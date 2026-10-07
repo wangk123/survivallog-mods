@@ -43,8 +43,8 @@
 
 | 位置 | 内容 |
 |---|---|
-| `SurvivalLog.*/` | 各 MOD 源码工程（`dotnet build -c Release`） |
-| `ModShared/` | 多 MOD 共享源码 |
+| `SurvivalLog.*/` | 各 MOD 源码工程（`dotnet build -c Release`）；**每个 mod 文件夹内有 `DESIGN.md` 设计文档，迭代时同步更新** |
+| `ModShared/` | 多 MOD 共享源码（表直写工具，见其 `README.md`） |
 | `installer/` | Inno Setup 安装器脚本（版本号由编译参数注入） |
 | `tools/` | 构建/发版/回归脚本与逆向研究脚本 |
 | `docs/` | 项目文档：需求、技术设计、教训红线、版本历史 |
