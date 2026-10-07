@@ -123,7 +123,8 @@ if (-not $SkipGithub -and (Test-Path (Join-Path $projRoot '.git'))) {
     if (git -C $projRoot tag -l $tag) {
         Write-Host ('tag ' + $tag + ' 已存在，跳过')
     } else {
-        git -C $projRoot tag $tag
+        # 必须用附注标签：--follow-tags 只推附注标签，轻量标签推不上去
+        git -C $projRoot tag -a $tag -m ('release ' + $tag)
     }
 
     # 注意：PS5.1 下 EAP=Stop 时给原生命令加重定向（2>&1/2>$null）可能触发
