@@ -53,11 +53,16 @@ foreach ($m in $suiteMods) {
     }
 }
 
-# ---------- 3. 构建 ----------
+# ---------- 3. 构建（用仓库自带便携 SDK，与历史构建一致）----------
+$dotnetExe = Join-Path $projRoot 'sdk\dotnet\dotnet.exe'
+if (-not (Test-Path $dotnetExe)) { $dotnetExe = 'dotnet' } # 兜底系统 PATH
+$env:DOTNET_MULTILEVEL_LOOKUP = '0'
+$env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
+$env:DOTNET_NOLOGO = '1'
 foreach ($m in $suiteMods) {
     Write-Host ('--- 构建 SurvivalLog.' + $m + ' ---')
     Push-Location (Join-Path $projRoot ('SurvivalLog.' + $m))
-    try { dotnet build -c Release --nologo | Out-Host }
+    try { & $dotnetExe build -c Release --nologo | Out-Host }
     finally { Pop-Location }
     if ($LASTEXITCODE -ne 0) { throw ('构建失败: SurvivalLog.' + $m) }
 }
@@ -121,15 +126,18 @@ if (-not $SkipGithub -and (Test-Path (Join-Path $projRoot '.git'))) {
         git -C $projRoot tag $tag
     }
 
-    $remote = git -C $projRoot remote get-url origin 2>$null
+    # 注意：PS5.1 下 EAP=Stop 时给原生命令加重定向（2>&1/2>$null）可能触发
+    # NativeCommandError 终止，所以这里全部裸调用、只看退出码
+    $remote = git -C $projRoot remote | Where-Object { $_ -eq 'origin' }
     if ($remote) {
-        git -C $projRoot push origin --follow-tags HEAD 2>&1 | Out-Host
+        git -C $projRoot push origin --follow-tags HEAD
+        if ($LASTEXITCODE -ne 0) { Write-Host '!! git push 失败（看上面输出；tag 已在本地）' -ForegroundColor Yellow }
     } else {
         Write-Host '无 origin 远程，跳过 push'
     }
 
     if ((Test-Path $ghExe) -and $remote) {
-        & $ghExe auth status *> $null
+        & $ghExe auth status
         if ($LASTEXITCODE -eq 0) {
             $notes = [regex]::Match($logTxt, ('(?s)##\s*v' + [regex]::Escape($ver) + '\b.*?(?=\r?\n##\s*v|\z)')).Value.Trim()
             $notesFile = Join-Path $env:TEMP ('release_notes_v' + $ver + '.md')
