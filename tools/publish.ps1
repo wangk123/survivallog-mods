@@ -112,18 +112,7 @@ foreach ($f in $artifacts) {
 }
 Write-Host ('网盘上传目录: ' + $stage + $syncHint)
 
-# GitHub Release 资产用 ASCII 别名：实测 GitHub 资产改名接口拒绝中文名
-# （返回 200 但忽略），中文原名文件走网盘渠道
-$ghAssets = @()
-$asciiExe = Join-Path $env:TEMP ('SurvivalLogMOD-Installer_v' + $ver + '.exe')
-Copy-Item (Join-Path $relRoot ('生存日志MOD安装器_v' + $ver + '.exe')) $asciiExe -Force
-$ghAssets += $asciiExe
-$asciiNotes = Join-Path $env:TEMP 'install-notes.txt'
-Copy-Item (Join-Path $relRoot '【必读】安装说明.txt') $asciiNotes -Force
-$ghAssets += $asciiNotes
-foreach ($m in @('Base') + $suiteMods) {
-    $ghAssets += (Join-Path $relRoot ('SurvivalLog.' + $m + '_v' + $ver + '.zip'))
-}
+# 说明：GitHub 只做源码管理，Release 仅 tag + 更新说明，不上传任何安装包（安装包只进网盘目录）
 
 # ---------- 9. git 提交 / tag / GitHub Release ----------
 if (-not $SkipGithub -and (Test-Path (Join-Path $projRoot '.git'))) {
@@ -153,12 +142,12 @@ if (-not $SkipGithub -and (Test-Path (Join-Path $projRoot '.git'))) {
     if ((Test-Path $ghExe) -and $remote) {
         & $ghExe auth status
         if ($LASTEXITCODE -eq 0) {
-            $notes = [regex]::Match($logTxt, ('(?s)##\s*v' + [regex]::Escape($ver) + '\b.*?(?=\r?\n##\s*v|\z)')).Value.Trim()
+            $notes = [regex]::Match($logTxt, ('(?s)##\s*v' + [regex]::Escape($ver) + '\b.*?(?=\r?\n(---|#{1,2}\s)|\z)')).Value.Trim()
             $notesFile = Join-Path $env:TEMP ('release_notes_v' + $ver + '.md')
             [System.IO.File]::WriteAllText($notesFile, $notes, (New-Object System.Text.UTF8Encoding($false)))
-            & $ghExe release create $tag --title ('v' + $ver) --notes-file $notesFile @ghAssets
+            & $ghExe release create $tag --title ('v' + $ver) --notes-file $notesFile
             if ($LASTEXITCODE -ne 0) { Write-Host '!! GitHub Release 创建失败（tag 已打好，可手动重试 gh release create）' -ForegroundColor Yellow }
-            else { Write-Host ('GitHub Release ' + $tag + ' 已创建并附 ' + $ghAssets.Count + ' 个产物') }
+            else { Write-Host ('GitHub Release ' + $tag + ' 已创建（仅更新说明，无安装包）') }
         } else {
             Write-Host 'gh 未登录，跳过 GitHub Release（tools\gh\bin\gh.exe auth login）'
         }
