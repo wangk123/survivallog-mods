@@ -15,6 +15,11 @@ New-Item $setupDir -ItemType Directory -Force | Out-Null
 # 预放一个"玩家旧配置"，验证 onlyifdoesntexist 不覆盖
 New-Item (Join-Path $setupDir 'BepInEx\config') -ItemType Directory -Force | Out-Null
 Set-Content (Join-Path $setupDir 'BepInEx\config\com.local.survivallog.backpackexpand.cfg') 'WidthMult = 9  # 玩家自己调过的'
+# 预放"上次安装过、本次未勾选"的柜子扩容 dll + 一个第三方插件 dll：
+# 验证 [InstallDelete] 预清理（本项目未勾选插件必须删掉、第三方插件绝不误删）
+New-Item (Join-Path $setupDir 'BepInEx\plugins') -ItemType Directory -Force | Out-Null
+Set-Content (Join-Path $setupDir 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll') 'OLD-CABINET-DLL'
+Set-Content (Join-Path $setupDir 'BepInEx\plugins\SomeThirdPartyMod.dll') 'THIRD-PARTY-KEEP'
 
 $p = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$setupDir`""),'/COMPONENTS="mod_backpack,mod_quick"' -Wait -PassThru
 Write-Host ("安装退出码: " + $p.ExitCode)
@@ -42,6 +47,7 @@ Check 'MOD说明\动作提速.md' $true
 Check 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeChill.dll' $false
+Check 'BepInEx\plugins\SomeThirdPartyMod.dll' $true
 Check 'unins000.exe' $true
 
 Write-Host '--- 旧配置保留检查（应仍为 WidthMult = 9）---'

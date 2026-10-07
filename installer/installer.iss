@@ -32,21 +32,42 @@ Uninstallable=yes
 Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 
 [Types]
-Name: "full"; Description: "全部安装（基座 + 5 个 MOD）"
+; recommended 必须排第一：Inno 默认选中 [Types] 首项。
+; "推荐安装"只含默认开的组件（4 扩容 + 吃/交互/维护提速），家具功能/娱乐锻炼默认不勾；
+; 下拉可切"全部安装"一键全勾。custom 实测会镜像前一个所选类型，不能用作默认不勾的载体。
+Name: "recommended"; Description: "推荐安装（4 个扩容 + 吃/交互/维护提速）"
+Name: "full"; Description: "全部安装（基座 + 全部 MOD）"
 Name: "custom"; Description: "自选安装"; Flags: iscustom
 
 [Components]
 Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Types: full custom; Flags: fixed
-Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: full custom
-Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: full custom
-Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: full custom
-Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: full custom
-Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: full custom
-Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: full custom
-Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开关电器/拾取/家务 → 0.5秒（约135条）"; Types: full custom
-Name: "mod_quick\qa_maint"; Description: "房屋维护：布置/安装/移动/拆除陷阱、安装家具 → 0.5秒（约78条）"; Types: full custom
-Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条，默认不勾）"; Types: full
-Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡 → 0.5秒（约173条，默认不勾）"; Types: full
+Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: recommended full custom
+Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: recommended full custom
+Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: recommended full custom
+Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
+Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
+Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
+Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开关电器/拾取/家务 → 0.5秒（约135条）"; Types: recommended full custom
+Name: "mod_quick\qa_maint"; Description: "房屋维护：布置/安装/移动/拆除陷阱、安装家具 → 0.5秒（约78条）"; Types: recommended full custom
+Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条，默认不勾）"; Types: full custom
+Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡 → 0.5秒（约173条，默认不勾）"; Types: full custom
+
+[InstallDelete]
+; 安装前预清理：先移除本项目全部插件（无论本次是否勾选），再安装所选组件——
+; 保证最终落地状态与勾选严格一致（解决"取消勾选不移除"）。只删本项目的固定文件名：
+; 不碰第三方插件、不碰游戏原生文件、不碰玩家 cfg（未再勾选的 mod 只留 1 个惰性 cfg）。
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.QuickAction.dll"
+Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
+Type: files; Name: "{app}\MOD说明\背包扩容.md"
+Type: files; Name: "{app}\MOD说明\柜子扩容.md"
+Type: files; Name: "{app}\MOD说明\冰箱扩容.md"
+Type: files; Name: "{app}\MOD说明\冰箱保鲜.md"
+Type: files; Name: "{app}\MOD说明\动作提速.md"
+Type: dirifempty; Name: "{app}\MOD说明"
 
 [Files]
 ; ---- 基座（必装）----
@@ -85,6 +106,39 @@ Filename: "steam://rungameid/4164790"; Description: "通过 Steam 启动游戏";
 const
   GameAppId = '4164790';
   GameDirSuffix = 'steamapps\common\Survival Log';
+
+// 游戏进程检测：dll 被占用时预清理会静默失败，必须在动手前拦下。
+// 精确匹配：只有当运行中的 SurvivalLog.exe 的路径位于本次安装目标目录下才拦截
+// （沙箱/其他目录的测试安装不受干扰）。
+function IsGameRunningAt(const appDir: string): Boolean;
+var
+  ResultCode: Integer;
+  tmpFile: string;
+  lines: TArrayOfString;
+  i: Integer;
+begin
+  Result := False;
+  tmpFile := ExpandConstant('{tmp}') + '\slproc.txt';
+  Exec(ExpandConstant('{cmd}'),
+    '/C powershell -NoProfile -Command "(Get-Process SurvivalLog -ErrorAction SilentlyContinue).Path" > "' + tmpFile + '"',
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  if FileExists(tmpFile) and LoadStringsFromFile(tmpFile, lines) then
+    for i := 0 to GetArrayLength(lines) - 1 do
+      if (lines[i] <> '') and (Pos(Uppercase(appDir), Uppercase(lines[i])) = 1) then
+      begin
+        Result := True;
+        exit;
+      end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  if IsGameRunningAt(ExpandConstant('{app}')) then
+    Result := '检测到游戏正在运行（SurvivalLog.exe）。' + #13#10 +
+              '请先完全退出游戏（含后台进程），再重新运行安装程序，' + #13#10 +
+              '否则插件文件被占用无法替换。';
+end;
 
 // 目录里存在游戏 exe 才算命中
 function TryDir(dir: string): string;

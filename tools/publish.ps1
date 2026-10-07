@@ -158,10 +158,25 @@ if (-not $SkipGithub -and (Test-Path (Join-Path $projRoot '.git'))) {
     }
 }
 
-# ---------- 10. 旧版本产物提醒 ----------
-Get-ChildItem $relRoot -Directory -Filter 'SurvivalLog.*_v*' |
-    Where-Object { $_.Name -notmatch ('_v' + [regex]::Escape($ver) + '$') } |
-    ForEach-Object { Write-Host ('提醒: 旧版本产物目录仍在 → ' + $_.Name + '（确认无用可删）') }
+# ---------- 10. 清理旧版本产物（不堆积：release 与 baidu_upload 只保留当前版本）----------
+# 锚定版本命名格式（SurvivalLog.X_vN.N(.zip) / 生存日志MOD安装器_vN.N.exe），
+# 绝不误删 测试版/预览版（文件名带后缀不匹配锚定模式）、promo、安装说明等。
+function Remove-OldArtifacts($root) {
+    if (-not (Test-Path $root)) { return }
+    Get-ChildItem $root | Where-Object {
+        $n = $_.Name
+        (($_ -is [System.IO.FileInfo]) -and (
+            ($n -match '^SurvivalLog\..+_v[\d.]+\.zip$' -and $n -notmatch ('^SurvivalLog\..+_v' + [regex]::Escape($ver) + '\.zip$')) -or
+            ($n -match '^生存日志MOD安装器_v[\d.]+\.exe$' -and $n -ne ('生存日志MOD安装器_v' + $ver + '.exe'))
+        )) -or
+        (($_ -is [System.IO.DirectoryInfo]) -and $n -match '^SurvivalLog\..+_v[\d.]+$' -and $n -notmatch ('_v' + [regex]::Escape($ver) + '$'))
+    } | ForEach-Object {
+        Write-Host ('清理旧产物: ' + $_.Name)
+        Remove-Item $_.FullName -Recurse -Force
+    }
+}
+Remove-OldArtifacts $relRoot
+Remove-OldArtifacts (Join-Path $relRoot 'baidu_upload')
 
 Write-Host ''
 Write-Host ('=== v' + $ver + ' 发版完成 ===')
