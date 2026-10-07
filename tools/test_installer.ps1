@@ -8,6 +8,31 @@ $setupDir = Join-Path $test 'game'
 $script:fails = @()
 
 if (-not (Test-Path $setup)) { throw ('安装器不存在: ' + $setup) }
+
+# --- 静态校验 [Types]/[Components] 归属矩阵（防 v1.0.2 基座默认不勾类事故）---
+# 规则：base 不写 Types（=属于所有类型）；默认勾选组件 Types 含 recommended；
+#       默认不勾的 qa_furn/qa_fun 仍须含 custom（用户手动勾选后不因类型重置丢失）；
+#       [Types] 首项必须是 recommended（Inno 默认选中首类型）。
+$issLines = Get-Content (Join-Path $projRoot 'installer\installer.iss') -Encoding UTF8
+$matrixFails = @()
+foreach ($l in $issLines) {
+    if ($l -notmatch '^Name: "(?<name>[^"]+)";') { continue }
+    $cname = $Matches['name']
+    if ($cname -eq 'base') {
+        if ($l -notmatch 'Types:\s*recommended\s+full\s+custom') { $matrixFails += 'base 的 Types 必须列出全部类型' }
+        if ($l -match 'fixed') { $matrixFails += 'base 不得用 fixed 旗标（Inno7 下 fixed 复选框不勾选显示错误，已改为 NextButtonClick 校验强制勾选）' }
+    }
+    if ($cname -in @('mod_backpack','mod_cabinet','mod_fridge','mod_chill','mod_quick','mod_quick\qa_item','mod_quick\qa_misc','mod_quick\qa_maint') -and $l -notmatch 'Types:\s*recommended\s') { $matrixFails += ($cname + ' 的 Types 缺少 recommended（默认类型下应勾选）') }
+    if ($cname -in @('mod_quick\qa_furn','mod_quick\qa_fun') -and $l -notmatch 'Types:\s*full\s+custom') { $matrixFails += ($cname + ' 的 Types 应为 full custom（含 custom 才能保持手动勾选）') }
+}
+$recLine = $issLines | Where-Object { $_ -match '^Name: "recommended";' } | Select-Object -First 1
+if (-not $recLine) { throw '[Types] 缺少 recommended 类型' }
+$idxRec = [array]::IndexOf($issLines, $recLine)
+$idxFirst = [array]::IndexOf($issLines, ($issLines | Where-Object { $_ -match '^Name: "\w+"; Description: "' } | Select-Object -First 1))
+if ($idxRec -gt $idxFirst) { $matrixFails += '[Types] recommended 必须排第一（Inno 默认选中首类型）' }
+if ($matrixFails.Count) { $matrixFails | ForEach-Object { Write-Host ('矩阵校验失败: ' + $_) }; throw ('组件/类型矩阵校验失败 ' + $matrixFails.Count + ' 项') }
+Write-Host 'OK  组件/类型归属矩阵校验通过'
+
 if (Test-Path $test) { Remove-Item $test -Recurse -Force }
 New-Item $setupDir -ItemType Directory -Force | Out-Null
 
@@ -21,7 +46,7 @@ New-Item (Join-Path $setupDir 'BepInEx\plugins') -ItemType Directory -Force | Ou
 Set-Content (Join-Path $setupDir 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll') 'OLD-CABINET-DLL'
 Set-Content (Join-Path $setupDir 'BepInEx\plugins\SomeThirdPartyMod.dll') 'THIRD-PARTY-KEEP'
 
-$p = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$setupDir`""),'/COMPONENTS="mod_backpack,mod_quick"' -Wait -PassThru
+$p = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$setupDir`""),'/COMPONENTS="base,mod_backpack,mod_quick"' -Wait -PassThru
 Write-Host ("安装退出码: " + $p.ExitCode)
 if ($p.ExitCode -ne 0) { $script:fails += ('安装器退出码 ' + $p.ExitCode) }
 

@@ -40,7 +40,7 @@ Name: "full"; Description: "全部安装（基座 + 全部 MOD）"
 Name: "custom"; Description: "自选安装"; Flags: iscustom
 
 [Components]
-Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Types: recommended full custom
+Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Flags: fixed
 Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: recommended full custom
 Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: recommended full custom
 Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: recommended full custom
@@ -247,12 +247,6 @@ begin
   end;
   // 组件页：基座之外至少选一个 MOD
   if CurPageID = wpSelectComponents then
-    if not WizardIsComponentSelected('base') then
-    begin
-      MsgBox('MOD 框架基座是所有 MOD 的运行前提，必须勾选。', mbError, MB_OK);
-      Result := False;
-      exit;
-    end;
   begin
     if not (WizardIsComponentSelected('mod_backpack') or
             WizardIsComponentSelected('mod_cabinet') or
