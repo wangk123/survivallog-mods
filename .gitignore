@@ -1,0 +1,19 @@
+# ===== 构建产物（不入库，由 publish.ps1 生成）=====
+**/bin/
+**/obj/
+release/
+
+# ===== 大体积工具链 / 游戏依赖（可再获取，不入库）=====
+sdk/
+tools/il2cppdumper/
+tools/il2cpp_out/
+tools/icd.zip
+tools/Cecil/
+tools/gh/
+
+# ===== 本地杂项 =====
+.playwright-mcp/
+nul
+*.log
+*.user
+.vs/

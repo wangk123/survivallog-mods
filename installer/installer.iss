@@ -1,0 +1,166 @@
+﻿; 生存日志 MOD 安装器（Inno Setup 7）
+; 基座必装（fixed），5 个 MOD 自选，代码强制至少选一个。
+; 文件源全部指向 release\ 下的正式版本目录。
+
+#define MyAppName "生存日志 MOD"
+; 版本号由编译参数注入（tools\build_installer.ps1 传 /DSuiteVer=x.y.z），单独编译时用默认值
+#ifndef SuiteVer
+#define SuiteVer "1.3.1"
+#endif
+#define MyAppVer SuiteVer
+#define RelRoot "..\release"
+
+[Setup]
+AppId={{7B1E6A54-C93E-4F0A-9D62-7C4E2F5A8D10}
+AppName={#MyAppName}
+AppVersion={#MyAppVer}
+AppPublisher=免费分享，仅供学习交流
+DefaultDirName={code:GetGameDir}
+AppendDefaultDirName=no
+UsePreviousAppDir=no
+PrivilegesRequired=lowest
+DisableProgramGroupPage=yes
+WizardStyle=modern
+Compression=lzma2/max
+SolidCompression=yes
+OutputDir={#RelRoot}
+OutputBaseFilename=生存日志MOD安装器_v{#MyAppVer}
+UninstallDisplayName={#MyAppName}（卸载/修复）
+Uninstallable=yes
+
+[Languages]
+Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+
+[Types]
+Name: "full"; Description: "全部安装（基座 + 5 个 MOD）"
+Name: "custom"; Description: "自选安装"; Flags: iscustom
+
+[Components]
+Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Types: full custom; Flags: fixed
+Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: full custom
+Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: full custom
+Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: full custom
+Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: full custom
+Name: "mod_quick"; Description: "动作提速：搜查/撬锁/修理/看书等统一0.5秒"; Types: full custom
+
+[Files]
+; ---- 基座（必装）----
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\winhttp.dll"; DestDir: "{app}"; Flags: ignoreversion
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\doorstop_config.ini"; DestDir: "{app}"; Flags: ignoreversion
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\.doorstop_version"; DestDir: "{app}"; Flags: ignoreversion
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\dotnet\*"; DestDir: "{app}\dotnet"; Flags: ignoreversion recursesubdirs createallsubdirs
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\core\*"; DestDir: "{app}\BepInEx\core"; Flags: ignoreversion recursesubdirs createallsubdirs
+; cfg 不覆盖玩家已有配置（重装/换组件时保留调好的数值）
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\config\BepInEx.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+; ---- 背包扩容 ----
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.backpackexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "背包扩容.md"; Flags: ignoreversion
+; ---- 柜子扩容 ----
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子扩容.md"; Flags: ignoreversion
+; ---- 冰箱扩容 ----
+Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.fridgeexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "冰箱扩容.md"; Flags: ignoreversion
+; ---- 冰箱保鲜 ----
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\config\com.local.survivallog.fridgechill.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "冰箱保鲜.md"; Flags: ignoreversion
+; ---- 动作提速 ----
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.QuickAction.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "动作提速.md"; Flags: ignoreversion
+
+[Run]
+Filename: "steam://rungameid/4164790"; Description: "通过 Steam 启动游戏"; Flags: postinstall shellexec skipifsilent unchecked
+
+[Code]
+const
+  GameAppId = '4164790';
+  GameDirSuffix = 'steamapps\common\Survival Log';
+
+// 目录里存在游戏 exe 才算命中
+function TryDir(dir: string): string;
+begin
+  Result := '';
+  if dir <> '' then
+    if FileExists(AddBackslash(dir) + 'SurvivalLog.exe') then
+      Result := dir;
+end;
+
+// 自动探测 Steam 游戏目录：HKCU SteamPath → libraryfolders.vdf 逐库找 appmanifest
+function GetGameDir(Param: string): string;
+var
+  steam, vdf, lib, s: string;
+  lines: TArrayOfString;
+  i, j: integer;
+begin
+  Result := '';
+  steam := '';
+  RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Valve\Steam', 'SteamPath', steam);
+  if steam = '' then
+    RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\WOW6432Node\Valve\Steam', 'InstallPath', steam);
+  if steam <> '' then
+  begin
+    StringChangeEx(steam, '/', '\', True);
+    Result := TryDir(AddBackslash(steam) + GameDirSuffix);
+    if Result <> '' then exit;
+    vdf := AddBackslash(steam) + 'steamapps\libraryfolders.vdf';
+    if LoadStringsFromFile(vdf, lines) then
+      for i := 0 to GetArrayLength(lines) - 1 do
+      begin
+        s := lines[i];
+        j := Pos('"path"', s);
+        if j > 0 then
+        begin
+          Delete(s, 1, j + 5);
+          j := Pos('"', s);
+          if j > 0 then
+          begin
+            Delete(s, 1, j);
+            j := Pos('"', s);
+            if j > 0 then
+            begin
+              lib := Copy(s, 1, j - 1);
+              StringChangeEx(lib, '\\', '\', True);
+              Result := TryDir(AddBackslash(lib) + GameDirSuffix);
+              if Result <> '' then exit;
+            end;
+          end;
+        end;
+      end;
+  end;
+  // 探测失败：给一个经典默认路径，目录页会提示玩家自行浏览
+  Result := 'C:\Program Files (x86)\Steam\steamapps\common\Survival Log';
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  // 静默安装（/VERYSILENT、/SILENT）时跳过一切交互校验，否则弹窗无人应答会挂死
+  if WizardSilent() then exit;
+  // 目录页：没有游戏 exe 时二次确认，防止装错地方
+  if CurPageID = wpSelectDir then
+  begin
+    if not FileExists(AddBackslash(WizardDirValue()) + 'SurvivalLog.exe') then
+      Result := MsgBox(
+        '这个目录里没有找到 SurvivalLog.exe。' + #13#10 +
+        '正确位置一般是 Steam\steamapps\common\Survival Log' + #13#10#13#10 +
+        '仍要安装到这个目录吗？', mbConfirmation, MB_OKCANCEL) = IDOK;
+  end;
+  // 组件页：基座之外至少选一个 MOD
+  if CurPageID = wpSelectComponents then
+  begin
+    if not (WizardIsComponentSelected('mod_backpack') or
+            WizardIsComponentSelected('mod_cabinet') or
+            WizardIsComponentSelected('mod_fridge') or
+            WizardIsComponentSelected('mod_chill') or
+            WizardIsComponentSelected('mod_quick')) then
+    begin
+      MsgBox('基座之外至少需要选择一个 MOD（也可以全选）。', mbError, MB_OK);
+      Result := False;
+    end;
+  end;
+end;

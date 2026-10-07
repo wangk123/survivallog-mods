@@ -1,0 +1,4 @@
+﻿{
+  "baiduSyncDir": "",
+  "_note": "百度网盘客户端'同步空间'的本机绝对路径，例如 C:\\Users\\you\\BaiduNetdiskSync\\生存日志MOD。留空时 publish.ps1 自动探测常见路径，探测不到则组装到 release\\baidu_upload\\ 由人工上传。"
+}

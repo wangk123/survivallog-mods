@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>生存日志 MOD合集 · 抖音封面 1080x1920</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#1b1b1f; font-family:"Microsoft YaHei","SimHei","PingFang SC",sans-serif; }
+  .cover { width:1080px; height:1920px; position:relative; overflow:hidden; margin:48px auto; }
+
+  /* ============ A · 末日警示牌风 ============ */
+  .a { background: radial-gradient(1200px 900px at 50% 36%, #23252b 0%, #16171b 55%, #0f1013 100%); color:#f2efe6; }
+  .a::before { content:""; position:absolute; inset:0;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:72px 72px; }
+  .a .stripe { position:absolute; left:0; right:0; height:44px; z-index:3;
+    background: repeating-linear-gradient(-45deg, #f5c518 0 38px, #17181c 38px 76px); }
+  .a .stripe.top { top:0; } .a .stripe.bot { bottom:0; }
+  .a .wm { position:absolute; top:33%; left:50%; transform:translate(-50%,-50%);
+    font-family:Impact,"Arial Black",sans-serif; font-size:520px; line-height:1; letter-spacing:8px;
+    color:transparent; -webkit-text-stroke:3px rgba(245,197,24,.11); z-index:1; }
+  .a-inner { position:relative; z-index:2; height:100%; display:flex; flex-direction:column; align-items:center;
+    padding:130px 90px 116px; text-align:center; }
+  .a .badge { border:2px solid rgba(245,197,24,.85); color:#f5c518; font-size:34px; letter-spacing:6px;
+    padding:16px 38px; font-weight:700; }
+  .a .kicker { margin-top:150px; color:#9aa0a8; font-size:31px; letter-spacing:16px; }
+  .a .title { margin-top:28px; font-size:168px; font-weight:900; color:#ffffff; letter-spacing:6px;
+    text-shadow:0 10px 44px rgba(0,0,0,.65); line-height:1.1; }
+  .a .line2 { margin-top:36px; display:flex; align-items:center; gap:26px; }
+  .a .line2 .mod { font-family:Impact,"Arial Black",sans-serif; font-size:96px; color:#f5c518; letter-spacing:4px; }
+  .a .line2 .heji { font-size:92px; font-weight:900; color:#17181c; background:#f5c518; padding:2px 30px; letter-spacing:8px; }
+  .a .desc { margin-top:40px; font-size:42px; color:#cfd3da; letter-spacing:6px; }
+  .a .features { margin-top:70px; width:840px; border:1px solid rgba(245,197,24,.4);
+    background:rgba(255,255,255,.03); }
+  .a .features .row { display:flex; align-items:center; gap:30px; padding:30px 40px; font-size:45px;
+    letter-spacing:3px; text-align:left; color:#f2efe6; }
+  .a .features .row + .row { border-top:1px dashed rgba(245,197,24,.35); }
+  .a .features .no { font-family:Impact,"Arial Black",sans-serif; font-size:40px; color:#17181c; background:#f5c518;
+    width:62px; height:62px; display:flex; align-items:center; justify-content:center; flex:none; }
+  .a .stamp { position:absolute; z-index:4; top:952px; right:58px; width:228px; height:228px; border:9px solid #e03b30;
+    border-radius:50%; color:#e03b30; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:54px; font-weight:900; letter-spacing:6px; line-height:1.25; transform:rotate(-13deg); opacity:.95; }
+  .a .foot { margin-top:auto; font-size:32px; color:#8f959d; letter-spacing:8px; }
+
+  /* ============ B · 大数字 999 海报风 ============ */
+  .b { background: radial-gradient(1050px 760px at 50% 42%, #274631 0%, #16281d 48%, #0c1611 100%); color:#f4f1e8;
+    display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .b::before { content:""; position:absolute; inset:0;
+    background:repeating-linear-gradient(-24deg, rgba(255,255,255,.022) 0 60px, transparent 60px 150px); }
+  .b-badge { margin-top:132px; font-size:34px; letter-spacing:20px; color:#a9c3ae; font-weight:700; z-index:2; }
+  .b-kicker { margin-top:118px; font-size:52px; letter-spacing:16px; color:#f4f1e8; font-weight:700; z-index:2; }
+  .b-num { margin-top:40px; font-family:Impact,"Arial Black",sans-serif; font-size:540px; line-height:.85;
+    color:#ffd23f; transform:rotate(-3deg); letter-spacing:-4px;
+    text-shadow:12px 12px 0 #12301d, 26px 26px 0 rgba(0,0,0,.28); z-index:1; }
+  .b-ribbon { margin-top:-104px; width:930px; background:#f4f1e8; color:#0f241a; font-size:84px; font-weight:900;
+    padding:22px 0; letter-spacing:4px; box-shadow:0 18px 50px rgba(0,0,0,.45); z-index:2; }
+  .b-sub { margin-top:52px; color:#ffd23f; font-size:48px; letter-spacing:6px; font-weight:700; z-index:2; }
+  .b-list { margin-top:88px; width:800px; display:flex; flex-direction:column; gap:36px; z-index:2; text-align:left; }
+  .b-list .it { display:flex; align-items:center; gap:28px; font-size:48px; letter-spacing:3px; }
+  .b-list .ck { width:54px; height:54px; border:5px solid #7fd18a; border-radius:50%; color:#7fd18a;
+    font-size:34px; font-weight:900; display:flex; align-items:center; justify-content:center; flex:none; }
+  .b-foot { margin-top:auto; margin-bottom:118px; font-size:32px; color:#7d937f; letter-spacing:10px; z-index:2; }
+
+  /* ============ C · 牛皮纸调拨单风 ============ */
+  .c { background: radial-gradient(1400px 1050px at 50% 30%, #c89d64 0%, #b58752 58%, #96693c 100%);
+    display:flex; flex-direction:column; align-items:center; }
+  .c::before { content:""; position:absolute; inset:0; opacity:.5;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"/><feColorMatrix type="saturate" values="0"/></filter><rect width="220" height="220" filter="url(%23n)" opacity="0.16"/></svg>'); }
+  .c::after { content:""; position:absolute; inset:0; box-shadow:inset 0 0 280px rgba(56,36,15,.6); }
+  .c-card { margin-top:225px; width:880px; background:#f9f1de; border:3px solid #3a2d1d; padding:60px 62px;
+    box-shadow:0 30px 80px rgba(35,20,5,.5); position:relative; z-index:2; }
+  .c-card::before, .c-card::after { content:""; position:absolute; width:170px; height:48px;
+    background:rgba(240,232,210,.82); box-shadow:0 2px 6px rgba(0,0,0,.14); }
+  .c-card::before { top:-22px; left:52px; transform:rotate(-6deg); }
+  .c-card::after { top:-22px; right:52px; transform:rotate(5deg); }
+  .c-head { display:flex; justify-content:space-between; align-items:baseline; }
+  .c-head .cn { font-size:34px; letter-spacing:12px; color:#6b5335; font-weight:700; }
+  .c-head .en { font-family:Impact,"Arial Black",sans-serif; font-size:29px; color:#8a7050; letter-spacing:2px; }
+  .c-div { border-top:3px dashed #b49a72; margin:30px 0; }
+  .c-title { font-size:104px; font-weight:900; color:#2f2415; letter-spacing:6px; line-height:1.15; }
+  .c-title2 { margin-top:12px; font-size:62px; font-weight:900; color:#2f2415; letter-spacing:4px; }
+  .c-title2 .en-mod { font-family:Impact,"Arial Black",sans-serif; font-size:60px; color:#b3342a; letter-spacing:2px; }
+  .c-title2 .pack { font-size:36px; color:#8a7050; letter-spacing:4px; font-weight:700; }
+  .c-rows { margin-top:34px; }
+  .c-rows .cr { display:flex; gap:24px; align-items:flex-start; padding:26px 0; }
+  .c-rows .cr + .cr { border-top:3px dashed #d8c8a6; }
+  .c-rows .cb { width:50px; height:50px; border:4px solid #4a3a24; background:#fff; color:#2f7d3a;
+    font-size:36px; font-weight:900; display:flex; align-items:center; justify-content:center; flex:none; }
+  .c-rows b { display:block; font-size:46px; color:#2f2415; letter-spacing:2px; font-weight:900; }
+  .c-rows i { display:block; font-style:normal; font-size:32px; color:#5d4525; margin-top:10px; line-height:1.45; }
+  .c-meta { display:flex; justify-content:flex-start; margin-top:6px; font-size:29px; color:#8a7050; letter-spacing:2px; }
+  .c-stamp { position:absolute; z-index:3; right:58px; top:1215px; width:252px; height:252px; border:10px solid #c03a2b;
+    border-radius:50%; color:#c03a2b; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; transform:rotate(-12deg); mix-blend-mode:multiply; opacity:.92; }
+  .c-stamp::before { content:""; position:absolute; inset:9px; border:3px dashed #c03a2b; border-radius:50%; }
+  .c-stamp b { font-size:56px; letter-spacing:4px; font-weight:900; }
+  .c-stamp span { font-size:30px; letter-spacing:10px; font-weight:700; }
+  .c-foot { margin-top:auto; font-size:46px; font-weight:900; color:#43301a; letter-spacing:8px; z-index:2; }
+  .c-foot-en { margin-top:22px; margin-bottom:128px; font-family:Impact,"Arial Black",sans-serif; font-size:28px; color:#6b4d28;
+    letter-spacing:4px; z-index:2; }
+</style>
+</head>
+<body>
+
+<!-- A · 末日警示牌风 -->
+<section class="cover a">
+  <div class="stripe top"></div>
+  <div class="stripe bot"></div>
+  <div class="wm">999</div>
+  <div class="a-inner">
+    <div class="badge">「生存日志」SURVIVAL LOG</div>
+    <div class="kicker">末日囤货 · 仓库改造包</div>
+    <div class="title">生存日志</div>
+    <div class="line2"><span class="mod">MOD</span><span class="heji">合集</span></div>
+    <div class="desc">给囤货党的仓库改造三件套</div>
+    <div class="features">
+      <div class="row"><span class="no">01</span>物资堆叠上限拉满至 999</div>
+      <div class="row"><span class="no">02</span>背包 · 仓库格子大幅扩容</div>
+      <div class="row"><span class="no">03</span>搜刮 · 烹饪 · 建造全面提速</div>
+    </div>
+    <div class="foot">合集持续更新 · 关注蹲新 MOD</div>
+  </div>
+  <div class="stamp">囤货党<br>福音</div>
+</section>
+
+<!-- B · 大数字 999 海报风 -->
+<section class="cover b">
+  <div class="b-badge">囤 货 党 福 音</div>
+  <div class="b-kicker">物资堆叠上限</div>
+  <div class="b-num">999</div>
+  <div class="b-ribbon">生存日志 MOD 合集</div>
+  <div class="b-sub">仓库拉满 · 告别格子焦虑</div>
+  <div class="b-list">
+    <div class="it"><span class="ck">✓</span>背包 / 仓库格子大幅扩容</div>
+    <div class="it"><span class="ck">✓</span>搜刮 · 烹饪 · 建造全面加速</div>
+    <div class="it"><span class="ck">✓</span>安装简单 · 教程全在合集里</div>
+  </div>
+  <div class="b-foot">合集持续更新 · 关注不迷路</div>
+</section>
+
+<!-- C · 牛皮纸调拨单风 -->
+<section class="cover c">
+  <div class="c-card">
+    <div class="c-head"><span class="cn">物 资 调 拨 单</span><span class="en">SUPPLY MANIFEST</span></div>
+    <div class="c-div"></div>
+    <div class="c-title">生存日志</div>
+    <div class="c-title2"><span class="en-mod">MOD</span> 合集 <span class="pack">· 囤货改造包</span></div>
+    <div class="c-rows">
+      <div class="cr"><span class="cb">✓</span><div><b>背包扩容胶囊</b><i>格子数量大幅提升，出门一趟搬空一栋楼</i></div></div>
+      <div class="cr"><span class="cb">✓</span><div><b>物资堆叠上限 999</b><i>背包 / 仓库随便囤，格子不再是瓶颈</i></div></div>
+      <div class="cr"><span class="cb">✓</span><div><b>全动作加速</b><i>搜刮 · 烹饪 · 建造提速，时间花在囤货上</i></div></div>
+    </div>
+    <div class="c-div"></div>
+    <div class="c-meta"><span>经手人：仓库管理员 · 单号 SL-0999</span></div>
+  </div>
+  <div class="c-stamp"><b>囤货党福音</b><span>已入库</span></div>
+  <div class="c-foot">末日囤货 · 装备持续更新</div>
+  <div class="c-foot-en">SURVIVAL LOG · MOD PACK</div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+param(
+    [int]$Rx, [int]$Ry,
+    [int]$HoldMs = 130
+)
+# Hold real Shift + real click at raster coords (Shift+Left-click split test)
+$ErrorActionPreference = 'SilentlyContinue'
+Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class SC { [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h); [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y); [DllImport("user32.dll")] public static extern void mouse_event(uint f, uint dx, uint dy, uint d, UIntPtr e); [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo); }'
+$game = Get-Process -Name SurvivalLog -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $game) { Write-Output 'NO-GAME-PROCESS'; exit 1 }
+[SC]::SetForegroundWindow($game.MainWindowHandle) | Out-Null
+Start-Sleep -Milliseconds 300
+$tx = $Rx * 2; $ty = $Ry * 2
+1..8 | ForEach-Object { [SC]::SetCursorPos([int](1280 + ($tx-1280)*$_/8), [int](720 + ($ty-720)*$_/8)) | Out-Null; Start-Sleep -Milliseconds 8 }
+Start-Sleep -Milliseconds 150
+[SC]::keybd_event(0x10, 0x2A, 0, [UIntPtr]::Zero)   # LSHIFT down
+Start-Sleep -Milliseconds 60
+[SC]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+Start-Sleep -Milliseconds 45
+[SC]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
+Start-Sleep -Milliseconds $HoldMs
+[SC]::keybd_event(0x10, 0x2A, 2, [UIntPtr]::Zero)   # LSHIFT up
+Write-Output ("shift+click raster({0},{1})" -f $Rx,$Ry)
