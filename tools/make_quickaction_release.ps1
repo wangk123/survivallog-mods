@@ -13,19 +13,22 @@ New-Item (Join-Path $pkg 'BepInEx\plugins') -ItemType Directory -Force | Out-Nul
 New-Item (Join-Path $pkg 'BepInEx\config')  -ItemType Directory -Force | Out-Null
 Copy-Item $dll (Join-Path $pkg 'BepInEx\plugins') -Force
 
-# Preset cfg: copy runtime cfg, normalize to release defaults
+# Preset cfg: 直接生成规范预置（分类默认值 = 安装器默认勾选：吃/交互/维护开，家具/娱乐关）
+# 与 mod 内 ReadBoot() 缺省值保持一致
 $cfgName = 'com.local.survivallog.quickaction.cfg'
-$srcCfg = Join-Path $game ('BepInEx\config\' + $cfgName)
-if (Test-Path $srcCfg) {
-    $dstCfg = Join-Path $pkg ('BepInEx\config\' + $cfgName)
-    Copy-Item $srcCfg $dstCfg -Force
-    $txt = [System.IO.File]::ReadAllText($dstCfg, [System.Text.Encoding]::UTF8)
-    $txt = $txt -replace '(?m)^(A\d+\s*=\s).*$', '${1}500'
-    $txt = $txt -replace '(?m)^((?:' + [char]0x7FFB + [char]0x9605 + [char]0x7B14 + [char]0x8BB0 + '|' + [char]0x5305 + [char]0x88F9 + [char]0x62C6 + [char]0x5C01 + '|' + [char]0x9677 + [char]0x9631 + '|' + [char]0x8FDB + [char]0x98DF + ')Ms\s*=\s).*$', '${1}500'
-    $txt = $txt -replace '(?m)^(Overrides\s*=\s).*$', '${1}'
-    $txt = $txt -replace '(?m)^# Default value.*\r?\n', ''
-    [System.IO.File]::WriteAllText($dstCfg, $txt, (New-Object System.Text.UTF8Encoding($false)))
-} else { Write-Warning 'runtime cfg not found; package ships without preset cfg' }
+$dstCfg = Join-Path $pkg ('BepInEx\config\' + $cfgName)
+$lines = @(
+    '[分类修改]',
+    '物品使用Ms = 500',
+    '家具功能Ms = 0',
+    '房屋维护Ms = 500',
+    '杂项交互Ms = 500',
+    '娱乐锻炼Ms = 0',
+    '',
+    '[其他]',
+    'Overrides = '
+)
+[System.IO.File]::WriteAllLines($dstCfg, $lines, (New-Object System.Text.UTF8Encoding($false)))
 
 Copy-Item (Join-Path $projRoot 'tools\readme_quickaction.md') (Join-Path $pkg 'README.md') -Force
 

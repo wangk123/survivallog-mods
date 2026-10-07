@@ -13,34 +13,43 @@ using Object = UnityEngine.Object;
 namespace SurvivalLog.QuickAction;
 
 /// <summary>
-/// 动作提速（独立 mod 5）：把交互动作耗时改为固定毫秒数（默认 500ms）。
-/// v1.3.0：54 个有区分度的动作逐项配置（分节 + 一行备注：名称/场景/原值），
-/// 3 个无区分度的大家族用整类设置（翻阅笔记/包裹拆封/陷阱，运行时按名字匹配，
-/// 游戏更新新增的同名动作自动覆盖）；配置瘦身：去掉 debug/换算等技术项。
+/// 动作提速（独立 mod 5）v2.0.0：按 ActionType 官方分类统一改写 During。
 ///
-/// 实证（Il2CppDumper dump + 探针运行时 dump，2026-10-04）：
-/// - 动作耗时 = Config_Action.During（游戏秒），进度条按游戏时钟递减；
-///   探索/家场景 TimeScale=120（1 真实秒=2 游戏分钟），1800 During=15 真实秒。
-/// - 内存表直写：不碰存档、无 Harmony、热改即时生效；0=恢复原值。
-/// - 天赋仅「眼明手快」影响动作耗时（开家具-30%，与本 mod 叠加、方向一致）。
+/// 实证基础（2026-10-07 运行时 EffectDump + Il2CppDumper/反汇编，详见 docs）：
+/// - 官方枚举 GameCore.HotUpdate.ActionType：Food=1 Rest=2 Entertainment=3 Exercise=4
+///   Social=5 Treatment=6 Move=7(未用) Other=8 Free=9(未用) RepairFurniture=10；
+///   表中另有 0 = 枚举无名默认值（家具功能桶）。
+/// - 收益结算：Config_Effect 三段式 Start/Interval/End。Interval=周期结算（每 N 游戏秒
+///   结算一次，如 瑜伽每600秒 士气+2/体力-1.67），总收益∝动作时长——**运行时守卫**：
+///   动作 EffectConfigID 指向的效果任一 Interval 字段非零 ⇒ 永不改动该动作。
+///   （实测黑名单 74 条：修理/加固本体系10、生吃冷冻32、跳舞/游戏机5、锻炼/发电3、
+///   Social 全部5、Other 内部行为18。）
+/// - Other(8)=官方大杂烩：真交互与内部行为混居。引用轴判定：动作被
+///   Config_FurnitureFunc.ActionIds（家具按钮）或 Config_Item.UseAction（物品）引用
+///   ⇒ 玩家可触发，可提速；三处皆不引用 ⇒ 内部行为（情绪播报/呕吐腹泻等），不动。
+/// - 禁改：Rest=2（睡觉 During 兼任时间推进）、Social=5（全部周期结算）、
+///   During<=0 的哨兵值动作。
+/// - 机制不变：内存表直写 Config_Action.During（游戏秒），无 Harmony 不碰存档；
+///   探索 TimeScale=120；只减不增守卫；0=恢复原值；Overrides 兜底优先级最高。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class QuickActionPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.quickaction";
     public const string Name = "QuickAction";
-    public const string Version = "1.3.1";
+    public const string Version = "2.0.0";
 
     /// <summary>探索时钟倍速（Config_Chapter 实测 120；游戏更新后体感异常再改此处重编译）。</summary>
     internal const int Scale = 120;
 
-    internal static new ManualLogSource Log;
+    internal static ManualLogSource Log;
 
-    internal static ConfigEntry<int>[] ActionMs;
-    internal static ConfigEntry<int> NoteMs;     // 翻阅笔记（整类）
-    internal static ConfigEntry<int> ParcelMs;   // 打开/拆封包裹（整类）
-    internal static ConfigEntry<int> TrapMs;     // 布置/安装陷阱（整类）
-    internal static ConfigEntry<int> EatMs;      // 吃/生吃/喝（整类，约 2650 个食物动作）
+    // 五个分类开关（毫秒；0=恢复原值）
+    internal static ConfigEntry<int> ItemMs;    // 物品使用：Food=1 ∪ Treatment=6（吃/喝/品尝/吞咽/药品）
+    internal static ConfigEntry<int> FurnMs;    // 家具功能：type=0（拆封包裹/种植/烹饪/升级/改装/救援建造）
+    internal static ConfigEntry<int> MaintMs;   // 房屋维护：RepairFurniture=10（陷阱/安装家具/移动/拆除/出门）
+    internal static ConfigEntry<int> MiscMs;    // 杂项交互：Other=8 ∩ 被家具按钮或物品引用（搜查/翻找/开关/拾取/家务）
+    internal static ConfigEntry<int> FunMs;     // 娱乐锻炼：Entertainment=3 ∪ Exercise=4（看书/听音乐/按摩/运动/洗澡）
     internal static ConfigEntry<string> Overrides;
 
     internal static volatile bool Rerun = true;
@@ -49,46 +58,78 @@ public sealed class QuickActionPlugin : BasePlugin
     {
         Log = base.Log;
 
-        ActionMs = new ConfigEntry<int>[ActionCatalog.All.Length];
-        for (int i = 0; i < ActionCatalog.All.Length; i++)
-        {
-            var e = ActionCatalog.All[i];
-            ActionMs[i] = Config.Bind("动作·" + e.section, "A" + e.id, 500,
-                $"{e.name}（ID {e.id}）· {e.use} · 原值 {e.orig:0} 游戏秒 ≈ {e.orig / 120f:0.#} 真实秒 · 0=恢复原值");
-        }
-
-        const string gsec = "整类设置";
-        NoteMs = Config.Bind(gsec, "翻阅笔记Ms", 500,
-            "全部「翻阅笔记」动作（34 个同名变体，书籍物品触发，原值 600~3600 游戏秒不等 ≈ 5~30 真实秒）。0=恢复原值。");
-        ParcelMs = Config.Bind(gsec, "包裹拆封Ms", 500,
-            "全部「打开 / 拆封 XX包裹·礼盒」动作（约 700 个：各类家具包裹/物资包，原值 900 或 1800 游戏秒 ≈ 7.5/15 真实秒）。0=恢复原值。");
-        TrapMs = Config.Bind(gsec, "陷阱Ms", 500,
-            "全部「布置陷阱 / 安装陷阱」动作（7 个，原值 300~2400 游戏秒 ≈ 2.5~20 真实秒）。0=恢复原值。");
-        EatMs = Config.Bind(gsec, "进食Ms", 500,
-            "全部「吃 / 生吃 / 喝 XX」动作（约 2650 个：每个食物一条，原值 600 或 1200 游戏秒 ≈ 5/10 真实秒）。\n整类只减不增：原本更快的（如吃药 0.2 秒）不会被放慢。0=恢复原值。");
+        // 安装引导勾选结果（ASCII 引导文件 BepInEx\config\quickaction.boot.ini，读后即删；
+        // 仅作下述 Bind 的默认值——玩家已有 cfg 键永远优先，重装不覆盖调好的数值）
+        var boot = ReadBoot();
+        const string gsec = "分类修改";
+        ItemMs = Config.Bind(gsec, "物品使用Ms", boot.item,
+            "吃/喝/品尝/吞咽/药品等入口动作（Food+Treatment 分类，约 2750 条可改）。\n" +
+            "挂周期结算效果的（32 条生吃冷冻类）自动跳过。0=恢复原值。");
+        FurnMs = Config.Bind(gsec, "家具功能Ms", boot.furn,
+            "家具按钮动作（分类 0，约 900 条：拆封包裹/种植/烹饪/升级大门/改装/救援建造）。\n默认 0=保持原速；设为毫秒数启用。");
+        MaintMs = Config.Bind(gsec, "房屋维护Ms", boot.maint,
+            "房屋维护动作（RepairFurniture 分类，约 78 条可改：布置/安装/移动/拆除陷阱、安装家具）。\n" +
+            "修理/加固本体系 10 条为周期结算（收益∝耗时），自动跳过。0=恢复原值。");
+        MiscMs = Config.Bind(gsec, "杂项交互Ms", boot.misc,
+            "杂项交互（Other 分类中玩家可触发的，约 135 条：搜查/翻找/查看/开关电器/拾取/家务）。\n" +
+            "内部行为（情绪播报/呕吐腹泻/系统动作）不被家具或物品引用，自动跳过。0=恢复原值。");
+        FunMs = Config.Bind(gsec, "娱乐锻炼Ms", boot.fun,
+            "娱乐与锻炼（Entertainment+Exercise 分类，约 173 条可改：看书/听音乐/按摩/运动/洗澡）。\n" +
+            "跳舞/游戏机/锻炼/发电等 8 条周期结算自动跳过。默认 0=保持原速；设为毫秒数启用。");
 
         Overrides = Config.Bind("其他", "Overrides", "",
             "上面没列到的动作单独覆盖：ID:毫秒 逗号分隔（优先级最高）。\n" +
             "例：100009001:500（观察便签）。ID:0 = 恢复原值。完整名单看 BepInEx\\ActionList.txt\n" +
-            "（首次启动自动生成；删掉该文件下次启动会再生成）。");
+            "（含类型列；删掉该文件下次启动会重新生成）。");
 
         Config.SettingChanged += (object s, BepInEx.Configuration.SettingChangedEventArgs e) => { Rerun = true; };
 
-        StripLegacyAndDefaultComments();
+        StripLegacySections();
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<QuickTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<QuickTicker>();
         var go = new GameObject("QuickAction.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<QuickTicker>();
-        Log.LogInfo($"[QuickAction] loaded v{Version}：逐项 {ActionCatalog.All.Length} + 整类 3");
+        Log.LogInfo($"[QuickAction] loaded v{Version}：分类引擎（物品使用/家具功能/房屋维护/杂项交互/娱乐锻炼 + 周期效果守卫 + 引用轴）");
     }
 
     /// <summary>
-    /// 清理 cfg：剔除 BepInEx 自动生成的「# Default value」行（与原值备注重复易误解），
-    /// 并整体移除 v1.0~1.2 的遗留段（[动作配置] / [QuickAction] / [Debug]）。
+    /// 读安装引导写入的勾选结果（quickaction.boot.ini，ASCII：itemMs/furnMs/maintMs/miscMs/funMs），
+    /// 读后删除。缺失或解析失败时用与引导默认勾选一致的内置默认值。
     /// </summary>
-    private void StripLegacyAndDefaultComments()
+    private static (int item, int furn, int maint, int misc, int fun) ReadBoot()
+    {
+        var def = (item: 500, furn: 0, maint: 500, misc: 500, fun: 0);
+        try
+        {
+            var p = System.IO.Path.Combine(Paths.BepInExRootPath, "config", "quickaction.boot.ini");
+            if (!System.IO.File.Exists(p)) return def;
+            var vals = new Dictionary<string, int>();
+            foreach (var l in System.IO.File.ReadAllLines(p))
+            {
+                var seg = l.Trim();
+                var i = seg.IndexOf('=');
+                if (i <= 0) continue;
+                if (int.TryParse(seg.Substring(i + 1).Trim(), out var v))
+                    vals[seg.Substring(0, i).Trim().ToLowerInvariant()] = v;
+            }
+            try { System.IO.File.Delete(p); } catch { }
+            return (
+                vals.TryGetValue("itemms", out var a) ? a : def.item,
+                vals.TryGetValue("furnms", out var b) ? b : def.furn,
+                vals.TryGetValue("maintms", out var c) ? c : def.maint,
+                vals.TryGetValue("miscms", out var d) ? d : def.misc,
+                vals.TryGetValue("funms", out var e) ? e : def.fun);
+        }
+        catch { return def; }
+    }
+
+    /// <summary>
+    /// 清理 cfg：整体移除 v1.x 的遗留段——[动作·xxx]（77 逐项）与 [整类设置]（4 整类），
+    /// 以及 BepInEx 自动生成的「# Default value」行。[其他] 段保留（Overrides 键延续）。
+    /// </summary>
+    private void StripLegacySections()
     {
         try
         {
@@ -102,7 +143,7 @@ public sealed class QuickActionPlugin : BasePlugin
                 var t = l.Trim();
                 if (t.StartsWith("["))
                 {
-                    skipping = t == "[动作配置]" || t == "[QuickAction]" || t == "[Debug]";
+                    skipping = t.StartsWith("[动作·", StringComparison.Ordinal) || t == "[整类设置]";
                     if (skipping) continue;
                 }
                 if (!skipping && !l.StartsWith("# Default value", StringComparison.Ordinal))
@@ -156,15 +197,37 @@ internal sealed class QuickTicker : MonoBehaviour
         Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict = null;
         try { dict = cm._Config_Action_Dict; } catch { }
         if (dict == null || dict.Count == 0) return;
-
-        if (!_listWritten && !System.IO.File.Exists(
-                System.IO.Path.Combine(Paths.BepInExRootPath, "ActionList.txt")))
+        // 守卫依赖的三张表（效果/家具功能/物品）必须与动作表同时就绪，否则空集会导致守卫失效
+        try
         {
-            _listWritten = true;
-            WriteActionList(dict);
+            if (cm._Config_Effect_Dict == null || cm._Config_Effect_Dict.Count == 0) return;
+            if (cm._Config_FurnitureFunc_Dict == null || cm._Config_FurnitureFunc_Dict.Count == 0) return;
+            if (cm._Config_Item_Dict == null || cm._Config_Item_Dict.Count == 0) return;
+        }
+        catch { return; }
+
+        if (!_listWritten)
+        {
+            var listPath = System.IO.Path.Combine(Paths.BepInExRootPath, "ActionList.txt");
+            bool stale = true;
+            try
+            {
+                if (System.IO.File.Exists(listPath))
+                {
+                    using var r = new System.IO.StreamReader(listPath);
+                    stale = (r.ReadLine() ?? "").IndexOf("Type", StringComparison.Ordinal) < 0;
+                }
+            }
+            catch { }
+            if (stale || !System.IO.File.Exists(listPath))
+            {
+                _listWritten = true;
+                WriteActionList(dict, listPath);
+            }
+            else _listWritten = true;
         }
 
-        var (scanned, changed, restored, groupHit, lines) = Apply(dict);
+        var (scanned, changed, restored, cat, skipped, lines) = Apply(dict, cm);
         QuickActionPlugin.Rerun = false;
 
         if (changed > 0 || restored > 0)
@@ -174,13 +237,17 @@ internal sealed class QuickTicker : MonoBehaviour
         {
             _announced = true;
             QuickActionPlugin.Log.LogInfo(
-                $"[QuickAction] 生效：逐项 {changed - groupHit.changed} 改写；整类 翻阅笔记×{groupHit.note} 包裹×{groupHit.parcel} 陷阱×{groupHit.trap} 进食×{groupHit.eat}；恢复 {restored}（表 {scanned} 条）。");
+                $"[QuickAction] v{QuickActionPlugin.Version} 生效：物品使用×{cat.item} 家具功能×{cat.furn} " +
+                $"房屋维护×{cat.maint} 杂项交互×{cat.misc} 娱乐锻炼×{cat.fun}；恢复 {restored}" +
+                $"（表 {scanned} 条；守卫跳过：周期效果 {skipped.interval}、禁改类 {skipped.banned}、" +
+                $"内部行为 {skipped.unref}、瞬时 {skipped.instant}）。");
             try
             {
                 var head = new List<string>
                 {
-                    $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] QuickAction {QuickActionPlugin.Version} 首次生效（表 {scanned} 条）：",
-                    $"逐项改写 {changed - groupHit.changed}；整类：翻阅笔记×{groupHit.note}、包裹拆封×{groupHit.parcel}、陷阱×{groupHit.trap}、进食×{groupHit.eat}；恢复 {restored}",
+                    $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] QuickAction {QuickActionPlugin.Version} 分类引擎首次生效（表 {scanned} 条）：",
+                    $"分类改写：物品使用×{cat.item}、家具功能×{cat.furn}、房屋维护×{cat.maint}、杂项交互×{cat.misc}、娱乐锻炼×{cat.fun}；恢复 {restored}",
+                    $"守卫跳过：周期结算效果（收益∝耗时）{skipped.interval}、禁改类（睡觉/社交）{skipped.banned}、内部行为（无引用 Other）{skipped.unref}、瞬时哨兵（During<=0）{skipped.instant}",
                     "换算：目标毫秒 ÷1000 ×" + QuickActionPlugin.Scale + " = 游戏秒（During）",
                     "---- 改写明细（原值 -> 当前值）----"
                 };
@@ -205,35 +272,102 @@ internal sealed class QuickTicker : MonoBehaviour
 
     private static string NameOf(GameCore.HotUpdate.Config_Action a)
     {
-        try { return a.Name_Local ?? a.Name ?? "?"; }
-        catch { return "?"; }
+        try { return a.Name_Local ?? a.Name ?? "?"; } catch { return "?"; }
     }
 
-    /// <summary>整类匹配：无区分度大家族按名字归类（游戏更新新增同名动作自动覆盖）。</summary>
-    private static int GroupOf(GameCore.HotUpdate.Config_Action a)
+    /// <summary>
+    /// 分类判定（每轮扫描现算；游戏更新新增内容自动归类）。
+    /// 返回 0=不在任何可改分类（禁改/守卫），1=物品使用, 2=家具功能, 3=房屋维护, 4=杂项交互, 5=娱乐锻炼。
+    /// </summary>
+    private static int CategoryOf(int id, int type, HashSet<int> referenced)
     {
-        var n = NameOf(a);
-        if (n == "翻阅笔记") return 1;
-        if (n.StartsWith("打开 ") || n.StartsWith("拆封 ")) return 2;
-        if (n == "布置陷阱" || n == "安装陷阱") return 3;
-        if (n.StartsWith("吃") || n.StartsWith("生吃") || n.StartsWith("喝")) return 4;
+        if (type == 2 || type == 5) return 0;                       // Rest / Social：禁改
+        if (type == 1 || type == 6) return 1;                       // Food / Treatment
+        if (type == 0) return 2;                                    // 家具功能桶
+        if (type == 10) return 3;                                   // RepairFurniture
+        if (type == 3 || type == 4) return 5;                       // Entertainment / Exercise
+        if (type == 8 && referenced.Contains(id)) return 4;         // Other ∩ 引用
         return 0;
     }
 
-    private static (int scanned, int changed, int restored, (int changed, int note, int parcel, int trap, int eat) groupHit, List<string> lines) Apply(
-        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict)
+    /// <summary>周期结算效果 ID 集：任一 Item*/Buff* Interval 字段非零的效果。</summary>
+    private static HashSet<int> BuildIntervalEffects(GameCore.HotUpdate.ConfigManager cm)
+    {
+        var set = new HashSet<int>();
+        try
+        {
+            foreach (var kv in cm._Config_Effect_Dict)
+            {
+                var e = kv.Value;
+                if (e == null) continue;
+                try
+                {
+                    if (e.ItemAttrInterval != 0f || e.ItemSatietyInterval != 0f || e.ItemMoraleInterval != 0f ||
+                        e.ItemStaminaInterval != 0f || e.ItemHealthInterval != 0f || e.ItemVitalityInterval != 0f ||
+                        e.BuffInterval != 0f || e.BuffSatietyInterval != 0f || e.BuffMoraleInterval != 0f ||
+                        e.BuffStaminaInterval != 0f || e.BuffHealthInterval != 0f || e.BuffVitalityInterval != 0f)
+                        set.Add(kv.Key);
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return set;
+    }
+
+    /// <summary>引用集：被家具功能按钮（ActionIds）或物品使用（UseAction）引用的动作 ID。</summary>
+    private static HashSet<int> BuildReferenced(GameCore.HotUpdate.ConfigManager cm)
+    {
+        var set = new HashSet<int>();
+        try
+        {
+            foreach (var kv in cm._Config_FurnitureFunc_Dict)
+            {
+                var f = kv.Value;
+                if (f == null) continue;
+                try
+                {
+                    var ids = f.ActionIds;
+                    if (ids != null)
+                        for (int i = 0; i < ids.Count; i++)
+                            set.Add(ids[i]);
+                }
+                catch { }
+            }
+        }
+        catch { }
+        try
+        {
+            foreach (var kv in cm._Config_Item_Dict)
+            {
+                var it = kv.Value;
+                if (it == null) continue;
+                try { var ua = it.UseAction; if (ua != 0) set.Add(ua); } catch { }
+            }
+        }
+        catch { }
+        return set;
+    }
+
+    private static (int scanned, int changed, int restored,
+        (int item, int furn, int maint, int misc, int fun) cat,
+        (int interval, int banned, int unref, int instant) skipped,
+        List<string> lines) Apply(
+        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict,
+        GameCore.HotUpdate.ConfigManager cm)
     {
         var lines = new List<string>();
         var overrides = QuickActionPlugin.ParseOverrides(QuickActionPlugin.Overrides.Value);
+        var intervalEffects = BuildIntervalEffects(cm);
+        var referenced = BuildReferenced(cm);
 
-        var perAction = new Dictionary<int, int>(ActionCatalog.All.Length);
-        for (int i = 0; i < ActionCatalog.All.Length; i++)
-            perAction[ActionCatalog.All[i].id] = QuickActionPlugin.ActionMs[i].Value;
+        int itemMs = QuickActionPlugin.ItemMs.Value, furnMs = QuickActionPlugin.FurnMs.Value,
+            maintMs = QuickActionPlugin.MaintMs.Value, miscMs = QuickActionPlugin.MiscMs.Value,
+            funMs = QuickActionPlugin.FunMs.Value;
 
-        int noteMs = QuickActionPlugin.NoteMs.Value, parcelMs = QuickActionPlugin.ParcelMs.Value, trapMs = QuickActionPlugin.TrapMs.Value, eatMs = QuickActionPlugin.EatMs.Value;
-
-        int scanned = 0, changed = 0, restored = 0;
-        int gChanged = 0, gNote = 0, gParcel = 0, gTrap = 0, gEat = 0;
+        int scanned = 0, restored = 0;
+        int cItem = 0, cFurn = 0, cMaint = 0, cMisc = 0, cFun = 0;
+        int sInterval = 0, sBanned = 0, sUnref = 0, sInstant = 0;
         try
         {
             foreach (var kv in dict)
@@ -248,6 +382,28 @@ internal sealed class QuickTicker : MonoBehaviour
                 OrigDuring.TryAdd(kv.Key, cur);
                 float orig = OrigDuring[kv.Key];
 
+                // 周期结算守卫：收益∝耗时的动作绝不改动（若历史会话被改过则自愈恢复）
+                int ecid = 0;
+                try { ecid = a.EffectConfigID; } catch { }
+                if (ecid != 0 && intervalEffects.Contains(ecid))
+                {
+                    sInterval++;
+                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    continue;
+                }
+
+                if (orig <= 0f) { sInstant++; continue; }   // During<=0 哨兵值
+
+                int atype = 0;
+                try { atype = a.ActionType; } catch { }
+                int cat = CategoryOf(kv.Key, atype, referenced);
+                if (cat == 0)
+                {
+                    if (atype == 8) sUnref++; else sBanned++;
+                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    continue;
+                }
+
                 float target = orig;
                 string tag = null;
                 if (overrides.TryGetValue(kv.Key, out var oms))
@@ -255,25 +411,17 @@ internal sealed class QuickTicker : MonoBehaviour
                     target = oms <= 0 ? orig : oms / 1000f * QuickActionPlugin.Scale;
                     tag = "覆盖表";
                 }
-                else if (perAction.TryGetValue(kv.Key, out var ms))
-                {
-                    target = ms <= 0 ? orig : ms / 1000f * QuickActionPlugin.Scale;
-                    tag = "逐项";
-                }
                 else
                 {
-                    var g = GroupOf(a);
-                    var gms = g switch { 1 => noteMs, 2 => parcelMs, 3 => trapMs, 4 => eatMs, _ => 0 };
-                    if (g > 0)
+                    var ms = cat switch { 1 => itemMs, 2 => furnMs, 3 => maintMs, 4 => miscMs, 5 => funMs, _ => 0 };
+                    if (ms <= 0) target = orig;
+                    else
                     {
-                        if (gms <= 0) target = orig;
-                        else
-                        {
-                            // 整类只减不增：原本更快的动作（如吃药 0.2 秒）不会被放慢
-                            target = Math.Min(orig, gms / 1000f * QuickActionPlugin.Scale);
-                            if (Math.Abs(target - orig) <= 1e-6f) tag = null;
-                            else tag = g == 1 ? "翻阅笔记" : g == 2 ? "包裹拆封" : g == 3 ? "陷阱" : "进食";
-                        }
+                        // 只减不增：原本更快的动作不会被放慢
+                        target = Math.Min(orig, ms / 1000f * QuickActionPlugin.Scale);
+                        if (Math.Abs(target - orig) <= 1e-6f) tag = null;
+                        else tag = cat == 1 ? "物品使用" : cat == 2 ? "家具功能" : cat == 3 ? "房屋维护"
+                                 : cat == 4 ? "杂项交互" : "娱乐锻炼";
                     }
                 }
 
@@ -284,49 +432,46 @@ internal sealed class QuickTicker : MonoBehaviour
                     if (isRestore) restored++;
                     else
                     {
-                        changed++;
-                        if (tag == "翻阅笔记") { gChanged++; gNote++; }
-                        else if (tag == "包裹拆封") { gChanged++; gParcel++; }
-                        else if (tag == "陷阱") { gChanged++; gTrap++; }
-                        else if (tag == "进食") { gChanged++; gEat++; }
+                        if (tag == "物品使用") cItem++;
+                        else if (tag == "家具功能") cFurn++;
+                        else if (tag == "房屋维护") cMaint++;
+                        else if (tag == "杂项交互") cMisc++;
+                        else if (tag == "娱乐锻炼") cFun++;
                     }
                     if (lines.Count < 400)
                         lines.Add($"ACTION {kv.Key}({NameOf(a)}) During {cur:0.###} -> {target:0.###}" +
-                                  (isRestore ? "（恢复原值）" : $"（{(target / QuickActionPlugin.Scale * 1000):0}ms·{(tag ?? "逐项")}）"));
+                                  (isRestore ? "（恢复原值）" : $"（{(target / QuickActionPlugin.Scale * 1000):0}ms·{tag}）"));
                 }
             }
         }
         catch (Exception e) { lines.Add("WARN 扫描中断: " + e.Message); }
 
-        return (scanned, changed, restored, (gChanged, gNote, gParcel, gTrap, gEat), lines);
+        return (scanned, cItem + cFurn + cMaint + cMisc + cFun, restored,
+            (cItem, cFurn, cMaint, cMisc, cFun), (sInterval, sBanned, sUnref, sInstant), lines);
     }
 
-    /// <summary>ActionList.txt：全表（按耗时降序），仅在文件不存在时生成一次。</summary>
+    /// <summary>ActionList.txt：全表（ID|名称|类型|原始During游戏秒|真实秒），按耗时降序。
+    /// 含类型列的 v2 格式；检测到旧格式（无 Type 列）会重写一次。</summary>
     private static void WriteActionList(
-        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict)
+        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict, string path)
     {
         try
         {
-            var path = System.IO.Path.Combine(Paths.BepInExRootPath, "ActionList.txt");
             using var w = new System.IO.StreamWriter(path, false, new UTF8Encoding(false));
-            w.WriteLine("== Config_Action 全表（ID|名称|原始During游戏秒|真实秒按TimeScale=120）。删掉本文件下次启动会重新生成 ==");
+            w.WriteLine("== Config_Action 全表（ID|名称|ActionType|原始During游戏秒|真实秒按TimeScale=120）。删掉本文件下次启动会重新生成 ==");
             var rows = new List<(float d, string line)>();
             foreach (var kv in dict)
             {
                 var a = kv.Value;
                 if (a == null) continue;
-                float d = 0f;
-                string n = "?";
-                try { d = a.During; n = a.Name_Local ?? a.Name ?? "?"; } catch { }
-                rows.Add((d, $"{kv.Key}|{n}|{d:0.###}|{d / 120f:0.##}"));
+                float d = 0f; string n = "?"; int t = 0;
+                try { d = a.During; n = a.Name_Local ?? a.Name ?? "?"; t = a.ActionType; } catch { }
+                rows.Add((d, $"{kv.Key}|{n}|{t}|{d:0.###}|{d / 120f:0.##}"));
             }
             rows.Sort((x, y) => y.d.CompareTo(x.d));
             foreach (var r in rows) w.WriteLine(r.line);
-            QuickActionPlugin.Log.LogInfo($"[QuickAction] ActionList.txt 已生成（{rows.Count} 条）");
+            QuickActionPlugin.Log.LogInfo($"[QuickAction] ActionList.txt 已生成（{rows.Count} 条，v2 含类型列）");
         }
-        catch (Exception e)
-        {
-            QuickActionPlugin.Log.LogWarning("[QuickAction] ActionList 写入失败: " + e.Message);
-        }
+        catch (Exception e) { QuickActionPlugin.Log.LogWarning("[QuickAction] ActionList 写入失败: " + e.Message); }
     }
 }

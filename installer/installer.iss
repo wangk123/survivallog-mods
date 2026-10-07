@@ -41,7 +41,12 @@ Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2
 Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: full custom
 Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: full custom
-Name: "mod_quick"; Description: "动作提速：搜查/撬锁/修理/看书等统一0.5秒"; Types: full custom
+Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: full custom
+Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: full custom
+Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开关电器/拾取/家务 → 0.5秒（约135条）"; Types: full custom
+Name: "mod_quick\qa_maint"; Description: "房屋维护：布置/安装/移动/拆除陷阱、安装家具 → 0.5秒（约78条）"; Types: full custom
+Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条，默认不勾）"; Types: full
+Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡 → 0.5秒（约173条，默认不勾）"; Types: full
 
 [Files]
 ; ---- 基座（必装）----
@@ -134,6 +139,42 @@ begin
   end;
   // 探测失败：给一个经典默认路径，目录页会提示玩家自行浏览
   Result := 'C:\Program Files (x86)\Steam\steamapps\common\Survival Log';
+end;
+
+// 组件勾选 → 数值（勾=500ms，不勾=0）
+function CompMs(const comp: string): string;
+begin
+  if WizardIsComponentSelected(comp) then Result := '500' else Result := '0';
+end;
+
+// 把动作提速分类勾选写成 ASCII 引导文件（mod 首次启动读取作为 cfg 默认值后自删；
+// 玩家已有 cfg 键永远优先，重装不会覆盖调好的数值）
+procedure WriteQuickActionBoot();
+var
+  boot: string;
+  s: string;
+begin
+  boot := ExpandConstant('{app}\BepInEx\config\quickaction.boot.ini');
+  if WizardIsComponentSelected('mod_quick') then
+  begin
+    s := 'itemMs='  + CompMs('mod_quick\qa_item')  + #13#10 +
+         'furnMs='  + CompMs('mod_quick\qa_furn')  + #13#10 +
+         'maintMs=' + CompMs('mod_quick\qa_maint') + #13#10 +
+         'miscMs='  + CompMs('mod_quick\qa_misc')  + #13#10 +
+         'funMs='   + CompMs('mod_quick\qa_fun')   + #13#10;
+    SaveStringToFile(boot, s, False);
+  end
+  else
+  begin
+    // 本次未装动作提速：清掉可能残留的旧引导文件
+    if FileExists(boot) then DeleteFile(boot);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    WriteQuickActionBoot();
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

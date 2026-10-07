@@ -38,8 +38,10 @@ if (-not $Yes) {
     if ($a -notmatch '^[Yy]') { throw '已取消' }
 }
 
-# ---------- 2. 插件版本常量同步（仅套件 5 MOD；StackLimit999/ActionProbe 不动）----------
-foreach ($m in $suiteMods) {
+# ---------- 2. 插件版本常量同步（仅套件 4 个扩容 MOD；StackLimit999/ActionProbe 不动）----------
+# 例外：QuickAction 插件版本独立于套件版本（作者口径 2026-10-07：插件自身大版本如 v2.0.0，
+# 不跟随套件 release 版本），其 csproj/Plugin.cs 版本手动维护。
+foreach ($m in $suiteMods | Where-Object { $_ -ne 'QuickAction' }) {
     $dir = Join-Path $projRoot ('SurvivalLog.' + $m)
     $csproj = Join-Path $dir ('SurvivalLog.' + $m + '.csproj')
     $t = [System.IO.File]::ReadAllText($csproj)
