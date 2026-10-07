@@ -15,6 +15,17 @@ Copy-Item (Join-Path $game 'dotnet') $base -Recurse -Force
 Copy-Item (Join-Path $game 'winhttp.dll') $base -Force
 Copy-Item (Join-Path $game 'doorstop_config.ini') $base -Force
 Copy-Item (Join-Path $game '.doorstop_version') $base -Force
+# 预置 BepInEx.cfg（安装器里 onlyifdoesntexist，不会覆盖玩家已有配置）：
+# [Logging.Disk] Enabled 强制 true——保证玩家机器生成 LogOutput.log，安装说明的排障 FAQ 依赖它
+New-Item (Join-Path $base 'BepInEx\config') -ItemType Directory -Force | Out-Null
+$cfgDst = Join-Path $base 'BepInEx\config\BepInEx.cfg'
+Copy-Item (Join-Path $game 'BepInEx\config\BepInEx.cfg') $cfgDst -Force
+$txt = [System.IO.File]::ReadAllText($cfgDst)
+$m = [regex]::Match($txt, '(?sm)(\[Logging\.Disk\].*?^Enabled\s*=\s*)false')
+if ($m.Success) {
+    $txt = $txt.Substring(0, $m.Index) + $m.Groups[1].Value + 'true' + $txt.Substring($m.Index + $m.Length)
+    [System.IO.File]::WriteAllText($cfgDst, $txt, (New-Object System.Text.UTF8Encoding($false)))
+}
 Copy-Item (Join-Path $projRoot 'tools\readme_base.md') (Join-Path $base 'README.md') -Force
 $baseZip = Join-Path $relRoot ('SurvivalLog.Base_v' + $ver + '.zip')
 if (Test-Path $baseZip) { Remove-Item $baseZip -Force }
