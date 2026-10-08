@@ -14,7 +14,8 @@ namespace SurvivalLog.FridgeExpand;
 /// <summary>
 /// 冰箱扩容（独立 mod 3/4）。
 /// 默认名单（覆盖游戏内全部可获得的冰箱）：1004（双门冰箱/食堂冰箱/医用冷藏柜共用）、
-/// 115000（双开门冰箱）、115001（冰柜/豪华双门共用）、3002（小冰箱）。
+/// 115000（双开门冰箱）、115001（冰柜/豪华双门共用）、115005（大容量冰柜，2026-10-08 游戏更新新增）、
+/// 3002（小冰箱）。
 /// 场景装饰类（非卖品巨型冷冻柜 2001 等）未含，需要可加 ExtraIds。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
@@ -22,7 +23,7 @@ public sealed class FridgeExpandPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.fridgeexpand";
     public const string Name = "FridgeExpand";
-    public const string Version = "1.0.3";
+    public const string Version = "1.0.4";
 
     internal static ManualLogSource Log;
 
@@ -32,7 +33,7 @@ public sealed class FridgeExpandPlugin : BasePlugin
     internal static ConfigEntry<string> ExcludeIds;
     internal static ConfigEntry<bool> Verbose;
 
-    internal static readonly int[] DefaultIds = { 1004, 115000, 115001, 3002 };
+    internal static readonly int[] DefaultIds = { 1004, 115000, 115001, 115005, 3002 };
     internal static volatile bool Rerun = true;
 
     public override void Load()
@@ -41,7 +42,7 @@ public sealed class FridgeExpandPlugin : BasePlugin
         WidthMult = Config.Bind("Expand", "WidthMult", 1.5f, "宽度倍数（四舍五入取整）。");
         HeightMult = Config.Bind("Expand", "HeightMult", 1.5f, "高度倍数（四舍五入取整）。");
         ExtraIds = Config.Bind("Expand", "ExtraIds", "",
-            "追加的 BagId（逗号分隔）。默认：1004,115000,115001,3002。");
+            "追加的 BagId（逗号分隔）。默认：1004,115000,115001,115005,3002。");
         ExcludeIds = Config.Bind("Expand", "ExcludeIds", "", "排除的 BagId（优先级最高）。");
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细。");
 

@@ -26,7 +26,7 @@ public sealed class FridgeChillPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.fridgechill";
     public const string Name = "FridgeChill";
-    public const string Version = "1.0.3";
+    public const string Version = "1.0.4";
 
     internal static ManualLogSource Log;
 
@@ -34,7 +34,7 @@ public sealed class FridgeChillPlugin : BasePlugin
     internal static ConfigEntry<string> BagIds;
     internal static ConfigEntry<bool> Verbose;
 
-    internal static readonly int[] DefaultBagIds = { 1004, 115000, 115001, 3002 };
+    internal static readonly int[] DefaultBagIds = { 1004, 115000, 115001, 115005, 3002 };
     internal static volatile bool Rerun = true;
 
     public override void Load()
@@ -43,7 +43,7 @@ public sealed class FridgeChillPlugin : BasePlugin
         KeepMult = Config.Bind("Chill", "KeepMult", 2f,
             "保鲜倍数：2 = 食物在冰箱里的保质期翻倍（ColdRate÷2）。1 = 不改。");
         BagIds = Config.Bind("Chill", "BagIds", "",
-            "冰箱 BagId 名单（逗号分隔；留空用默认 1004,115000,115001,3002，可追加）。");
+            "冰箱 BagId 名单（逗号分隔；留空用默认 1004,115000,115001,115005,3002，可追加）。");
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };

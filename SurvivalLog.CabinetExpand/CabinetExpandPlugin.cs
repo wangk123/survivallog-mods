@@ -23,7 +23,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.cabinetexpand";
     public const string Name = "CabinetExpand";
-    public const string Version = "1.0.3";
+    public const string Version = "1.0.4";
 
     internal static ManualLogSource Log;
 
