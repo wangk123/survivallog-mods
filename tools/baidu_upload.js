@@ -11,9 +11,11 @@
 //   ③ 行 checkbox 是 hover 才显示（hide-checkbox），DOM 勾选/全选皆不稳，删除走 API 最稳
 //   ④ 上传 input 有 3 个同 title，用 [accept="*/*"] 过滤 torrent 版后 .first()
 //   ⑤ IAB 内置浏览器不支持文件上传（filechooser 能力缺失），必须本脚本方式
-const { chromium } = require('playwright-core');
 const fs = require('fs');
 const path = require('path');
+let chromium;
+try { ({ chromium } = require('playwright-core')); }
+catch { ({ chromium } = require('C:/temp/baidu_up/node_modules/playwright-core')); }
 
 const SESSION = path.join(__dirname, 'baidu.session.json');
 const SRC = path.join(__dirname, '..', 'release', 'baidu_upload');
