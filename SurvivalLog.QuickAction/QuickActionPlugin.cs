@@ -41,7 +41,7 @@ public sealed class QuickActionPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.quickaction";
     public const string Name = "QuickAction";
-    public const string Version = "2.1.0";
+    public const string Version = "2.1.1";
 
     /// <summary>探索时钟倍速（Config_Chapter 实测 120；游戏更新后体感异常再改此处重编译）。</summary>
     internal const int Scale = 120;
@@ -322,10 +322,21 @@ internal sealed class QuickTicker : MonoBehaviour
         return 0;
     }
 
-    /// <summary>周期结算效果 ID 集：任一 Item*/Buff* Interval 字段非零的效果。</summary>
-    private static HashSet<int> BuildIntervalEffects(GameCore.HotUpdate.ConfigManager cm)
+    /// <summary>
+    /// 周期结算效果集（按收益方向二分，2026-10-09 EffectDump 全表实证）：
+    /// ItemAttrInterval/BuffInterval 是"每 N 游戏秒结算一次"的周期长度参数（恒正），
+    /// 不参与收益方向判断；方向只看数值字段（Item*/Buff* 的 Satiety/Morale/...Interval）。
+    /// - positive：任一数值 > 0（正收益∝耗时）——永不改动；
+    /// - drain：数值全 ≤0 且至少一个 < 0（纯消耗型，如上厕所 112 每周期饱食-5、
+    ///   结束固定 +士气+5/+健康+3）——加速对玩家有利，但仅 Other(8) 交互放行；
+    ///   修理(T10)/发电(T4)等劳动型核心收益（修复量/发电量）∝时长且结算在
+    ///   Effect 表外，同样保持拦截；
+    /// - 周期字段非零但数值全 0：语义未知，保守并入 positive。
+    /// </summary>
+    private static (HashSet<int> positive, HashSet<int> drain) BuildIntervalEffects(GameCore.HotUpdate.ConfigManager cm)
     {
-        var set = new HashSet<int>();
+        var positive = new HashSet<int>();
+        var drain = new HashSet<int>();
         try
         {
             foreach (var kv in cm._Config_Effect_Dict)
@@ -334,17 +345,24 @@ internal sealed class QuickTicker : MonoBehaviour
                 if (e == null) continue;
                 try
                 {
-                    if (e.ItemAttrInterval != 0f || e.ItemSatietyInterval != 0f || e.ItemMoraleInterval != 0f ||
-                        e.ItemStaminaInterval != 0f || e.ItemHealthInterval != 0f || e.ItemVitalityInterval != 0f ||
-                        e.BuffInterval != 0f || e.BuffSatietyInterval != 0f || e.BuffMoraleInterval != 0f ||
-                        e.BuffStaminaInterval != 0f || e.BuffHealthInterval != 0f || e.BuffVitalityInterval != 0f)
-                        set.Add(kv.Key);
+                    bool hasPos = e.ItemSatietyInterval > 0f || e.ItemMoraleInterval > 0f || e.ItemStaminaInterval > 0f ||
+                                  e.ItemHealthInterval > 0f || e.ItemVitalityInterval > 0f ||
+                                  e.BuffSatietyInterval > 0f || e.BuffMoraleInterval > 0f || e.BuffStaminaInterval > 0f ||
+                                  e.BuffHealthInterval > 0f || e.BuffVitalityInterval > 0f;
+                    bool hasNeg = e.ItemSatietyInterval < 0f || e.ItemMoraleInterval < 0f || e.ItemStaminaInterval < 0f ||
+                                  e.ItemHealthInterval < 0f || e.ItemVitalityInterval < 0f ||
+                                  e.BuffSatietyInterval < 0f || e.BuffMoraleInterval < 0f || e.BuffStaminaInterval < 0f ||
+                                  e.BuffHealthInterval < 0f || e.BuffVitalityInterval < 0f;
+                    bool hasPeriod = e.ItemAttrInterval != 0f || e.BuffInterval != 0f;
+                    if (!hasPos && !hasNeg && !hasPeriod) continue;
+                    if (hasPos || (hasPeriod && !hasNeg)) positive.Add(kv.Key);
+                    else drain.Add(kv.Key);
                 }
                 catch { }
             }
         }
         catch { }
-        return set;
+        return (positive, drain);
     }
 
     /// <summary>引用集：被家具功能按钮（ActionIds）或物品使用（UseAction）引用的动作 ID。</summary>
@@ -390,7 +408,7 @@ internal sealed class QuickTicker : MonoBehaviour
     {
         var lines = new List<string>();
         var overrides = QuickActionPlugin.ParseOverrides(QuickActionPlugin.Overrides.Value);
-        var intervalEffects = BuildIntervalEffects(cm);
+        var (positiveEffects, drainEffects) = BuildIntervalEffects(cm);
         var referenced = BuildReferenced(cm);
 
         int itemMs = QuickActionPlugin.ItemMs.Value, furnMs = QuickActionPlugin.FurnMs.Value,
@@ -414,14 +432,28 @@ internal sealed class QuickTicker : MonoBehaviour
                 OrigDuring.TryAdd(kv.Key, cur);
                 float orig = OrigDuring[kv.Key];
 
-                // 周期结算守卫：收益∝耗时的动作绝不改动（若历史会话被改过则自愈恢复）
+                // 周期结算守卫：正收益∝耗时的动作绝不改动（若历史会话被改过则自愈恢复）
                 int ecid = 0;
                 try { ecid = a.EffectConfigID; } catch { }
-                if (ecid != 0 && intervalEffects.Contains(ecid))
+                if (ecid != 0 && positiveEffects.Contains(ecid))
                 {
                     sInterval++;
                     if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
                     continue;
+                }
+                if (ecid != 0 && drainEffects.Contains(ecid))
+                {
+                    // 纯消耗型周期效果（数值全≤0，如上厕所 112 饱食-5/周期）：
+                    // 仅 Other(8) 且玩家可触发（引用 ∪ BT 交互名单）放行提速——上得快=消耗少，
+                    // 固定 End 收益照拿；其余类型（修理/加固/发电/娱乐等）核心收益∝时长，照旧拦截
+                    int dtype = 0;
+                    try { dtype = a.ActionType; } catch { }
+                    if (!(dtype == 8 && (referenced.Contains(kv.Key) || BtInteractIds.Contains(kv.Key))))
+                    {
+                        sInterval++;
+                        if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                        continue;
+                    }
                 }
 
                 if (orig <= 0f) { sInstant++; continue; }   // During<=0 哨兵值
