@@ -28,16 +28,20 @@ namespace SurvivalLog.QuickAction;
 ///   Config_FurnitureFunc.ActionIds（家具按钮）或 Config_Item.UseAction（物品）引用
 ///   ⇒ 玩家可触发，可提速；三处皆不引用 ⇒ 内部行为（情绪播报/呕吐腹泻等），不动。
 /// - 禁改：Rest=2（睡觉 During 兼任时间推进）、Social=5（全部周期结算）、
-///   During<=0 的哨兵值动作。
+///   During<=0 的哨兵值动作（三者均不提供开关，防误设）。
 /// - 机制不变：内存表直写 Config_Action.During（游戏秒），无 Harmony 不碰存档；
-///   探索 TimeScale=120；只减不增守卫；0=恢复原值；Overrides 兜底优先级最高。
+///   探索 TimeScale=120；只减不增守卫；0=恢复原值；Overrides 兜底优先级最高
+///   （v2.1：覆盖表先于分类判定，可命中引用轴漏掉的家具本体 BT 交互，如上厕所 9075；
+///   五分类默认统一 500，旧 cfg 一次性迁移 DefaultsV21）。
+/// - 已实证无周期收益（可安全提速）：看书 100003xxx/100000004、空调吹风 1915（End 型
+///   士气+5/健康+5）、上厕所 9075（效果全 0，收益走内急解除）、浇水 1615（植物状态另算）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class QuickActionPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.quickaction";
     public const string Name = "QuickAction";
-    public const string Version = "2.0.0";
+    public const string Version = "2.1.0";
 
     /// <summary>探索时钟倍速（Config_Chapter 实测 120；游戏更新后体感异常再改此处重编译）。</summary>
     internal const int Scale = 120;
@@ -66,7 +70,8 @@ public sealed class QuickActionPlugin : BasePlugin
             "吃/喝/品尝/吞咽/药品等入口动作（Food+Treatment 分类，约 2750 条可改）。\n" +
             "挂周期结算效果的（32 条生吃冷冻类）自动跳过。0=恢复原值。");
         FurnMs = Config.Bind(gsec, "家具功能Ms", boot.furn,
-            "家具按钮动作（分类 0，约 900 条：拆封包裹/种植/烹饪/升级大门/改装/救援建造）。\n默认 0=保持原速；设为毫秒数启用。");
+            "家具按钮动作（分类 0，约 900 条：拆封包裹/种植/烹饪/升级大门/改装/救援建造）。\n" +
+            "周期结算类自动跳过。0=恢复原值。");
         MaintMs = Config.Bind(gsec, "房屋维护Ms", boot.maint,
             "房屋维护动作（RepairFurniture 分类，约 78 条可改：布置/安装/移动/拆除陷阱、安装家具）。\n" +
             "修理/加固本体系 10 条为周期结算（收益∝耗时），自动跳过。0=恢复原值。");
@@ -74,8 +79,23 @@ public sealed class QuickActionPlugin : BasePlugin
             "杂项交互（Other 分类中玩家可触发的，约 135 条：搜查/翻找/查看/开关电器/拾取/家务）。\n" +
             "内部行为（情绪播报/呕吐腹泻/系统动作）不被家具或物品引用，自动跳过。0=恢复原值。");
         FunMs = Config.Bind(gsec, "娱乐锻炼Ms", boot.fun,
-            "娱乐与锻炼（Entertainment+Exercise 分类，约 173 条可改：看书/听音乐/按摩/运动/洗澡）。\n" +
-            "跳舞/游戏机/锻炼/发电等 8 条周期结算自动跳过。默认 0=保持原速；设为毫秒数启用。");
+            "娱乐与锻炼（Entertainment+Exercise 分类，约 173 条可改：看书/听音乐/按摩/运动/洗澡/空调吹风）。\n" +
+            "跳舞/游戏机/锻炼/发电等周期结算自动跳过。0=恢复原值。");
+
+        // v2.1 默认值迁移：五个分类统一默认 500（v2.0 里家具功能/娱乐锻炼默认 0）。
+        // 只把"仍是旧默认 0"的项抬到 500；玩家主动设回 0 的在本次迁移后照常生效。
+        var migrated = Config.Bind("迁移", "DefaultsV21", false,
+            "v2.1 默认值迁移标记（五个分类开关统一默认 500）。勿手改。");
+        if (!migrated.Value)
+        {
+            try
+            {
+                if (FurnMs.Value == 0) FurnMs.Value = 500;
+                if (FunMs.Value == 0) FunMs.Value = 500;
+            }
+            catch { }
+            migrated.Value = true;
+        }
 
         Overrides = Config.Bind("其他", "Overrides", "",
             "上面没列到的动作单独覆盖：ID:毫秒 逗号分隔（优先级最高）。\n" +
@@ -100,7 +120,7 @@ public sealed class QuickActionPlugin : BasePlugin
     /// </summary>
     private static (int item, int furn, int maint, int misc, int fun) ReadBoot()
     {
-        var def = (item: 500, furn: 0, maint: 500, misc: 500, fun: 0);
+        var def = (item: 500, furn: 500, maint: 500, misc: 500, fun: 500);
         try
         {
             var p = System.IO.Path.Combine(Paths.BepInExRootPath, "config", "quickaction.boot.ini");
@@ -276,6 +296,18 @@ internal sealed class QuickTicker : MonoBehaviour
     }
 
     /// <summary>
+    /// BT 硬编码玩家交互动作（家具本体交互链：Config_Furniture.ActionId 全=2 通用开场，
+    /// 具体动作在 Battle.Logic.E_Action_* 行为节点硬编码，不被 FurnitureFunc/Item 任何表引用
+    /// ——引用轴结构性盲区）。全部经 EffectDump 实证无周期结算收益（效果全 0 或 End 型）。
+    /// 运行时监视（ActionWatch：BattleLogicWorld._ActionManager.AgentActionSourceDict）发现新动作后在此补充。
+    /// </summary>
+    internal static readonly HashSet<int> BtInteractIds = new()
+    {
+        9075,         // 上厕所（马桶家具本体，E_Action_Furniture_Bar_Toilet）
+        1611, 9130,   // 正在种植（农活链 播种1610→正在种植→翻土1618，玩家种植的主体动作 7.5 秒）
+    };
+
+    /// <summary>
     /// 分类判定（每轮扫描现算；游戏更新新增内容自动归类）。
     /// 返回 0=不在任何可改分类（禁改/守卫），1=物品使用, 2=家具功能, 3=房屋维护, 4=杂项交互, 5=娱乐锻炼。
     /// </summary>
@@ -286,7 +318,7 @@ internal sealed class QuickTicker : MonoBehaviour
         if (type == 0) return 2;                                    // 家具功能桶
         if (type == 10) return 3;                                   // RepairFurniture
         if (type == 3 || type == 4) return 5;                       // Entertainment / Exercise
-        if (type == 8 && referenced.Contains(id)) return 4;         // Other ∩ 引用
+        if (type == 8 && (referenced.Contains(id) || BtInteractIds.Contains(id))) return 4;  // Other ∩ (引用 ∪ BT交互名单)
         return 0;
     }
 
@@ -396,6 +428,25 @@ internal sealed class QuickTicker : MonoBehaviour
 
                 int atype = 0;
                 try { atype = a.ActionType; } catch { }
+
+                // 覆盖表：用户显式指定，优先于分类判定——可命中引用轴漏掉的动作
+                // （如上厕所 9075 等家具本体 BT 交互，不被任何配置表引用）。
+                // 唯一仍高于它的是上面的周期结算守卫（收益∝耗时的动作绝不碰）。
+                if (overrides.TryGetValue(kv.Key, out var oms))
+                {
+                    float otarget = oms <= 0 ? orig : oms / 1000f * QuickActionPlugin.Scale;
+                    if (Math.Abs(cur - otarget) > 1e-6f)
+                    {
+                        a.During = otarget;
+                        bool orestore = Math.Abs(otarget - orig) <= 1e-6f;
+                        if (orestore) restored++;
+                        if (lines.Count < 400)
+                            lines.Add($"ACTION {kv.Key}({NameOf(a)}) During {cur:0.###} -> {otarget:0.###}" +
+                                      (orestore ? "（恢复原值）" : $"（{(otarget / QuickActionPlugin.Scale * 1000):0}ms·覆盖表）"));
+                    }
+                    continue;
+                }
+
                 int cat = CategoryOf(kv.Key, atype, referenced);
                 if (cat == 0)
                 {
@@ -406,12 +457,6 @@ internal sealed class QuickTicker : MonoBehaviour
 
                 float target = orig;
                 string tag = null;
-                if (overrides.TryGetValue(kv.Key, out var oms))
-                {
-                    target = oms <= 0 ? orig : oms / 1000f * QuickActionPlugin.Scale;
-                    tag = "覆盖表";
-                }
-                else
                 {
                     var ms = cat switch { 1 => itemMs, 2 => furnMs, 3 => maintMs, 4 => miscMs, 5 => funMs, _ => 0 };
                     if (ms <= 0) target = orig;

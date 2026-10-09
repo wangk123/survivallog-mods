@@ -13,17 +13,17 @@ New-Item (Join-Path $pkg 'BepInEx\plugins') -ItemType Directory -Force | Out-Nul
 New-Item (Join-Path $pkg 'BepInEx\config')  -ItemType Directory -Force | Out-Null
 Copy-Item $dll (Join-Path $pkg 'BepInEx\plugins') -Force
 
-# Preset cfg: 直接生成规范预置（分类默认值 = 安装器默认勾选：吃/交互/维护开，家具/娱乐关）
+# Preset cfg: 直接生成规范预置（v2.1 起五分类统一默认 500）
 # 与 mod 内 ReadBoot() 缺省值保持一致
 $cfgName = 'com.local.survivallog.quickaction.cfg'
 $dstCfg = Join-Path $pkg ('BepInEx\config\' + $cfgName)
 $lines = @(
     '[分类修改]',
     '物品使用Ms = 500',
-    '家具功能Ms = 0',
+    '家具功能Ms = 500',
     '房屋维护Ms = 500',
     '杂项交互Ms = 500',
-    '娱乐锻炼Ms = 0',
+    '娱乐锻炼Ms = 500',
     '',
     '[其他]',
     'Overrides = '

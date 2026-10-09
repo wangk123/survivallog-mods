@@ -49,8 +49,8 @@ Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提�
 Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
 Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开关电器/拾取/家务 → 0.5秒（约135条）"; Types: recommended full custom
 Name: "mod_quick\qa_maint"; Description: "房屋维护：布置/安装/移动/拆除陷阱、安装家具 → 0.5秒（约78条）"; Types: recommended full custom
-Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条，默认不勾）"; Types: full custom
-Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡 → 0.5秒（约173条，默认不勾）"; Types: full custom
+Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条）"; Types: recommended full custom
+Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡/空调吹风 → 0.5秒（约173条）"; Types: recommended full custom
 
 [InstallDelete]
 ; 安装前预清理：先移除本项目全部插件（无论本次是否勾选），再安装所选组件——
