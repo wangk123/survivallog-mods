@@ -22,7 +22,7 @@ foreach ($l in $issLines) {
         if ($l -notmatch 'Types:\s*recommended\s+full\s+custom') { $matrixFails += 'base 的 Types 必须列出全部类型' }
         if ($l -match 'fixed') { $matrixFails += 'base 不得用 fixed 旗标（Inno7 下 fixed 复选框不勾选显示错误，已改为 NextButtonClick 校验强制勾选）' }
     }
-    if ($cname -in @('mod_backpack','mod_cabinet','mod_fridge','mod_chill','mod_quick','mod_quick\qa_item','mod_quick\qa_misc','mod_quick\qa_maint','mod_quick\qa_furn','mod_quick\qa_fun') -and $l -notmatch 'Types:\s*recommended\s') { $matrixFails += ($cname + ' 的 Types 缺少 recommended（默认类型下应勾选）') }
+    if ($cname -in @('mod_backpack','mod_cabinet','mod_fridge','mod_chill','mod_cabaccess','mod_quick','mod_quick\qa_item','mod_quick\qa_misc','mod_quick\qa_maint','mod_quick\qa_furn','mod_quick\qa_fun') -and $l -notmatch 'Types:\s*recommended\s') { $matrixFails += ($cname + ' 的 Types 缺少 recommended（默认类型下应勾选）') }
 }
 $recLine = $issLines | Where-Object { $_ -match '^Name: "recommended";' } | Select-Object -First 1
 if (-not $recLine) { throw '[Types] 缺少 recommended 类型' }
@@ -69,6 +69,7 @@ Check 'BepInEx\config\com.local.survivallog.quickaction.cfg' $true
 Check 'MOD说明\背包扩容.md' $true
 Check 'MOD说明\动作提速.md' $true
 Check 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll' $false
+Check 'BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeChill.dll' $false
 Check 'BepInEx\plugins\SomeThirdPartyMod.dll' $true

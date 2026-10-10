@@ -14,7 +14,7 @@ $projRoot = 'E:\Game\Mod\mod_stack'
 $tools    = Join-Path $projRoot 'tools'
 $relRoot  = Join-Path $projRoot 'release'
 $ghExe    = Join-Path $tools 'gh\bin\gh.exe'
-$suiteMods = @('BackpackExpand','CabinetExpand','FridgeExpand','FridgeChill','QuickAction')
+$suiteMods = @('BackpackExpand','CabinetExpand','FridgeExpand','FridgeChill','QuickAction','CabinetEverywhere')
 
 # 按原文件是否带 BOM 决定写回编码（不制造无谓 diff）
 function Set-SrcText($path, $text) {

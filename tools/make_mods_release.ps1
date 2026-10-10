@@ -36,7 +36,8 @@ $mods = @(
     @{ Name='BackpackExpand'; Readme='readme_backpack.md' },
     @{ Name='CabinetExpand';  Readme='readme_cabinet.md'  },
     @{ Name='FridgeExpand';   Readme='readme_fridge.md'   },
-    @{ Name='FridgeChill';    Readme='readme_chill.md'    }
+    @{ Name='FridgeChill';    Readme='readme_chill.md'    },
+    @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' }
 )
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
@@ -64,6 +65,10 @@ foreach ($m in $mods) {
         $txt = $txt -replace '(?m)^(Extra\w*Ids\s*=\s).*$', '${1}'
         $txt = $txt -replace '(?m)^(ExcludeIds\s*=\s).*$', '${1}'
         $txt = $txt -replace '(?m)^(BagIds\s*=\s).*$',     '${1}'
+        # CabinetEverywhere：两个名单键归一为空（ExcludeBagIds 本身就是发布默认值，保留）
+        $txt = $txt -replace '(?m)^(IncludeFurnitureIds\s*=\s).*$', '${1}'
+        $txt = $txt -replace '(?m)^(ExcludeFurnitureIds\s*=\s).*$', '${1}'
+        $txt = $txt -replace '(?m)^(ListOnReady\s*=\s).*$', '${1}true'
         [System.IO.File]::WriteAllText($dstCfg, $txt, (New-Object System.Text.UTF8Encoding($false)))
     }
 

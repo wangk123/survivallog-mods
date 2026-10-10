@@ -26,7 +26,7 @@ public sealed class FridgeChillPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.fridgechill";
     public const string Name = "FridgeChill";
-    public const string Version = "1.0.6";
+    public const string Version = "1.1.0";
 
     internal static ManualLogSource Log;
 
