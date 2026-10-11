@@ -70,6 +70,7 @@ Check 'MOD说明\背包扩容.md' $true
 Check 'MOD说明\动作提速.md' $true
 Check 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll' $false
+Check 'BepInEx\plugins\SurvivalLog.CabinetBurden.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeChill.dll' $false
 Check 'BepInEx\plugins\SomeThirdPartyMod.dll' $true

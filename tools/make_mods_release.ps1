@@ -37,7 +37,8 @@ $mods = @(
     @{ Name='CabinetExpand';  Readme='readme_cabinet.md'  },
     @{ Name='FridgeExpand';   Readme='readme_fridge.md'   },
     @{ Name='FridgeChill';    Readme='readme_chill.md'    },
-    @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' }
+    @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' },
+    @{ Name='CabinetBurden';    Readme='readme_cabburden.md' }
 )
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
@@ -58,16 +59,22 @@ foreach ($m in $mods) {
         $txt = [System.IO.File]::ReadAllText($dstCfg, [System.Text.Encoding]::UTF8)
         $txt = $txt -replace '(?m)^(WidthMult\s*=\s).*$',  '${1}1.5'
         $txt = $txt -replace '(?m)^(HeightMult\s*=\s).*$', '${1}1.5'
-        $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$', '${1}2'
+        # BurdenMult 同名不同义：背包=2（倍增玩家背包），柜子负重=1000（解除家具限制）——按 mod 区分
+        if ($m.Name -eq 'BackpackExpand') { $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$', '${1}2' }
+        if ($m.Name -eq 'CabinetBurden') {
+            $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$',   '${1}1000'
+            $txt = $txt -replace '(?m)^(IncludeBagIds\s*=\s).*$', '${1}'
+            # ExcludeBagIds 本身就是发布默认值（3,4），保留
+        }
         $txt = $txt -replace '(?m)^(KeepMult\s*=\s).*$',   '${1}2'
         $txt = $txt -replace '(?m)^(Verbose\s*=\s).*$',    '${1}false'
         $txt = $txt -replace '(?m)^(DiagOnOpen\s*=\s).*$', '${1}false'
         $txt = $txt -replace '(?m)^(Extra\w*Ids\s*=\s).*$', '${1}'
         $txt = $txt -replace '(?m)^(ExcludeIds\s*=\s).*$', '${1}'
         $txt = $txt -replace '(?m)^(BagIds\s*=\s).*$',     '${1}'
-        # CabinetEverywhere：两个名单键归一为空（ExcludeBagIds 本身就是发布默认值，保留）
+        # CabinetEverywhere：IncludeFurnitureIds 归一为空；ExcludeBagIds/ExcludeFurnitureIds
+        # 本身就是发布默认值（v1.2 起名单默认非空），保留不清空
         $txt = $txt -replace '(?m)^(IncludeFurnitureIds\s*=\s).*$', '${1}'
-        $txt = $txt -replace '(?m)^(ExcludeFurnitureIds\s*=\s).*$', '${1}'
         $txt = $txt -replace '(?m)^(ListOnReady\s*=\s).*$', '${1}true'
         [System.IO.File]::WriteAllText($dstCfg, $txt, (New-Object System.Text.UTF8Encoding($false)))
     }

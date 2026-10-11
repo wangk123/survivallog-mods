@@ -29,7 +29,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.cabineteverywhere";
     public const string Name = "CabinetEverywhere";
-    public const string Version = "1.1.0";
+    public const string Version = "1.1.2";
 
     internal static ManualLogSource Log;
 
@@ -42,6 +42,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
     internal static ConfigEntry<string> ExcludeBagIds;
     internal static ConfigEntry<bool> Verbose;
     internal static ConfigEntry<bool> ListOnReady;
+    internal static ConfigEntry<bool> DumpFurniture;
 
     internal static volatile bool Rerun = true;
 
@@ -54,14 +55,17 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         EnableRatCage = Config.Bind("Access", "EnableRatCage", true, "老鼠笼界面注入柜子页签。");
         EnableBrew = Config.Bind("Access", "EnableBrew", true, "酿酒桶界面注入柜子页签。");
         IncludeFurnitureIds = Config.Bind("Access", "IncludeFurnitureIds", "",
-            "追加的家具 ConfigId（逗号分隔，强制加入，如置物架等）。");
-        ExcludeFurnitureIds = Config.Bind("Access", "ExcludeFurnitureIds", "",
-            "排除的家具 ConfigId（优先级最高）。");
-        ExcludeBagIds = Config.Bind("Access", "ExcludeBagIds", "110000,110001,110008,5001,5002",
-            "排除的 BagId。默认：置物架系列(110000/110001/110008，工作台已原生物料架左栏，110001 与工具柜共用包且工具柜已在官方白名单)；炉具(5001 燃料炉/5002 电烤箱，属烹饪电器非储藏)。");
+            "追加的家具 ConfigId（逗号分隔，强制加入）。");
+        ExcludeFurnitureIds = Config.Bind("Access", "ExcludeFurnitureIds", "313,80033,80164,1024,1025,1026,1027,1028,42033",
+            "排除的家具 ConfigId（优先级最高）。默认排除：313/80033/80164自制工具台（非储物，同名三个变体）；载具类 1024购物塑料袋/1025购物车/1026自行车/1027小汽车/1028SUV/42033旧SUV（与纸箱共用包，只能按家具排除）。");
+        ExcludeBagIds = Config.Bind("Access", "ExcludeBagIds",
+            "1008,1014,1050,1060,10001,10004,3001,115004,5001,5002,5003,5004,5005,5006,5007,5008,5009,5011,5014,5015,5017,5020",
+            "排除的 BagId（整包系排除）。默认排除非储物容器：厨房电器(5001燃料炉/5002电烤箱/5003微波炉/5004燃气灶/5005榨汁机/5006咖啡机/5011电火锅)、机器功能槽(5007-5009/5014老鼠笼/5015粉碎机/5017口粮压制机/5020暖房工程台/115004酿酒桶)、围栏(3001)、吊篮(1050)、无人机(1008)、门(1060)、窗(1014)、床(10001)、垃圾桶(10004)。其余带储物包家具默认全部生效。");
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细。");
         ListOnReady = Config.Bind("Debug", "ListOnReady", true,
             "配置表就绪时在日志列出发现的全部柜子家具名单（首次核对用，可关）。");
+        DumpFurniture = Config.Bind("Debug", "DumpFurniture", false,
+            "置 true 后（游戏运行中改 cfg 约 5 秒内生效）在日志列出家中全部带包家具明细：owner/配置/名称/锁定态/是否入选。排查'新柜子不生效'用，平时关。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         IncludeFurnitureIds.SettingChanged += reload;
@@ -71,9 +75,11 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         EnableCooking.SettingChanged += reload;
         EnableRatCage.SettingChanged += reload;
         EnableBrew.SettingChanged += reload;
+        DumpFurniture.SettingChanged += (object s, System.EventArgs e) => { CabinetCatalog.DumpRequested = true; };
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<AccessTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<AccessTicker>();
+        if (DumpFurniture.Value) CabinetCatalog.DumpRequested = true; // cfg 启动即 true 也生效（进档后 dump 一次）
         var go = new GameObject("CabinetEverywhere.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<AccessTicker>();
@@ -132,6 +138,7 @@ internal sealed class AccessTicker : MonoBehaviour
         {
             _instanceCacheAge = 0f;
             CabinetCatalog.RefreshHomeInstances();
+            CabinetCatalog.FlushDump();
         }
         TabInjector.PollAll();
     }

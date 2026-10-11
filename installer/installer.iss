@@ -46,6 +46,7 @@ Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜�
 Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: recommended full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
 Name: "mod_cabaccess"; Description: "储藏柜直达：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料"; Types: recommended full custom
+Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
 Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
 Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
 Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开关电器/拾取/家务 → 0.5秒（约135条）"; Types: recommended full custom
@@ -63,6 +64,7 @@ Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.QuickAction.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"
 Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
 Type: files; Name: "{app}\MOD说明\背包扩容.md"
 Type: files; Name: "{app}\MOD说明\柜子扩容.md"
@@ -70,6 +72,7 @@ Type: files; Name: "{app}\MOD说明\冰箱扩容.md"
 Type: files; Name: "{app}\MOD说明\冰箱保鲜.md"
 Type: files; Name: "{app}\MOD说明\动作提速.md"
 Type: files; Name: "{app}\MOD说明\储藏柜直达.md"
+Type: files; Name: "{app}\MOD说明\柜子负重解放.md"
 Type: dirifempty; Name: "{app}\MOD说明"
 
 [Files]
@@ -101,6 +104,10 @@ Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\
 Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabineteverywhere.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "储藏柜直达.md"; Flags: ignoreversion
+; ---- 柜子负重解放 ----
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
 ; ---- 动作提速 ----
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.QuickAction.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist

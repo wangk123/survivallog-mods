@@ -62,7 +62,7 @@ internal static class TabInjector
         if (tabs == null || tabs.Count == 0) return;
 
         var have = CollectOwners(tabs, t => t?.OwnerId?.Value ?? 0);
-        AddMissing("烹饪", s, have, tabs.Count,
+        var added = AddMissing("烹饪", s, have, tabs.Count,
             (ownerId, name, index) =>
             {
                 var tab = new Data_Web_Cooking_BagTab();
@@ -74,6 +74,7 @@ internal static class TabInjector
                 tab.IsNew = new R3.ReactiveProperty<bool>(false);
                 tabs.Add(tab);
             });
+        if (added > 0) Repush(rus, CookingType);
     }
 
     // ---- 老鼠笼 ----
@@ -89,7 +90,7 @@ internal static class TabInjector
         if (tabs == null || tabs.Count == 0) return;
 
         var have = CollectOwners(tabs, t => t?.OwnerId?.Value ?? 0);
-        AddMissing("老鼠笼", s, have, tabs.Count,
+        var added = AddMissing("老鼠笼", s, have, tabs.Count,
             (ownerId, name, index) =>
             {
                 var tab = new Data_Web_RatCage_BagTab();
@@ -99,6 +100,7 @@ internal static class TabInjector
                 tab.Locked = new R3.ReactiveProperty<bool>(false);
                 tabs.Add(tab);
             });
+        if (added > 0) Repush(rus, RatCageType);
     }
 
     // ---- 酿酒桶 ----
@@ -114,7 +116,7 @@ internal static class TabInjector
         if (tabs == null || tabs.Count == 0) return;
 
         var have = CollectOwners(tabs, t => t?.OwnerId?.Value ?? 0);
-        AddMissing("酿酒", s, have, tabs.Count,
+        var added = AddMissing("酿酒", s, have, tabs.Count,
             (ownerId, name, index) =>
             {
                 var tab = new Data_Web_Brew_BagTab();
@@ -124,6 +126,7 @@ internal static class TabInjector
                 tab.Locked = new R3.ReactiveProperty<bool>(false);
                 tabs.Add(tab);
             });
+        if (added > 0) Repush(rus, BrewType);
     }
 
     // ---- 公共 ----
@@ -145,7 +148,26 @@ internal static class TabInjector
         return set;
     }
 
-    private static void AddMissing(string uiName, UiSession s, HashSet<long> have, int currentCount,
+    /// <summary>
+    /// 注入后触发界面重推：WebUIVm 绑定是脏标记制（MarkAllMsgDirty → OnMsgChange 序列化推送 JS），
+    /// ObservableList.Add 后必须走一遍 VM 的重推，JS 才会收到 bagTabs（TriggerStateSubscribe 实证无效）。
+    /// </summary>
+    private static void Repush(GameCore.HotUpdate.ReduxUI.ReduxUISystem rus, Il2CppSystem.Type uiType)
+    {
+        try
+        {
+            var layer = rus.GetWebUILayer();
+            GameCore.HotUpdate.ReduxUI.WebUIVm vm = null;
+            if (layer != null && layer.GetWebUI(uiType, out vm) && vm != null)
+            {
+                vm.MarkAllMsgDirty();
+                vm.OnMsgChange();
+            }
+        }
+        catch (Exception e) { WarnOnce("repush", "UI 重推失败: " + e.Message); }
+    }
+
+    private static int AddMissing(string uiName, UiSession s, HashSet<long> have, int currentCount,
         Action<long, string, int> create)
     {
         var cabinets = CabinetCatalog.HomeInstances;
@@ -168,6 +190,7 @@ internal static class TabInjector
         }
         if (added > 0)
             CabinetEverywherePlugin.Log.LogInfo($"[CabinetEverywhere] {uiName} 界面注入 {added} 个柜子页签：{string.Join("、", names)}");
+        return added;
     }
 
     private static readonly HashSet<string> WarnedOnce = new();

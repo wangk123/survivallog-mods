@@ -23,7 +23,7 @@ public sealed class FridgeExpandPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.fridgeexpand";
     public const string Name = "FridgeExpand";
-    public const string Version = "1.1.0";
+    public const string Version = "1.1.2";
 
     internal static ManualLogSource Log;
 
