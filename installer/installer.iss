@@ -35,15 +35,14 @@ Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 ; recommended 必须排第一：Inno 默认选中 [Types] 首项。
 ; "推荐安装"只含默认开的组件（4 扩容 + 吃/交互/维护提速），家具功能/娱乐锻炼默认不勾；
 ; 下拉可切"全部安装"一键全勾。custom 实测会镜像前一个所选类型，不能用作默认不勾的载体。
-Name: "recommended"; Description: "推荐安装（4 个扩容 + 柜子直达 + 吃/交互/维护提速）"
+Name: "recommended"; Description: "推荐安装（背包/柜子含冰箱/保鲜扩容 + 柜子直达与负重 + 吃/交互/维护提速）"
 Name: "full"; Description: "全部安装（基座 + 全部 MOD）"
 Name: "custom"; Description: "自选安装"; Flags: iscustom
 
 [Components]
 Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Types: recommended full custom
 Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: recommended full custom
-Name: "mod_cabinet"; Description: "柜子扩容：工具柜/储物柜/金属柜格子宽高各×1.5"; Types: recommended full custom
-Name: "mod_fridge"; Description: "冰箱扩容：全部可获得冰箱格子宽高各×1.5"; Types: recommended full custom
+Name: "mod_cabinet"; Description: "柜子扩容：家里全部柜子（置物架/柜子/金属柜/工具柜/床头柜/衣柜等）+冰箱格子宽高各×1.5，新增柜子/冰箱自动跟上（原冰箱扩容已并入）"; Types: recommended full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
 Name: "mod_cabaccess"; Description: "储藏柜直达：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料"; Types: recommended full custom
 Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
@@ -92,10 +91,7 @@ Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#Suit
 Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子扩容.md"; Flags: ignoreversion
-; ---- 冰箱扩容 ----
-Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.fridgeexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_fridge; Source: "{#RelRoot}\SurvivalLog.FridgeExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "冰箱扩容.md"; Flags: ignoreversion
+; ---- 冰箱扩容已并入柜子扩容（2026-10-13）：此处只保留升级清理（InstallDelete 区的旧 dll/说明文件） ----
 ; ---- 冰箱保鲜 ----
 Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\config\com.local.survivallog.fridgechill.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
@@ -270,7 +266,6 @@ begin
   begin
     if not (WizardIsComponentSelected('mod_backpack') or
             WizardIsComponentSelected('mod_cabinet') or
-            WizardIsComponentSelected('mod_fridge') or
             WizardIsComponentSelected('mod_chill') or
             WizardIsComponentSelected('mod_quick')) then
     begin

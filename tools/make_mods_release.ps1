@@ -35,7 +35,6 @@ Compress-Archive -Path (Join-Path $base '*') -DestinationPath $baseZip -Compress
 $mods = @(
     @{ Name='BackpackExpand'; Readme='readme_backpack.md' },
     @{ Name='CabinetExpand';  Readme='readme_cabinet.md'  },
-    @{ Name='FridgeExpand';   Readme='readme_fridge.md'   },
     @{ Name='FridgeChill';    Readme='readme_chill.md'    },
     @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' },
     @{ Name='CabinetBurden';    Readme='readme_cabburden.md' }
