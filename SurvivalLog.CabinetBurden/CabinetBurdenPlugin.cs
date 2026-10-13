@@ -29,7 +29,7 @@ public sealed class CabinetBurdenPlugin : BasePlugin
     public const string Guid = "com.local.survivallog.cabinetburden";
     public const string Name = "CabinetBurden";
     // 跟随套件 version.json，发版时与套件同步（版本号由作者定义）
-    public const string Version = "1.1.2";
+    public const string Version = "1.2.0";
 
     internal static ManualLogSource Log;
 

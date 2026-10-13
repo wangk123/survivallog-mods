@@ -37,7 +37,8 @@ $mods = @(
     @{ Name='CabinetExpand';  Readme='readme_cabinet.md'  },
     @{ Name='FridgeChill';    Readme='readme_chill.md'    },
     @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' },
-    @{ Name='CabinetBurden';    Readme='readme_cabburden.md' }
+    @{ Name='CabinetBurden';    Readme='readme_cabburden.md' },
+    @{ Name='RobotSpeed';       Readme='readme_robotspeed.md' }
 )
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
@@ -64,6 +65,17 @@ foreach ($m in $mods) {
             $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$',   '${1}1000'
             $txt = $txt -replace '(?m)^(IncludeBagIds\s*=\s).*$', '${1}'
             # ExcludeBagIds 本身就是发布默认值（3,4），保留
+        }
+        # RobotSpeed：中文键归一为发布默认（除系数开关外全部翻倍；
+        # 插槽/模块相关键已随功能移除（作者定版 2026-10-13），老 cfg 残留键由 BepInEx 忽略）
+        if ($m.Name -eq 'RobotSpeed') {
+            $txt = $txt -replace '(?m)^(动作速度对齐手动\s*=\s).*$', '${1}true'
+            $txt = $txt -replace '(?m)^(移速倍率\s*=\s).*$', '${1}2'
+            $txt = $txt -replace '(?m)^(充电速率倍率\s*=\s).*$', '${1}2'
+            $txt = $txt -replace '(?m)^(续航倍率\s*=\s).*$', '${1}2'
+            $txt = $txt -replace '(?m)^(耗电降低倍率\s*=\s).*$', '${1}2'
+            $txt = $txt -replace '(?m)^(动作时长倍率\s*=\s).*$', '${1}2'
+            $txt = $txt -replace '(?m)^(货舱格数倍率\s*=\s).*$', '${1}2'
         }
         $txt = $txt -replace '(?m)^(KeepMult\s*=\s).*$',   '${1}2'
         $txt = $txt -replace '(?m)^(Verbose\s*=\s).*$',    '${1}false'
