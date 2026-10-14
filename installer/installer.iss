@@ -40,7 +40,7 @@ Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 ; recommended 必须排第一：Inno 默认选中 [Types] 首项。
 ; "推荐安装"只含默认开的组件（4 扩容 + 吃/交互/维护提速），家具功能/娱乐锻炼默认不勾；
 ; 下拉可切"全部安装"一键全勾。custom 实测会镜像前一个所选类型，不能用作默认不勾的载体。
-Name: "recommended"; Description: "推荐安装（背包/柜子含冰箱/保鲜扩容 + 柜子直达与负重 + 吃/交互/维护提速 + 机器人提速）"
+Name: "recommended"; Description: "推荐安装（背包/柜子含冰箱/保鲜扩容 + 柜子直达与负重与标签筛选 + 吃/交互/维护提速 + 机器人提速）"
 Name: "full"; Description: "全部安装（基座 + 全部 MOD）"
 Name: "custom"; Description: "自选安装"; Flags: iscustom
 
@@ -51,6 +51,7 @@ Name: "mod_cabinet"; Description: "柜子扩容：家里全部柜子（置物架
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
 Name: "mod_cabaccess"; Description: "储藏柜直达：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料"; Types: recommended full custom
 Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
+Name: "mod_tagfilter"; Description: "柜子标签筛选：带容器页签的界面（工作台/烹饪等 8 个）可按标签筛选柜子页签（自储藏柜直达拆分独立，可单独安装）"; Types: recommended full custom
 Name: "mod_robotspeed"; Description: "机器人提速：修理/整理/种植机器人不再比手动慢（动作对齐手速+移速/充电/续航翻倍+三台货舱扩容；不含插槽与模块）"; Types: recommended full custom
 Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
 Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
@@ -71,6 +72,7 @@ Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.QuickAction.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll"
 Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
 Type: files; Name: "{app}\MOD说明\背包扩容.md"
 Type: files; Name: "{app}\MOD说明\柜子扩容.md"
@@ -80,6 +82,7 @@ Type: files; Name: "{app}\MOD说明\动作提速.md"
 Type: files; Name: "{app}\MOD说明\储藏柜直达.md"
 Type: files; Name: "{app}\MOD说明\柜子负重解放.md"
 Type: files; Name: "{app}\MOD说明\机器人提速.md"
+Type: files; Name: "{app}\MOD说明\柜子标签筛选.md"
 Type: dirifempty; Name: "{app}\MOD说明"
 
 [Files]
@@ -112,6 +115,10 @@ Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
+; ---- 柜子标签筛选 ----
+Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinettagfilter.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子标签筛选.md"; Flags: ignoreversion
 ; ---- 机器人提速（cfg 不预置：首跑按代码默认生成完整中文注释配置） ----
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "机器人提速.md"; Flags: ignoreversion
@@ -361,7 +368,8 @@ begin
             WizardIsComponentSelected('mod_cabinet') or
             WizardIsComponentSelected('mod_chill') or
             WizardIsComponentSelected('mod_quick') or
-            WizardIsComponentSelected('mod_robotspeed')) then
+            WizardIsComponentSelected('mod_robotspeed') or
+            WizardIsComponentSelected('mod_tagfilter')) then
     begin
       MsgBox('基座之外至少需要选择一个 MOD（也可以全选）。', mbError, MB_OK);
       Result := False;

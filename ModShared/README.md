@@ -34,10 +34,11 @@ Config_Bag / Config_Furniture **内存表直写工具**：表访问、进程内�
 - 目的：限制恶意转载收费引流——进档后主角头顶弹 3 秒原生对话气泡（欢迎语+署名+抖音号）。
 - 入口 `WelcomeTip.Install(Log)`：`GameObject.Find("SurvivalLog.WelcomeTip")` 去重，先到者建
   DontDestroyOnLoad ticker → 装任意一个套件 mod 即有气泡，装多个只弹一条。
-- 气泡通道（interop 实证 + 5 轮实测定稿）：`AgentModel.Unit_ShowHeadTalk(text, 3)`，主角模型经
-  `WebGm.GetLeadingRoleModel(out string)` 一行获取。定稿结论：主角头顶条为官方**无框文字**样式
-  （silentHeadTalk 默认 false；ImmediateShowTalk / headBar.ShowTalk 直调同样无框，非缺陷）；
-  During≈真实秒，传 360（游戏秒换算）会远超 3 秒。
+- 气泡通道（实测定稿，六修）：主通道 `CharacterTalkManager.EnqueueTalk`——游戏官方说话队列，
+  与原生气泡消息排队轮流显示、互不顶替（直显会被进档瞬间的原生推送覆盖）；管理器不可用时
+  兜底 `Unit_ShowHeadTalk(text, 3)` 直显。主角模型 `WebGm.GetLeadingRoleModel(out string)` 一行获取。
+  主角头顶条为官方**无框文字**样式（silentHeadTalk 默认 false，各通道均无框，非缺陷）；
+  During≈真实秒（传 360 会远超 3 秒）。
 - 生命周期：轮询 `BaseSingleton<BattleLogicWorld>.IsInstanceCreated` 沿 false→true（进档）触发、
   true→false（回菜单）复位；等主角模型最长 15s，超时静默放弃。全程只读，不改游戏数据。
 - 无 cfg 开关（防盗内置行为，防剥离，也避开 cfg 首跑固化坑）。

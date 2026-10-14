@@ -127,6 +127,6 @@ cfg 兼容：老 CabinetExpand cfg 的 ExtraIds/ExcludeIds 键名与语义不变
 ## 10. 防盗署名气泡（2026-10-14，套件统一）
 
 - `Load()` 末尾调用 `SurvivalLog.ModShared.WelcomeTip.Install(Log)`（共享源 `ModShared/WelcomeTip.cs`，csproj 已链入）。
-- 行为：进档后主角头顶显示 3 秒原生气泡文字——`AgentModel.Unit_ShowHeadTalk(text, 3)`（主角模型经 `WebGm.GetLeadingRoleModel(out string)` 获取）。实测主角头顶条为官方无框文字样式（silentHeadTalk 默认 false，ImmediateShowTalk/ShowTalk 直调同样无框，非本 mod 缺陷）；During≈真实秒（传 360 会远超 3 秒）。每次进档一次，回主菜单再进再弹。
+- 行为：进档后主角头顶显示欢迎文字（约 3 秒）——主通道走游戏官方说话队列 `CharacterTalkManager.EnqueueTalk`（与原生气泡消息排队轮流显示、互不顶替；进档瞬间有原生推送也不会被覆盖）；管理器不可用时退 `AgentModel.Unit_ShowHeadTalk(text, 3)` 直显。实测主角头顶条为官方无框文字样式（silentHeadTalk 默认 false，各通道均无框，非缺陷）；During≈真实秒（传 360 会远超 3 秒）。每次进档一次，回主菜单再进再弹。
 - 7 个套件 mod 全部调用，靠 `GameObject.Find("SurvivalLog.WelcomeTip")` 去重：先到者创建 DontDestroyOnLoad ticker，其余跳过——装多个只弹一条。无 cfg 开关（防盗署名为内置行为，防剥离）。
 - 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；改文案后 7 个 mod 需全部重编。

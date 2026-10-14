@@ -98,10 +98,26 @@ namespace SurvivalLog.ModShared
                 // 定稿（5 轮实测）：主角头顶条为官方无框文字样式（silentHeadTalk 本就 false，
                 // ImmediateShowTalk/ShowTalk/直调全部无框，非本 mod 缺陷）；
                 // During≈真实秒——传 3 恰好约 3 秒，传 360（游戏秒换算）会远超 3 秒。
-                model.Unit_ShowHeadTalk(WelcomeTip.Text, WelcomeTip.ShowSec);
-
-                _shown = true;
-                WelcomeTip.Log?.LogInfo($"[WelcomeTip] 署名气泡已显示（3 秒文字版，等待 {_waited:0.0}s）");
+                // 通道（2026-10-14 六修）：进 EnqueueTalk 官方说话队列——进档瞬间若有原生
+                // 气泡推送（主角碎碎念等），直显会互相顶替覆盖；队列化后与原生消息排队
+                // 轮流显示，互不覆盖。管理器拿不到时退回直显。
+                var world = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.Battle.Logic.BattleLogicWorld>.Instance;
+                var lead = world != null && world._AgentManager != null
+                    ? world._AgentManager.GetLeadingRole()
+                    : null;
+                var talk = world != null ? world._CharacterTalkManager : null;
+                if (talk != null && lead != null)
+                {
+                    talk.EnqueueTalk(lead.InstanceId, WelcomeTip.Text);
+                    _shown = true;
+                    WelcomeTip.Log?.LogInfo($"[WelcomeTip] 署名气泡已入官方说话队列（等待 {_waited:0.0}s）");
+                }
+                else
+                {
+                    model.Unit_ShowHeadTalk(WelcomeTip.Text, WelcomeTip.ShowSec);
+                    _shown = true;
+                    WelcomeTip.Log?.LogInfo($"[WelcomeTip] 署名气泡已显示（直显兜底 3 秒文字版，等待 {_waited:0.0}s）");
+                }
             }
             catch { /* 下轮重试，超时自然放弃，绝不打扰游戏 */ }
         }

@@ -38,7 +38,8 @@ $mods = @(
     @{ Name='FridgeChill';    Readme='readme_chill.md'    },
     @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' },
     @{ Name='CabinetBurden';    Readme='readme_cabburden.md' },
-    @{ Name='RobotSpeed';       Readme='readme_robotspeed.md' }
+    @{ Name='RobotSpeed';       Readme='readme_robotspeed.md' },
+    @{ Name='CabinetTagFilter'; Readme='readme_tagfilter.md' }
 )
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
@@ -76,6 +77,10 @@ foreach ($m in $mods) {
             $txt = $txt -replace '(?m)^(耗电降低倍率\s*=\s).*$', '${1}2'
             $txt = $txt -replace '(?m)^(动作时长倍率\s*=\s).*$', '${1}2'
             $txt = $txt -replace '(?m)^(货舱格数倍率\s*=\s).*$', '${1}2'
+        }
+        # CabinetTagFilter：总开关归一为发布默认 true
+        if ($m.Name -eq 'CabinetTagFilter') {
+            $txt = $txt -replace '(?m)^(Enable\s*=\s).*$', '${1}true'
         }
         $txt = $txt -replace '(?m)^(KeepMult\s*=\s).*$',   '${1}2'
         $txt = $txt -replace '(?m)^(Verbose\s*=\s).*$',    '${1}false'

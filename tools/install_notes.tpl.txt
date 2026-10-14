@@ -36,6 +36,7 @@
     SurvivalLog.CabinetEverywhere_v{V}.zip 储藏柜直达
     SurvivalLog.CabinetBurden_v{V}.zip  柜子负重解放
     SurvivalLog.RobotSpeed_v{V}.zip     机器人提速
+    SurvivalLog.CabinetTagFilter_v{V}.zip 柜子标签筛选
 
   解压方法：每个包的全部内容直接解压到游戏目录
   （提示合并/覆盖选"是"），装完 Base 再装选中的 MOD 包。
@@ -56,6 +57,8 @@
             移速/充电/续航翻倍、耗电减半，三台货舱全部翻倍
             （每项倍率可改；机器人模块加成不受影响；
             不含插槽与模块修改）
+  柜子标签筛选：带容器页签的界面（工作台/烹饪等 8 个）可按标签筛选
+            柜子页签，与"储藏柜直达"互相独立可单独安装
 
   共同点：不改存档、不改游戏文件，卸载即还原原版。
 

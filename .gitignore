@@ -13,6 +13,7 @@ tools/gh/
 
 # ===== 本地杂项 =====
 .playwright-mcp/
+.zcode/
 nul
 *.log
 *.user

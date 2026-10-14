@@ -23,7 +23,7 @@ public sealed class BackpackExpandPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.backpackexpand";
     public const string Name = "BackpackExpand";
-    public const string Version = "1.2.0";
+    public const string Version = "1.3.0";
 
     internal static ManualLogSource Log;
 

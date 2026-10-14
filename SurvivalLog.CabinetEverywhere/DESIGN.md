@@ -143,6 +143,13 @@
 ## 8. 防盗署名气泡（2026-10-14，套件统一）
 
 - `Load()` 末尾调用 `SurvivalLog.ModShared.WelcomeTip.Install(Log)`（共享源 `ModShared/WelcomeTip.cs`，csproj 已链入）。
-- 行为：进档后主角头顶显示 3 秒原生气泡文字——`AgentModel.Unit_ShowHeadTalk(text, 3)`（主角模型经 `WebGm.GetLeadingRoleModel(out string)` 获取）。实测主角头顶条为官方无框文字样式（silentHeadTalk 默认 false，ImmediateShowTalk/ShowTalk 直调同样无框，非本 mod 缺陷）；During≈真实秒（传 360 会远超 3 秒）。每次进档一次，回主菜单再进再弹。
+- 行为：进档后主角头顶显示欢迎文字（约 3 秒）——主通道走游戏官方说话队列 `CharacterTalkManager.EnqueueTalk`（与原生气泡消息排队轮流显示、互不顶替；进档瞬间有原生推送也不会被覆盖）；管理器不可用时退 `AgentModel.Unit_ShowHeadTalk(text, 3)` 直显。实测主角头顶条为官方无框文字样式（silentHeadTalk 默认 false，各通道均无框，非缺陷）；During≈真实秒（传 360 会远超 3 秒）。每次进档一次，回主菜单再进再弹。
 - 7 个套件 mod 全部调用，靠 `GameObject.Find("SurvivalLog.WelcomeTip")` 去重：先到者创建 DontDestroyOnLoad ticker，其余跳过——装多个只弹一条。无 cfg 开关（防盗署名为内置行为，防剥离）。
 - 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；改文案后 7 个 mod 需全部重编。
+
+## 9. 柜子标签筛选（已拆分为独立 mod）
+
+2026-10-14 曾把"柜子标签筛选"（按官方标签过滤容器页签的下拉框）实装进本 mod，同日按作者要求
+**拆分为独立 mod `SurvivalLog.CabinetTagFilter`**（两个 mod 互不依赖、可单独安装；筛选覆盖全部
+容器页签，含本 mod 注入的柜子页签与原生冰箱/工具柜页签）。完整技术取证（官方标签数据模型、
+Vuplex ExecuteJavaScript 注入通道、DOM 隐藏决策、闪烁修复等）迁移至该 mod 的 DESIGN.md。
