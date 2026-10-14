@@ -116,3 +116,10 @@ Burden=0 无负重限制（同会话 FridgeExpand/CabinetExpand 扫描齐全佐�
 
 - v1.1.0（2026-10-11）：首发。自动发现名单 + 负重 ×1000（范围/幅度为用户确认值）。
   当日实测：10 包改写成功（柜子1 14400→1440 万等），插件加载/轮询/幂等正常。
+
+## 10. 防盗署名气泡（2026-10-14，套件统一）
+
+- `Load()` 末尾调用 `SurvivalLog.ModShared.WelcomeTip.Install(Log)`（共享源 `ModShared/WelcomeTip.cs`，csproj 已链入）。
+- 行为：进档后主角头顶弹 3 秒原生对话气泡——`AgentModel.Unit_ShowHeadTalk(text, 3)`；主角模型取 `WebGm.GetLeadingRoleModel(out string)`（静态），异常时退 `(headBar as UnitHeadBar).ShowTalk(text, 3, true)`。每次进档一次，回主菜单再进再弹。
+- 7 个套件 mod 全部调用，靠 `GameObject.Find("SurvivalLog.WelcomeTip")` 去重：先到者创建 DontDestroyOnLoad ticker，其余跳过——装多个只弹一条。无 cfg 开关（防盗署名为内置行为，防剥离）。
+- 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；改文案后 7 个 mod 需全部重编。

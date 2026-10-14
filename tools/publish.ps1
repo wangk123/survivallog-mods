@@ -55,6 +55,20 @@ foreach ($m in $suiteMods | Where-Object { $_ -ne 'QuickAction' }) {
     }
 }
 
+# ---------- 2.5 防盗署名气泡接线校验（套件规范：新 mod 必须接入 WelcomeTip，见 docs\00）----------
+foreach ($m in $suiteMods) {
+    $dir = Join-Path $projRoot ('SurvivalLog.' + $m)
+    $csproj = Join-Path $dir ('SurvivalLog.' + $m + '.csproj')
+    if ((Get-Content $csproj -Raw) -notmatch 'ModShared[\\/]WelcomeTip\.cs') {
+        throw ('SurvivalLog.' + $m + ' 的 csproj 未链入 ModShared\WelcomeTip.cs（防盗署名气泡为套件规范，接法见 docs\00 与 ModShared\README.md）')
+    }
+    $plug = Get-ChildItem $dir -Filter '*Plugin.cs' | Select-Object -First 1
+    if ($plug -and ((Get-Content $plug.FullName -Raw) -notmatch 'WelcomeTip\.Install')) {
+        throw ($plug.Name + ' 缺少 WelcomeTip.Install(Log) 调用（防盗署名气泡为套件规范，接法见 docs\00）')
+    }
+}
+Write-Host '防盗署名气泡接线校验通过（全部套件 mod 已接入 WelcomeTip）'
+
 # ---------- 3. 构建（用仓库自带便携 SDK，与历史构建一致）----------
 $dotnetExe = Join-Path $projRoot 'sdk\dotnet\dotnet.exe'
 if (-not (Test-Path $dotnetExe)) { $dotnetExe = 'dotnet' } # 兜底系统 PATH

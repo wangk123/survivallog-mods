@@ -45,4 +45,8 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="../ModShared/WelcomeTip.cs" />
+  </ItemGroup>
+
 </Project>

@@ -64,6 +64,7 @@ public sealed class CabinetBurdenPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<BurdenTicker>();
         Log.LogInfo($"[CabinetBurden] loaded：储物家具负重 ×{BurdenMult.Value}（默认排除购物车 3、轿车 4）");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 }
 

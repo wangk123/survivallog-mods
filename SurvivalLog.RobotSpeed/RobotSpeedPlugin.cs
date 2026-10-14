@@ -96,6 +96,7 @@ public sealed class RobotSpeedPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<RobotTicker>();
         Log.LogInfo($"[RobotSpeed] loaded v{Version}：机器人提速（表直写：动作系数/移速/充电/续航/耗电/动作时长/货舱；不含插槽与模块）");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 }
 

@@ -1,6 +1,7 @@
-# ModShared — 扩容 mod 共享源码
+# ModShared — 套件共享源码
 
-`BagTableRw.cs`（编译时由 4 个扩容 mod 各自链入，产物为各自独立 dll，运行时互不依赖）。
+- `BagTableRw.cs`：Config_Bag / Config_Furniture 内存表直写工具（编译时由 4 个扩容系 mod 各自链入，产物为各自独立 dll，运行时互不依赖）。
+- `WelcomeTip.cs`：防盗署名气泡（2026-10-14，编译时由全部 7 个套件 mod 链入）。
 
 ## 职责
 
@@ -28,8 +29,22 @@ Config_Bag / Config_Furniture **内存表直写工具**：表访问、进程内�
 | `InvalidateBagSizeIndex(cm, lines)` | `_bagSizeSet = null` 懒重建 |
 | `RepairV11TimeScale()` | **一次性**修复 FridgeChill v1.1.0 写坏并存档的物品 TimeScale（0.385 区段 ×2；<0.1 冰箱正确值不碰），按 InstanceId 防重复 |
 
+## WelcomeTip.cs（防盗署名气泡，2026-10-14）
+
+- 目的：限制恶意转载收费引流——进档后主角头顶弹 3 秒原生对话气泡（欢迎语+署名+抖音号）。
+- 入口 `WelcomeTip.Install(Log)`：`GameObject.Find("SurvivalLog.WelcomeTip")` 去重，先到者建
+  DontDestroyOnLoad ticker → 装任意一个套件 mod 即有气泡，装多个只弹一条。
+- 气泡通道（interop 实证）：`AgentModel.Unit_ShowHeadTalk(text, during)`；主角模型
+  `WebGm.GetLeadingRoleModel(out string)`（静态一行）；异常兜底 `(headBar as UnitHeadBar).ShowTalk(text, 3, true)`。
+- 生命周期：轮询 `BaseSingleton<BattleLogicWorld>.IsInstanceCreated` 沿 false→true（进档）触发、
+  true→false（回菜单）复位；等主角模型最长 15s，超时静默放弃。全程只读，不改游戏数据。
+- 无 cfg 开关（防盗内置行为，防剥离，也避开 cfg 首跑固化坑）。
+- 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；**改动需 7 个 mod 全部重编**。
+
 ## 维护约定
 
-- 本文件是 4 个 mod 的公共依赖：改动必须逐一评估对 Backpack/Cabinet/FridgeExpand/FridgeChill 的影响，
-  并同步更新 4 份 DESIGN.md。
-- 任何新增写操作先过红线检查：**不写 Data_Item / 不写存档**（唯一例外 RepairV11TimeScale 是修复历史损伤）。
+- `BagTableRw.cs` 是 4 个扩容系 mod 的公共依赖：改动必须逐一评估对 Backpack/Cabinet/FridgeExpand/FridgeChill 的影响，
+  并同步更新对应 DESIGN.md。
+- `WelcomeTip.cs` 是全部 7 个套件 mod 的公共依赖：改动需同步更新 7 份 DESIGN.md 的"防盗署名气泡"节并全量重编。
+- 任何新增写操作先过红线检查：**不写 Data_Item / 不写存档**（唯一例外 RepairV11TimeScale 是修复历史损伤；
+  WelcomeTip 只读状态不写任何数据）。

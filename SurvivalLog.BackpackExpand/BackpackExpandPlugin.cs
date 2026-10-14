@@ -63,6 +63,7 @@ public sealed class BackpackExpandPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<BackpackTicker>();
         Log.LogInfo($"[BackpackExpand] loaded：宽×{WidthMult.Value} 高×{HeightMult.Value} 负重×{BurdenMult.Value}");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
     internal static HashSet<int> BuildTargets()

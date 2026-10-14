@@ -85,6 +85,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         go.AddComponent<AccessTicker>();
         Log.LogInfo("[CabinetEverywhere] loaded：白名单注入=" + EnableCraftSource.Value +
                     "，页签注入=烹饪/老鼠笼/酿酒(" + EnableCooking.Value + "/" + EnableRatCage.Value + "/" + EnableBrew.Value + ")");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 }
 

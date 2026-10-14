@@ -130,6 +130,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
         go.AddComponent<CabinetTicker>();
         Log.LogInfo($"[CabinetExpand] loaded：柜子宽×{WidthMult.Value} 高×{HeightMult.Value}；" +
                     $"冰箱宽×{FridgeWidthMult.Value} 高×{FridgeHeightMult.Value}（已并入原冰箱扩容）");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
     /// <summary>

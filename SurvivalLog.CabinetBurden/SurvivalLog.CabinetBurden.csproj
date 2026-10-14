@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Include="../ModShared/BagTableRw.cs" />
+    <Compile Include="../ModShared/WelcomeTip.cs" />
   </ItemGroup>
 
   <ItemGroup>

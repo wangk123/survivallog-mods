@@ -129,3 +129,10 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
   ① 装扩舱模块会切到未改写的扩展档行盖掉 mod 效果 → 改为键值两排行同倍放大；
   ② 插槽设置改成功但面板仍 2 槽 → 门控=装着 SlotExpand 模块（`_moduleTypeMask & 0x800`），
   默认补发该模块物品。修复版待玩家复测。
+
+## 7. 防盗署名气泡（2026-10-14，套件统一）
+
+- `Load()` 末尾调用 `SurvivalLog.ModShared.WelcomeTip.Install(Log)`（共享源 `ModShared/WelcomeTip.cs`，csproj 已链入）。
+- 行为：进档后主角头顶弹 3 秒原生对话气泡——`AgentModel.Unit_ShowHeadTalk(text, 3)`；主角模型取 `WebGm.GetLeadingRoleModel(out string)`（静态），异常时退 `(headBar as UnitHeadBar).ShowTalk(text, 3, true)`。每次进档一次，回主菜单再进再弹。
+- 7 个套件 mod 全部调用，靠 `GameObject.Find("SurvivalLog.WelcomeTip")` 去重：先到者创建 DontDestroyOnLoad ticker，其余跳过——装多个只弹一条。无 cfg 开关（防盗署名为内置行为，防剥离）。
+- 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；改文案后 7 个 mod 需全部重编。

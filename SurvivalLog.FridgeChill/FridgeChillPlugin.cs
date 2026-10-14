@@ -56,6 +56,7 @@ public sealed class FridgeChillPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<ChillTicker>();
         Log.LogInfo($"[FridgeChill] loaded：保鲜 ×{KeepMult.Value}");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
     internal static HashSet<int> BuildTargets()

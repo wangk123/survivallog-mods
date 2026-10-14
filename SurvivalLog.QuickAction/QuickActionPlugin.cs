@@ -112,6 +112,7 @@ public sealed class QuickActionPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<QuickTicker>();
         Log.LogInfo($"[QuickAction] loaded v{Version}：分类引擎（物品使用/家具功能/房屋维护/杂项交互/娱乐锻炼 + 周期效果守卫 + 引用轴）");
+        SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
     /// <summary>

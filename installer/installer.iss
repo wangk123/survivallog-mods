@@ -9,17 +9,22 @@
 #endif
 #define MyAppVer SuiteVer
 #define RelRoot "..\release"
+; 作者署名/防盗引流（2026-10-14）：每页底部署名条（TNewStaticText）+ 欢迎页二维码名片，均点击直达作者抖音主页
+#define DouyinUrl "https://v.douyin.com/z99n5ZQfkyw/"
 
 [Setup]
 AppId={{7B1E6A54-C93E-4F0A-9D62-7C4E2F5A8D10}
 AppName={#MyAppName}
 AppVersion={#MyAppVer}
-AppPublisher=免费分享，仅供学习交流
+AppPublisher=Night（抖音号 166660371）· 免费分享，谨防盗版收费
+AppPublisherURL={#DouyinUrl}
 DefaultDirName={code:GetGameDir}
 AppendDefaultDirName=no
 UsePreviousAppDir=no
 PrivilegesRequired=lowest
 DisableProgramGroupPage=yes
+; Inno 7 默认自动跳过欢迎页 → 显式保留（欢迎页要展示抖音名片）
+DisableWelcomePage=no
 WizardStyle=modern
 Compression=lzma2/max
 SolidCompression=yes
@@ -115,6 +120,9 @@ Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "动作提速.md"; Flags: ignoreversion
 
+; 抖音名片（仅向导期署名展示用，dontcopy 不落地安装目录）
+Source: "assets\douyin_night_card.bmp"; DestDir: "{tmp}"; Flags: dontcopy
+
 [Run]
 Filename: "steam://rungameid/4164790"; Description: "通过 Steam 启动游戏"; Flags: postinstall shellexec skipifsilent unchecked
 
@@ -122,6 +130,85 @@ Filename: "steam://rungameid/4164790"; Description: "通过 Steam 启动游戏";
 const
   GameAppId = '4164790';
   GameDirSuffix = 'steamapps\common\Survival Log';
+  AuthorDouyinUrl = '{#DouyinUrl}';
+
+var
+  SigWelcome: TNewStaticText;
+  SigInner: TNewStaticText;
+  SigFinish: TNewStaticText;
+  DouyinCardHost: TPanel;
+  DouyinCard: TBitmapImage;
+
+// 点击打开作者抖音主页（署名条与二维码名片共用）
+procedure OpenDouyinPage(Sender: TObject);
+var
+  ErrorCode: Integer;
+begin
+  ShellExec('open', AuthorDouyinUrl, '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+end;
+
+// 每页底部署名条：TNewStaticText（窗口控件）。不能用 TLabel——
+// 2026-10-14 渲染对照实测：Inno7 皮肤绘制会盖住 TLabel（图形控件），TNewStaticText 正常显示可点击。
+function PutSignature(host: TNewNotebookPage): TNewStaticText;
+begin
+  Result := TNewStaticText.Create(host);
+  Result.Parent := host;
+  Result.Caption := 'MOD免费分享·请支持正版 | 作者 Night · 抖音号 166660371（点击打开主页）';
+  Result.Color := clWhite;
+  Result.Font.Color := clNavy;
+  Result.Font.Size := 9;
+  Result.Alignment := taCenter;
+  Result.Cursor := crHand;
+  Result.OnClick := @OpenDouyinPage;
+  Result.SetBounds(ScaleX(12), host.Height - ScaleY(34), host.Width - ScaleX(24), ScaleY(22));
+end;
+
+// 每个向导界面常驻底部署名条（欢迎页/内页=目录与组件与安装中/完成页三个宿主）+
+// 欢迎页右下角抖音二维码名片（裸 TBitmapImage，实测可显示可点击）。
+// 仅创建控件、无交互弹窗，/VERYSILENT 静默安装同样安全。
+procedure InitializeWizard();
+begin
+  // 组件页列表本来顶到页底，压低 34 让署名条零遮挡（其余页面底部本来就空）
+  try
+    WizardForm.ComponentsList.Height := WizardForm.ComponentsList.Height - ScaleY(34);
+  except
+  end;
+
+  SigWelcome := PutSignature(WizardForm.WelcomePage);
+  SigInner := PutSignature(WizardForm.InnerPage);
+  SigFinish := PutSignature(WizardForm.FinishedPage);
+
+  ExtractTemporaryFile('douyin_night_card.bmp');
+  // 二维码名片必须用 TPanel（窗口控件）包着 TBitmapImage：欢迎页正文标签 WelcomeLabel2
+  // 是不透明窗口控件，矩形一直延伸到页面下部，会把裸图形位图的下半截盖住（10-14 实测）。
+  // 面板创建晚于标签 → 窗口层级在上，完整显示；再压低标签高度双保险。
+  try
+    WizardForm.WelcomeLabel2.Height := WizardForm.WelcomeLabel2.Height - ScaleY(150);
+  except
+  end;
+  DouyinCardHost := TPanel.Create(WizardForm.WelcomePage);
+  DouyinCardHost.Parent := WizardForm.WelcomePage;
+  DouyinCardHost.SetBounds(WizardForm.WelcomePage.Width - ScaleX(180),
+    WizardForm.WelcomePage.Height - ScaleY(283),
+    ScaleX(164), ScaleY(243));
+  DouyinCard := TBitmapImage.Create(DouyinCardHost);
+  DouyinCard.Parent := DouyinCardHost;
+  DouyinCard.Bitmap.LoadFromFile(ExpandConstant('{tmp}\douyin_night_card.bmp'));
+  DouyinCard.Stretch := True;
+  DouyinCard.SetBounds(ScaleX(2), ScaleY(2), ScaleX(160), ScaleY(239));
+  DouyinCard.Cursor := crHand;
+  DouyinCard.OnClick := @OpenDouyinPage;
+
+  // 几何自证（仅 /LOG 运行时落盘，平时零开销）
+  Log('WT: innerHost=' + IntToStr(WizardForm.InnerPage.Width) + 'x' + IntToStr(WizardForm.InnerPage.Height) +
+      ' welcomeHost=' + IntToStr(WizardForm.WelcomePage.Width) + 'x' + IntToStr(WizardForm.WelcomePage.Height) +
+      ' finishHost=' + IntToStr(WizardForm.FinishedPage.Width) + 'x' + IntToStr(WizardForm.FinishedPage.Height) +
+      ' sigInner.T=' + IntToStr(SigInner.Top) + ' H=' + IntToStr(SigInner.Height) +
+      ' card L=' + IntToStr(DouyinCard.Left) + ' T=' + IntToStr(DouyinCard.Top) +
+      ' W=' + IntToStr(DouyinCard.Width) + ' H=' + IntToStr(DouyinCard.Height) +
+      ' compList bottom=' + IntToStr(WizardForm.ComponentsList.Top + WizardForm.ComponentsList.Height));
+end;
+
 
 // 游戏进程检测：dll 被占用时预清理会静默失败，必须在动手前拦下。
 // 精确匹配：只有当运行中的 SurvivalLog.exe 的路径位于本次安装目标目录下才拦截
