@@ -6,11 +6,12 @@ using UnityEngine;
 namespace SurvivalLog.ModShared
 {
     /// <summary>
-    /// 防盗署名气泡（2026-10-14）：进入存档后在主角头顶弹 3 秒欢迎气泡。
-    /// 复用游戏原生头顶对话气泡：AgentModel.Unit_ShowHeadTalk(text, during)
-    /// （主链路 WebGm.GetLeadingRoleModel 一行取主角模型；失败退 headBar.ShowTalk 直调）。
+    /// 防盗署名气泡（2026-10-14）：进入存档后在主角头顶显示 3 秒欢迎文字。
+    /// 通道 AgentModel.Unit_ShowHeadTalk(text, 3)（主角模型经 WebGm.GetLeadingRoleModel 一行获取）。
+    /// 实测定稿：主角头顶条为官方无框文字样式（带框气泡仅 NPC 管线；silentHeadTalk 默认
+    /// false、ImmediateShowTalk/ShowTalk 直调同样无框）；During≈真实秒（传 360 会远超 3 秒）。
     /// 7 个套件 mod 的 Load() 都调用 Install()，靠 GameObject 名去重：先到者创建
-    /// DontDestroyOnLoad 物体挂本 ticker，其余插件直接跳过 → 装任意一个 mod 即有气泡，
+    /// DontDestroyOnLoad 物体挂本 ticker，其余插件直接跳过 → 装任意一个 mod 即有提示，
     /// 装多个也只弹一条。每次进档弹一次（BattleLogicWorld 重建沿复位），无 cfg 开关
     /// （防盗署名为内置行为，同时避开 cfg 首跑固化坑）。只读游戏状态，不改任何游戏数据。
     /// </summary>
@@ -94,23 +95,13 @@ namespace SurvivalLog.ModShared
                 var model = GameCore.HotUpdate.WebGm.GetLeadingRoleModel(out _);
                 if (model == null) return; // ShowWorld 主角模型未就绪，下轮再试
 
-                // 主通道：直调 UnitHeadBar.ShowTalk——带气泡背景框+开/关 Timeline 动画的完整
-                // 原生"思考气泡"（Unit_ShowHeadTalk 实测只出无框文字，不够醒目，仅作兜底）。
-                // ignoreTimeScale=true：3 真实秒，不受游戏时间缩放影响。
-                var raw = model.headBar;
-                var hb = raw != null
-                    ? raw.TryCast<GameCore.HotUpdate.Battle.Show.UnitHeadBar>()
-                    : null;
-                if (hb != null)
-                {
-                    hb.ShowTalk(WelcomeTip.Text, WelcomeTip.ShowSec, true);
-                }
-                else
-                {
-                    model.Unit_ShowHeadTalk(WelcomeTip.Text, WelcomeTip.ShowSec);
-                }
+                // 定稿（5 轮实测）：主角头顶条为官方无框文字样式（silentHeadTalk 本就 false，
+                // ImmediateShowTalk/ShowTalk/直调全部无框，非本 mod 缺陷）；
+                // During≈真实秒——传 3 恰好约 3 秒，传 360（游戏秒换算）会远超 3 秒。
+                model.Unit_ShowHeadTalk(WelcomeTip.Text, WelcomeTip.ShowSec);
+
                 _shown = true;
-                WelcomeTip.Log?.LogInfo($"[WelcomeTip] 署名气泡已显示（进档后等待 {_waited:0.0}s）");
+                WelcomeTip.Log?.LogInfo($"[WelcomeTip] 署名气泡已显示（3 秒文字版，等待 {_waited:0.0}s）");
             }
             catch { /* 下轮重试，超时自然放弃，绝不打扰游戏 */ }
         }
