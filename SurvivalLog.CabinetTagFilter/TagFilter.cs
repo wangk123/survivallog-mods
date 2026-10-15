@@ -31,6 +31,7 @@ internal static class TagFilter
                 _probeDone = true;
                 Probe(web);
             }
+
         }
         catch (Exception e)
         {
@@ -38,7 +39,6 @@ internal static class TagFilter
         }
     }
 
-    /// <summary>UI 主 WebView（Vuplex）：WebUILayer.canvasWebViewPrefab.WebView；未初始化返回 null 等下轮。</summary>
     private static Vuplex.WebView.IWebView GetWebView()
     {
         try
@@ -53,10 +53,6 @@ internal static class TagFilter
         catch { return null; }
     }
 
-    /// <summary>
-    /// 同源探针：Root 与 iframe 同源是整个 DOM 方案的前提（包装 contentWindow.postMessage /
-    /// 直访 contentDocument）。结果写日志，非 OK 时提示功能受限，便于远程排障。
-    /// </summary>
     private static void Probe(Vuplex.WebView.IWebView web)
     {
         var js = "(function(){try{var f=document.querySelector('#iframe-container iframe');"

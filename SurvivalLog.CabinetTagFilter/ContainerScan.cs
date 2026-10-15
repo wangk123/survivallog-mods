@@ -5,16 +5,29 @@ using SurvivalLog.ModShared;
 namespace SurvivalLog.CabinetTagFilter;
 
 /// <summary>
-/// 家中容器枚举（筛选用）：单遍直扫 AgentManager.agentList，凡 BagId&gt;0 的家具
+/// 家中容器枚举（筛选用）：单遍直扫 AgentManager.agentList，凡 BagId&gt;0 的**储物**家具
 /// （柜子/冰箱/置物架/材料架/床头柜/载具…）全部收录。
 /// 语义=「不是带该标签的容器就藏页签」，名单宁全勿缺：没有页签的容器进了名单也无害
 /// （无页签可藏）；反之缺了（如冰箱）就会出现"常驻藏不掉"。
 /// 与储藏柜直达（CabinetEverywhere）的注入名单无关——那边的黑名单只决定"注入哪些柜子页签"，
 /// 本筛选对所有容器页签一视同仁；两个 mod 可各自独立安装。
+/// **非储物功能包必须排除**（与储藏柜直达 ExcludeBagIds 默认名单同源同维护）：无人机货舱
+/// （BagId 1008，无人机中控台/停机坪挂的就是它）、老鼠笼/粉碎机/酿酒桶等功能槽、炉具、
+/// 门窗床垃圾桶等。这些会出现在功能界面的页签数组里（如无人机交易的中控台页签）——
+/// 误收进名单又无匹配标签会被当柜子藏掉，官方 A/D 步进切过去即被弹回＝卡死闪一下
+/// （2026-10-15 实测：交易界面向左到中控台卡住）。排除=永不参与筛选=页签常显。
 /// 顺序即性能：TryCast+配置查包（廉价，滤掉绝大多数）→ 主图严格相等短路 → 仅非主图走 IsHomeMap（重）。
 /// </summary>
 internal static class ContainerScan
 {
+    /// <summary>非储物功能包（同储藏柜直达 ExcludeBagIds 默认名单；游戏更新加新功能包时两处同步）。</summary>
+    private static readonly HashSet<int> NonStorageBagIds = new()
+    {
+        5001, 5002, 5003, 5004, 5005, 5006, 5011, // 厨房电器：燃料炉/电烤箱/微波炉/燃气灶/榨汁机/咖啡机/电火锅
+        5007, 5008, 5009, 5014, 5015, 5017, 5020, 115004, // 机器功能槽/老鼠笼/粉碎机/口粮压制机/暖房工程台/酿酒桶
+        3001, 1050, 1008, 1060, 1014, 10001, 10004, // 围栏/吊篮/无人机/门/窗/床/垃圾桶
+    };
+
     internal sealed class ContainerInst
     {
         public long OwnerId;
@@ -61,6 +74,7 @@ internal static class ContainerScan
                 int bagId = 0;
                 try { bagId = cfg != null ? cfg.BagId : 0; } catch { }
                 if (bagId <= 0) continue; // 非容器家具
+                if (NonStorageBagIds.Contains(bagId)) continue; // 非储物功能包（无人机货舱等）：不参与筛选
 
                 int furnMap = 0;
                 try { furnMap = furn.MapConfigId; } catch { }
