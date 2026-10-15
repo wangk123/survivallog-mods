@@ -129,6 +129,8 @@ Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\
 
 ; 抖音名片（仅向导期署名展示用，dontcopy 不落地安装目录）
 Source: "assets\douyin_night_card.bmp"; DestDir: "{tmp}"; Flags: dontcopy
+; QuickAction cfg 按勾选直写脚本（仅安装期 ApplyQuickActionCfg 提取用，不落地安装目录）
+Source: "fix_quickaction_cfg.ps1"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Run]
 Filename: "steam://rungameid/4164790"; Description: "通过 Steam 启动游戏"; Flags: postinstall shellexec skipifsilent unchecked
@@ -305,40 +307,49 @@ begin
   Result := 'C:\Program Files (x86)\Steam\steamapps\common\Survival Log';
 end;
 
-// 组件勾选 → 数值（勾=500ms，不勾=0）
+// 组件勾选 → 参数值（勾=500ms，不勾=0）
 function CompMs(const comp: string): string;
 begin
   if WizardIsComponentSelected(comp) then Result := '500' else Result := '0';
 end;
 
-// 把动作提速分类勾选写成 ASCII 引导文件（mod 首次启动读取作为 cfg 默认值后自删；
-// 玩家已有 cfg 键永远优先，重装不会覆盖调好的数值）
-procedure WriteQuickActionBoot();
+// 按勾选直写 QuickAction cfg 五个分类键（v1.3.2 起替代 quickaction.boot.ini 引导）。
+// 旧机制的值只作 Bind 默认值，被玩家 cfg 已固化的旧值压住——"取消勾选"永不生效
+// （新玩家落地预置全 500 cfg、老玩家首跑已固化 500，两条路全中）。改为安装完成时
+// 用 PowerShell 把五键值直写 cfg：勾=500/不勾=0，其余内容（Overrides/注释）原样保留。
+// 用 PowerShell 是因为 Inno 原生 LoadStrings/SaveStrings 处理无 BOM UTF-8 中文 cfg
+// 会按 ANSI 误读导致字节损坏；ps1 统一 .NET UTF-8 无 BOM 读写。
+procedure ApplyQuickActionCfg();
 var
-  boot: string;
-  s: string;
+  rc: Integer;
+  ps1, cfg: string;
 begin
-  boot := ExpandConstant('{app}\BepInEx\config\quickaction.boot.ini');
-  if WizardIsComponentSelected('mod_quick') then
-  begin
-    s := 'itemMs='  + CompMs('mod_quick\qa_item')  + #13#10 +
-         'furnMs='  + CompMs('mod_quick\qa_furn')  + #13#10 +
-         'maintMs=' + CompMs('mod_quick\qa_maint') + #13#10 +
-         'miscMs='  + CompMs('mod_quick\qa_misc')  + #13#10 +
-         'funMs='   + CompMs('mod_quick\qa_fun')   + #13#10;
-    SaveStringToFile(boot, s, False);
-  end
-  else
-  begin
-    // 本次未装动作提速：清掉可能残留的旧引导文件
-    if FileExists(boot) then DeleteFile(boot);
+  if not WizardIsComponentSelected('mod_quick') then exit;
+  try
+    ExtractTemporaryFile('fix_quickaction_cfg.ps1');
+    ps1 := ExpandConstant('{tmp}\fix_quickaction_cfg.ps1');
+    cfg := ExpandConstant('{app}\BepInEx\config\com.local.survivallog.quickaction.cfg');
+    if Exec(ExpandConstant('{cmd}'),
+        '/C powershell -NoProfile -ExecutionPolicy Bypass -File "' + ps1 + '"' +
+        ' -CfgPath "' + cfg + '"' +
+        ' -ItemMs '  + CompMs('mod_quick\qa_item')  +
+        ' -FurnMs '  + CompMs('mod_quick\qa_furn')  +
+        ' -MaintMs ' + CompMs('mod_quick\qa_maint') +
+        ' -MiscMs '  + CompMs('mod_quick\qa_misc')  +
+        ' -FunMs '   + CompMs('mod_quick\qa_fun'),
+        '', SW_HIDE, ewWaitUntilTerminated, rc) and (rc = 0) then
+      Log('QA cfg 五键已按勾选直写')
+    else
+      Log('QA cfg 直写未成功（exit=' + IntToStr(rc) + '），cfg 保持原值/预置 500');
+  except
+    Log('QA cfg 直写异常: ' + GetExceptionMessage);
   end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
-    WriteQuickActionBoot();
+    ApplyQuickActionCfg();
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

@@ -96,9 +96,16 @@ AgentAction 另有 MatchedFuncId（>0=走家具功能表）可区分两类来源
 
 ### 安装引导（installer 联动）
 
-安装器 mod_quick 下 5 个子组件勾选 → `CurStepChanged` 写 ASCII 引导文件
-`BepInEx\config\quickaction.boot.ini`（itemMs/furnMs/maintMs/miscMs/funMs）→
-mod `ReadBoot()` 读后即删，仅作 Bind 默认值；**已有 cfg 键永远优先**（重装不覆盖玩家调好的数值）。
+安装器 mod_quick 下 5 个子组件勾选 → 安装完成阶段（ssPostInstall）用 PowerShell 脚本
+（`installer/fix_quickaction_cfg.ps1`）把五个分类键值**直写** cfg（勾=500/不勾=0），
+其余内容（Overrides/注释/其他段）原样保留；cfg 不存在则按勾选生成最小 cfg。
+用 PowerShell 是因为 Inno 原生读写无 BOM UTF-8 中文 cfg 会按 ANSI 误读损坏字节。
+
+**v1.3.2 前的旧机制（quickaction.boot.ini）已废**：旧机制写的 ASCII 引导文件只作
+Bind 默认值，被玩家 cfg 已固化的旧值压住——"取消勾选"永不生效（新玩家落地预置全
+500 cfg、老玩家首跑固化 500，两条路全中，玩家实测取消勾选杂项交互仍 0.5 秒）。
+mod `ReadBoot()` 保留仅为兼容旧安装器（找不到 boot.ini 走内置默认全 500），
+安装器侧已改为 cfg 直写。
 
 ## 4. 代码结构
 
