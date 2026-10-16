@@ -41,6 +41,60 @@ internal static class TagFilterJs
   // 事件格式与页面原生点击完全一致（各页实证）：tt=TAB_SWITCH{tab}、bag=SWITCH_BAG{ownerId}、
   // trade=SWITCH_BAG{ownerId:String}、cart/cart0=TAB_SWITCH{tab}。Root 转发只认 sourcePageId
   //（=iframe 元素 id，resolveSourceId 的 claimed 分支），从 Root 帧发即模拟了页面来源。
+  function rebuildLib() {
+    S.dim = {};
+    S.foodId = 0;
+    for (var i = 0; i < S.lib.length; i++) {
+      var e = S.lib[i];
+      S.dim[e.id] = e.dim;
+      if (e.dim === 4) S.foodId = e.id; // 全部食物（食物维度的代表标签）
+    }
+  }
+  rebuildLib();
+
+  // 选中匹配：食物=命中任一 Dim1-4 食物标签；其他=精确命中
+  function matchesSel(tags) {
+    if (S.sel === S.foodId) {
+      for (var i = 0; i < tags.length; i++) {
+        var d = S.dim[tags[i]] || 0;
+        if (d >= 1 && d <= 4) return true;
+      }
+      return false;
+    }
+    return tags.indexOf(S.sel) >= 0;
+  }
+  function shouldHide(k) {
+    if (!S.sel) return false;
+    var t = S.owners[k];
+    return t !== undefined && !matchesSel(t);
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ---- 截读 Root→iframe 的 *_BagMsg：记页签数组（含 null 占位，维持下标对齐）----
+  function normOwner(t) {
+    if (!t) return null;
+    var o = (t.ownerId != null) ? t.ownerId : ((t.owner != null) ? t.owner : null);
+    return (o == null || o === '') ? null : String(o);
+  }
+  function extractTabs(msg) {
+    try {
+      if (!msg || typeof msg.type !== 'string' || msg.type.indexOf('BagMsg') < 0) return null;
+      var d = msg.data;
+      if (typeof d === 'string') d = JSON.parse(d);
+      if (!d) return null;
+      var arr = null;
+      if (d.bagTabsJson) arr = JSON.parse(d.bagTabsJson);
+      else arr = d.cabinetTabs || d.bagTabs || d.cartTabs || null;
+      if (!arr) return null;
+      var out = [];
+      for (var i = 0; i < arr.length; i++) out.push(normOwner(arr[i]));
+      return out;
+    } catch (e) { return null; }
+  }
+
+
   function releasePending(st) {
     if (!st.pending) return;
     var p = st.pending;
@@ -389,6 +443,9 @@ internal static class TagFilterJs
       var dd = st.dd;
       if (!opts.length) { if (dd) dd.style.display = 'none'; return; }
       if (!dd || !dd.isConnected || dd.ownerDocument !== st.doc) {
+        // 先清掉本页签栏里遗留的旧下拉（初始化竞态窗口曾插出两个，保此文档内唯一）
+        var olds = c.bar.querySelectorAll('.sltf-dd');
+        for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
         dd = st.doc.createElement('select');
         dd.className = 'sltf-dd';
         dd.title = '按标签筛选容器页签';
@@ -469,12 +526,13 @@ internal static class TagFilterJs
 
   function hookFrame(el) {
     for (var i = 0; i < S.frames.length; i++) if (S.frames[i].el === el) return;
-    var st = { el: el, doc: null, tabs: null, hidden: [], dd: null, mo: null, xorigin: false, lastActiveIdx: null, frozen: [], freezeTimer: 0, pending: null, pendingTimer: 0, skipEcho: null };
+    var st = { el: el, doc: null, tabs: null, hidden: [], dd: null, mo: null, xorigin: false, lastActiveIdx: null, frozen: [], freezeTimer: 0, pending: null, pendingTimer: 0, skipEcho: null, initTimer: 0 };
     S.frames.push(st);
     var init = function () {
       var doc = null;
       try { doc = el.contentDocument; } catch (e) { doc = null; }
-      if (!doc || !doc.body || !doc.body.firstChild) { setTimeout(init, 150); return; }
+      if (!doc || !doc.body || !doc.body.firstChild) { st.initTimer = setTimeout(init, 150); return; }
+      st.initTimer = 0;
       st.doc = doc;
       wrapRelay(el, st);
       if (!st.mo) st.mo = new MutationObserver(function (rs) { schedule(st, rs); });
@@ -482,6 +540,9 @@ internal static class TagFilterJs
       schedule(st);
     };
     el.addEventListener('load', function () {
+      // 界面（重）载：取消还在轮询的旧 init 链（首次打开期间的竞态窗口曾插出两个下拉，
+      // 2026-10-16 实测），再重置状态重启初始化
+      if (st.initTimer) { clearTimeout(st.initTimer); st.initTimer = 0; }
       st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.lastActiveIdx = null; st.skipEcho = null;
       st.pending = null;
       if (st.pendingTimer) { clearTimeout(st.pendingTimer); st.pendingTimer = 0; }

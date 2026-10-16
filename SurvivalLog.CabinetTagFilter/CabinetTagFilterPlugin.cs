@@ -26,7 +26,7 @@ public sealed class CabinetTagFilterPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.cabinettagfilter";
     public const string Name = "CabinetTagFilter";
-    public const string Version = "1.3.2"; // 占位版本号：正式发版号由作者定（version.json 单源）
+    public const string Version = "1.3.3"; // 占位版本号：正式发版号由作者定（version.json 单源）
 
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> Enable;
