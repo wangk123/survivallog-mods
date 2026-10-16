@@ -48,6 +48,10 @@
       <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\HotUpdate.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Vuplex.WebView">
+      <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\Vuplex.WebView.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>

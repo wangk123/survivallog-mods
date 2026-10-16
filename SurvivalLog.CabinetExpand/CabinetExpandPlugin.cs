@@ -44,6 +44,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
     internal static ConfigEntry<float> HeightMult;
     internal static ConfigEntry<float> FridgeWidthMult;
     internal static ConfigEntry<float> FridgeHeightMult;
+    internal static ConfigEntry<int> MaxCols;
     internal static ConfigEntry<string> ExtraIds;
     internal static ConfigEntry<string> ExcludeIds;
     internal static ConfigEntry<bool> Verbose;
@@ -92,6 +93,9 @@ public sealed class CabinetExpandPlugin : BasePlugin
             "冰箱宽度倍数（四舍五入取整）。1 = 还原原生。原冰箱扩容 mod 已并入本 mod。");
         FridgeHeightMult = Config.Bind("Expand", "FridgeHeightMult", 1.5f,
             "冰箱高度倍数（四舍五入取整）。1 = 还原原生。");
+        MaxCols = Config.Bind("Expand", "MaxCols", 23,
+            "扩容后的宽度上限（倍数取整后再封顶；0 = 不封顶）。默认 23 = 与超大型置物架同宽，" +
+            "所有柜子页签宽度统一，各界面只需一档缩放、切柜子不跳尺寸。材料架受影响：30→23 列（540→414 格）。");
         ExtraIds = Config.Bind("Expand", "ExtraIds", "",
             "追加的 BagId（逗号分隔，优先级最高）。全冷链电器的包（冰箱族）会自动归入冰箱倍数组，" +
             "其余归柜子倍数组。注意 bag 10002=金属柜，家具\"小型置物架\"用的是包 110002（id 撞号勿加错）。");
@@ -109,6 +113,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
         HeightMult.SettingChanged += reload;
         FridgeWidthMult.SettingChanged += reload;
         FridgeHeightMult.SettingChanged += reload;
+        MaxCols.SettingChanged += reload;
         ExtraIds.SettingChanged += reload;
         ExcludeIds.SettingChanged += reload;
 
@@ -128,8 +133,14 @@ public sealed class CabinetExpandPlugin : BasePlugin
         var go = new GameObject("CabinetExpand.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<CabinetTicker>();
+
+        // 视口适配守卫（2026-10-16）：大柜子页签把界面右栏挤出屏幕的修复，
+        // 12 个官方适配页让官方自测真实宽度 + 3 个无适配页补官方同款缩放；详见 ViewportFit.cs
+        ViewportFit.Install(Config);
+        ViewportFit.Attach();
         Log.LogInfo($"[CabinetExpand] loaded：柜子宽×{WidthMult.Value} 高×{HeightMult.Value}；" +
-                    $"冰箱宽×{FridgeWidthMult.Value} 高×{FridgeHeightMult.Value}（已并入原冰箱扩容）");
+                    $"冰箱宽×{FridgeWidthMult.Value} 高×{FridgeHeightMult.Value}（已并入原冰箱扩容）；" +
+                    $"视口守卫 {(ViewportFit.Enabled.Value ? "开" : "关")}");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
@@ -209,6 +220,114 @@ public sealed class CabinetExpandPlugin : BasePlugin
         catch { }
         return "?";
     }
+
+    // ── 宽度封顶（2026-10-16）：本地原尺寸缓存 + 分流 + 封顶改写，不动 ModShared ──
+
+    /// <summary>受管包扩后的最大宽/高（ViewportFit 守卫『打开即最大尺寸』的初始锁基准）。</summary>
+    internal static int ManagedMaxW;
+    internal static int ManagedMaxH;
+
+    internal static void UpdateManagedMax(HashSet<int> cabinets, HashSet<int> fridges)
+    {
+        try
+        {
+            var cm = BagTable.Cm();
+            var dict = cm == null ? null : BagTable.BagDict(cm);
+            if (dict == null) return;
+            int mw = 0, mh = 0;
+            foreach (var pair in dict)
+            {
+                if (!cabinets.Contains(pair.Key) && !fridges.Contains(pair.Key)) continue;
+                var bag = pair.Value;
+                if (bag == null) continue;
+                try
+                {
+                    var s = bag.Size;
+                    if (s != null && s.Count >= 2)
+                    {
+                        if (s[0] > mw) mw = s[0];
+                        if (s[1] > mh) mh = s[1];
+                    }
+                }
+                catch { }
+            }
+            if (mw > 0) ManagedMaxW = mw;
+            if (mh > 0) ManagedMaxH = mh;
+        }
+        catch { }
+    }
+
+    /// <summary>本会话首见即原生（我们的改写是唯一写者）；跨周期幂等。</summary>
+    private static readonly Dictionary<int, int> NativeW = new();
+    private static readonly Dictionary<int, int> NativeH = new();
+
+    private static int ReadNative(string what, int id, int fallback)
+    {
+        if (what == "w") { if (NativeW.TryGetValue(id, out var w)) return w; NativeW[id] = fallback; return fallback; }
+        if (NativeH.TryGetValue(id, out var h)) return h;
+        NativeH[id] = fallback;
+        return fallback;
+    }
+
+    /// <summary>
+    /// 按投影宽度分流：round(nativeW × mult) &gt; cap 的包进 capSet（cap&lt;=0 时全进 normal）。
+    /// nativeW 优先取本地缓存，未缓存读当前值（本会话首次见到的当前值即原生值）。
+    /// </summary>
+    internal static (HashSet<int> normal, HashSet<int> capped) PartitionByCap(HashSet<int> ids, float mult, int cap)
+    {
+        var normal = new HashSet<int>();
+        var capped = new HashSet<int>();
+        if (cap <= 0) { normal.UnionWith(ids); return (normal, capped); }
+        var cm = BagTable.Cm();
+        var dict = cm == null ? null : BagTable.BagDict(cm);
+        foreach (var id in ids)
+        {
+            int native = 0;
+            if (dict != null && dict.TryGetValue(id, out var bag) && bag != null)
+            {
+                try { var s = bag.Size; if (s != null && s.Count >= 2) native = ReadNative("w", id, s[0]); } catch { }
+            }
+            if (native <= 0) { normal.Add(id); continue; } // 读不到就交回常规路径
+            var proj = (int)Math.Round(native * mult, MidpointRounding.AwayFromZero);
+            if (proj > cap) capped.Add(id);
+            else normal.Add(id);
+        }
+        return (normal, capped);
+    }
+
+    /// <summary>封顶改写：want = 倍数取整后宽度 min(want, cap)；与共享 RewriteSize 同风格日志。</summary>
+    internal static List<string> CappedRewrite(HashSet<int> ids, float wMult, float hMult, int cap)
+    {
+        var lines = new List<string>();
+        var cm = BagTable.Cm();
+        var dict = cm == null ? null : BagTable.BagDict(cm);
+        if (dict == null) return lines;
+        int changed = 0;
+        foreach (var pair in dict)
+        {
+            if (!ids.Contains(pair.Key)) continue;
+            var bag = pair.Value;
+            if (bag == null) continue;
+            Il2CppSystem.Collections.Generic.List<int> size = null;
+            try { size = bag.Size; } catch { }
+            if (size == null || size.Count < 2) continue;
+            int w0 = size[0], h0 = size[1];
+            int nw = ReadNative("w", pair.Key, w0);
+            int nh = ReadNative("h", pair.Key, h0);
+            if (nw <= 0 || nh <= 0) continue;
+            int wantW = Math.Min((int)Math.Round(nw * wMult, MidpointRounding.AwayFromZero), cap);
+            int wantH = (int)Math.Round(nh * hMult, MidpointRounding.AwayFromZero);
+            if (w0 != wantW || h0 != wantH)
+            {
+                size[0] = wantW;
+                size[1] = wantH;
+                changed++;
+                lines.Add($"BAG {pair.Key}({BagTable.Name(bag)}) {w0}x{h0} -> {wantW}x{wantH}（宽度封顶 MaxCols={cap}）");
+            }
+        }
+        if (changed > 0) BagTable.InvalidateBagSizeIndex(cm, lines);
+        return lines;
+    }
 }
 
 /// <summary>
@@ -278,29 +397,46 @@ internal sealed class CabinetTicker : MonoBehaviour
         if (fridgeNotes.Count > 0 && listAll)
             lines.Add("冰箱组（全冷链电器包，自动发现，含未来新冰箱）：" + string.Join("、", fridgeNotes));
 
+        // 宽度封顶分流（2026-10-16 用户拍板"材料架与其他界面同宽"）：投影宽度超 MaxCols 的包
+        // 不进共享 RewriteSize（否则每周期 23↔30 来回改写抖动刷日志），走本地封顶改写。
+        // 默认 23 = 超大型置物架同宽——全部柜子页签宽度统一，界面缩放一档、切柜子不跳尺寸。
+        int cap = CabinetExpandPlugin.MaxCols.Value;
+        var (cabinetsNormal, cabinetsCap) = CabinetExpandPlugin.PartitionByCap(cabinets, CabinetExpandPlugin.WidthMult.Value, cap);
+        var (fridgesNormal, fridgesCap) = CabinetExpandPlugin.PartitionByCap(fridges, CabinetExpandPlugin.FridgeWidthMult.Value, cap);
+
         var (scanned1, changed1, lines1) = BagTable.RewriteSize(
-            cabinets, CabinetExpandPlugin.WidthMult.Value, CabinetExpandPlugin.HeightMult.Value,
+            cabinetsNormal, CabinetExpandPlugin.WidthMult.Value, CabinetExpandPlugin.HeightMult.Value,
             CabinetExpandPlugin.Verbose.Value || listAll);
         if (scanned1 < 0) { CabinetExpandPlugin.Rerun = true; return; }
         lines.AddRange(lines1);
 
         var (scanned2, changed2, lines2) = BagTable.RewriteSize(
-            fridges, CabinetExpandPlugin.FridgeWidthMult.Value, CabinetExpandPlugin.FridgeHeightMult.Value,
+            fridgesNormal, CabinetExpandPlugin.FridgeWidthMult.Value, CabinetExpandPlugin.FridgeHeightMult.Value,
             CabinetExpandPlugin.Verbose.Value || listAll);
         // scanned2 < 0 只在配置表整体未就绪时发生，此时 scanned1 也会 <0，上面已返回
         lines.AddRange(lines2);
 
+        if (fridgesCap.Count > 0)
+            lines.AddRange(CabinetExpandPlugin.CappedRewrite(fridgesCap,
+                CabinetExpandPlugin.FridgeWidthMult.Value, CabinetExpandPlugin.FridgeHeightMult.Value, cap));
+        if (cabinetsCap.Count > 0)
+            lines.AddRange(CabinetExpandPlugin.CappedRewrite(cabinetsCap,
+                CabinetExpandPlugin.WidthMult.Value, CabinetExpandPlugin.HeightMult.Value, cap));
+
         CabinetExpandPlugin.Rerun = false;
+        CabinetExpandPlugin.UpdateManagedMax(cabinets, fridges);
 
         if (lines.Count > 0)
             foreach (var l in lines) CabinetExpandPlugin.Log.LogInfo("[CabinetExpand] " + l);
 
-        if (!_announced && scanned1 > 0)
+        if (!_announced && scanned1 >= 0)
         {
             _announced = true;
             CabinetExpandPlugin.Log.LogInfo(
-                $"[CabinetExpand] 生效：{scanned1} 个柜子包（宽×{CabinetExpandPlugin.WidthMult.Value} 高×{CabinetExpandPlugin.HeightMult.Value}）+ " +
-                $"{fridges.Count} 个冰箱包（宽×{CabinetExpandPlugin.FridgeWidthMult.Value} 高×{CabinetExpandPlugin.FridgeHeightMult.Value}）；" +
+                $"[CabinetExpand] 生效：{cabinetsNormal.Count + cabinetsCap.Count} 个柜子包（宽×{CabinetExpandPlugin.WidthMult.Value} 高×{CabinetExpandPlugin.HeightMult.Value}" +
+                (cabinetsCap.Count > 0 ? $"，{cabinetsCap.Count} 包宽度封顶≤{cap}" : "") + "）+ " +
+                $"{fridges.Count} 个冰箱包（宽×{CabinetExpandPlugin.FridgeWidthMult.Value} 高×{CabinetExpandPlugin.FridgeHeightMult.Value}" +
+                (fridgesCap.Count > 0 ? $"，{fridgesCap.Count} 包宽度封顶≤{cap}" : "") + "）；" +
                 "名单=家具表自动发现+黑名单，新增柜子/冰箱自动跟上。");
         }
     }

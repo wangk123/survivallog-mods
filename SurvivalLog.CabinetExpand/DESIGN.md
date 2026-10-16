@@ -43,7 +43,25 @@
 | `CabinetExpandPlugin.cs` | 入口：配置定义、Rerun、`DiscoverTargets()` 名单发现（自动发现+冷链跳过+黑名单+cfg 套用）、挂诊断补丁、注入 Ticker |
 | `BagInitDiag`（同文件） | Harmony postfix `BagComponent.OnInit(int)`：读档时列出全部容器实体的 BagConfigId/名称/当前尺寸（DiagOnOpen=true 时） |
 | `CabinetTicker`（同文件） | 5 秒轮询幂等改写；ListOnReady=true 首轮在日志列出全部受管包与尺寸前后（自证+留档原生尺寸） |
+| `ViewportFit.cs` | 视口适配守卫（2026-10-16）：修大柜子页签把界面右栏挤出屏幕；详见 §3.1 |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll，本轮未改动——不触发 4 份扩容文档同步） |
+
+### 3.1 视口适配守卫 ViewportFit（2026-10-16，ViewportProbe 三轮实测驱动）
+
+现象：切到大柜子页签（超大型置物架 15x12→23x18）时烹饪界面右侧菜谱栏被切出屏幕。根因链（全部实测）：
+- 用户真实 CSS 视口 **1536x864**（4K 密度 2 再乘 0.8 系数；官方 MaterialRack 注释"864 视口"即此，勿按 1920x1080 估算）；
+- 面板根容器是 body flex 的子项：内容 max-content 超可用宽度时**容器被压到可用宽度**（子项 min-content 保护的是"不缩到内容以下"，但容器宽度本身被 flex 布局封顶），内部各栏装不下向右**顶出容器**；
+- 官方 `createViewportFit` 量容器 `offsetWidth`（同样被封顶）→ 顶出的部分测量不可见 → 按"装下了"缩放 → 右栏留在屏外。实测：cooking-system 视觉右边界 1519（在内），right-panel 视觉右边界 **1564**（超视口 28px）。
+
+两把工具（每 2s 巡检 + iframe load 即时钩子 + 容器 MutationObserver，Root 上下文经 `ExecuteJavaScript` 执行，同源直读 iframe DOM，**不注页面脚本**；动作日志 `[CEVF]` 走 Root console → Player.log——2026-10-16 游戏更新后转发方向已翻转为 Root 转/iframe 不转）：
+- **A 工具（12 个官方适配页）**：注入 `<style id="__CEVF_STYLE">` 写「根容器 `flex-shrink:0 !important`」——根容器不再被挤压 → 官方自己的测量看到真实宽度 → **缩放仍由页面自己算自己管**。另做"欠缩桥接"：按官方同公式（同选择器 offsetWidth/Height + 按页 margin，MARGINS 表）补写正确缩放（页面首次适配早于样式注入时救场，页面下次重算自然收敛）。按页照抄官方 heightProp（HPROPS 表：Compressor/MaterialRack/Shredder/ToolTable 用 height，其余 minHeight）——写错属性会与官方身高补偿打架出竖向滚动条（v3 实测教训）。
+- **LockFit（BrewPanel/DyePanel/RatCage 三页，v14/v15 终版）**：往页面注入【官方锁的纯累计复刻 + 官方 `createViewportFit` 调用】脚本（页面上下文）。根因：官方 `createGridSizeLock` 的 seenCols **有服务端 maxCols 提示时无视历史累计**（`hintC ? max(hintC,cols) : max(seen,cols)`）——这三页提示疑随页签变导致锁失效（烹饪的提示是真·常量最大值所以原生稳定）。复刻版纯累计（`max(seen,cols)`），在页面 message 监听里**同步**重写格子外边距（页面自己的 listener 先注册先执行、我们后写=生效且无闪帧），再调官方 fit。v15 加**初始即最大**：`BootstrapJs` 属性把受管包最大宽高（ManagedMaxW/H，封顶后由 CabinetTicker 每轮刷新）填为 seenC/seenR 初始值 → 打开即最大柜子尺寸、永远恒定（对齐烹饪/工作台）。取舍：站点只连小柜子时也按最大预留留白（与官方页访问过大柜子后的观感相同）。TrapUI 跳过（#app 是 display:contents 无可测根容器）。
+- **MaxCols 宽度封顶（C# 侧，v1.3.4 起）**：材料架 20 列×1.5=30 是全游戏唯一异类，让每个界面多一档缩放。默认封 23（=超大型置物架）后全部柜子页签同宽、缩放统一。实现：PartitionByCap 按"投影宽度>cap"分流，超限包不进共享 RewriteSize（避免每周期 23↔30 来回改写刷日志），走本地 CappedRewrite（NativeW/NativeH 本地缓存原生值，幂等）。
+- **v5~v12 自制锁定机制已全线拆除（2026-10-17，用户四小时实测反馈驱动）**：曾用 min-width 锁复刻官方尺寸锁（根容器/格子/栏位/持久状态/消息中继），五轮翻车，教训沉淀：①测量含被自己写入样式影响的元素=反馈循环（无限缩小）；②className 做锁定键，兄弟共类名则互相污染（酿酒桶三栏全胖、老鼠笼黑块）；③只在"新值>记录"时写样式，页面重开（DOM 重建）后永不恢复；④观测最快 150ms/帧且去重，与用户 60fps 肉眼不可对齐，黑匣子（CEVFBB）只能证伪不能证实。**结论：能走官方机制就不自制；确需自制时，锁定键用结构序号、样式写入要幂等恢复、验证要么逐帧采样要么开 CDP 远程调试。**
+
+铁律：**BackpackUI/TradeUI 永不触碰**（自带 applyViewportFit 且拖拽补偿是私有 `clientX/viewportZoom` 变量，外人设缩放必错位）；B 工具安全性依据=createGridBag 族坐标换算自动除以 `getBodyZoom()`（body 计算缩放），外部设 zoom 天生被补偿。
+
+取证工具：一次性探针 mod `SurvivalLog.ViewportProbe`（仓库留存，不进套件；三关校验 `tools\vpp_check.js`）；诊断结论详见记忆 webui-viewport-fit 相关条目。
 
 ### 诊断钩子的三代演进（都是实锤，复用前必读）
 
@@ -65,6 +83,8 @@
 | Verbose | false | 每轮输出明细 |
 | ListOnReady | true | 首次生效时在日志列出全部受管包与尺寸前后（核对名单用） |
 | DiagOnOpen | false | 读档时在日志列出全部容器的 BagConfigId（确认名单用，平时关防刷屏） |
+| UiFit.Enabled | true | 视口适配守卫开关（§3.1；12 页让官方自测真实宽度 + 3 页补官方同款缩放） |
+| MaxCols | 23 | 扩后宽度上限（倍数取整后封顶；0=不限）。默认 23=与超大型置物架同宽，全部柜子页签同宽、界面缩放一档。材料架受影响：30→23 列（540→414 格） |
 
 cfg 兼容：老 CabinetExpand cfg 的 ExtraIds/ExcludeIds 键名与语义不变，直接沿用；新增键首次加载自动补默认值。原 FridgeExpand 的 cfg 变惰性文件（dll 已不存在，无害残留）。**cfg 首跑固化坑**：改代码默认值不会更新已生成的 cfg，发版说明需提示。
 
