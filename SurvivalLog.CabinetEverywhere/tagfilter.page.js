@@ -45,6 +45,7 @@
     try { localStorage.setItem(LS_KEY, JSON.stringify(S.sel)); } catch (e) {}
     st.lastActiveIdx = null; // 玩家主动换筛选：方向无意义，回到『第一个可见』语义
     applyFrame(st);
+    refreshDD(st); // 同步刷触发器文案/图标（__sltfKey 缓存幂等零抖动；不刷则最长等下一次 observer 回调≈5s 陈旧）
   }
 
   // 食物域命中：任一标签落在 Dim1-4（原 matchesSel 的 foodId 分支抽出，语义不变）
@@ -73,17 +74,13 @@
     if (o.kind === 'r') return true;
     if (o.kind === 'f') return false;
     return o.t.length === 0 || o.t.indexOf(S.matId) >= 0 || o.t.indexOf(S.toolId) >= 0
-        || (S.matFood && matchesFood(o.t));               // S.matFood=K2 取证后若材料组需含食物则 true（默认 false，cfg 见 Task 9）
+        || (S.matFood && matchesFood(o.t));               // S.matFood：K2 取证结论为「工作台需含食物域」时才加 cfg Scenario.MaterialIncludeFood 并经 scenario JSON 推送（当前无此键，默认 false）
   }
   function shouldHide(k, st) {
     var o = S.owners[k];
     // 不在扫描名单里的容器（owners 无此键）：v2 语义=不藏（宁可不藏也不错藏）
     return o !== undefined && !viewAllows(st, o);
   }
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
   // ---- 截读 Root→iframe 的 *_BagMsg：记页签数组（含 null 占位，维持下标对齐）----
   function normOwner(t) {
     if (!t) return null;
@@ -539,7 +536,7 @@
   // 弹出层：挂 st.doc.body（position:fixed 防 overflow 裁切），坐标=按钮 rect 下方、溢出视口则向上弹；
   // 行多时 max-height+滚动（容器值克隆 DyePanel .dd-list）。选项行/触发器都是 <button>
   //（官方 clickThrough selector 收 button/[data-interactive]；选项行再加 data-interactive 双保险，照 brief）
-  function togglePop(st, c) {
+  function togglePop(st) {
     try {
       if (st.pop && st.pop.isConnected) { closePop(st); return; } // 开着再点按钮=关
       closePop(st);                                                 // 清不连通的残留引用（重开由本次继续）
@@ -634,7 +631,7 @@
           + 'color:#e8dcc8;background:rgba(28,24,18,0.96);border:1px solid rgba(255,193,7,0.35);border-radius:5px;'
           + 'display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap;'
           + 'transition:background .15s,border-color .15s;';
-        dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st, c); });
+        dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
         dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:14px;height:14px;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
           + '<span style="position:absolute;right:9px;top:50%;margin-top:-2px;width:0;height:0;pointer-events:none;'
