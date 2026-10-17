@@ -729,6 +729,16 @@
       pop.style.left = left + 'px';
       pop.style.top = top + 'px';
       pop.style.visibility = '';
+      // 贴身自校（作者实测"列表遮盖按钮"）：表值 k 与实际缩放的微小偏差经长距离 ÷k 换算放大
+      // 成下坠遮盖。用渲染后的实际 rect 做一次局部校正——只看弹层底与按钮顶的视觉差，
+      // 一次到位（BetterTrade tooltip placeInside 同款思路），不测页面缩放、无累积误差
+      try {
+        var pr2 = pop.getBoundingClientRect();
+        var br2 = st.dd.getBoundingClientRect();
+        if (pr2.bottom > br2.top - 3) {
+          pop.style.top = (parseFloat(pop.style.top) - (pr2.bottom - br2.top + 6) / k) + 'px';
+        }
+      } catch (e2) {}
       st.pop = pop;
       st.popDown = function (e) { // 任意 mousedown 关闭（capture，先于页面处理）：选项行交给 click、按钮交给 toggle
         var t = e.target;
