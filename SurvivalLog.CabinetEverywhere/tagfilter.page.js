@@ -532,7 +532,7 @@
   // 选项行 .on/:hover、滚动条值克隆官方 DyePanel（快照直读）。
   var DD_FALLBACK_BASE = '.sltf-dd-btn{height:21px;line-height:21px;font-size:12px;padding:0 10px;'
     + 'border:1px solid rgba(164,181,70,0.5);border-radius:6px;background:rgba(0,0,0,0);color:#e8ecc8;}';
-  function ddBaseRule(donorEl, view) {
+  function ddBaseRule(donorEl, view, exH) {
     if (!donorEl || !view) return DD_FALLBACK_BASE;
     try {
       var cs = view.getComputedStyle(donorEl);
@@ -546,6 +546,7 @@
         if (v && v !== 'none' && v !== 'normal') decls += props[i] + ':' + v + ';';
       }
       if (!decls) return DD_FALLBACK_BASE;
+      if (exH > 2 && !(parseFloat(cs.height) > 2)) decls += 'height:' + exH + 'px;'; // 捐献者高度 auto 时显式补
       return '.sltf-dd-btn{' + decls + 'box-sizing:border-box;}';
     } catch (e) { return DD_FALLBACK_BASE; }
   }
@@ -650,18 +651,31 @@
           if (r.height > nbH) { nbH = r.height; donor = el; } // 旁边按钮=样式捐献者（照抄）
         }
       }
-      // 捐献者兜底：列底带没有旁按钮时（调度机队），抄官方页签行的排序按钮（.sortb/#sortBagBtn2）
-      if (!donor) donor = col.querySelector('.sortb, .gbtn') || st.doc.getElementById('sortBagBtn2');
-      // 样式照抄：捐献者的 computed 值（本就是该页缩放正确的 css）整套写进样式表基础规则；
-      // 高度/字号快照给弹层行排版用（css 值直接用，无需 ÷k）
+      // 捐献者兜底：列底带没有旁按钮时（调度机队），抄官方页签行的排序按钮——**只认可见的**
+      //（标题栏收起时 sortBagBtn1 rect 为 0，隐藏按钮抄回来的样式不可信）
+      if (!donor) {
+        var cands = col.querySelectorAll('.sortb, .gbtn');
+        for (var ci = 0; ci < cands.length; ci++) {
+          var cr = cands[ci].getBoundingClientRect();
+          if (cr.width > 4 && cr.height > 4) { donor = cands[ci]; break; }
+        }
+        var sb2 = st.doc.getElementById('sortBagBtn2');
+        if (!donor && sb2 && sb2.getBoundingClientRect().width > 4) donor = sb2;
+      }
+      // 样式照抄：捐献者 computed 值整套写进基础规则。**高度为 auto（内容撑高）时抄不回来**——
+      // 用捐献者实测视觉高 ÷k 折成显式 px 补进规则（否则我们的内容 icon+文字+箭头 撑出的高度≠捐献者，
+      // 交易页实测"高度没对齐"根因）
       var dH = 21, dFS = 12;
       if (donor && view) {
+        var dBase;
         try {
           var dcs = view.getComputedStyle(donor);
-          dH = parseFloat(dcs.height) || 21;
           dFS = parseFloat(dcs.fontSize) || 12;
-        } catch (e) {}
-        ensureDDStyle(st.doc, ddBaseRule(donor, view));
+          dH = parseFloat(dcs.height);
+          if (!(dH > 2)) dH = Math.round(donor.getBoundingClientRect().height / k);
+          dBase = ddBaseRule(donor, view, dH);
+        } catch (e) { dH = 21; dBase = DD_FALLBACK_BASE; }
+        ensureDDStyle(st.doc, dBase);
       } else {
         ensureDDStyle(st.doc, DD_FALLBACK_BASE);
       }
@@ -798,6 +812,15 @@
           + '<span style="flex:0 0 auto;width:0;height:0;pointer-events:none;'
           + 'border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #b9b0a6"></span>';
         st.dd = dd; // 先记引用再 placeDD（挂列容器+落位都在那里，不挂 body——视口角落会跑出面板外）
+        // 捐献者/旁按钮可能晚于我们注入（BetterTrade 时序）——延迟重放三轮消灭"初始重叠到
+        // 首次交互才修正"（作者实测交易页刚打开两按钮重叠）。placeDD 幂等且自带样式照抄
+        var stR = st, cR = c;
+        var retries = [500, 1500, 3000];
+        for (var ri = 0; ri < retries.length; ri++) {
+          (function (ms) {
+            setTimeout(function () { try { if (stR.dd && stR.dd.isConnected) placeDD(stR, stR.dd, cR || detectC(stR.doc)); } catch (e) {} }, ms);
+          })(retries[ri]);
+        }
       }
       dd.style.display = 'flex'; // 显式恢复：'' 会清掉 cssText 的 display:flex（回退 inline-block 布局散架）
       placeDD(st, dd, c); // 列容器锚定+测量避让+捐献样式照抄，每次重算（外来按钮卸载→自动回贴列左缘；须在 __sltfKey 缓存返回之前）
