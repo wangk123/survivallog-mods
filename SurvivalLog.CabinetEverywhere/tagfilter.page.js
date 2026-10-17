@@ -447,11 +447,171 @@
     return out;
   }
 
+  // ---- 自绘下拉（T7）：触发器挂页签行末（滚动区外）、body 级 popup 防裁切、官方图标/配色 ----
+  // 官方 TAG_ICONS 静态兜底：33 键与 BackpackUI.html 的 const TAG_ICONS 同源（SVG 字符串原样复制）。
+  // 官方 svg 无 fill 属性（BackpackUI 用 CSS color 控色），注入侧由 iconSvg 统一补 fill=currentColor。
+  // 官方图标库更新时 diff 游戏目录快照同步本副本（保留官方分批注释便于对齐）。
+  var TAG_ICONS_FALLBACK = {
+    food: '<svg viewBox="0 0 24 24"><path d="M2.6 10.6h18.8a9.4 9.4 0 0 1-18.8 0z"/><rect x="1.4" y="19.8" width="21.2" height="2.3" rx="1.15"/><rect x="7.6" y="2.2" width="1.9" height="5.6" rx=".95" opacity=".6"/><rect x="14.5" y="2.2" width="1.9" height="5.6" rx=".95" opacity=".6"/></svg>',
+    dish: '<svg viewBox="0 0 24 24"><path d="M3.4 14.6a8.6 8.6 0 0 1 17.2 0z"/><rect x="1.6" y="15.4" width="20.8" height="2.4" rx="1.2"/><circle cx="12" cy="3.8" r="1.7"/></svg>',
+    ingredient: '<svg viewBox="0 0 24 24"><path d="M6.2 7.4h11.6l1.5 12a2.1 2.1 0 0 1-2.1 2.4H6.8a2.1 2.1 0 0 1-2.1-2.4z"/><path d="M6.2 7.4 7.8 3.4h8.4l1.6 4z" opacity=".62"/></svg>',
+    veg: '<svg viewBox="0 0 24 24"><path d="M12 21c-4 0-6.4-3.2-6.4-7.2C5.6 10.4 8 8.4 12 8.4s6.4 2 6.4 5.4c0 4-2.4 7.2-6.4 7.2z"/><path d="M12 8.6c0-3 1.8-5 4.6-5.6.3 3-1.4 5.2-4.6 5.6z" opacity=".7"/></svg>',
+    prey: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="16.4" rx="5.4" ry="4.4"/><circle cx="6.2" cy="9.2" r="2.3"/><circle cx="10.3" cy="6.2" r="2.3"/><circle cx="14.6" cy="6.2" r="2.3"/><circle cx="18.2" cy="9.6" r="2.3"/></svg>',
+    cold: '<svg viewBox="0 0 24 24"><rect x="10.9" y="1.6" width="2.2" height="20.8" rx="1.1"/><rect x="10.9" y="1.6" width="2.2" height="20.8" rx="1.1" transform="rotate(60 12 12)"/><rect x="10.9" y="1.6" width="2.2" height="20.8" rx="1.1" transform="rotate(120 12 12)"/></svg>',
+    seed: '<svg viewBox="0 0 24 24"><rect x="11" y="9.5" width="2" height="11.5"/><path d="M11 11C8 11 5.5 9 5 5.6c3.6-.4 6 1.6 6 5.4z"/><path d="M13 11c3 0 5.5-2 6-5.4-3.6-.4-6 1.6-6 5.4z" opacity=".72"/></svg>',
+    drink: '<svg viewBox="0 0 24 24"><path d="M6.5 4h11l-1.6 16.2a1.6 1.6 0 0 1-1.6 1.4h-4.6a1.6 1.6 0 0 1-1.6-1.4z"/><rect x="7.6" y="8.6" width="8.8" height="1.8" opacity=".45"/></svg>',
+    med: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.6"/><rect x="11" y="8.4" width="2" height="7.2" fill="#fff"/><rect x="8.4" y="11" width="7.2" height="2" fill="#fff"/></svg>',
+    daily: '<svg viewBox="0 0 24 24"><path d="M9.6 1.8h4.8v3.4l2.6 3.4a4 4 0 0 1 .8 2.4v9a2 2 0 0 1-2 2H8.2a2 2 0 0 1-2-2v-9a4 4 0 0 1 .8-2.4l2.6-3.4z"/><rect x="7.4" y="13" width="9.2" height="1.8" fill="#fff" opacity=".45"/></svg>',
+    tool: '<svg viewBox="0 0 24 24"><rect x="3.5" y="3" width="17" height="5.4" rx="1.4"/><rect x="9.6" y="8.4" width="4.8" height="12.6" rx="1"/></svg>',
+    material: '<svg viewBox="0 0 24 24"><rect x="1.6" y="13.6" width="9.6" height="7.4" rx="1.2"/><rect x="12.8" y="13.6" width="9.6" height="7.4" rx="1.2"/><rect x="7.2" y="5" width="9.6" height="7.4" rx="1.2" opacity=".78"/></svg>',
+    fuel: '<svg viewBox="0 0 24 24"><rect x="6" y="8" width="12" height="13" rx="2"/><rect x="9.5" y="5.5" width="5" height="3"/><path d="M12 1.5c2.4 2 3.4 3.4 3.4 4.7A3.4 3.4 0 0 1 12 9.6 3.4 3.4 0 0 1 8.6 6.2c0-1.3 1-2.7 3.4-4.7z" opacity=".55"/></svg>',
+    fertilizer: '<svg viewBox="0 0 24 24"><path d="M2.4 21.5a9.6 6 0 0 1 19.2 0z"/><rect x="11.1" y="11.8" width="1.8" height="7.2"/><path d="M11.1 13.2c-2.4 0-4.2-1.7-4.6-4.3 2.9-.3 4.6 1.3 4.6 4.3z"/><path d="M12.9 13.2c2.4 0 4.2-1.7 4.6-4.3-2.9-.3-4.6 1.3-4.6 4.3z" opacity=".72"/><circle cx="5.2" cy="14.6" r="1.3" opacity=".6"/><circle cx="18.8" cy="14.6" r="1.3" opacity=".6"/></svg>',
+    defense: '<svg viewBox="0 0 24 24"><path d="M12 2.2 20 5v7.2c0 4.6-3.2 8.2-8 9.6-4.8-1.4-8-5-8-9.6V5z"/><path d="M12 6.5v11" stroke="#fff" stroke-width="1.6" opacity=".5"/></svg>',
+    book: '<svg viewBox="0 0 24 24"><path d="M4 3.5h7.2v17H4z"/><path d="M12.8 3.5H20v17h-7.2z" opacity=".72"/><rect x="11.2" y="3.5" width="1.6" height="17" opacity=".4"/></svg>',
+    elec: '<svg viewBox="0 0 24 24"><path d="M13.6 1.5 5 13.4h5.3L9.4 22.5 19 10.2h-5.6z"/></svg>',
+    special: '<svg viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.9 7.5.8-5.6 5.1 1.6 7.4L12 18.2l-6.6 3.8 1.6-7.4-5.6-5.1 7.5-.8z"/></svg>',
+    misc: '<svg viewBox="0 0 24 24"><circle cx="7" cy="7" r="3.2"/><rect x="13.4" y="3.8" width="6.6" height="6.6" rx="1.4"/><rect x="4" y="13.6" width="6.6" height="6.6" rx="1.4" opacity=".72"/><circle cx="17" cy="17" r="3.2" opacity=".72"/></svg>',
+    // 2026-09-14 新增 8 个选项的占位图标（美术出图后替换）
+    ready: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.5"/><rect x="5" y="8" width="14" height="1.6" opacity=".45"/><rect x="5" y="15" width="14" height="1.6" opacity=".45"/></svg>',
+    meat: '<svg viewBox="0 0 24 24"><path d="M14.5 3.5c3.5 0 6 2.6 6 6 0 4.8-4.6 8.8-9.6 8.8-1.6 0-2.6-.4-3.4-1.1L4.6 20.1l-1.6-1.6 2.9-2.9c-.7-.8-1.1-1.8-1.1-3.4 0-5 4-8.7 9.7-8.7z"/></svg>',
+    fish: '<svg viewBox="0 0 24 24"><path d="M2.5 12c3-4.2 7-6 11-5.4 2.6.4 4.6 1.9 6 3.6L22 7v10l-2.5-3.2c-1.4 1.7-3.4 3.2-6 3.6-4 .6-8-1.2-11-5.4z"/></svg>',
+    egg: '<svg viewBox="0 0 24 24"><path d="M12 2.5c3.8 0 6.8 6 6.8 10.4a6.8 6.8 0 0 1-13.6 0C5.2 8.5 8.2 2.5 12 2.5z"/></svg>',
+    mushroom: '<svg viewBox="0 0 24 24"><path d="M2.5 11.5a9.5 7.5 0 0 1 19 0z"/><rect x="9.4" y="11.5" width="5.2" height="9.5" rx="2"/></svg>',
+    grain: '<svg viewBox="0 0 24 24"><rect x="11.1" y="3" width="1.8" height="18.5"/><ellipse cx="9" cy="8" rx="2" ry="3.2" transform="rotate(-25 9 8)"/><ellipse cx="15" cy="8" rx="2" ry="3.2" transform="rotate(25 15 8)"/><ellipse cx="9" cy="13.5" rx="2" ry="3.2" transform="rotate(-25 9 13.5)"/><ellipse cx="15" cy="13.5" rx="2" ry="3.2" transform="rotate(25 15 13.5)"/></svg>',
+    spice: '<svg viewBox="0 0 24 24"><rect x="8" y="2.5" width="8" height="3.5" rx="1"/><path d="M7 7h10l1 3v9.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V10z"/></svg>',
+    snack: '<svg viewBox="0 0 24 24"><path d="M4 6.5 7 3h10l3 3.5-2 1 1.2 12.5H4.8L6 7.5z"/></svg>',
+    // 2026-09-23 物品大类重分：剧情道具 / 收藏品 / 唱片 / 装修材料（占位图标，美术出图后替换）
+    story: '<svg viewBox="0 0 24 24"><path d="M5 2.5h9.5L19 7v14.5H5z"/><path d="M14.5 2.5V7H19z" opacity=".6"/><rect x="7.6" y="10.6" width="8.8" height="1.7" fill="#fff" opacity=".55"/><rect x="7.6" y="14.2" width="8.8" height="1.7" fill="#fff" opacity=".55"/><rect x="7.6" y="17.8" width="5.4" height="1.7" fill="#fff" opacity=".55"/></svg>',
+    collect: '<svg viewBox="0 0 24 24"><path d="M6.8 3.2h10.4L21.8 9 12 21.4 2.2 9z"/><path d="M2.2 9h19.6L12 21.4z" opacity=".72"/><path d="M9.6 3.2 7.8 9 12 21.4 16.2 9l-1.8-5.8z" fill="#fff" opacity=".3"/></svg>',
+    record: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.2"/><circle cx="12" cy="12" r="6.8" fill="none" stroke="#fff" stroke-width="1" opacity=".4"/><circle cx="12" cy="12" r="3.2" fill="#fff" opacity=".6"/><circle cx="12" cy="12" r="1.1"/></svg>',
+    renov: '<svg viewBox="0 0 24 24"><rect x="3" y="2.6" width="15.6" height="6.4" rx="1.6"/><path d="M18.6 5h1.6a1.2 1.2 0 0 1 1.2 1.2v4.2a1.2 1.2 0 0 1-1.2 1.2h-8.4v2.6" fill="none" stroke="currentColor" stroke-width="1.8" opacity=".72"/><rect x="10" y="13.6" width="3.6" height="8.2" rx="1.2"/></svg>',
+    // 2026-09-29 任务道具（从剧情道具拆出，占位图标）
+    task: '<svg viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="18" rx="2"/><rect x="8.5" y="2" width="7" height="4" rx="1.2" opacity=".72"/><path d="M8 13.4l2.8 2.8 5.6-5.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/></svg>',
+    // 2026-10-09 防御耗材（门窗修补 / 加固件从材料拆出，占位图标）
+    repair: '<svg viewBox="0 0 24 24"><path d="M15.6 2.4a5.2 5.2 0 0 0-4.9 6.9L2.9 17.1 2.7 19.6l1.7 1.7 2.5-.2 7.8-7.8a5.2 5.2 0 0 0 6.9-4.9l-.1-1-3 3-2.6-.6-.6-2.6 3-3z"/></svg>'
+  };
+  // 「全部柜子」图标：三横线=列表（33 键无通用列表键，控制器裁定用内联 svg）
+  var ICON_ALL_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>';
+
+  // 图标取值：优先 BackpackUI 帧的 TAG_ICONS（同源提取，官方更新自动跟上；BackpackUI 多数时候
+  // 未打开→null→走兜底）；未知键兜底 misc（与官方 tagIconSvg 的 || TAG_ICONS.misc 同款）。
+  // 从 Root 帧直查 iframe，不需要页面 doc 参数（控制器裁定）。
+  function tagIcon(key) {
+    try {
+      var f = document.querySelector('#iframe-container iframe#BackpackUI');
+      var icons = f && f.contentWindow ? f.contentWindow.eval('TAG_ICONS') : null;
+      if (icons && icons[key]) return icons[key];
+    } catch (e) {}
+    return TAG_ICONS_FALLBACK[key] || TAG_ICONS_FALLBACK.misc;
+  }
+  // 官方 svg 字符串补齐尺寸/填色：强制 14x14；根节点无 fill 时补 fill="currentColor"
+  //（由所在元素 style.color 控色=官方 BackpackUI 同款机制；子路径自带 fill="#fff" 等保持不动）
+  function iconSvg(html) {
+    var s = String(html || '');
+    if (s.indexOf('<svg') !== 0) return '';
+    var head = s.substring(0, s.indexOf('>'));
+    var add = ' width="14" height="14" style="display:block"';
+    if (!/\sfill\s*=/.test(head)) add += ' fill="currentColor"';
+    return '<svg' + add + s.slice(4);
+  }
+  // 选中值 → lib 条目（sel=lib id 命中；'other'/0 返回 null，由调用方分别给「其他」/「全部柜子」文案）
+  function selById(sel) {
+    for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
+    return null;
+  }
+  // hover/滚动条需样式表（内联样式写不了 :hover），随触发器一次性注入页面 head；
+  // 值克隆官方 DyePanel 的 .dd-btn:hover / .dd-it:hover / .dd-list::-webkit-scrollbar（快照直读）
+  function ensureDDStyle(doc) {
+    if (doc.getElementById('sltf-dd-style')) return;
+    var s = doc.createElement('style');
+    s.id = 'sltf-dd-style';
+    s.textContent = '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.32);}'
+      + '.sltf-dd-opt:hover{background:rgba(255,255,255,.08);color:#fff;}'
+      + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
+      + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
+    (doc.head || doc.documentElement).appendChild(s);
+  }
+  function closePop(st) {
+    if (st.pop) { try { st.pop.remove(); } catch (e) {} st.pop = null; }
+    if (st.popDown) { try { if (st.doc) st.doc.removeEventListener('mousedown', st.popDown, true); } catch (e) {} st.popDown = null; }
+  }
+
+  // 弹出层：挂 st.doc.body（position:fixed 防 overflow 裁切），坐标=按钮 rect 下方、溢出视口则向上弹；
+  // 行多时 max-height+滚动（容器值克隆 DyePanel .dd-list）。选项行/触发器都是 <button>
+  //（官方 clickThrough selector 收 button/[data-interactive]；选项行再加 data-interactive 双保险，照 brief）
+  function togglePop(st, c) {
+    try {
+      if (st.pop && st.pop.isConnected) { closePop(st); return; } // 开着再点按钮=关
+      closePop(st);                                                 // 清不连通的残留引用（重开由本次继续）
+      if (!st.doc || !st.doc.body || !st.dd || !st.dd.isConnected) return;
+      ensureDDStyle(st.doc);                                        // 幂等：hover 样式表意外被摘时补回
+      var sel = pageSel(st);
+      var rect = st.dd.getBoundingClientRect();
+      var pop = st.doc.createElement('div');
+      pop.className = 'sltf-dd-pop';
+      pop.style.cssText = 'position:fixed;z-index:99999;visibility:hidden;'
+        + 'min-width:' + Math.max(120, rect.width) + 'px;max-width:260px;max-height:266px;overflow-y:auto;'
+        + 'padding:3px;border-radius:6px;background:#1b1612;border:1px solid rgba(255,255,255,.2);'
+        + 'box-shadow:0 6px 18px rgba(0,0,0,.65);';
+      function addRow(id, name, lib) {
+        var on = id === sel;
+        var b = st.doc.createElement('button');
+        b.type = 'button';
+        b.className = 'sltf-dd-opt' + (on ? ' on' : '');
+        b.setAttribute('data-interactive', '');
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:26px;padding:0 7px;margin:0;'
+          + 'border:0;background:transparent;border-radius:4px;font-family:inherit;font-size:12px;line-height:1;'
+          + 'white-space:nowrap;cursor:pointer;text-align:left;color:' + (on ? '#fff' : '#d6cdc2') + ';'
+          + (on ? 'font-weight:bold;' : '');
+        var ico = st.doc.createElement('span');
+        ico.style.cssText = 'display:flex;width:14px;height:14px;flex:0 0 auto;'
+          + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
+        ico.innerHTML = iconSvg(lib ? tagIcon(lib.icon) : (id === 'other' ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG));
+        var txt = st.doc.createElement('span');
+        txt.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;';
+        txt.textContent = name;
+        b.appendChild(ico);
+        b.appendChild(txt);
+        if (on) { // 选中标记（DyePanel .dd-it.on 的 bold/高亮，标记位用 ✓）
+          var ok = st.doc.createElement('span');
+          ok.style.cssText = 'flex:0 0 auto;';
+          ok.textContent = '\u2713';
+          b.appendChild(ok);
+        }
+        b.addEventListener('click', function () { setSel(st, id); closePop(st); });
+        pop.appendChild(b);
+      }
+      addRow(0, '全部柜子', null); // 首位=全部，其后 options()：其他→食物→物资（T6 排列不变）
+      var opts = options();
+      for (var i = 0; i < opts.length; i++) addRow(opts[i].id, opts[i].name, selById(opts[i].id));
+      st.doc.body.appendChild(pop);
+      // 定位：先挂 body 量尺寸（visibility:hidden 防跳），下方优先、溢出向上、再放不下贴底
+      var vw = st.doc.defaultView ? st.doc.defaultView.innerWidth : 0;
+      var vh = st.doc.defaultView ? st.doc.defaultView.innerHeight : 0;
+      var ph = pop.offsetHeight, pw = pop.offsetWidth;
+      var top = rect.bottom + 3;
+      if (top + ph > vh - 4) top = rect.top - ph - 3;
+      if (top < 0) top = Math.max(0, vh - ph - 4);
+      var left = Math.min(Math.max(4, rect.left), Math.max(4, vw - pw - 4));
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+      pop.style.visibility = '';
+      st.pop = pop;
+      st.popDown = function (e) { // 任意 mousedown 关闭（capture，先于页面处理）：选项行交给 click、按钮交给 toggle
+        var t = e.target;
+        if (pop.contains(t) || (st.dd && st.dd.contains(t))) return;
+        closePop(st);
+      };
+      st.doc.addEventListener('mousedown', st.popDown, true);
+    } catch (e) {}
+  }
+
   function refreshDD(st, c) {
     try {
       if (frameMode(st) !== 'browser') {
-        // 固定视图页（food/material）无任何 UI 注入：摘除遗留下拉（如 cfg 把该页从 browser 改走）
+        // 固定视图页（food/material）无任何 UI 注入：摘除遗留下拉/弹出层（如 cfg 把该页从 browser 改走）
         if (st.dd) { try { st.dd.remove(); } catch (e) {} st.dd = null; }
+        closePop(st);
         return;
       }
       if (!st.doc || !st.doc.body) return;
@@ -462,37 +622,41 @@
       var dd = st.dd;
       if (!opts.length) { if (dd) dd.style.display = 'none'; return; }
       if (!dd || !dd.isConnected || dd.ownerDocument !== st.doc) {
-        // 先清掉本页签栏里遗留的旧下拉（初始化竞态窗口曾插出两个，保此文档内唯一）
-        var olds = c.bar.querySelectorAll('.sltf-dd');
+        // 先清本页面遗留的触发器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一）
+        var olds = st.doc.querySelectorAll('.sltf-dd-btn, .sltf-dd-pop');
         for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
-        dd = st.doc.createElement('select');
-        dd.className = 'sltf-dd';
-        dd.title = '按标签筛选容器页签';
-        dd.style.cssText = 'height:26px;max-width:130px;margin:2px 4px;padding:0 4px;font-size:12px;flex:0 0 auto;align-self:center;'
-          + 'background:rgba(28,24,18,0.96);color:#e8dcc8;border:1px solid rgba(255,193,7,0.35);border-radius:4px;cursor:pointer;outline:none;';
-        var ddRef = dd;
-        // 值解析：「其他」是字符串选项，先判再 parseInt；setSel 只作用本界面（每页独立记忆）
-        dd.addEventListener('change', function () {
-          setSel(st, ddRef.value === 'other' ? 'other' : (parseInt(ddRef.value, 10) || 0));
-        });
-        c.bar.insertBefore(dd, c.bar.firstChild);
+        ensureDDStyle(st.doc);
+        dd = st.doc.createElement('button');
+        dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
+        // 视觉克隆官方 DyePanel .dd-btn（圆角/边框/过渡/hover 见 ensureDDStyle；▾ 箭头=同款 CSS 三角）适配页签栏
+        dd.style.cssText = 'height:26px;min-width:96px;max-width:150px;margin:2px 6px 2px 4px;padding:0 22px 0 8px;'
+          + 'font-size:12px;font-family:inherit;line-height:1;flex:0 0 auto;align-self:center;position:relative;cursor:pointer;'
+          + 'color:#e8dcc8;background:rgba(28,24,18,0.96);border:1px solid rgba(255,193,7,0.35);border-radius:5px;'
+          + 'display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap;'
+          + 'transition:background .15s,border-color .15s;';
+        dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st, c); });
+        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:14px;height:14px;flex:0 0 auto"></span>'
+          + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
+          + '<span style="position:absolute;right:9px;top:50%;margin-top:-2px;width:0;height:0;pointer-events:none;'
+          + 'border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #b9b0a6"></span>';
+        // 位置：滚动区外行末——挂 c.list 的父容器（页签行容器）尾部（bag 族=#bagTabs、Trade=.bag-tabs，
+        // 以 c.list.parentElement 为准优先），页签再多也只占行末、不会被滚动区带走
+        var row = c.list.parentElement || c.bar;
+        row.appendChild(dd);
         st.dd = dd;
       }
       dd.style.display = '';
-      var key = sel + '|' + opts.map(function (u) { return u.id + '.' + u.name; }).join(',');
+      // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
+      var lib = selById(sel);
+      var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
+      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG));
+      var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
-      dd.innerHTML = '';
-      var doc = st.doc;
-      function addOpt(v, label, selected) {
-        var o = doc.createElement('option');
-        o.value = String(v);
-        o.textContent = label;
-        if (selected) o.selected = true;
-        dd.appendChild(o);
-      }
-      addOpt(0, '全部柜子', sel === 0);
-      for (var i = 0; i < opts.length; i++) addOpt(opts[i].id, opts[i].name, opts[i].id === sel);
+      dd.querySelector('.sltf-dd-txt').textContent = txt;
+      var icoEl = dd.querySelector('.sltf-dd-ico');
+      icoEl.innerHTML = ico;
+      icoEl.style.color = (sel && lib && lib.color) ? lib.color : '';
     } catch (e) {}
   }
 
@@ -529,6 +693,9 @@
   function schedule(st, records) {
     try {
       if (!st.doc || !st.doc.body) return;
+      // TradeUI 是 Vue 页会整条重渲染，可能把 body 级 popup 一并摘掉：只清引用不重建（重开由按钮
+      // click 触发 togglePop），触发器本体走下面 refreshDD 的 isConnected 重插（既有机制不变）
+      if (st.pop && !st.pop.isConnected) st.pop = null;
       var c = detectC(st.doc);
       if (!c) return;
       if (st.frozen && st.frozen.length && Date.now() - (st.freezeAt || 0) > 150) unfreeze(st); // 二次渲染已到且最短冻结满 150ms（防延迟渲染穿透）
@@ -539,7 +706,7 @@
 
   function hookFrame(el) {
     for (var i = 0; i < S.frames.length; i++) if (S.frames[i].el === el) return;
-    var st = { el: el, doc: null, tabs: null, hidden: [], dd: null, mo: null, xorigin: false, lastActiveIdx: null, frozen: [], freezeTimer: 0, pending: null, pendingTimer: 0, skipEcho: null, initTimer: 0 };
+    var st = { el: el, doc: null, tabs: null, hidden: [], dd: null, pop: null, popDown: null, mo: null, xorigin: false, lastActiveIdx: null, frozen: [], freezeTimer: 0, pending: null, pendingTimer: 0, skipEcho: null, initTimer: 0 };
     S.frames.push(st);
     var init = function () {
       var doc = null;
@@ -556,7 +723,7 @@
       // 界面（重）载：取消还在轮询的旧 init 链（首次打开期间的竞态窗口曾插出两个下拉，
       // 2026-10-16 实测），再重置状态重启初始化
       if (st.initTimer) { clearTimeout(st.initTimer); st.initTimer = 0; }
-      st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.lastActiveIdx = null; st.skipEcho = null;
+      st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.pop = null; st.popDown = null; st.lastActiveIdx = null; st.skipEcho = null;
       st.pending = null;
       if (st.pendingTimer) { clearTimeout(st.pendingTimer); st.pendingTimer = 0; }
       unfreeze(st);
