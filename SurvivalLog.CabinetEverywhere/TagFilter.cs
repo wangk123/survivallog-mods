@@ -6,7 +6,7 @@ using Il2CppInterop.Runtime;
 namespace SurvivalLog.CabinetEverywhere;
 
 /// <summary>
-/// 筛选通道：读容器标签（ContainerScan）+ 标签库（Config_FurnitureTag），经
+/// 筛选通道：读容器标签（CabinetCatalog.AllContainers 统一容器扫描）+ 标签库（Config_FurnitureTag），经
 /// WebUILayer.canvasWebViewPrefab.WebView（Vuplex IWebView）ExecuteJavaScript 注入引导脚本并喂标签数据。
 /// 引导脚本每周期幂等重注（WebView 崩溃恢复重建后自动重挂），数据每周期直推（体量极小，
 /// 免维护"注入先后"时序）。JS 侧只读 tab 数据、只隐藏 DOM，不改下标不发事件。
@@ -15,9 +15,18 @@ internal static class TagFilter
 {
     private static readonly HashSet<string> Warned = new();
     private static bool _probeDone;
+    private static bool _containerLogged;
 
     internal static void Tick()
     {
+        // 容器计数日志（原 ContainerScan.Refresh 的首报，随扫描合一迁到消费侧）
+        if (!_containerLogged && CabinetCatalog.AllContainers.Count > 0)
+        {
+            _containerLogged = true;
+            CabinetEverywherePlugin.Log.LogInfo("[CabinetEverywhere.筛选] 家中容器 " +
+                CabinetCatalog.AllContainers.Count + " 个进入筛选名单（含冰箱/柜子/置物架/材料架）");
+        }
+
         var web = GetWebView();
         if (web == null) return;
         try
@@ -92,7 +101,7 @@ internal static class TagFilter
         var sb = new StringBuilder(4096);
         sb.Append("{\"owners\":{");
         var first = true;
-        foreach (var c in ContainerScan.Home)
+        foreach (var c in CabinetCatalog.AllContainers)
         {
             if (!first) sb.Append(',');
             first = false;
@@ -134,7 +143,7 @@ internal static class TagFilter
         return sb.ToString();
     }
 
-    private static void AppendOwner(StringBuilder sb, ContainerScan.ContainerInst c, int materialTagId)
+    private static void AppendOwner(StringBuilder sb, CabinetCatalog.ContainerInst c, int materialTagId)
     {
         sb.Append('"').Append(c.OwnerId).Append("\":[");
         var ids = c.TagIds;

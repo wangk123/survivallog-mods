@@ -4,21 +4,43 @@ using SurvivalLog.ModShared;
 
 namespace SurvivalLog.CabinetEverywhere;
 
-/// <summary>柜子家具的发现（配置层）与家中实例枚举（运行时）。</summary>
+/// <summary>柜子家具的发现（配置层）与家中容器统一枚举（运行时：单遍扫描产出 全容器名单 + 柜子子集，直达/筛选共用）。</summary>
 internal static class CabinetCatalog
 {
     /// <summary>发现的柜子家具 ConfigId（配置层，重扫幂等重建）。</summary>
     internal static HashSet<int> ConfigIds = new();
 
-    /// <summary>家中的柜子实例（ownerId = Furniture.InstanceId，页签/取包都用它）。</summary>
-    internal sealed class CabinetInst
+    /// <summary>
+    /// 家中容器实例（ownerId = Furniture.InstanceId，页签/取包/筛选都用它）。
+    /// Kind：'c'=柜子（直达注入子集）/ 'f'=冰箱（冷链电器，走原生冰箱页签）/ 'r'=材料架（专属界面，不能打标签）。
+    /// </summary>
+    internal sealed class ContainerInst
     {
         public long OwnerId;
         public int ConfigId;
         public string Name;
+        public char Kind;
+        public int[] TagIds = Array.Empty<int>();
+        /// <summary>材料架（MaterialRackComponent）：不能打标签但只能放材料，筛选时补"材料"伪标签。</summary>
+        public bool IsMaterialRack;
     }
 
-    private static List<CabinetInst> _homeInstances = new();
+    /// <summary>
+    /// 非储物功能包（与 cfg ExcludeBagIds 默认名单同源同维护；游戏更新加新功能包时两处同步）。
+    /// cfg 名单用户可调、本常量随游戏版本兜底——运行时门槛两个都查，任一命中即跳过。
+    /// 这些会出现在功能界面的页签数组里（如无人机交易的中控台页签）——误收进筛选名单又无
+    /// 匹配标签会被当柜子藏掉，官方 A/D 步进切过去即被弹回＝卡死闪一下（2026-10-15 实测）。
+    /// 排除=永不参与筛选=页签常显。
+    /// </summary>
+    private static readonly HashSet<int> NonStorageBagIds = new()
+    {
+        5001, 5002, 5003, 5004, 5005, 5006, 5011, // 厨房电器：燃料炉/电烤箱/微波炉/燃气灶/榨汁机/咖啡机/电火锅
+        5007, 5008, 5009, 5014, 5015, 5017, 5020, 115004, // 机器功能槽/老鼠笼/粉碎机/口粮压制机/暖房工程台/酿酒桶
+        3001, 1050, 1008, 1060, 1014, 10001, 10004, // 围栏/吊篮/无人机/门/窗/床/垃圾桶
+    };
+
+    private static List<ContainerInst> _homeInstances = new();  // 柜子子集（直达注入用）
+    private static List<ContainerInst> _allContainers = new();  // 全容器（筛选用）
     private static readonly HashSet<string> WarnedOnce = new();
 
     private static void WarnOnce(string key, string msg)
@@ -99,10 +121,14 @@ internal static class CabinetCatalog
     }
 
     /// <summary>
-    /// 枚举家中柜子实例。**单遍直扫 AgentManager.agentList**（与原生 GetFurnituresWithBag 同一数据源，
-    /// 但不走其"主角当前楼层"过滤；也不再用 GetFurnituresByConfigId 逐配置反查——833 配置×每次调用
-    /// 性能不可接受，且其自身也有过滤条件）。条件：柜子名单配置 + 本图（MapConfigId==homeMapId），
-    /// 全楼层收录。
+    /// 统一容器扫描（5s 一遍，原直达/筛选两个 5s 扫描合一）：**单遍直扫 AgentManager.agentList**
+    /// （与原生 GetFurnituresWithBag 同一数据源，但不走其"主角当前楼层"过滤；也不再用
+    /// GetFurnituresByConfigId 逐配置反查——833 配置×每次调用性能不可接受）。同一次遍历产出两份名单：
+    /// AllContainers——家中全部储物容器（柜子/冰箱/材料架+标签，TagFilter 筛选用）；
+    /// HomeInstances——其中的柜子子集（kind=='c' 且 ConfigIds 名单命中，TabInjector 直达注入用，
+    /// 语义与合并前一致；冰箱走原生冰箱页签、材料架有专属界面，均不注入）。全楼层收录。
+    /// 顺序即性能：TryCast → 配置查包/名单（廉价，滤掉 ~90% 家具）→ 主图严格相等短路 →
+    /// 仅非主图走 IsHomeMap（重）→ 通过者才读类别/标签（组件字典/电器属性最贵，放最后）。
     /// </summary>
     internal static void RefreshHomeInstances()
     {
@@ -120,7 +146,9 @@ internal static class CabinetCatalog
 
             var cm = BagTable.Cm();
             var dict = BagTable.FurnDict(cm);
-            var fresh = new List<CabinetInst>();
+            var excludeBagCfg = BagTable.ParseIds(CabinetEverywherePlugin.ExcludeBagIds.Value);
+            var all = new List<ContainerInst>();
+            var fresh = new List<ContainerInst>();
             var extraNames = new List<string>(); // 不在原生枚举结果里的（楼层过滤导致），日志用
             int withBagCount = 0;
 
@@ -136,17 +164,24 @@ internal static class CabinetCatalog
                 try { furn = agentList[i]?.TryCast<GameCore.HotUpdate.Battle.Logic.Furniture>(); } catch { }
                 if (furn == null) continue;
 
-                // 顺序即性能：先用廉价的配置名单过滤掉 ~90% 家具，再做地图判定（IsHomeMap 较重，
-                // 且用严格相等短路——绝大多数家具就在主图上），最后才读其余字段。
                 long ownerId = 0; int cfgId = 0;
                 try { ownerId = furn.InstanceId; cfgId = furn.AgentConfigId; } catch { continue; }
-                if (ownerId == 0 || !ConfigIds.Contains(cfgId))
+                if (ownerId == 0) continue;
+
+                // 廉价门槛（顺序即性能）：配置查包 bagId>0，且不在 cfg ExcludeBagIds（用户可调）与
+                // NonStorageBagIds（随游戏版本维护）任一名单——先滤掉绝大多数家具，再做地图判定
+                // （IsHomeMap 较重，且用严格相等短路——绝大多数家具就在主图上），最后才读其余字段。
+                GameCore.HotUpdate.Config_Furniture cfg = null;
+                try { dict?.TryGetValue(cfgId, out cfg); } catch { }
+                int bagId = 0;
+                try { if (cfg != null) bagId = cfg.BagId; } catch { }
+                if (bagId <= 0 || excludeBagCfg.Contains(bagId) || NonStorageBagIds.Contains(bagId))
                 {
-                    if (DumpRequested && ownerId != 0)
+                    if (DumpRequested)
                     {
                         int fmD = 0; bool lockedD = false;
                         try { fmD = furn.MapConfigId; lockedD = furn.IsBagLocked; } catch { }
-                        _dumpLines.Add($"  家具 {cfgId}（{FurnNameSafe(dict, cfgId)}）owner=0x{ownerId:X} map={fmD} locked={lockedD} → 排除(不在柜子名单)");
+                        _dumpLines.Add($"  家具 {cfgId}（{FurnNameSafe(dict, cfgId)}）owner=0x{ownerId:X} map={fmD} locked={lockedD} → 排除(无包/非储物名单)");
                     }
                     continue;
                 }
@@ -160,9 +195,31 @@ internal static class CabinetCatalog
                     if (!isHomeMap) continue;
                 }
 
-                fresh.Add(new CabinetInst { OwnerId = ownerId, ConfigId = cfgId, Name = FurnNameSafe(dict, cfgId) });
-                if (nativeIds.Contains(ownerId)) withBagCount++;
-                else extraNames.Add($"{FurnNameSafe(dict, cfgId)}(0x{ownerId:X})");
+                // 类别+标签（仅对通过门槛的家中容器读——组件字典索引/电器属性最贵，放最后）
+                bool isElec = false; int elecType = 0; float cold = 0f;
+                try { if (cfg != null) { isElec = cfg.IsElectrical; elecType = cfg.ElectricalType; cold = cfg.ColdRate; } } catch { }
+                bool coldChain = isElec && elecType == 1 && cold > 0f; // 与原生 CollectFridges 同判定
+                bool rack = HasComponent(furn, typeof(GameCore.HotUpdate.Battle.Logic.MaterialRackComponent));
+                char kind = rack ? 'r' : (coldChain ? 'f' : 'c');
+
+                var inst = new ContainerInst
+                {
+                    OwnerId = ownerId,
+                    ConfigId = cfgId,
+                    Name = FurnNameSafe(dict, cfgId),
+                    Kind = kind,
+                    IsMaterialRack = rack,
+                };
+                inst.TagIds = ReadTagIds(furn);
+                all.Add(inst);
+
+                // 直达柜子子集判定（保持旧语义）：kind=='c' 且 ConfigIds 名单命中才进 _homeInstances
+                if (kind == 'c' && ConfigIds.Contains(cfgId))
+                {
+                    fresh.Add(inst);
+                    if (nativeIds.Contains(ownerId)) withBagCount++;
+                    else extraNames.Add($"{inst.Name}(0x{ownerId:X})");
+                }
             }
 
             // 诊断：全量列出 agentList 中的家具（不过滤），标注各判定结果——定位"被过滤掉的新柜子"
@@ -205,6 +262,7 @@ internal static class CabinetCatalog
 
             int prevN = _homeInstances.Count;
             _homeInstances = fresh;
+            _allContainers = all;
             if (prevN != fresh.Count)
                 CabinetEverywherePlugin.Log.LogInfo($"[CabinetEverywhere] 家中柜子实例 {prevN} → {fresh.Count} 个");
 
@@ -263,7 +321,7 @@ internal static class CabinetCatalog
         }
         catch (Exception e)
         {
-            WarnOnce("refresh", "家中柜子枚举失败: " + e.Message);
+            WarnOnce("refresh", "家中容器枚举失败: " + e.Message);
         }
     }
 
@@ -280,6 +338,43 @@ internal static class CabinetCatalog
             return cfg != null ? BagTable.FurnName(cfg) : "?";
         }
         catch { return "?"; }
+    }
+
+    /// <summary>
+    /// 读容器的官方标签（FurnitureTagComponent.TagIds，原 ContainerScan.FillTags 的标签读取）。
+    /// agentComponentDictionary 是 Dictionary&lt;Il2CppType, BaseEntity&gt;，按 Type 索引直达组件
+    /// （无泛型/枚举坑）；无组件/异常一律空数组兜底。
+    /// </summary>
+    private static int[] ReadTagIds(GameCore.HotUpdate.Battle.Logic.Furniture furn)
+    {
+        try
+        {
+            var dict = furn.agentComponentDictionary;
+            if (dict == null) return Array.Empty<int>();
+            var raw = dict[Il2CppInterop.Runtime.Il2CppType.From(
+                typeof(GameCore.HotUpdate.Battle.Logic.FurnitureTagComponent))];
+            var comp = raw?.TryCast<GameCore.HotUpdate.Battle.Logic.FurnitureTagComponent>();
+            var ids = comp?.TagIds;
+            if (ids != null && ids.Count > 0)
+            {
+                var arr = new int[ids.Count];
+                for (int i = 0; i < ids.Count; i++) arr[i] = ids[i];
+                return arr;
+            }
+        }
+        catch { /* 标签读不到=无标签 */ }
+        return Array.Empty<int>();
+    }
+
+    /// <summary>组件存在性（agentComponentDictionary 按 Type 索引直达，无组件/异常一律 false）。</summary>
+    private static bool HasComponent(GameCore.HotUpdate.Battle.Logic.Furniture furn, Type type)
+    {
+        try
+        {
+            var dict = furn.agentComponentDictionary;
+            return dict != null && dict[Il2CppInterop.Runtime.Il2CppType.From(type)] != null;
+        }
+        catch { return false; }
     }
 
     /// <summary>诊断：列出本次枚举的全部带包家具明细（DumpFurniture 置 true 触发一次）。</summary>
@@ -301,5 +396,9 @@ internal static class CabinetCatalog
 
     private static bool _instanceLogged;
 
-    internal static IReadOnlyList<CabinetInst> HomeInstances => _homeInstances;
+    /// <summary>家中全部储物容器（柜子/冰箱/材料架+标签，同一次遍历产出）——TagFilter 筛选用。</summary>
+    internal static IReadOnlyList<ContainerInst> AllContainers => _allContainers;
+
+    /// <summary>柜子子集（kind=='c' 且 ConfigIds 名单命中，同一次遍历产出）——直达注入用，语义与合并前一致。</summary>
+    internal static IReadOnlyList<ContainerInst> HomeInstances => _homeInstances;
 }

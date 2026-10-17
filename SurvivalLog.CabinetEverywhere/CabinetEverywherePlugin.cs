@@ -98,9 +98,8 @@ internal sealed class AccessTicker : MonoBehaviour
     public AccessTicker(IntPtr ptr) : base(ptr) { }
     public AccessTicker() { }
 
-    private float _slowCheck;          // 白名单 + 柜子名单重扫（5s 幂等）
+    private float _slowCheck;          // 白名单 + 柜子名单重扫 + 统一容器扫描（5s 幂等）
     private float _fastCheck;          // 页签注入轮询（0.5s，仅目标界面打开时）
-    private float _instanceCacheAge;   // 家中柜子实例缓存时效
     private bool _listedOnce;
 
     public void Update()
@@ -133,25 +132,20 @@ internal sealed class AccessTicker : MonoBehaviour
             if (CabinetEverywherePlugin.EnableCraftSource.Value)
                 CraftSourceInjector.Ensure(cfgIds);
 
-            // 4) 筛选：容器枚举 + JS 注入/喂标签数据（原独立 Ticker 的 5s 周期，幂等）
+            // 3) 统一容器扫描（5s 只扫一遍，原直达/筛选两个 5s 扫描合一）：单遍产出
+            //    AllContainers（全容器+标签，筛选用）+ HomeInstances（柜子子集，直达注入用）
+            CabinetCatalog.RefreshHomeInstances();
+            CabinetCatalog.FlushDump();
+
+            // 4) 筛选：JS 注入/喂标签数据（容器枚举已并入上面的统一扫描）
             if (CabinetEverywherePlugin.FilterEnable.Value)
-            {
-                ContainerScan.Refresh();
                 TagFilter.Tick();
-            }
         }
 
-        // 3) 页签注入（烹饪/老鼠笼/酿酒）
+        // 页签注入（烹饪/老鼠笼/酿酒）：读 5s 刷新的柜子子集 HomeInstances，0.5s 轮询补挂
         _fastCheck += dt;
         if (_fastCheck < 0.5f) return;
         _fastCheck = 0f;
-        _instanceCacheAge += 0.5f;
-        if (_instanceCacheAge >= 5f)
-        {
-            _instanceCacheAge = 0f;
-            CabinetCatalog.RefreshHomeInstances();
-            CabinetCatalog.FlushDump();
-        }
         TabInjector.PollAll();
     }
 }
