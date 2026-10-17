@@ -639,7 +639,10 @@
       var ddw = st.ddw || dd;
       var prevPar = ddw.parentElement, prevNext = ddw.nextElementSibling;
       if (anchorRow) {
-        ddw.style.position = 'static';
+        // **必须 relative 不能 static**：包裹器是弹层 bottom:calc(100%+6px) 的锚定块，static 会让
+        // 弹层失去锚点飘到上层定位祖先（CDP 实锤 pop y=-108 出屏+#trade overflow 裁切=隐身）。
+        // relative 无偏移=行内行为与 static 完全一致，不影响布局。
+        ddw.style.position = 'relative';
         ddw.style.left = ''; ddw.style.right = ''; ddw.style.top = ''; ddw.style.bottom = '';
         ddw.style.flex = '0 0 auto';
         ddw.style.alignSelf = 'center';
