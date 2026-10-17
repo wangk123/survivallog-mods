@@ -528,9 +528,12 @@
   // 克隆源=其 dll 内嵌 page.js 提取的 .PFX-btn/.PFX-active/.PFX-menu/.PFX-on 原文（PFX=bt-view，
   // token：fg #fff、accent #fbb034、menu-bg #1d1e22）。**两页缩放不同**（交易≈0.62/调度机队≈0.85），
   // 同一 css 值视觉大小必然不同（作者实测两页不一致根因）——所有计量值按「视觉 px ÷ k」生成：
-  // 视觉值=它的 css × DD_VIS（0.647=交易页校准系数），k=本页实测（ddScaleK），窗口缩放变化时
+  // 视觉值=它的 css × DD_VIS（0.647=交易页校准系数），k=按页面查静态表（DD_K_TABLE，零测量）
   // placeDD 会带新 k 重生成。选中某标签→.on 金色激活态（其排序激活同语义）。内联只留布局。
   var DD_VIS = 0.647; // 交易页校准：css×0.647=视觉 px
+  // 各页静态缩放表（页面 id → 典型 k，作者机 1536×864 实测）：交易=祖先层 #app 缩放、
+  // 调度机队=body zoom。零测量路线的唯一数据源，改分辨率/游戏改版时更新此表。
+  var DD_K_TABLE = { Trade: 0.62, DroneHub: 0.845 };
   function ensureDDStyle(doc, k) {
     var kk = (k && k > 0.2 && k < 4) ? k : 1;
     var px = function (btCss) { return (btCss * DD_VIS / kk).toFixed(2) + 'px'; };
@@ -581,25 +584,6 @@
     } catch (e) { return null; }
   }
 
-  // 有效缩放系数 k（fix-wave-5 通用解）：缩放可能挂在 body（调度机队≈0.845）也可能挂在祖先层
-  // #app 链（交易页≈0.62、body zoom=1）——检测挂哪层不可靠，改用**按钮自身比值**：
-  // k = 按钮 rect.height ÷ 其 css 高（computed，样式表捐献值）。rect 是全部祖先累计缩放后的
-  // 视觉 px，比值即作用于本按钮的有效系数，与挂哪层无关。**k 只用于定位换算（避让偏移/弹层
-  // 锚定）——按钮与弹层行的尺寸/字体自 fix-wave-7 起直接抄捐献按钮的 css 值（同空间原值，
-  // 天生缩放正确），不再有任何 ÷k 尺寸反推**（反推连错三轮的教训）。按钮未渲染（rect 高 0）
-  // 时回退 body zoom（仅覆盖 body 层缩放页；祖先层页得 1，下一轮 refreshDD≈5s 自愈）。
-  // rect 与 rect 比较不用 k；「rect 读出→写进 style」必须 ÷k。
-  function ddScaleK(st, dd) {
-    try {
-      var rc = dd.getBoundingClientRect();
-      var view = st.doc.defaultView;
-      if (rc.height > 2 && view) {
-        var ch = parseFloat(view.getComputedStyle(dd).height) || dd.__sltfCssH || 21; // 分母=按钮当前 css 高（样式表捐献值），rect=视觉高，比值=有效系数
-        if (ch > 2) return rc.height / ch;
-      }
-      return (view && parseFloat(view.getComputedStyle(st.doc.body).zoom)) || 1;
-    } catch (e) { return 1; }
-  }
 
   // 触发器落位（refreshDD 每次调用）：动态锚定列容器底部左侧（ddCol）+测量避让——旁列按钮
   //（外来 mod 注入的排序/视图按钮）卸载后自动左挪贴边。换位背景（作者实测）：挂页签行末会被
@@ -624,21 +608,11 @@
       var view = st.doc.defaultView;
       var refEl = null, anchorRow = null, capEl = null;
       var colR = col ? col.getBoundingClientRect() : null; // 兜底绝对定位偏移用
-      // k 从**列容器**自比值（rect 宽 ÷ offsetWidth）——列容器永远已渲染，与我们按钮的渲染
-      // 状态无关，首帧即正确。按钮自比值在未渲染时回退 body zoom，而交易页缩放在祖先层
-      //（body zoom=1）→ 首帧 k=1 → 字号按错误系数生成过小，下次刷新才恢复——作者实测
-      //"刚打开字小、滚动列表后恢复正常"的根因。
-      // k 每页只测一次（st.__sltfKCache，列容器 rect÷offsetWidth），样式表只写一次、写完不再碰
-      //（ensureDDStyle 幂等原样）——与 BetterTrade 的静态样式同构：没有重写路径=没有可跳/可闪的
-      // 时机（此前"点开列表尺寸跳"“首帧闪小”全部源于运行时重写样式表）。布局未稳量不出时
-      // 等下一轮再显示（首份数据到达时列容器早已渲染，此窗口实际几乎不存在）。
-      var k = st.__sltfKCache;
-      if (!k && colR && col.offsetWidth > 50) {
-        var kTry = colR.width / col.offsetWidth;
-        if (kTry > 0.2 && kTry < 4) { k = st.__sltfKCache = kTry; }
-      }
-      if (!k) { dd.style.visibility = 'hidden'; return; }
-      dd.style.visibility = '';
+      // k=**静态查表**（按页面 id），零测量零计算——与 BetterTrade 的静态样式完全同构。
+      // 测量路线三轮全灭：动态测→重写震荡；首帧测→闪错；测一次写死→量错成永久错误
+      //（作者实测"按钮一直小+弹层飘走"）。查表无任何可出错的运行时路径；表值为
+      // 作者机（1536×864）实测典型缩放。未知页面用交易页值兜底。
+      var k = DD_K_TABLE[pageKey(st)] || DD_K_TABLE.Trade;
       dd.__sltfK = k;
       ensureDDStyle(st.doc, k);
       // 首选锚=.sort-btn（BetterTrade 自己的稳定锚：它每次重绘都把自己的组件 insertBefore 到
@@ -703,7 +677,7 @@
       if (!col) return;
       ensureDDStyle(st.doc);                                        // 幂等：hover 样式表意外被摘时补回
       var sel = pageSel(st);
-      var k = st.dd.__sltfK || ddScaleK(st, st.dd); // placeDD 从列容器测得（首帧即正确）
+      var k = st.dd.__sltfK || DD_K_TABLE[pageKey(st)] || 0.62; // 静态查表（placeDD 已写入按钮）
       var ddr = st.dd.getBoundingClientRect();
       var pop = st.doc.createElement('div');
       pop.className = 'sltf-dd-pop';
@@ -889,7 +863,6 @@
       // 2026-10-16 实测），再重置状态重启初始化
       if (st.initTimer) { clearTimeout(st.initTimer); st.initTimer = 0; }
       st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.pop = null; st.popDown = null; st.lastActiveIdx = null; st.skipEcho = null;
-      st.__sltfKCache = null; // 页面重载：k 缓存随文档作废（缩放可能不同），样式表随新文档重建
       st.pending = null;
       if (st.pendingTimer) { clearTimeout(st.pendingTimer); st.pendingTimer = 0; }
       unfreeze(st);
