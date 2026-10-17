@@ -673,12 +673,10 @@
       if (st.pop && st.pop.isConnected) { closePop(st); return; } // 开着再点按钮=关
       closePop(st);                                                 // 清不连通的残留引用（重开由本次继续）
       if (!st.doc || !st.doc.body || !st.dd || !st.dd.isConnected) return;
-      var col = ddCol(st, detectC(st.doc)); // 与 placeDD 同款列容器（常态恒有；拿不到则无处锚定，放弃开层）
-      if (!col) return;
+      var view = st.doc.defaultView;
       ensureDDStyle(st.doc);                                        // 幂等：hover 样式表意外被摘时补回
       var sel = pageSel(st);
-      var k = st.dd.__sltfK || DD_K_TABLE[pageKey(st)] || 0.62; // 静态查表（placeDD 已写入按钮）
-      var ddr = st.dd.getBoundingClientRect();
+      var k = st.dd.__sltfK || DD_K_TABLE[pageKey(st)] || 0.62; // 静态查表（仅弹层自身尺寸用；定位已零换算）
       var pop = st.doc.createElement('div');
       pop.className = 'sltf-dd-pop';
       // 外观（背景/描边/圆角/内衬/gap）全在 ensureDDStyle 的 .sltf-dd-pop（BetterTrade 菜单硬抄本）；
@@ -715,34 +713,22 @@
       addRow(0, '全部柜子', null); // 首位=全部，其后 options()：其他→食物→物资（T6 排列不变）
       var opts = options();
       for (var i = 0; i < opts.length; i++) addRow(opts[i].id, opts[i].name, selById(opts[i].id));
-      col.appendChild(pop); // 先挂列容器量尺寸（visibility:hidden 防跳；与按钮同空间）
-      // 定位：同空间 rect 差（视觉）÷k 回 css。向上开优先，放不下/出顶转向下；左对齐按钮左缘，
-      // 右溢出钳制列内（pw/clientWidth 同为布局空间直接比）。旧 body+fixed 时代的视口
-      // innerWidth/innerHeight 换算随挂载点一并作废（fix-wave-5）。
-      var colR = col.getBoundingClientRect();
-      var ph = pop.offsetHeight, pw = pop.offsetWidth;
-      var openUp = true;
-      var top = (ddr.top - colR.top) / k - ph - 4;
-      if (top + ph > col.clientHeight || top < 0) { top = (ddr.bottom - colR.top) / k + 4; openUp = false; }
-      var left = (ddr.left - colR.left) / k;
-      var maxL = col.clientWidth - pw - 4;
-      if (left > maxL) left = Math.max(4, maxL);
-      pop.style.left = left + 'px';
-      pop.style.top = top + 'px';
+      // 弹层挂**按钮所在的行容器**，用 offsetTop/offsetLeft 定位——布局空间原生值与 css 同一
+      // 坐标系，按钮的 offset 就是弹层的坐标，**零换算零除法**（此前 rect÷k 各版换算误差被
+      // 距离放大：遮盖/飘远/出屏三个症状同根因。行容器 static 时补 relative——两页行容器
+      // 内无依赖定位祖先的官方绝对元素，已核）
+      var row = st.dd.parentElement;
+      if (!row) return;
+      if (view && view.getComputedStyle(row).position === 'static') row.style.position = 'relative';
+      row.appendChild(pop); // 先挂行内量尺寸（visibility:hidden 防跳）
+      var tCss = st.dd.offsetTop - pop.offsetHeight - 6; // 向上开：弹层底=按钮顶-6（同空间直接算）
+      if (tCss < 0) tCss = st.dd.offsetTop + st.dd.offsetHeight + 6; // 放不下转向下开
+      var lCss = st.dd.offsetLeft;
+      var maxL = row.clientWidth - pop.offsetWidth - 4;
+      if (lCss > maxL) lCss = Math.max(4, maxL);
+      pop.style.left = lCss + 'px';
+      pop.style.top = tCss + 'px';
       pop.style.visibility = '';
-      // 贴身吸附（双向）：表值 k 与实际缩放的微小偏差经长距离 ÷k 换算放大成偏移（交易页
-      // 表现为遮盖、调度机队表现为飘远——同根因两个方向）。用渲染后的实际 rect 把弹层边缘
-      // **精确吸附**到按钮边缘 ±6px：向上开=弹层底贴按钮顶-6；向下开=弹层顶贴按钮底+6。
-      // 一次到位、双向修正（BetterTrade tooltip placeInside 同思路），残余误差≈间距×偏差率<0.2px
-      try {
-        var pr2 = pop.getBoundingClientRect();
-        var br2 = st.dd.getBoundingClientRect();
-        if (openUp) {
-          pop.style.top = (parseFloat(pop.style.top) - (pr2.bottom - (br2.top - 6)) / k) + 'px';
-        } else {
-          pop.style.top = (parseFloat(pop.style.top) + ((br2.bottom + 6) - pr2.top) / k) + 'px';
-        }
-      } catch (e2) {}
       st.pop = pop;
       st.popDown = function (e) { // 任意 mousedown 关闭（capture，先于页面处理）：选项行交给 click、按钮交给 toggle
         var t = e.target;
