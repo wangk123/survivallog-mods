@@ -550,12 +550,10 @@
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
     var el = doc.getElementById('sltf-dd-style');
-    if (el && k === undefined) return; // 无 k 调用（togglePop 补挂/重建分支）一律不动已有表——否则按 kk=1 整表重写，把归一值打回错误系数（作者实测"点开列表尺寸跳变"根因，采样实锤 sheet 字体 12.26→7.76）
-    if (el) { if (el.__sltfK !== kk) { el.textContent = txt; el.__sltfK = kk; } return; }
+    if (el) return; // **样式表只写一次**：已在即原样返回，任何路径（含 k 变化/重建分支）都不重写——重写=尺寸跳变之源（采样实锤）
     var st = doc.createElement('style');
     st.id = 'sltf-dd-style';
     st.textContent = txt;
-    st.__sltfK = kk;
     (doc.head || doc.documentElement).appendChild(st);
   }
   function closePop(st) {
@@ -630,11 +628,19 @@
       // 状态无关，首帧即正确。按钮自比值在未渲染时回退 body zoom，而交易页缩放在祖先层
       //（body zoom=1）→ 首帧 k=1 → 字号按错误系数生成过小，下次刷新才恢复——作者实测
       //"刚打开字小、滚动列表后恢复正常"的根因。
-      var k = (colR && col.offsetWidth > 50) ? (colR.width / col.offsetWidth) : 0;
-      if (!(k > 0.2 && k < 4)) k = ddScaleK(st, dd);
-      if (!(k > 0.2 && k < 4)) k = 1;
+      // k 每页只测一次（st.__sltfKCache，列容器 rect÷offsetWidth），样式表只写一次、写完不再碰
+      //（ensureDDStyle 幂等原样）——与 BetterTrade 的静态样式同构：没有重写路径=没有可跳/可闪的
+      // 时机（此前"点开列表尺寸跳"“首帧闪小”全部源于运行时重写样式表）。布局未稳量不出时
+      // 等下一轮再显示（首份数据到达时列容器早已渲染，此窗口实际几乎不存在）。
+      var k = st.__sltfKCache;
+      if (!k && colR && col.offsetWidth > 50) {
+        var kTry = colR.width / col.offsetWidth;
+        if (kTry > 0.2 && kTry < 4) { k = st.__sltfKCache = kTry; }
+      }
+      if (!k) { dd.style.visibility = 'hidden'; return; }
+      dd.style.visibility = '';
       dd.__sltfK = k;
-      ensureDDStyle(st.doc, k); // 计量值按本页 k 归一（窗口缩放变化时随 placeDD 重生成）
+      ensureDDStyle(st.doc, k);
       // 首选锚=.sort-btn（BetterTrade 自己的稳定锚：它每次重绘都把自己的组件 insertBefore 到
       // sort-btn 紧左边——我们若在它右边就会被它重绘挤到左边去（作者实测"顺序翻转"根因）。
       // 我们插 **sort-btn 右侧**，它的重绘永远碰不到我们，顺序稳定：[bt-view][sort][我们]）
@@ -778,7 +784,8 @@
         // 先清本页面遗留的触发器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一）
         var olds = st.doc.querySelectorAll('.sltf-dd-btn, .sltf-dd-pop');
         for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
-        ensureDDStyle(st.doc); // BetterTrade 下拉库硬抄本（两页同款，作者要求的"样式一致"）
+        // 样式表不在此处创建——只允许 placeDD 携有效 k 创建，杜绝任何 kk=1 错误系数帧闪现
+        //（作者实测"刚打开闪一下小的"：首帧 col 未量出系数 → 回退 body zoom=1 → 错误系数表闪一帧）
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
         // 内联只管布局——外观/字体/内衬全部由样式表管理，内联外观会压死 :hover（复审 R1 旧坑）。
@@ -882,6 +889,7 @@
       // 2026-10-16 实测），再重置状态重启初始化
       if (st.initTimer) { clearTimeout(st.initTimer); st.initTimer = 0; }
       st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.pop = null; st.popDown = null; st.lastActiveIdx = null; st.skipEcho = null;
+      st.__sltfKCache = null; // 页面重载：k 缓存随文档作废（缩放可能不同），样式表随新文档重建
       st.pending = null;
       if (st.pendingTimer) { clearTimeout(st.pendingTimer); st.pendingTimer = 0; }
       unfreeze(st);
