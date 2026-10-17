@@ -9,9 +9,12 @@ using Object = UnityEngine.Object;
 namespace SurvivalLog.ViewportProbe;
 
 /// <summary>
-/// 一次性诊断插件 v2（不发布）：柜子界面视口自适应取证。
-/// 现象：烹饪/酿酒桶界面在 23 列置物架页签下溢出屏幕，但按 4K@PixelDensity2
-/// （CSS 视口 1920x1080）静态计算面板约 1774px 本不该溢出——需要运行时实测。
+/// 开发期探针插件（不发布）：柜子界面视口自适应取证 + Vuplex 远程调试开关。
+///
+/// DevTools 开关（cfg [DevTools] Enabled，默认关）：开启后游戏 UI 可用 Chrome
+/// DevTools 调试（chrome://inspect → localhost:9222）。时机窗口见 TryEnableDevTools：
+/// Load() 太早（Web 类未 Awake），WebView 就绪后太晚（Chromium 已跑），Ticker 抢跑命中。
+/// 仅开发机使用，发布版禁开。详见 docs/06-WebUI调试通道与源码地图.md。
 ///
 /// v1 教训（本轮实证）：当前游戏版本转发进 Player.log 的是【Root 帧】console
 /// （[3D WebView] [Web Console] 行，本会话 [Vue] Root Orchestrator 实锤），
@@ -32,9 +35,15 @@ public sealed class ViewportProbePlugin : BasePlugin
 
     internal static new ManualLogSource Log;
 
+    /// <summary>开发期开关：Vuplex 远程调试（Web 类方法必须等 Awake 之后，故由 Ticker 在 WebView 就绪时调用）</summary>
+    internal static bool DevToolsEnabled;
+
     public override void Load()
     {
         Log = base.Log;
+        var devtools = Config.Bind("DevTools", "Enabled", false,
+            "开启 Vuplex 远程调试：游戏启动后 Chrome 打开 chrome://inspect 即可调试游戏 UI（localhost:9222）。仅开发期使用，发布版保持关闭");
+        DevToolsEnabled = devtools.Value;
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<ProbeTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<ProbeTicker>();
         var go = new GameObject("ViewportProbe.Ticker");
@@ -53,9 +62,18 @@ internal sealed class ProbeTicker : MonoBehaviour
     private bool _hadWeb;
     private int _injects;
     private bool _warned;
+    private float _devtoolsNext;
+    private bool _devtoolsDone;
 
     private void Update()
     {
+        // 远程调试抢跑：Vuplex 要求 Awake 之后、Chromium 启动之前调用。
+        // 静默重试直到命中窗口；Chromium 已跑则 Terminate 补救（WebView 会自动恢复重载）。
+        if (ViewportProbePlugin.DevToolsEnabled && !_devtoolsDone && Time.time >= _devtoolsNext)
+        {
+            _devtoolsNext = Time.time + 0.5f;
+            TryEnableDevTools();
+        }
         _check += Time.deltaTime;
         if (_check < 5f) return;
         _check = 0f;
@@ -84,6 +102,46 @@ internal sealed class ProbeTicker : MonoBehaviour
             if (_warned) return;
             _warned = true;
             ViewportProbePlugin.Log.LogWarning("[ViewportProbe] 注入异常: " + e.Message);
+        }
+    }
+
+    private void TryEnableDevTools()
+    {
+        try
+        {
+            Vuplex.WebView.Web.EnableRemoteDebugging();
+            _devtoolsDone = true;
+            ViewportProbePlugin.Log.LogInfo("[ViewportProbe] Vuplex 远程调试已开启（抢跑窗口命中）：chrome://inspect → localhost:9222");
+        }
+        catch (InvalidOperationException e)
+        {
+            var msg = e.Message ?? "";
+            if (msg.Contains("too early")) return; // 还没到 Awake，静默重试
+            if (msg.Contains("already running"))
+            {
+                try
+                {
+                    Vuplex.WebView.StandaloneWebView.TerminateBrowserProcess();
+                    Vuplex.WebView.Web.EnableRemoteDebugging();
+                    _devtoolsDone = true;
+                    ViewportProbePlugin.Log.LogInfo("[ViewportProbe] Vuplex 远程调试已开启（Terminate 补救，WebView 将自动恢复）：localhost:9222");
+                }
+                catch (Exception e2)
+                {
+                    _devtoolsDone = true; // 补救也失败，停止重试
+                    ViewportProbePlugin.Log.LogError("[ViewportProbe] 远程调试补救失败: " + e2.Message);
+                }
+            }
+            else
+            {
+                _devtoolsDone = true;
+                ViewportProbePlugin.Log.LogError("[ViewportProbe] 远程调试未知失败: " + msg);
+            }
+        }
+        catch (Exception e)
+        {
+            _devtoolsDone = true;
+            ViewportProbePlugin.Log.LogError("[ViewportProbe] 远程调试开启异常: " + e.Message);
         }
     }
 
