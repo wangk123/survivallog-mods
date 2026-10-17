@@ -17,6 +17,17 @@ internal static class TagFilter
     private static bool _probeDone;
     private static bool _containerLogged;
 
+    private static string _bootstrap;
+    internal static string BootstrapJs => _bootstrap ??= ReadBootstrap();
+    private static string ReadBootstrap()
+    {
+        var asm = System.Reflection.Assembly.GetExecutingAssembly();
+        using var s = asm.GetManifestResourceStream("SurvivalLog.CabinetEverywhere.tagfilter.page.js");
+        if (s == null) { WarnOnce("res", "内嵌资源 tagfilter.page.js 缺失"); return ""; }
+        using var r = new System.IO.StreamReader(s, System.Text.Encoding.UTF8);
+        return r.ReadToEnd();
+    }
+
     internal static void Tick()
     {
         // 容器计数日志（原 ContainerScan.Refresh 的首报，随扫描合一迁到消费侧）
@@ -31,7 +42,7 @@ internal static class TagFilter
         if (web == null) return;
         try
         {
-            web.ExecuteJavaScript(TagFilterJs.Bootstrap);
+            web.ExecuteJavaScript(BootstrapJs);
             var json = BuildDataJson();
             if (json != null)
                 web.ExecuteJavaScript("window.__SLTF__&&window.__SLTF__.setData(" + json + ")");

@@ -1,33 +1,3 @@
-namespace SurvivalLog.CabinetEverywhere;
-
-/// <summary>
-/// 标签筛选的 JS 引导脚本（运行在 Root.html 主帧，经 IWebView.ExecuteJavaScript 注入）。
-///
-/// 架构（2026-10-14 全程反汇编实证，见 DESIGN.md）：
-/// - 游戏 UI = 一个 Vuplex Chromium WebView 装载 Root.html，各界面页是 #iframe-container 下的
-///   iframe；C#→页面数据全部经 Root 的 case-10 广播 frame.contentWindow.postMessage({type,data}) 转发，
-///   页签数据都在 *_BagMsg 里（cabinetTabs/bagTabs/cartTabs/bagTabsJson，条目带 ownerId）。
-/// - 本脚本只做两件事：① 包装每个 iframe 的 contentWindow.postMessage，截读 BagMsg 记住页签
-///   顺序与 ownerId（**不改消息内容**——工作台/粉碎机/压缩机切页签发 TAB_SWITCH{tab:数组下标}，
-///   C#/JS 共享下标，改数组会切错柜子）；② 按当前选中标签把不匹配的容器页签 DOM display:none
-///   （背包等不在名单里的 ownerId 永不隐藏；下标/事件/自动取料全部原样）。
-/// - 下拉选项（2026-10-14 第三轮定版）：**完整标签库**默认全量显示——食物维度汇总为一个
-///   "食物"选项（Dim 4 的那条做代表，选中时匹配任何 Dim 1-4 食物标签），物资维度（Dim 0）
-///   逐个列出；不再按"柜子是否用到"裁剪（空标签存档只剩伪标签一项的困惑）。
-/// - MutationObserver 回调内**同步**重挂隐藏（微任务、绘制前执行）——页面每次 BagMsg 整条
-///   重建页签 DOM，任何防抖窗口都会让被藏页签闪现（闪烁根因，实修验证）。
-/// - 方向感知弹回（2026-10-15）：官方 A/D 切页签是 C# 侧"下标±1"步进
-///   （ContainerTabHotKey.SendSwitchTab → 各面板 RA_SwitchTabByKey，反汇编实证），
-///   对 DOM 隐藏零感知——按 D 常落在被藏柜子上，若把焦点盲拽回"第一个可见页签"会表现为
-///   来回跳跃/无法移动。故被藏 active 页签按移动方向（对比上帧 active 下标）点同方向最近
-///   可见页签（=跳过被藏柜子）；方向未知（首帧/玩家换筛选）才点第一个可见页签。
-/// - 选中态存 localStorage（sltf_sel_v2），界面间共享；跨会话保持。
-/// - 同源前提：包装 contentWindow 与直访 contentDocument 都要求 Root 与 iframe 同源；
-///   跨域时包装自然失败（写属性 throw），功能静默不生效，C# 侧探针会在日志留痕。
-/// </summary>
-internal static class TagFilterJs
-{
-    internal const string Bootstrap = @"
 (function () {
   if (window.__SLTF__) return;
   var LS_KEY = 'sltf_sel_v2';
@@ -583,5 +553,3 @@ internal static class TagFilterJs
     }
   };
 })();
-";
-}
