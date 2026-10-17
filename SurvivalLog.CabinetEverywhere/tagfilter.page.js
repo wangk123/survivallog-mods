@@ -524,23 +524,46 @@
     for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
     return null;
   }
-  // 外观态样式表（随触发器一次性注入页面 head）：内联 cssText 只管布局/尺寸，**背景/文字色
-  // 等外观态全部交本表**——内联样式层叠恒高于作者样式表（无 !important 拯救），基础态留内联
-  // 会把 :hover 规则压死（2026-10-17 复审 R1：hover 曾因此无效，旧版即有）。基础规则同时负责
-  // 压掉 UA 的 button 默认灰底。触发器 hover=克隆官方 gbtn.sm 语义（仅提亮底色一档，
-  // fix-wave-4）；选项行 .on/:hover、滚动条值克隆官方 DyePanel 的 .dd-it.on/:hover /
-  // .dd-list::-webkit-scrollbar（快照直读）
-  function ensureDDStyle(doc) {
-    if (doc.getElementById('sltf-dd-style')) return;
-    var s = doc.createElement('style');
-    s.id = 'sltf-dd-style';
-    s.textContent = '.sltf-dd-btn{background:rgba(0,0,0,0);}'
-      + '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);}'
+  // 外观态样式表（随触发器注入页面 head）：**基础规则=捐献按钮的 computed style 原样照抄**
+  //（2026-10-17 作者拍板"照抄"：旁边的按钮——交易页=BetterTrade 视图按钮、调度机队=官方
+  // 一键整理——其 css 值本就是为该页缩放写好的，逐条抄来像素级一致，且免掉一切 k 反推）。
+  // 无捐献者时回退官方 gbtn.sm 规格基线。内联样式只留布局——外观/字体进样式表，否则内联
+  // 层叠压死 :hover（复审 R1 旧坑）。基础规则同时压掉 UA 的 button 默认灰底。hover=提亮一档；
+  // 选项行 .on/:hover、滚动条值克隆官方 DyePanel（快照直读）。
+  var DD_FALLBACK_BASE = '.sltf-dd-btn{height:21px;line-height:21px;font-size:12px;padding:0 10px;'
+    + 'border:1px solid rgba(164,181,70,0.5);border-radius:6px;background:rgba(0,0,0,0);color:#e8ecc8;}';
+  function ddBaseRule(donorEl, view) {
+    if (!donorEl || !view) return DD_FALLBACK_BASE;
+    try {
+      var cs = view.getComputedStyle(donorEl);
+      var props = ['height', 'line-height', 'font-family', 'font-size', 'font-weight', 'padding',
+                   'border-width', 'border-style', 'border-color', 'border-radius',
+                   'background-color', 'background-image', 'background-repeat',
+                   'color', 'box-shadow'];
+      var decls = '';
+      for (var i = 0; i < props.length; i++) {
+        var v = cs.getPropertyValue(props[i]);
+        if (v && v !== 'none' && v !== 'normal') decls += props[i] + ':' + v + ';';
+      }
+      if (!decls) return DD_FALLBACK_BASE;
+      return '.sltf-dd-btn{' + decls + 'box-sizing:border-box;}';
+    } catch (e) { return DD_FALLBACK_BASE; }
+  }
+  function ensureDDStyle(doc, base) {
+    var el = doc.getElementById('sltf-dd-style');
+    if (el && base === undefined) return; // 未指定 base 且样式表在：勿动（togglePop 的补挂路径不得用回退基线覆盖捐献照抄值）
+    var txt = (base || DD_FALLBACK_BASE)
+      + '.sltf-dd-btn:hover{filter:brightness(1.25);}'
       + '.sltf-dd-opt{background:transparent;color:#d6cdc2;}'
       + '.sltf-dd-opt.on{color:#fff;font-weight:bold;}'
       + '.sltf-dd-opt:hover{background:rgba(255,255,255,.08);color:#fff;}'
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
+    var el = doc.getElementById('sltf-dd-style');
+    if (el) { if (el.textContent !== txt) el.textContent = txt; return; }
+    var s = doc.createElement('style');
+    s.id = 'sltf-dd-style';
+    s.textContent = txt;
     (doc.head || doc.documentElement).appendChild(s);
   }
   function closePop(st) {
@@ -570,20 +593,20 @@
 
   // 有效缩放系数 k（fix-wave-5 通用解）：缩放可能挂在 body（调度机队≈0.845）也可能挂在祖先层
   // #app 链（交易页≈0.62、body zoom=1）——检测挂哪层不可靠，改用**按钮自身比值**：
-  // k = 按钮 rect.height ÷ 其 css 高。css 高是我们写的内联 px（布局空间），rect 是全部祖先
-  // 累计缩放后的视觉 px，比值即作用于本按钮的有效系数，与挂哪层无关。分母用 dd.__sltfCssH
-  //（placeDD 每轮按 k 反推写入的高，初始 21）而非常量：写 21/k 后 rect→21，若仍除 21 则
-  // k 回摆→1、下一轮又写回 21——尺寸在两值间振荡（自比值对加性偏差如边框还自带收敛）。
-  // 按钮未渲染（rect 高 0）时回退 body zoom（仅覆盖 body 层缩放页；祖先层页得 1，下一轮
-  // refreshDD≈5s 自愈）。rect 与 rect 比较不用 k；「rect 读出→写进 style」必须 ÷k。
+  // k = 按钮 rect.height ÷ 其 css 高（computed，样式表捐献值）。rect 是全部祖先累计缩放后的
+  // 视觉 px，比值即作用于本按钮的有效系数，与挂哪层无关。**k 只用于定位换算（避让偏移/弹层
+  // 锚定）——按钮与弹层行的尺寸/字体自 fix-wave-7 起直接抄捐献按钮的 css 值（同空间原值，
+  // 天生缩放正确），不再有任何 ÷k 尺寸反推**（反推连错三轮的教训）。按钮未渲染（rect 高 0）
+  // 时回退 body zoom（仅覆盖 body 层缩放页；祖先层页得 1，下一轮 refreshDD≈5s 自愈）。
+  // rect 与 rect 比较不用 k；「rect 读出→写进 style」必须 ÷k。
   function ddScaleK(st, dd) {
     try {
       var rc = dd.getBoundingClientRect();
-      if (rc.height > 2) {
-        var ch = dd.__sltfCssH || 21; // 自己写的 css 高（重建分支新按钮无记录→初始 21 与 cssText 一致）
+      var view = st.doc.defaultView;
+      if (rc.height > 2 && view) {
+        var ch = parseFloat(view.getComputedStyle(dd).height) || dd.__sltfCssH || 21; // 分母=按钮当前 css 高（样式表捐献值），rect=视觉高，比值=有效系数
         if (ch > 2) return rc.height / ch;
       }
-      var view = st.doc.defaultView;
       return (view && parseFloat(view.getComputedStyle(st.doc.body).zoom)) || 1;
     } catch (e) { return 1; }
   }
@@ -604,12 +627,14 @@
       var col = ddCol(st, c);
       if (!col) return;
       if (dd.parentElement !== col) col.appendChild(dd); // 挂列容器（幂等重挂；Vue 重渲染摘除由 isConnected 重建分支兜底）
+      var view = st.doc.defaultView;
       var k = ddScaleK(st, dd);
-      dd.__sltfK = k; // 供 refreshDD 的 iconSvg 取尺寸（placeDD 先于其执行）
-      // 先测避让（尺寸依赖测量结果）：band 判定（colR vs r 同为 rect）不除 k；偏移写 css 才 ÷k。
+      dd.__sltfK = k; // 供 refreshDD/togglePop 用（定位换算）
+      // 先测避让（band 判定 colR vs r 同为 rect 不除 k；偏移写 css 才 ÷k）。
       // **自家弹层元素必须排除**——弹层选项行就落在列底带内，不排除的话弹层一开，下一次
-      // refreshDD 就把按钮"避让"到自己的选项行右侧、关掉又挪回（作者实测"点一下换一个位置"根因）
-      var left = 6, bottom = 6, nbH = 0; // nbH=窄邻居（旁边的按钮）视觉高——按钮尺寸跟它对齐的依据
+      // refreshDD 就把按钮"避让"到自己的选项行右侧、关掉又挪回（"点一下换一个位置"根因）。
+      // 窄左底邻居同时就是**样式捐献者**（照抄对象）。
+      var left = 6, bottom = 6, nbH = 0, donor = null;
       var colR = col.getBoundingClientRect();
       var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
       for (var i = 0; i < kids.length; i++) {
@@ -622,35 +647,30 @@
           bottom = Math.max(bottom, (colR.bottom - r.top) / k + 8); // 宽底栏（负重条类）→ 排它上方（偏移写 css：rect 差 ÷k）
         } else if (r.left < colR.left + DD_AVOID.nearLeft) {
           left = Math.max(left, (colR.right < 0 ? 0 : (r.right - colR.left) / k) + 6); // 窄左底按钮 → 排它右侧（同 ÷k）
-          if (r.height > nbH) nbH = r.height; // 旁边按钮的视觉高=我们的目标高（作者要求"和它一样大"，逐页精确）
+          if (r.height > nbH) { nbH = r.height; donor = el; } // 旁边按钮=样式捐献者（照抄）
         }
       }
-      // 视觉规格：高=旁边窄邻居的视觉高（有邻居就跟它一样大；无邻居用 21=调度机队官方 sortb 视觉高），
-      // css 值=视觉÷k。box-sizing:border-box 保证 css 高=边框盒高=rect 量的就是它。
-      var visH = (nbH > 8) ? Math.round(nbH) : 21;
-      dd.__sltfVisH = visH; // togglePop 的行高/字号跟按钮视觉规格走
-      var h = Math.round(visH / k);
-      dd.__sltfCssH = h; // 记下本轮写的 css 高——ddScaleK 的分母（勿常量 21，见其注释的振荡问题）
-      dd.style.height = h + 'px';
-      dd.style.lineHeight = h + 'px';
-      var fs = (visH >= 20 ? 12 : 11); // 邻居 18px 级用 11 号字，21px 级用 12（跟随官方两页规格）
-      dd.style.fontSize = (fs / k).toFixed(1) + 'px';
-      dd.style.padding = '0 ' + Math.round(10 / k) + 'px';
-      dd.style.maxWidth = Math.round(110 / k) + 'px';
-      var icoEl = dd.querySelector('.sltf-dd-ico');
-      if (icoEl) {
-        var isz = Math.round((visH >= 20 ? 13 : 11) / k) + 'px';
-        icoEl.style.width = isz;
-        icoEl.style.height = isz;
+      // 捐献者兜底：列底带没有旁按钮时（调度机队），抄官方页签行的排序按钮（.sortb/#sortBagBtn2）
+      if (!donor) donor = col.querySelector('.sortb, .gbtn') || st.doc.getElementById('sortBagBtn2');
+      // 样式照抄：捐献者的 computed 值（本就是该页缩放正确的 css）整套写进样式表基础规则；
+      // 高度/字号快照给弹层行排版用（css 值直接用，无需 ÷k）
+      var dH = 21, dFS = 12;
+      if (donor && view) {
+        try {
+          var dcs = view.getComputedStyle(donor);
+          dH = parseFloat(dcs.height) || 21;
+          dFS = parseFloat(dcs.fontSize) || 12;
+        } catch (e) {}
+        ensureDDStyle(st.doc, ddBaseRule(donor, view));
+      } else {
+        ensureDDStyle(st.doc, DD_FALLBACK_BASE);
       }
-      var arw = dd.lastElementChild; // ▾ 箭头（CSS 三角）：边框宽同按 k 反推，否则缩放页上小得看不见
-      if (arw && arw.tagName === 'SPAN') {
-        arw.style.borderLeftWidth = Math.max(2, Math.round(3 / k)) + 'px';
-        arw.style.borderRightWidth = Math.max(2, Math.round(3 / k)) + 'px';
-        arw.style.borderTopWidth = Math.max(3, Math.round(4 / k)) + 'px';
-      }
+      dd.__sltfDonor = { h: dH, fs: dFS };
+      // 唯一的尺寸类内联：label 比捐献者长（"全部柜子"4 字 vs "排序"2 字），给个上限防撑爆，
+      // 上限=捐献按钮视觉宽×2（÷k 回 css）；图标/箭头跟捐献字号走，样式表管其余全部
+      dd.style.maxWidth = Math.round(((nbH > 0 && donor ? donor.getBoundingClientRect().width : 60) * 2) / k) + 'px';
       // 落位（每次重算，外来按钮卸载→自动回贴列左缘）。按钮挪位时关掉旧弹层——弹层锚定的是
-      // 开层那一刻的按钮位置，按钮走了弹层就成了脱锚孤儿（漂在半空的"离按钮老远"观感来源之一）
+      // 开层那一刻的按钮位置，按钮走了弹层就成了脱锚孤儿
       var prevL = dd.style.left, prevB = dd.style.bottom;
       dd.style.left = left + 'px';
       dd.style.bottom = bottom + 'px';
@@ -694,13 +714,12 @@
         b.setAttribute('data-interactive', '');
         // 背景/文字色/加粗不在内联——外观态（基础/.on/:hover）统一由 ensureDDStyle 层叠管理
         //（同按钮复审 R1：内联背景/色会把 :hover 整条压死；.on 挂钩=上面 className 已带）。
-        // 行高/字号/icon 跟触发器的视觉规格走（__sltfVisH 由 placeDD 量邻居定出，逐页与旁边按钮对齐）
-        var visH = st.dd.__sltfVisH || 21;
-        var rfs = (visH >= 20 ? 12 : 11);
-        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:' + Math.round((visH - 1) / k) + 'px;padding:0 8px;margin:0;'
-          + 'border:0;border-radius:4px;font-family:inherit;font-size:' + (rfs / k).toFixed(1) + 'px;line-height:1;'
+        // 行高/字号/icon 跟捐献按钮的 css 值直接走（同空间原值，无需 ÷k——照抄即正确）
+        var dn = st.dd.__sltfDonor || { h: 21, fs: 12 };
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:' + Math.max(14, Math.round(dn.h - 2)) + 'px;padding:0 8px;margin:0;'
+          + 'border:0;border-radius:4px;font-family:inherit;font-size:' + dn.fs + 'px;line-height:1;'
           + 'white-space:nowrap;cursor:pointer;text-align:left;';
-        var isz = Math.round((visH >= 20 ? 12 : 10) / k);
+        var isz = Math.max(10, Math.round(dn.fs));
         var ico = st.doc.createElement('span');
         ico.style.cssText = 'display:flex;width:' + isz + 'px;height:' + isz + 'px;flex:0 0 auto;'
           + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
@@ -765,44 +784,37 @@
         // 先清本页面遗留的触发器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一）
         var olds = st.doc.querySelectorAll('.sltf-dd-btn, .sltf-dd-pop');
         for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
-        ensureDDStyle(st.doc);
+        ensureDDStyle(st.doc, DD_FALLBACK_BASE); // 基础规则先落官方规格基线；placeDD 随后用捐献按钮的 computed 值整套替换（照抄）
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
-        // 视觉克隆官方 .gbtn.sm（2026-10-17 fix-wave-4，作者要求「和旁边排序按钮一样大」——调度
-        // 机队页签行 sortBagBtn2 实测 63×21）：视觉目标高 21/行高 21/字号 12/padding 0 10/圆角 6/
-        // 字色 #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/图标 13/max-width 110（icon+label
-        // ellipsis+▾）/min-width 40。此处写的是 k=1 基线 css 值——**placeDD 每轮按有效缩放系数 k
-        // 反推覆盖**（高/行高/字号/padding/icon/max-width=目标/k，视觉恒等大）；box-sizing:
-        // border-box 保证 rect 量的高就是写的高（ddScaleK 比值的分母）。背景透明+hover 提亮走
-        // ensureDDStyle 样式表——被 :hover 覆盖的属性不得留内联（内联层叠恒压样式表，复审 R1）。
-        // ▾ 箭头=CSS 三角、flex 尾项（非绝对定位，padding 0 10 下不压字）。
-        // left/bottom 不在 cssText 里——落位全部由 placeDD 测量后写入（每次重算，勿写死）
-        dd.style.cssText = 'position:absolute;z-index:99998;box-sizing:border-box;'
-          + 'height:21px;line-height:21px;min-width:40px;max-width:110px;margin:0;padding:0 10px;'
-          + 'font-size:12px;font-family:inherit;cursor:pointer;'
-          + 'color:#e8ecc8;border:1px solid rgba(164,181,70,0.5);border-radius:6px;'
+        // 内联只管布局——高/字体/边框/背景全部由样式表（捐献照抄）管理，内联外观会压死 :hover
+        //（复审 R1 旧坑）。left/bottom 由 placeDD 测量后写入（每次重算，勿写死）。
+        dd.style.cssText = 'position:absolute;z-index:99998;box-sizing:border-box;min-width:0;margin:0;'
+          + 'font-family:inherit;cursor:pointer;'
           + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;';
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
-        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:13px;height:13px;flex:0 0 auto"></span>'
+        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
           + '<span style="flex:0 0 auto;width:0;height:0;pointer-events:none;'
           + 'border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #b9b0a6"></span>';
         st.dd = dd; // 先记引用再 placeDD（挂列容器+落位都在那里，不挂 body——视口角落会跑出面板外）
       }
       dd.style.display = 'flex'; // 显式恢复：'' 会清掉 cssText 的 display:flex（回退 inline-block 布局散架）
-      placeDD(st, dd, c); // 列容器锚定+测量避让+按 k 反推视觉规格，每次重算（外来按钮卸载→自动回贴列左缘；须在 __sltfKey 缓存返回之前）
+      placeDD(st, dd, c); // 列容器锚定+测量避让+捐献样式照抄，每次重算（外来按钮卸载→自动回贴列左缘；须在 __sltfKey 缓存返回之前）
       // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
-      var kk = dd.__sltfK || 1; // placeDD 刚测得的有效缩放系数（icon 尺寸同按 k 反推，视觉跟随 visH）
-      var kVis = dd.__sltfVisH || 21;
+      var dn = dd.__sltfDonor || { h: 21, fs: 12 }; // 捐献按钮 css 快照（字号=图标尺寸，同空间原值）
       var lib = selById(sel);
       var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
-      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), Math.round((kVis >= 20 ? 13 : 11) / kk));
+      var icoSz = Math.max(10, Math.round(dn.fs));
+      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), icoSz);
       var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
       dd.querySelector('.sltf-dd-txt').textContent = txt;
       var icoEl = dd.querySelector('.sltf-dd-ico');
       icoEl.innerHTML = ico;
+      icoEl.style.width = icoSz + 'px';
+      icoEl.style.height = icoSz + 'px';
       icoEl.style.color = (sel && lib && lib.color) ? lib.color : '';
     } catch (e) {}
   }
