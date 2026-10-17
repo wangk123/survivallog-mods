@@ -524,14 +524,20 @@
     for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
     return null;
   }
-  // hover/滚动条需样式表（内联样式写不了 :hover——本表就是 hover 通道，无需 mouseenter 监听），
-  // 随触发器一次性注入页面 head；触发器 hover=克隆官方 gbtn.sm 语义（仅提亮底色一档，
-  // 2026-10-17 fix-wave-4），选项行/滚动条值克隆官方 DyePanel 的 .dd-it:hover / .dd-list::-webkit-scrollbar（快照直读）
+  // 外观态样式表（随触发器一次性注入页面 head）：内联 cssText 只管布局/尺寸，**背景/文字色
+  // 等外观态全部交本表**——内联样式层叠恒高于作者样式表（无 !important 拯救），基础态留内联
+  // 会把 :hover 规则压死（2026-10-17 复审 R1：hover 曾因此无效，旧版即有）。基础规则同时负责
+  // 压掉 UA 的 button 默认灰底。触发器 hover=克隆官方 gbtn.sm 语义（仅提亮底色一档，
+  // fix-wave-4）；选项行 .on/:hover、滚动条值克隆官方 DyePanel 的 .dd-it.on/:hover /
+  // .dd-list::-webkit-scrollbar（快照直读）
   function ensureDDStyle(doc) {
     if (doc.getElementById('sltf-dd-style')) return;
     var s = doc.createElement('style');
     s.id = 'sltf-dd-style';
-    s.textContent = '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);}'
+    s.textContent = '.sltf-dd-btn{background:rgba(0,0,0,0);}'
+      + '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);}'
+      + '.sltf-dd-opt{background:transparent;color:#d6cdc2;}'
+      + '.sltf-dd-opt.on{color:#fff;font-weight:bold;}'
       + '.sltf-dd-opt:hover{background:rgba(255,255,255,.08);color:#fff;}'
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
@@ -614,10 +620,11 @@
         b.type = 'button';
         b.className = 'sltf-dd-opt' + (on ? ' on' : '');
         b.setAttribute('data-interactive', '');
+        // 背景/文字色/加粗不在内联——外观态（基础/.on/:hover）统一由 ensureDDStyle 层叠管理
+        //（同按钮复审 R1：内联背景/色会把 :hover 整条压死；.on 挂钩=上面 className 已带）
         b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:19px;padding:0 8px;margin:0;'
-          + 'border:0;background:transparent;border-radius:4px;font-family:inherit;font-size:11px;line-height:1;'
-          + 'white-space:nowrap;cursor:pointer;text-align:left;color:' + (on ? '#fff' : '#d6cdc2') + ';'
-          + (on ? 'font-weight:bold;' : '');
+          + 'border:0;border-radius:4px;font-family:inherit;font-size:11px;line-height:1;'
+          + 'white-space:nowrap;cursor:pointer;text-align:left;';
         var ico = st.doc.createElement('span');
         ico.style.cssText = 'display:flex;width:12px;height:12px;flex:0 0 auto;'
           + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
@@ -690,13 +697,14 @@
         // 视觉克隆官方 .gbtn.sm（2026-10-17 fix-wave-4，作者要求「和旁边排序按钮一样大」——调度
         // 机队页签行 sortBagBtn2 实测 63×21）：高 21/行高 21/字号 12/padding 0 10/圆角 6/字色
         // #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/图标 13/max-width 110（icon+label
-        // ellipsis+▾）/min-width 40。hover 提亮底色走 ensureDDStyle 的 :hover 样式表通道。
+        // ellipsis+▾）/min-width 40。背景透明+hover 提亮走 ensureDDStyle 样式表——被 :hover
+        // 覆盖的属性不得留内联（内联层叠恒压样式表，复审 R1）。
         // ▾ 箭头=CSS 三角、flex 尾项（非绝对定位，padding 0 10 下不压字）。
         // left/bottom 不在 cssText 里——落位全部由 placeDD 测量后写入（每次重算，勿写死）
         dd.style.cssText = 'position:absolute;z-index:99998;'
           + 'height:21px;line-height:21px;min-width:40px;max-width:110px;margin:0;padding:0 10px;'
           + 'font-size:12px;font-family:inherit;cursor:pointer;'
-          + 'color:#e8ecc8;background:rgba(0,0,0,0);border:1px solid rgba(164,181,70,0.5);border-radius:6px;'
+          + 'color:#e8ecc8;border:1px solid rgba(164,181,70,0.5);border-radius:6px;'
           + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;';
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
         dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:13px;height:13px;flex:0 0 auto"></span>'

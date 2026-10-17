@@ -138,9 +138,10 @@
   placeDD 重挂重算）。**尺寸/配色克隆官方 `.gbtn.sm`**（2026-10-17 作者反馈四轮：「和旁边排序
   按钮一样大」——调度机队页签行 sortBagBtn2 实测 63×21）：高 21px/行高 21/字号 12/图标 13px/
   padding 0 10/圆角 6/字色 #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/max-width 110
-  （icon+label ellipsis+▾）/min-width 40，▾ 箭头改 flex 尾项（padding 0 10 下不压字）。hover
-  提亮底色 rgba(255,255,255,.06)——hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联，
-  ensureDDStyle 样式表通道即 hover 实现，无需 mouseenter 监听）。
+  （icon+label ellipsis+▾）/min-width 40，▾ 箭头改 flex 尾项（padding 0 10 下不压字）。
+  **外观态（触发器基础背景/hover、选项行 .on/:hover）统一由 ensureDDStyle 注入页面的样式表
+  层叠管理，内联 cssText 只留布局/尺寸**——`:hover` 写不了内联，且被状态规则覆盖的属性留在
+  内联会把样式表 :hover 压死（内联层叠恒高于作者样式表，复审 R1 曾因此 hover 无效）。
 - **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；**锚定除 body zoom**（公式
   照抄官方 showFitTip，见 §2.5.1）：坐标=按钮 rect ÷zoom 下方 +4、溢出视口（innerHeight÷zoom）
   向上弹、再为负贴 4；行多时 max-height 190px（约 10 行）+滚动（滚动逻辑不变，滚动条值克隆
@@ -280,6 +281,11 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
     字号 12/图标 13/padding 0 10/圆角 6/边框 rgba(164,181,70,.5)/背景透明，hover 提亮底色）；
     弹层尺寸适配小按钮（行高 19/字号 11/图标 12/min 104/max 150/max-height 190≈10 行/
     圆角 5/背景 rgba(20,18,14,.96)）。机制与不除项记录 §2.5.1（后续所有 UI 注入任务的硬知识）。
+  - **筛选按钮 hover 态修复（fix-wave-4 复审项 R1）**：按钮内联 `background:rgba(0,0,0,0)` 层叠
+    压制样式表 `.sltf-dd-btn:hover`（内联>作者样式表，无 !important 拯救），hover 视觉无效
+    （旧版即有，克隆样式时未消除）。修法=**外观态全部移入 ensureDDStyle 样式表**（触发器基础
+    背景/hover + 选项行基础/.on/:hover 同根顺修——选项行内联背景/文字色同样压死自己的 :hover），
+    内联只留布局/尺寸，层叠自然生效不用 !important。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 
