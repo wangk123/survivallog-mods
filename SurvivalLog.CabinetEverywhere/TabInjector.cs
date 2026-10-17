@@ -5,8 +5,8 @@ using GameCore.HotUpdate.ReduxUI;
 namespace SurvivalLog.CabinetEverywhere;
 
 /// <summary>
-/// 页签注入：向 烹饪/老鼠笼/酿酒桶 的 Redux 状态 BagTabs（ObservableList）追加柜子页签。
-/// 三个界面的容器过滤是内联"冷链电器"判定（不走白名单），因此走状态层；
+/// 页签注入：向 烹饪/老鼠笼/酿酒桶/颜料桶 的 Redux 状态 BagTabs（ObservableList）追加柜子页签。
+/// 四个界面的容器过滤是内联"冷链电器"判定（不走白名单），因此走状态层；
 /// 切换路径 ApplySwitchBag→GetBagData(ownerId) 已实证无类型过滤，Locked=false 即可切换。
 /// 轮询幂等：界面每次重推 tabs（打开/刷新）后若柜子页签缺失则自动补挂。
 /// </summary>
@@ -24,6 +24,7 @@ internal static class TabInjector
     private static readonly Il2CppSystem.Type CookingType = Il2CppInterop.Runtime.Il2CppType.From(typeof(WebUI_Cooking));
     private static readonly Il2CppSystem.Type RatCageType = Il2CppInterop.Runtime.Il2CppType.From(typeof(WebUI_RatCage));
     private static readonly Il2CppSystem.Type BrewType = Il2CppInterop.Runtime.Il2CppType.From(typeof(WebUI_Brew));
+    private static readonly Il2CppSystem.Type DyeType = Il2CppInterop.Runtime.Il2CppType.From(typeof(WebUI_Dye));
 
     private static UiSession Session(string key) => Sessions.TryGetValue(key, out var s) ? s : Sessions[key] = new UiSession();
 
@@ -42,6 +43,8 @@ internal static class TabInjector
                 PollRatCage(rus);
             if (CabinetEverywherePlugin.EnableBrew.Value)
                 PollBrew(rus);
+            if (CabinetEverywherePlugin.EnableDye.Value)
+                PollDye(rus);
         }
         catch (Exception e)
         {
@@ -127,6 +130,32 @@ internal static class TabInjector
                 tabs.Add(tab);
             });
         if (added > 0) Repush(rus, BrewType);
+    }
+
+    // ---- 颜料桶 ----
+    private static void PollDye(GameCore.HotUpdate.ReduxUI.ReduxUISystem rus)
+    {
+        var s = Session("dye");
+        bool active = SafeActive(rus, DyeType);
+        if (!active) { s.WasActive = false; return; }
+
+        if (!s.WasActive) { s.WasActive = true; s.Injected.Clear(); }
+        var st = rus.GetStateByUI(DyeType)?.TryCast<State_Web_Dye>();
+        var tabs = st?.BagTabs;
+        if (tabs == null || tabs.Count == 0) return;
+
+        var have = CollectOwners(tabs, t => t?.OwnerId?.Value ?? 0);
+        var added = AddMissing("颜料桶", s, have, tabs.Count,
+            (ownerId, name, index) =>
+            {
+                var tab = new Data_Web_Dye_BagTab();
+                tab.Index = index;
+                tab.OwnerId = new R3.ReactiveProperty<long>(ownerId);
+                tab.Name = new R3.ReactiveProperty<string>(name);
+                tab.Locked = new R3.ReactiveProperty<bool>(false);
+                tabs.Add(tab);
+            });
+        if (added > 0) Repush(rus, DyeType);
     }
 
     // ---- 公共 ----

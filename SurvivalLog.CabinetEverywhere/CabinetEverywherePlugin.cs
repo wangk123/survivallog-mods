@@ -21,7 +21,7 @@ public enum ScenarioView { Food, Material, Browser }
 /// 1. 白名单注入：把柜子家具 ID 加进 ToolCabinetConfig.CraftSourceFurnitureIds（官方"制作材料源"
 ///    白名单，原生驱动 工作台/无人机交易/无人机站/粉碎机/温室 五个系统的页签与自动取料，
 ///    GetAllLinkedOwnerIds 实证遍历 CabinetTabs 参与自动补料）。
-/// 2. 页签注入：烹饪/老鼠笼/酿酒桶 的容器过滤是内联的"冷链电器"判定（不走白名单），
+/// 2. 页签注入：烹饪/老鼠笼/酿酒桶/颜料桶 的容器过滤是内联的"冷链电器"判定（不走白名单），
 ///    改为向各自 Redux 状态的 BagTabs（ObservableList）追加柜子页签；切换/取放路径
 ///    ApplySwitchBag→GetBagData(ownerId) 已实证为通用取包，无类型过滤。
 ///
@@ -40,6 +40,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
     internal static ConfigEntry<bool> EnableCooking;
     internal static ConfigEntry<bool> EnableRatCage;
     internal static ConfigEntry<bool> EnableBrew;
+    internal static ConfigEntry<bool> EnableDye;
     internal static ConfigEntry<string> IncludeFurnitureIds;
     internal static ConfigEntry<string> ExcludeFurnitureIds;
     internal static ConfigEntry<string> ExcludeBagIds;
@@ -62,6 +63,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         EnableCooking = Config.Bind("Access", "EnableCooking", true, "烹饪界面注入柜子页签。");
         EnableRatCage = Config.Bind("Access", "EnableRatCage", true, "老鼠笼界面注入柜子页签。");
         EnableBrew = Config.Bind("Access", "EnableBrew", true, "酿酒桶界面注入柜子页签。");
+        EnableDye = Config.Bind("Access", "EnableDye", true, "颜料桶界面注入柜子页签。");
         IncludeFurnitureIds = Config.Bind("Access", "IncludeFurnitureIds", "",
             "追加的家具 ConfigId（逗号分隔，强制加入）。");
         ExcludeFurnitureIds = Config.Bind("Access", "ExcludeFurnitureIds", "313,80033,80164,1024,1025,1026,1027,1028,42033",
@@ -100,6 +102,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         EnableCooking.SettingChanged += reload;
         EnableRatCage.SettingChanged += reload;
         EnableBrew.SettingChanged += reload;
+        EnableDye.SettingChanged += reload;
         ViewCooking.SettingChanged += reload;
         ViewRatCage.SettingChanged += reload;
         ViewBrewPanel.SettingChanged += reload;
@@ -119,7 +122,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<AccessTicker>();
         Log.LogInfo("[CabinetEverywhere] loaded：白名单注入=" + EnableCraftSource.Value +
-                    "，页签注入=烹饪/老鼠笼/酿酒(" + EnableCooking.Value + "/" + EnableRatCage.Value + "/" + EnableBrew.Value + ")");
+                    "，页签注入=烹饪/老鼠笼/酿酒/颜料桶(" + EnableCooking.Value + "/" + EnableRatCage.Value + "/" + EnableBrew.Value + "/" + EnableDye.Value + ")");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 }
@@ -173,7 +176,7 @@ internal sealed class AccessTicker : MonoBehaviour
                 TagFilter.Tick();
         }
 
-        // 页签注入（烹饪/老鼠笼/酿酒）：读 5s 刷新的柜子子集 HomeInstances，0.5s 轮询补挂
+        // 页签注入（烹饪/老鼠笼/酿酒/颜料桶）：读 5s 刷新的柜子子集 HomeInstances，0.5s 轮询补挂
         _fastCheck += dt;
         if (_fastCheck < 0.5f) return;
         _fastCheck = 0f;
