@@ -524,31 +524,39 @@
     for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
     return null;
   }
-  // 外观态样式表：**逐字克隆 BetterTrade 下拉库的 CSS**（从其 dll 内嵌 page.js 提取的 .PFX-btn/
-  // :hover/.PFX-active/.PFX-menu/.PFX-on 规则，PFX=bt-view，token 值 --bt-gold #fbb034、
-  // --bt-menu-bg #1d1e22 已代入）。两页同款=作者十轮要求的"样式一致"；选中某标签时按钮转金色
-  // 激活态（.on 挂类）与 BetterTrade 排序激活同语义。内联只留布局——外观进样式表，内联层叠会
-  // 压死 :hover（复审 R1 旧坑）。基础规则同时压掉 UA 的 button 默认灰底。
-  function ensureDDStyle(doc) {
-    var el = doc.getElementById('sltf-dd-style');
-    if (el) return;
-    var s = doc.createElement('style');
-    s.id = 'sltf-dd-style';
-    s.textContent = '.sltf-dd-btn{font-family:inherit;font-size:12px;color:#fff;white-space:nowrap;'
-      + 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;'
-      + 'padding:4px 10px;text-align:left;cursor:pointer;}'
+  // 外观态样式表：**逐字克隆 BetterTrade 下拉库 CSS + 跨页视觉归一**。
+  // 克隆源=其 dll 内嵌 page.js 提取的 .PFX-btn/.PFX-active/.PFX-menu/.PFX-on 原文（PFX=bt-view，
+  // token：fg #fff、accent #fbb034、menu-bg #1d1e22）。**两页缩放不同**（交易≈0.62/调度机队≈0.85），
+  // 同一 css 值视觉大小必然不同（作者实测两页不一致根因）——所有计量值按「视觉 px ÷ k」生成：
+  // 视觉值=它的 css × DD_VIS（0.647=交易页校准系数），k=本页实测（ddScaleK），窗口缩放变化时
+  // placeDD 会带新 k 重生成。选中某标签→.on 金色激活态（其排序激活同语义）。内联只留布局。
+  var DD_VIS = 0.647; // 交易页校准：css×0.647=视觉 px
+  function ensureDDStyle(doc, k) {
+    var kk = (k && k > 0.2 && k < 4) ? k : 1;
+    var s = DD_VIS / kk; // 本页 css 缩放因子：css = 视觉 ÷ k = 视觉设计 × s / DD_VIS …直接：视觉=btCss*DD_VIS, css=视觉/k
+    var px = function (btCss) { return (btCss * DD_VIS / kk).toFixed(2) + 'px'; };
+    var txt = '.sltf-dd-btn{font-family:inherit;font-size:' + px(12) + ';line-height:1.5;color:#fff;white-space:nowrap;'
+      + 'background:rgba(255,255,255,0.06);border:' + px(1) + ' solid rgba(255,255,255,0.15);border-radius:' + px(4) + ';'
+      + 'padding:' + px(4) + ' ' + px(10) + ';text-align:left;cursor:pointer;display:flex;align-items:center;gap:' + px(6) + ';}'
       + '.sltf-dd-btn:hover{border-color:rgba(251,176,52,0.6);}'
       + '.sltf-dd-btn.on{color:#fbb034;border-color:rgba(251,176,52,0.75);background:rgba(251,176,52,0.14);}'
-      + '.sltf-dd-opt{font-family:inherit;font-size:12px;color:#fff;white-space:nowrap;'
-      + 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;'
-      + 'padding:4px 10px;text-align:left;cursor:pointer;}'
+      + '.sltf-dd-opt{font-family:inherit;font-size:' + px(12) + ';line-height:1.5;color:#fff;white-space:nowrap;'
+      + 'background:rgba(255,255,255,0.06);border:' + px(1) + ' solid rgba(255,255,255,0.15);border-radius:' + px(4) + ';'
+      + 'padding:' + px(4) + ' ' + px(10) + ';text-align:left;cursor:pointer;display:flex;align-items:center;gap:' + px(6) + ';}'
       + '.sltf-dd-opt:hover{border-color:rgba(251,176,52,0.6);}'
       + '.sltf-dd-opt.on{color:#fbb034;}'
-      + '.sltf-dd-pop{display:flex;flex-direction:column;gap:2px;padding:3px;border-radius:4px;'
-      + 'background:#1d1e22;border:1px solid rgba(255,255,255,0.15);}'
+      + '.sltf-dd-ico svg{display:block;}'
+      + '.sltf-dd-pop{display:flex;flex-direction:column;gap:' + px(2) + ';padding:' + px(3) + ';border-radius:' + px(4) + ';'
+      + 'background:#1d1e22;border:' + px(1) + ' solid rgba(255,255,255,0.15);}'
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
-    (doc.head || doc.documentElement).appendChild(s);
+    var el = doc.getElementById('sltf-dd-style');
+    if (el) { if (el.__sltfK !== kk) { el.textContent = txt; el.__sltfK = kk; } return; }
+    var st = doc.createElement('style');
+    st.id = 'sltf-dd-style';
+    st.textContent = txt;
+    st.__sltfK = kk;
+    (doc.head || doc.documentElement).appendChild(st);
   }
   function closePop(st) {
     if (st.pop) { try { st.pop.remove(); } catch (e) {} st.pop = null; }
@@ -618,26 +626,19 @@
       var view = st.doc.defaultView;
       var k = ddScaleK(st, dd);
       dd.__sltfK = k;
-      ensureDDStyle(st.doc);
-      // 找锚参照：列底带内可见窄按钮（BetterTrade 的 bt-view-btn）。其父级若是小组件壳
-      //（子元素≤2，如 bt-view 根=btn+menu）则以**壳**为参照——插壳之后，绝不进壳内部
+      ensureDDStyle(st.doc, k); // 计量值按本页 k 归一（窗口缩放变化时随 placeDD 重生成）
       var refEl = null, anchorRow = null, capEl = null;
-      var colR = col ? col.getBoundingClientRect() : null;
-      if (colR) {
-        var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
-        for (var i = 0; i < kids.length; i++) {
-          var el = kids[i];
-          if (el === dd) continue;
-          if (el.closest && el.closest('.sltf-dd-pop, .sltf-dd-btn')) continue; // 自家元素不参与（弹层选项行在底带，w6 根因）
-          var r = el.getBoundingClientRect();
-          if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue;
-          if (r.width >= DD_AVOID.wide) { if (!capEl) capEl = el; }
-          else if (r.left < colR.left + DD_AVOID.nearLeft) { refEl = el; break; }
-        }
-      }
+      var colR = col ? col.getBoundingClientRect() : null; // 兜底绝对定位偏移用
+      // 首选锚=.sort-btn（BetterTrade 自己的稳定锚：它每次重绘都把自己的组件 insertBefore 到
+      // sort-btn 紧左边——我们若在它右边就会被它重绘挤到左边去（作者实测"顺序翻转"根因）。
+      // 我们插 **sort-btn 右侧**，它的重绘永远碰不到我们，顺序稳定：[bt-view][sort][我们]）
+      var sbtn = col ? col.querySelector('.sort-btn') : null;
+      if (sbtn && sbtn.getBoundingClientRect().width > 4) { refEl = sbtn; anchorRow = sbtn.parentElement; }
       if (refEl) {
-        var host = refEl.parentElement;
-        if (host && host !== col && host.children.length <= 2 && host.parentElement) refEl = host; // 组件壳升级
+        if (refEl !== sbtn) {
+          var host = refEl.parentElement;
+          if (host && host !== col && host.children.length <= 2 && host.parentElement) refEl = host; // 组件壳升级
+        }
         anchorRow = refEl.parentElement;
       } else {
         if (!capEl && col) {
@@ -705,7 +706,7 @@
         b.className = 'sltf-dd-opt' + (on ? ' on' : '');
         b.setAttribute('data-interactive', '');
         // 外观/字体/内衬全在样式表（.sltf-dd-opt 硬抄本，与按钮同款）；内联只留布局
-        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;margin:0;';
+        b.style.cssText = 'width:100%;margin:0;'; // 布局only——display/gap/padding 全在样式表（归一值）
         var isz = 14; // BetterTrade .PFX-ico 同值
         var ico = st.doc.createElement('span');
         ico.style.cssText = 'display:flex;width:' + isz + 'px;height:' + isz + 'px;flex:0 0 auto;'
@@ -777,7 +778,7 @@
         // 内联只管布局——外观/字体/内衬全部由样式表管理，内联外观会压死 :hover（复审 R1 旧坑）。
         // ▾ 用文字（BetterTrade 同款 "排序 ▾"），弃 CSS 三角。left/bottom 由 placeDD 写入。
         dd.style.cssText = 'z-index:99998;box-sizing:border-box;min-width:0;max-width:128px;margin:0;'
-          + 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;overflow:hidden;';
+          + 'cursor:pointer;overflow:hidden;'; // display/gap/padding 在样式表（归一值），内联不压
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
         dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>';
