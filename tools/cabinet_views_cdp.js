@@ -6,7 +6,7 @@
 //
 // 用法（三种模式）：
 //   node tools/cabinet_views_cdp.js <pageId>                计数断言：可见页签数 + 结构性事实
-//   node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言：存在性/挂载位置（行末、滚动区外）
+//   node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言：存在性/挂载位置（body、fixed、左下角）
 //   node tools/cabinet_views_cdp.js --mem <pageId> <tagId>  记忆断言：localStorage sltf_sel_v3 与触发器文本
 //     tagId = 标签数字 id | 'other'（其他/未打标签） | 0（全部柜子）
 //     --mem 只读比对，不模拟点击：CDP evaluate 不经屏幕输入链路，直改 localStorage/调 __SLTF__
@@ -22,7 +22,7 @@
 //
 // ---- EXPECT 回填说明（作者）----
 // 下方 EXPECT 常量块 = 期望「可见页签数」，-1=未回填 → 跳过该页计数断言（结构性事实仍断言：
-// 固定页无 .sltf-dd-btn、browser 页有且 parentElement 非滚动容器）。回填流程：
+// 固定页无 .sltf-dd-btn、browser 页有且挂 body+fixed+左下角）。回填流程：
 //   1) 进测试存档打开目标界面 → 2) 跑本脚本 <pageId> 看 "visible=N" 与明细
 //   3) 按存档柜子打标实况核对 N（语义见上方分组注释，spec §3 场景视图表）
 //   4) 填入 EXPECT 后复跑应全绿。
@@ -99,20 +99,29 @@ function probeFrame() {
     visible.push(label);
   }
   var dd = document.querySelector('.sltf-dd-btn');
+  var ddInfo = null;
+  if (dd) {
+    // 触发器 2026-10-17 起挂 body、position:fixed 左下角（DD_POS）——断言按新挂点取证
+    var cs = null;
+    try { var dv = dd.ownerDocument.defaultView; if (dv) cs = dv.getComputedStyle(dd); } catch (e) {}
+    ddInfo = {
+      connected: dd.isConnected,
+      displayNone: dd.style.display === 'none',
+      pos: cs ? cs.position : '',
+      onBody: !!dd.parentElement && dd.parentElement === dd.ownerDocument.body, // 挂在 body=免疫页签行/Vue 整条重渲染
+      left: cs ? parseFloat(cs.left) : NaN,
+      bottom: cs ? parseFloat(cs.bottom) : NaN,
+      parentDesc: dd.parentElement ? ((dd.parentElement.id ? '#' + dd.parentElement.id : '') + '.' + dd.parentElement.className) : null,
+      text: (dd.textContent || '').trim().slice(0, 16),
+    };
+  }
   return {
     found: true,
     kind: c.kind,
     total: total,
     visibleCount: visible.length,
     visible: visible,
-    dd: !dd ? null : {
-      connected: dd.isConnected,
-      displayNone: dd.style.display === 'none',
-      inScroll: c.list.contains(dd),                                    // 挂进了滚动容器=错位
-      parentIsListParent: !!dd.parentElement && dd.parentElement === c.list.parentElement, // mod 挂行末的实证事实
-      parentDesc: dd.parentElement ? ((dd.parentElement.id ? '#' + dd.parentElement.id : '') + '.' + dd.parentElement.className) : null,
-      text: (dd.textContent || '').trim().slice(0, 16),
-    },
+    dd: ddInfo,
     pop: !!document.querySelector('.sltf-dd-pop'),
   };
 }
@@ -134,7 +143,7 @@ function usage() {
     '',
     '用法:',
     '  node tools/cabinet_views_cdp.js <pageId>                计数断言（可见页签数 + 结构性事实）',
-    '  node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言（存在/行末/滚动区外）',
+    '  node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言（存在/body挂载+fixed+左下角）',
     '  node tools/cabinet_views_cdp.js --mem <pageId> <tagId>  记忆断言（tagId=数字|other|0；作者选过后读态比对）',
     '',
     'pageId: ' + ids,
@@ -287,10 +296,6 @@ async function main() {
         if (p.dd) {
           checks.ok('触发器已连接文档', p.dd.connected);
           checks.ok('触发器未隐藏（display≠none）', !p.dd.displayNone);
-          checks.ok('触发器在滚动容器外（cands 滚动区不含它）', !p.dd.inScroll);
-          // mod 实证：挂 c.list.parentElement（页签行容器）行末——不匹配时降级为 WARN 不判死，
-          // 硬事实=上面的"滚动区外"；此处 parentDesc 供人核对行容器身份
-          if (!p.dd.parentIsListParent) checks.skip('触发器挂载点=页签行容器（c.list.parentElement）', '实际 parent=' + p.dd.parentDesc + '——请人工核对是否仍在滚动区外的行末');
           checks.ok('未点开时无弹层残留 .sltf-dd-pop', !p.pop);
         }
       } else {
@@ -336,12 +341,16 @@ async function main() {
   }
 }
 
-// browser 组的下拉存在性 + 位置硬事实（计数/dd 两模式共用）
+// browser 组的下拉存在性 + 位置硬事实（计数/dd 两模式共用）：2026-10-17 起触发器=body 挂载 +
+// position:fixed + 左下角（DD_POS={left:8,bottom:8}，作者实测指定换位——行末会被 DroneHub 官方
+// sortBagBtn2/交易页他 mod 排序按钮挤变形）；左下角阈值 left<40 且 bottom<40 容微调余量
 function assertDdPresent(checks, p) {
   const has = !!p.dd;
   checks.ok('下拉触发器 .sltf-dd-btn 存在（browser 页应有）', has, has ? 'text="' + p.dd.text + '" parent=' + p.dd.parentDesc : '未找到——mod 未注入或 lib 为空');
   if (has) {
-    checks.ok('触发器在滚动容器外（parentElement 非滚动容器）', !p.dd.inScroll, p.dd.inScroll ? '被挂进了滚动区，会被滚走' : '');
+    checks.ok('触发器 computed position=fixed', p.dd.pos === 'fixed', '实际=' + p.dd.pos);
+    checks.ok('触发器挂在 body（免疫页签行/Vue 重渲染）', p.dd.onBody, '实际 parent=' + p.dd.parentDesc);
+    checks.ok('触发器落左下角（left<40 且 bottom<40）', p.dd.left < 40 && p.dd.bottom < 40, 'left=' + p.dd.left + ' bottom=' + p.dd.bottom);
   }
 }
 

@@ -444,7 +444,12 @@
     return out;
   }
 
-  // ---- 自绘下拉（T7）：触发器挂页签行末（滚动区外）、body 级 popup 防裁切、官方图标/配色 ----
+  // ---- 自绘下拉（T7）：触发器=body 级左下角固定悬浮（2026-10-17 作者指定换位缩小）、popup 防裁切、官方图标/配色 ----
+  // 左下角落点常量，集中定义便于后续微调。换位背景（作者实测）：调度机队（DroneHub）页签行末
+  // 有官方原生「一键整理」按钮（sortBagBtn2，滚动区之后=原 append 位置）会把触发器顶变形/右移；
+  // 交易页还有其他 mod 的排序按钮同挤行末。注意：DroneHub 左栏底部有官方负重条 #bagCap，
+  // 左下角落点若与之重叠属作者自选位置，不避让。
+  var DD_POS = { left: 8, bottom: 8 };
   // 官方 TAG_ICONS 静态兜底：33 键与 BackpackUI.html 的 const TAG_ICONS 同源（SVG 字符串原样复制）。
   // 官方 svg 无 fill 属性（BackpackUI 用 CSS color 控色），注入侧由 iconSvg 统一补 fill=currentColor。
   // 官方图标库更新时 diff 游戏目录快照同步本副本（保留官方分批注释便于对齐）。
@@ -501,13 +506,14 @@
     } catch (e) {}
     return TAG_ICONS_FALLBACK[key] || TAG_ICONS_FALLBACK.misc;
   }
-  // 官方 svg 字符串补齐尺寸/填色：强制 14x14；根节点无 fill 时补 fill="currentColor"
+  // 官方 svg 字符串补齐尺寸/填色：默认 14x14、触发器传 12（按钮缩小配套）；根节点无 fill 时补 fill="currentColor"
   //（由所在元素 style.color 控色=官方 BackpackUI 同款机制；子路径自带 fill="#fff" 等保持不动）
-  function iconSvg(html) {
+  function iconSvg(html, size) {
     var s = String(html || '');
     if (s.indexOf('<svg') !== 0) return '';
     var head = s.substring(0, s.indexOf('>'));
-    var add = ' width="14" height="14" style="display:block"';
+    var sz = size || 14;
+    var add = ' width="' + sz + '" height="' + sz + '" style="display:block"';
     if (!/\sfill\s*=/.test(head)) add += ' fill="currentColor"';
     return '<svg' + add + s.slice(4);
   }
@@ -625,28 +631,30 @@
         ensureDDStyle(st.doc);
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
-        // 视觉克隆官方 DyePanel .dd-btn（圆角/边框/过渡/hover 见 ensureDDStyle；▾ 箭头=同款 CSS 三角）适配页签栏
-        dd.style.cssText = 'height:26px;min-width:96px;max-width:150px;margin:2px 6px 2px 4px;padding:0 22px 0 8px;'
-          + 'font-size:12px;font-family:inherit;line-height:1;flex:0 0 auto;align-self:center;position:relative;cursor:pointer;'
-          + 'color:#e8dcc8;background:rgba(28,24,18,0.96);border:1px solid rgba(255,193,7,0.35);border-radius:5px;'
-          + 'display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap;'
+        // 视觉克隆官方 DyePanel .dd-btn 神韵、按作者指定缩小（▾ 箭头=同款 CSS 三角；hover 见 ensureDDStyle）
+        dd.style.cssText = 'position:fixed;left:' + DD_POS.left + 'px;bottom:' + DD_POS.bottom + 'px;z-index:99998;'
+          + 'height:22px;min-width:0;max-width:110px;margin:0;padding:0 16px 0 6px;'
+          + 'font-size:11px;font-family:inherit;line-height:1;cursor:pointer;'
+          + 'color:#e8dcc8;background:rgba(28,24,18,0.88);border:1px solid rgba(255,193,7,0.35);border-radius:4px;'
+          + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;'
           + 'transition:background .15s,border-color .15s;';
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
-        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:14px;height:14px;flex:0 0 auto"></span>'
+        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:12px;height:12px;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
-          + '<span style="position:absolute;right:9px;top:50%;margin-top:-2px;width:0;height:0;pointer-events:none;'
-          + 'border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #b9b0a6"></span>';
-        // 位置：滚动区外行末——挂 c.list 的父容器（页签行容器）尾部（bag 族=#bagTabs、Trade=.bag-tabs，
-        // 以 c.list.parentElement 为准优先），页签再多也只占行末、不会被滚动区带走
-        var row = c.list.parentElement || c.bar;
-        row.appendChild(dd);
+          + '<span style="position:absolute;right:5px;top:50%;margin-top:-2px;width:0;height:0;pointer-events:none;'
+          + 'border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #b9b0a6"></span>';
+        // 位置：界面左下角固定悬浮（作者 2026-10-17 实测指定）——挂 st.doc.body 免疫页签行/
+        // Vue 整条重渲染（重建兜底仍靠上面的 isConnected/ownerDocument 判断）；不再挂页签行
+        //（行末会被 DroneHub 官方 sortBagBtn2/交易页他 mod 排序按钮挤变形）；锚点由 popup 的
+        // st.dd.getBoundingClientRect() 起算，无需随挂点改
+        st.doc.body.appendChild(dd);
         st.dd = dd;
       }
-      dd.style.display = '';
+      dd.style.display = 'flex'; // 显式恢复：'' 会清掉 cssText 的 display:flex（回退 inline-block 布局散架）
       // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
       var lib = selById(sel);
       var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
-      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG));
+      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), 12);
       var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;

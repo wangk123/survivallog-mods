@@ -84,6 +84,10 @@
 
 - 配置层：扫 `Config_Furniture_Dict`，默认收录**全部带储物包**的家具（不按 FurnitureType
   分类——实测 Type=0/3 里也有大量真容器），仅排除非储物包 + 冷链电器 + 用户 Include/Exclude。
+  家具粒度默认排除（与纸箱/自制工具台共用包，按包排会误伤纸箱，只能按家具 ID）：自制工具台
+  313/80033/80164、载具 1024-1028/42033、**染料桶 66196（BagId 1010）、材料堆 330/384/389/9126
+  （BagId 2003，仓库管理员专属四个变体）**——后两者 2026-10-17 作者实测日志实锤混进工作台/
+  粉碎机的柜子名单（功能容器/角色专属），追加排除。
 - 运行时：**单遍直扫 `AgentManager.agentList`**（5s 周期，原直达/筛选两个扫描合一），
   同一次遍历产出两份名单：
   - `AllContainers`——家中全部储物容器（柜/冰箱/材料架 + 标签 TagIds + Kind），**筛选用**；
@@ -91,8 +95,9 @@
 - Kind 三值：'c'=柜子（直达注入子集）/ 'f'=冰箱（冷链电器，走原生冰箱页签）/ 'r'=材料架
   （MaterialRackComponent 存在即材料架，不能打标签只能放材料）。
 - 非储物功能包双保险排除（cfg ExcludeBagIds + 代码内 NonStorageBagIds 常量）：功能容器页签
-  （如无人机交易的中控台=无人机货舱 BagId 1008）误收进筛选名单会被当柜子藏掉，A/D 切过去
-  即被弹回＝卡死闪一下（2026-10-15 五轮实测，附录 C）。
+  （如无人机**中控台 BagId 1009**，家具 9080——2026-10-17 作者实测发现 1008 无人机货舱在名单
+  而 1009 漏网，被注入烹饪/酿酒等界面，已补；两包同在名单）误收进筛选名单会被当柜子藏掉，
+  A/D 切过去即被弹回＝卡死闪一下（2026-10-15 五轮实测，附录 C）。
 - 性能顺序：TryCast → 配置查包/名单（廉价，滤掉 ~90% 家具）→ 主图严格相等短路 → 仅非主图
   走 IsHomeMap（家地图组判定，重）→ 通过者才读类别/标签（组件字典/电器属性最贵，放最后）。
 - Redux 包镜像补全：新摆放家具的包要重读档才进 `State_Data_Item.BagCache`（GetBagData 直接
@@ -120,10 +125,13 @@
 
 ### 2.5 自绘下拉（2026-10-17 重做，替代原生 select）
 
-- **触发器**：挂页签行容器（`c.list.parentElement`：bag 族=#bagTabs、Trade=.bag-tabs、
-  ToolTable=.left-tabs）**尾部、滚动区外**——页签再多也只占行末，不会被滚动区带走。
-  视觉克隆官方 DyePanel `.dd-btn`（圆角/边框/过渡/▾ 三角箭头），hover 样式随触发器一次性
-  注入页面 head（`:hover` 写不了内联）。
+- **触发器**：挂 `st.doc.body`、`position:fixed` 于**界面左下角**（`DD_POS={left:8,bottom:8}`，
+  2026-10-17 作者实测指定换位：原页签行末挂点会被 DroneHub 官方「一键整理」按钮 sortBagBtn2
+  顶变形/右移，交易页另有其他 mod 的排序按钮同挤行末）——挂 body 免疫页签行/Vue 整条重渲染，
+  重建兜底走 isConnected/ownerDocument 判断。视觉克隆官方 DyePanel `.dd-btn` 神韵并按作者
+  指定缩小（高 22px/字号 11/图标 12px/最大宽 110px label ellipsis/半透明底色 rgba(28,24,18,.88)），
+  hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联）。已知落点风险：DroneHub 左栏
+  底部官方负重条 #bagCap 可能与左下角重叠（作者自选位置，不避让）。
 - **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；坐标=按钮 rect 下方、溢出
   视口向上弹、再放不下贴底；行多时 max-height+滚动（滚动条值克隆 DyePanel `.dd-list`）。
   TradeUI 是 Vue 页会整条重渲染可能摘掉 popup——只清引用不重建（重开由按钮 click 触发），
@@ -157,8 +165,8 @@
 | Access.EnableCraftSource | true | 工作台/无人机交易/站/粉碎机/温室 的页签+自动取料 |
 | Access.EnableCooking / EnableRatCage / EnableBrew / EnableDye | true | 烹饪/老鼠笼/酿酒桶/颜料桶 页签注入 |
 | Access.IncludeFurnitureIds | 空 | 追加家具 ConfigId（强制加入） |
-| Access.ExcludeFurnitureIds | 313,80033,80164,1024-1028,42033 | 排除家具（自制工具台+载具系） |
-| Access.ExcludeBagIds | 电器/机器槽/围栏/吊篮/门窗/床/垃圾桶等 22 项 | 排除整包系（非储物功能包） |
+| Access.ExcludeFurnitureIds | 313,80033,80164,1024-1028,42033,66196,330/384/389/9126 | 排除家具（自制工具台+载具系+染料桶+材料堆：后两者=功能容器/角色专属，与纸箱共用包只能按家具排除） |
+| Access.ExcludeBagIds | 电器/机器槽/围栏/吊篮/门窗/床/垃圾桶等 23 项（含无人机货舱 1008/中控台 1009） | 排除整包系（非储物功能包） |
 | Filter.Enable | true | 标签筛选总开关：关闭后不注入筛选（场景视图一并失效，页签全部显示） |
 | Scenario.View_Cooking / View_RatCage / View_BrewPanel / View_DyePanel / View_Compressor | Food | 烹饪/老鼠笼/酿酒桶/颜料桶/口粮压制机 视图 |
 | Scenario.View_ToolTable / View_Shredder / View_GreenhouseBuild | Material | 工作台/粉碎机/温室工程台 视图 |
@@ -219,6 +227,12 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
   - **取证工具**：tools/cabinet_views_cdp.js（CDP 只读断言：计数/下拉/记忆三模式）+ K2/K3/K4
     取证操作手册（作者节点）。
   - **白盒穷举**：10 页 × 页签字段/active 字段/切换事件/族别 对照表落附录 A，拦截链覆盖核对闭环。
+  - **作者实测反馈修复（fix-wave-2）**：染料桶 66196、材料堆 330/384/389/9126（与纸箱共用包
+    只能按家具排除）与无人机中控台 BagId 1009 补进排除名单——cfg 默认值/游戏侧 cfg/
+    NonStorageBagIds/本文档四处同步（§2.3、§3）。
+  - **筛选触发器换位缩小（fix-wave-2）**：从页签行末改为界面左下角 body 级固定悬浮
+    （DD_POS 常量，§2.5），躲开 DroneHub 官方一键整理按钮与他 mod 排序按钮；CDP --dd
+    断言同步改为 fixed+body+左下角。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 
