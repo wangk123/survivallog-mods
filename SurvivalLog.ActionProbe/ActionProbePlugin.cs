@@ -209,7 +209,7 @@ internal sealed class ProbeTicker : MonoBehaviour
 
     private static void DumpEffects(GameCore.HotUpdate.ConfigManager cm, System.IO.StreamWriter w)
     {
-        w.WriteLine("== EFFECT ID|SStart|MStart|StStart|HStart|VStart|AInt|SInt|MInt|StInt|HInt|VInt|BInt|BSInt|BMInt|BStInt|BHInt|BVInt|SEnd|MEnd|StEnd|HEnd|VEnd ==");
+        w.WriteLine("== EFFECT ID|SStart|MStart|StStart|HStart|VStart|AInt|SInt|MInt|StInt|HInt|VInt|BInt|BSInt|BMInt|BStInt|BHInt|BVInt|SEnd|MEnd|StEnd|HEnd|VEnd|IV0|IV1|IV2|IV3 ==");
         try
         {
             foreach (var kv in cm._Config_Effect_Dict)
@@ -222,7 +222,8 @@ internal sealed class ProbeTicker : MonoBehaviour
                     F(e.ItemSatietyStart), F(e.ItemMoraleStart), F(e.ItemStaminaStart), F(e.ItemHealthStart), F(e.ItemVitalityStart),
                     F(e.ItemAttrInterval), F(e.ItemSatietyInterval), F(e.ItemMoraleInterval), F(e.ItemStaminaInterval), F(e.ItemHealthInterval), F(e.ItemVitalityInterval),
                     F(e.BuffInterval), F(e.BuffSatietyInterval), F(e.BuffMoraleInterval), F(e.BuffStaminaInterval), F(e.BuffHealthInterval), F(e.BuffVitalityInterval),
-                    F(e.ItemSatietyEnd), F(e.ItemMoraleEnd), F(e.ItemStaminaEnd), F(e.ItemHealthEnd), F(e.ItemVitalityEnd)
+                    F(e.ItemSatietyEnd), F(e.ItemMoraleEnd), F(e.ItemStaminaEnd), F(e.ItemHealthEnd), F(e.ItemVitalityEnd),
+                    e.IntValue0.ToString(), e.IntValue1.ToString(), e.IntValue2.ToString(), e.IntValue3.ToString()
                 }));
             }
         }

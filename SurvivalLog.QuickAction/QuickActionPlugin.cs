@@ -24,6 +24,9 @@ namespace SurvivalLog.QuickAction;
 ///   动作 EffectConfigID 指向的效果任一 Interval 字段非零 ⇒ 永不改动该动作。
 ///   （实测黑名单 74 条：修理/加固本体系10、生吃冷冻32、跳舞/游戏机5、锻炼/发电3、
 ///   Social 全部5、Other 内部行为18。）
+///   另有**表外结算收益名单 OutsideGainIds**（效果表全 0/仅 Start 消耗但收益∝时长、
+///   结算在 Effect 表之外，周期守卫看不见——如 1916 做俯卧撑提速后心态收益归零），
+///   点名拦截永不改动。
 /// - Other(8)=官方大杂烩：真交互与内部行为混居。引用轴判定：动作被
 ///   Config_FurnitureFunc.ActionIds（家具按钮）或 Config_Item.UseAction（物品）引用
 ///   ⇒ 玩家可触发，可提速；三处皆不引用 ⇒ 内部行为（情绪播报/呕吐腹泻等），不动。
@@ -41,7 +44,7 @@ public sealed class QuickActionPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.quickaction";
     public const string Name = "QuickAction";
-    public const string Version = "2.1.1";
+    public const string Version = "2.1.2";
 
     /// <summary>探索时钟倍速（Config_Chapter 实测 120；游戏更新后体感异常再改此处重编译）。</summary>
     internal const int Scale = 120;
@@ -309,6 +312,43 @@ internal sealed class QuickTicker : MonoBehaviour
     };
 
     /// <summary>
+    /// 表外结算收益拦截名单（方向与 BtInteractIds 相反：这是"永不改动"名单）。
+    /// 这批动作的 Config_Effect 配置看不见收益（全 0 或仅 Start 消耗），核心收益∝动作
+    /// 时长、结算在 Effect 表之外——周期守卫结构性看不见，提速后收益归零。
+    /// 2026-10-17 玩家实测实证：1916 做俯卧撑（家具功能 1719 桌/茶几触发，30 秒被提速
+    /// 到 0.5 秒后心态收益归零；ActionWatch 实测动作仅历时 0.2~0.3 秒）。对比塑钢哑铃
+    /// 100011001（效果表有周期数值）被周期守卫正常拦住、收益无损。
+    /// 注意"效果全 0"不等于有表外收益：看书 100000004 等全 0 但已实证无收益，仍可提速，
+    /// 故只能点名、不能按"全 0"一刀切。
+    /// </summary>
+    internal static readonly HashSet<int> OutsideGainIds = new()
+    {
+        6,           // 做运动（ECID=10 效果全 0，原 30 秒，表外锻炼收益）
+        1902,        // 手动发电（ECID=8007 仅 Start 消耗，发电量∝时长表外结算，原 5 秒）
+        1916,        // 做俯卧撑（ECID=8014 效果全 0，家具 1719 坐俯卧撑，心态收益表外结算，原 30 秒）
+    };
+
+    /// <summary>
+    /// 固定收益放行名单（方向与 OutsideGainIds 相反：这批动作被周期守卫误拦，特此豁免）。
+    /// 2026-10-17 反汇编实证（Il2CppDumper+Iced，三处独立验证）：修理/修补/加固系的
+    /// 耐久收益 = Config_Effect.IntValue0..3 固定配置值（AE_AddFurnitureDurabilityMax=
+    /// IntValue×buff层数；AE_RobotRepairDoorWindow=IntValue 经 TakeDamage 负值落地；
+    /// AE_RepairTowerDevice=固定比例 0.65；bug 文案"门窗修理效果没配修复量（Effect IntValue）"），
+    /// **与动作时长无关，提速无损**。v2.0.0 拦它们的依据（"修复量∝时长"）是配置层推断、
+    /// 误把角色属性 Interval 数值当成了修理收益。命中者跳过周期守卫，其余判定
+    /// （Overrides/分类/只减不增）照常。
+    /// </summary>
+    internal static readonly HashSet<int> FixedGainIds = new()
+    {
+        25,          // 修理设施（60 秒；ECID25 每周期体力-5 纯消耗，修复量=固定值）
+        30,          // 修补房门（15 秒，玩家修门主体动作；ECID30 仅 End 一次性消耗，修复量=固定）
+        43,          // 修复电力（60 秒，与 30 共用效果行；同机制）
+        44,          // 修复窗户（15 秒，ECID44 仅 End 一次性消耗；同机制）
+        118,         // 加固房门（15 秒，AE_AddFurnitureDurabilityMax=IntValue×层数 固定）
+        120,         // 修理工作台（30 秒，ECID120 每周期饱食-5/体力-10 纯消耗；同机制）
+    };
+
+    /// <summary>
     /// 分类判定（每轮扫描现算；游戏更新新增内容自动归类）。
     /// 返回 0=不在任何可改分类（禁改/守卫），1=物品使用, 2=家具功能, 3=房屋维护, 4=杂项交互, 5=娱乐锻炼。
     /// </summary>
@@ -433,16 +473,29 @@ internal sealed class QuickTicker : MonoBehaviour
                 OrigDuring.TryAdd(kv.Key, cur);
                 float orig = OrigDuring[kv.Key];
 
-                // 周期结算守卫：正收益∝耗时的动作绝不改动（若历史会话被改过则自愈恢复）
-                int ecid = 0;
-                try { ecid = a.EffectConfigID; } catch { }
-                if (ecid != 0 && positiveEffects.Contains(ecid))
+                // 表外结算收益守卫：效果表看不见收益但收益∝时长、结算在 Effect 表之外
+                // （见 OutsideGainIds 实证注释）。优先级同周期守卫，高于 Overrides——
+                // 与周期守卫同理：玩家显式点名也不放行收益∝耗时的动作。
+                if (OutsideGainIds.Contains(kv.Key))
                 {
                     sInterval++;
                     if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
                     continue;
                 }
-                if (ecid != 0 && drainEffects.Contains(ecid))
+
+                // 周期结算守卫：正收益∝耗时的动作绝不改动（若历史会话被改过则自愈恢复）。
+                // FixedGainIds（固定收益放行名单）豁免：反汇编实证修理系耐久收益=Effect
+                // IntValue 固定值、与时长无关，周期守卫对它们误拦（挂的 Interval 是角色属性小账）
+                bool fixedGain = FixedGainIds.Contains(kv.Key);
+                int ecid = 0;
+                try { ecid = a.EffectConfigID; } catch { }
+                if (!fixedGain && ecid != 0 && positiveEffects.Contains(ecid))
+                {
+                    sInterval++;
+                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    continue;
+                }
+                if (!fixedGain && ecid != 0 && drainEffects.Contains(ecid))
                 {
                     // 纯消耗型周期效果（数值全≤0，如上厕所 112 饱食-5/周期）：
                     // 仅 Other(8) 且玩家可触发（引用 ∪ BT 交互名单）放行提速——上得快=消耗少，

@@ -15,6 +15,12 @@ Copy-Item (Join-Path $game 'dotnet') $base -Recurse -Force
 Copy-Item (Join-Path $game 'winhttp.dll') $base -Force
 Copy-Item (Join-Path $game 'doorstop_config.ini') $base -Force
 Copy-Item (Join-Path $game '.doorstop_version') $base -Force
+# unity-libs 预置（2026-10-17）：BepInEx 首启生成 interop 需要未裁剪 Unity 基础库，官方默认
+# 从 unity.bepinex.dev 下载 {VERSION}.zip——境外源境内常失败 → mod 静默不生效（玩家实测反馈）。
+# 预置整目录（zip+已解压 dll）命中 BepInEx.cfg UnityBaseLibrariesSource 的"同名 zip 本地
+# 优先"逻辑，首启全程离线。zip 名 6000.2.7 = 游戏 Unity 版本，游戏大版本升级后需重新取新版
+New-Item (Join-Path $base 'BepInEx\unity-libs') -ItemType Directory -Force | Out-Null
+Copy-Item (Join-Path $game 'BepInEx\unity-libs\*') (Join-Path $base 'BepInEx\unity-libs') -Recurse -Force
 # 预置 BepInEx.cfg（安装器里 onlyifdoesntexist，不会覆盖玩家已有配置）：
 # [Logging.Disk] Enabled 强制 true——保证玩家机器生成 LogOutput.log，安装说明的排障 FAQ 依赖它
 New-Item (Join-Path $base 'BepInEx\config') -ItemType Directory -Force | Out-Null
@@ -43,6 +49,14 @@ $mods = @(
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
     if (-not (Test-Path $dll)) { throw ('build missing: ' + $dll) }
+    # 新鲜度守卫（2026-10-17 事故）：本脚本不编译，只收 bin\Release 现货——若 dll 比源码旧，
+    # 说明打包的是陈货（当日实测：合并后的筛选代码从未进 Release，重装后筛选"消失"）。
+    # 拒绝打包，先 `sdk\dotnet\dotnet.exe build -c Release`（publish.ps1 会先构建，正常发版不受影响）。
+    $srcDir = Join-Path $projRoot ('SurvivalLog.' + $m.Name)
+    $newestSrc = Get-ChildItem $srcDir -Recurse -Include *.cs,*.js,*.csproj | Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($newestSrc -and (Get-Item $dll).LastWriteTime -lt $newestSrc.LastWriteTime) {
+        throw ('stale build: ' + $dll + ' 比源码旧（最新源文件 ' + $newestSrc.Name + ' ' + $newestSrc.LastWriteTime.ToString('yyyy-MM-dd HH:mm') + '）。请先: sdk\dotnet\dotnet.exe build ' + $srcDir + ' -c Release')
+    }
 
     $pkg = Join-Path $relRoot ('SurvivalLog.' + $m.Name + '_v' + $ver)
 

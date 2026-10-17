@@ -66,6 +66,8 @@ Check 'doorstop_config.ini' $true
 Check '.doorstop_version' $true
 Check 'dotnet\coreclr.dll' $true
 Check 'BepInEx\core\BepInEx.Core.dll' $true
+Check 'BepInEx\unity-libs\6000.2.7.zip' $true
+Check 'BepInEx\unity-libs\UnityEngine.CoreModule.dll' $true
 Check 'BepInEx\config\BepInEx.cfg' $true
 Check 'BepInEx\plugins\SurvivalLog.BackpackExpand.dll' $true
 Check 'BepInEx\plugins\SurvivalLog.QuickAction.dll' $true
@@ -89,9 +91,13 @@ if ($kept -notmatch 'WidthMult\s*=\s*9') { $script:fails += '玩家旧配置被�
 
 $dotnetN = (Get-ChildItem (Join-Path $setupDir 'dotnet') -File).Count
 $coreN   = (Get-ChildItem (Join-Path $setupDir 'BepInEx\core') -File -Recurse).Count
-Write-Host ("dotnet 文件数: " + $dotnetN + "  (上次基准 187)   core 文件数: " + $coreN)
+# unity-libs（2026-10-17 起必带）：BepInEx 首启生成 interop 的必需库，缺它首启会联网下载
+# （境内常失败 → mod 静默不生效）。zip 名 6000.2.7 = 游戏 Unity 版本，游戏大版本升级后随版本变
+$ulibsN  = (Get-ChildItem (Join-Path $setupDir 'BepInEx\unity-libs') -File).Count
+Write-Host ("dotnet 文件数: " + $dotnetN + "  (上次基准 187)   core 文件数: " + $coreN + "   unity-libs 文件数: " + $ulibsN + "  (基准 74)")
 if ($dotnetN -lt 150) { $script:fails += ('dotnet 文件数异常: ' + $dotnetN) }
 if ($coreN -lt 10)   { $script:fails += ('BepInEx core 文件数异常: ' + $coreN) }
+if ($ulibsN -lt 70)  { $script:fails += ('unity-libs 文件数异常: ' + $ulibsN) }
 
 # --- 测试 2：静默卸载，验证清理 + 旧配置保留 ---
 Start-Process -FilePath (Join-Path $setupDir 'unins000.exe') -ArgumentList '/VERYSILENT','/NORESTART' -Wait
@@ -103,6 +109,7 @@ function CheckGone($rel) {
 }
 CheckGone 'winhttp.dll'
 CheckGone 'dotnet'
+CheckGone 'BepInEx\unity-libs\6000.2.7.zip'
 CheckGone 'BepInEx\plugins\SurvivalLog.QuickAction.dll'
 $cfgKept = Test-Path (Join-Path $setupDir 'BepInEx\config\com.local.survivallog.backpackexpand.cfg')
 Write-Host ("玩家旧配置保留: " + $cfgKept)

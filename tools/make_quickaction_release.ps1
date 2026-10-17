@@ -6,6 +6,12 @@ $ver      = (Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom
 $relRoot  = Join-Path $projRoot 'release'
 $dll      = Join-Path $projRoot 'SurvivalLog.QuickAction\bin\Release\SurvivalLog.QuickAction.dll'
 if (-not (Test-Path $dll)) { throw ('build missing: ' + $dll) }
+# 新鲜度守卫（同 make_mods_release.ps1，2026-10-17 事故：陈货 dll 打进安装包）
+$srcDir = Join-Path $projRoot 'SurvivalLog.QuickAction'
+$newestSrc = Get-ChildItem $srcDir -Recurse -Include *.cs,*.csproj | Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($newestSrc -and (Get-Item $dll).LastWriteTime -lt $newestSrc.LastWriteTime) {
+    throw ('stale build: ' + $dll + ' 比源码旧（最新源文件 ' + $newestSrc.Name + ' ' + $newestSrc.LastWriteTime.ToString('yyyy-MM-dd HH:mm') + '）。请先: sdk\dotnet\dotnet.exe build ' + $srcDir + ' -c Release')
+}
 
 $pkg = Join-Path $relRoot ('SurvivalLog.QuickAction_v' + $ver)
 if (Test-Path $pkg) { Remove-Item $pkg -Recurse -Force }

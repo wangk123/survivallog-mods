@@ -11,6 +11,9 @@ tools/icd.zip
 tools/Cecil/
 tools/gh/
 
+# ===== 第三方 N 网 mod 本地存档（作者禁止转载：不入公开仓、不进安装器，仅本地参考）=====
+thirdparty/
+
 # ===== 本地杂项 =====
 .playwright-mcp/
 .zcode/

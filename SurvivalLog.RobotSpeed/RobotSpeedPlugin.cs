@@ -48,7 +48,7 @@ public sealed class RobotSpeedPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.robotspeed";
     public const string Name = "RobotSpeed";
-    public const string Version = "1.3.3"; // 由 publish.ps1 随 version.json 同步
+    public const string Version = "1.3.5"; // 由 publish.ps1 随 version.json 同步
 
     internal static ManualLogSource Log;
 
@@ -118,7 +118,8 @@ internal sealed class RobotTicker : MonoBehaviour
     private static readonly Dictionary<int, int> OrigBagW = new();
     private static readonly Dictionary<int, int> OrigBagH = new();
 
-    // 机器人专属动作行（与玩家不共用；9101 回座 = -1 哨兵绝不在列）
+    // 机器人专属动作行（9101 回座 = -1 哨兵绝不在列）。
+    // 注意 9130 正在种植实际与玩家共用（v1.2.0 误判专属；让位守卫保证与 QuickAction 不打架）
     private static readonly int[] RobotActionIds = { 9098, 9099, 9100, 9130, 9131 };
     // 动作时长下限（游戏秒；0.3 真实秒 × TimeScale 120）
     private const float MinActionDuring = 36f;
@@ -248,6 +249,10 @@ internal sealed class RobotTicker : MonoBehaviour
 
                 float want = Math.Max(MinActionDuring, orig / mult);
                 if (want > orig) want = orig; // 只减不增（倍率 <1 时也不放慢，防误设）
+                // 让位守卫（2026-10-17）：9130 正在种植与玩家共用（QuickAction 也提速它，
+                // v1.2.0"机器人专属"的判断有误）；当前值已被提得更快（≤目标）时不动——
+                // 否则两个 mod 每 5 秒互相覆盖（实测日志各刷 200+ 条）。
+                if (cur <= want + 1e-6f) continue;
                 if (Math.Abs(cur - want) > 1e-6f)
                 { act.During = want; changed++; lines.Add($"ACTION {id}({Name(act)}) During {orig:0.#} -> {want:0.#} 游戏秒（÷{mult:0.##}）"); }
             }

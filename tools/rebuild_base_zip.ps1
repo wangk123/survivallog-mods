@@ -30,5 +30,11 @@ foreach ($k in @('winhttp.dll', 'doorstop_config.ini', '.doorstop_version', 'dot
     $found = $zip.Entries | Where-Object { $_.FullName.Replace('\','/') -eq $k }
     Write-Host ((('OK  ') + $k) + $(if (-not $found) { '  MISSING!' }))
 }
+
+# unity-libs 预置验证（2026-10-17 起必带：缺 zip 则玩家首启会尝试联网下载，
+# 境内常失败 → mod 静默不生效；zip 名 = 游戏 Unity 版本号）
+$uLibs = $files | Where-Object { $_.FullName.Replace('\','/') -like 'BepInEx/unity-libs/*' }
+$uZip  = $uLibs | Where-Object { $_.Name -like '*.zip' }
+Write-Host ('OK  unity-libs 文件数 ' + @($uLibs).Count + '  (基准 74)   离线 zip: ' + $uZip.Name + $(if (-not $uZip) { '  MISSING!' }))
 $zip.Dispose()
 Write-Host ('ZIP: ' + [math]::Round((Get-Item $zipPath).Length / 1MB, 2) + ' MB')

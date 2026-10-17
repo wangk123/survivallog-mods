@@ -1,5 +1,5 @@
 ﻿; 生存日志 MOD 安装器（Inno Setup 7）
-; 基座必装（fixed），7 个 MOD 自选（柜子标签筛选已并入储藏柜直达），代码强制至少选一个。
+; 基座必装（NextButtonClick 校验强制），7 个 MOD 自选（推荐类型默认勾选，可自由增减），至少选一个。
 ; 文件源全部指向 release\ 下的正式版本目录。
 
 #define MyAppName "生存日志 MOD"
@@ -98,6 +98,11 @@ Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\doorstop_con
 Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\.doorstop_version"; DestDir: "{app}"; Flags: ignoreversion
 Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\dotnet\*"; DestDir: "{app}\dotnet"; Flags: ignoreversion recursesubdirs createallsubdirs
 Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\core\*"; DestDir: "{app}\BepInEx\core"; Flags: ignoreversion recursesubdirs createallsubdirs
+; unity-libs：BepInEx 首启生成 interop 所需的未裁剪 Unity 基础库。官方默认从 unity.bepinex.dev
+; 联网下载 {VERSION}.zip，境外源境内常失败 → mod 静默不生效；预置后命中 BepInEx.cfg
+; UnityBaseLibrariesSource 的"同名 zip 本地优先"逻辑，首启全程离线（游戏大版本升级换
+; Unity 版本时才会重新联网拉新版库）
+Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\unity-libs\*"; DestDir: "{app}\BepInEx\unity-libs"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; cfg 不覆盖玩家已有配置（重装/换组件时保留调好的数值）
 Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\config\BepInEx.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 ; ---- 背包扩容 ----

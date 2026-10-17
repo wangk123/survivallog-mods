@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <AssemblyName>disasm</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Iced">
+      <HintPath>C:\Users\wangk\.nuget\packages\iced\1.21.0\lib\netstandard2.0\Iced.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
