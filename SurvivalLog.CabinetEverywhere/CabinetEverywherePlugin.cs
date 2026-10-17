@@ -15,17 +15,19 @@ namespace SurvivalLog.CabinetEverywhere;
 public enum ScenarioView { Food, Material, Browser }
 
 /// <summary>
-/// 储藏柜直达（独立 mod）。
+/// 储藏柜直达 + 标签筛选/场景视图（原独立 mod CabinetTagFilter 已于 2026-10-17 并回）。
 ///
-/// 让普通储物类家具（储物柜/金属柜/床头柜等）出现在制作类界面的容器页签里：
-/// 1. 白名单注入：把柜子家具 ID 加进 ToolCabinetConfig.CraftSourceFurnitureIds（官方"制作材料源"
-///    白名单，原生驱动 工作台/无人机交易/无人机站/粉碎机/温室 五个系统的页签与自动取料，
-///    GetAllLinkedOwnerIds 实证遍历 CabinetTabs 参与自动补料）。
-/// 2. 页签注入：烹饪/老鼠笼/酿酒桶/颜料桶 的容器过滤是内联的"冷链电器"判定（不走白名单），
-///    改为向各自 Redux 状态的 BagTabs（ObservableList）追加柜子页签；切换/取放路径
-///    ApplySwitchBag→GetBagData(ownerId) 已实证为通用取包，无类型过滤。
+/// 1. 直达：让普通储物类家具（储物柜/金属柜/床头柜等）出现在制作类界面的容器页签：
+///    a. 白名单注入：把柜子家具 ID 加进 ToolCabinetConfig.CraftSourceFurnitureIds（官方"制作材料源"
+///       白名单，原生驱动 工作台/无人机交易/无人机站/粉碎机/温室 五个系统的页签与自动取料，
+///       GetAllLinkedOwnerIds 实证遍历 CabinetTabs 参与自动补料）。
+///    b. 页签注入：烹饪/老鼠笼/酿酒桶/颜料桶 的容器过滤是内联的"冷链电器"判定（不走白名单），
+///       改为向各自 Redux 状态的 BagTabs（ObservableList）追加柜子页签；切换/取放路径
+///       ApplySwitchBag→GetBagData(ownerId) 已实证为通用取包，无类型过滤。
+/// 2. 筛选/场景视图：按界面 cfg（[Scenario] View_*）固定收窄页签视野（食物/材料），或 Browser
+///    模式自绘下拉按官方标签筛选；A/D 步进自动跳过被藏柜子（JS 侧扣发+伪造，DESIGN.md 附录）。
 ///
-/// 实证依据见 DESIGN.md（2026-10-10 全程反汇编）。
+/// 实证依据见 DESIGN.md（2026-10-10 全程反汇编 + 附录 A/C 取证史）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class CabinetEverywherePlugin : BasePlugin

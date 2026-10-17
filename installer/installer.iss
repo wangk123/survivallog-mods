@@ -1,5 +1,5 @@
 ﻿; 生存日志 MOD 安装器（Inno Setup 7）
-; 基座必装（fixed），7 个 MOD 自选，代码强制至少选一个。
+; 基座必装（fixed），7 个 MOD 自选（柜子标签筛选已并入储藏柜直达），代码强制至少选一个。
 ; 文件源全部指向 release\ 下的正式版本目录。
 
 #define MyAppName "生存日志 MOD"
@@ -8,7 +8,10 @@
 #define SuiteVer "1.3.1"
 #endif
 #define MyAppVer SuiteVer
+; 文件源根（release\ 正式版本目录）；编译参数可覆盖（本地验证用 /DRelRoot 指向现成 release 源）
+#ifndef RelRoot
 #define RelRoot "..\release"
+#endif
 ; 作者署名/防盗引流（2026-10-14）：每页底部署名条（TNewStaticText）+ 欢迎页二维码名片，均点击直达作者抖音主页
 #define DouyinUrl "https://v.douyin.com/z99n5ZQfkyw/"
 
@@ -40,7 +43,7 @@ Name: "chs"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 ; recommended 必须排第一：Inno 默认选中 [Types] 首项。
 ; "推荐安装"只含默认开的组件（4 扩容 + 吃/交互/维护提速），家具功能/娱乐锻炼默认不勾；
 ; 下拉可切"全部安装"一键全勾。custom 实测会镜像前一个所选类型，不能用作默认不勾的载体。
-Name: "recommended"; Description: "推荐安装（背包/柜子含冰箱/保鲜扩容 + 柜子直达与负重与标签筛选 + 吃/交互/维护提速 + 机器人提速）"
+Name: "recommended"; Description: "推荐安装（背包/柜子含冰箱/保鲜扩容 + 柜子直达（含场景视图/标签筛选）与负重 + 吃/交互/维护提速 + 机器人提速）"
 Name: "full"; Description: "全部安装（基座 + 全部 MOD）"
 Name: "custom"; Description: "自选安装"; Flags: iscustom
 
@@ -49,9 +52,8 @@ Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都�
 Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: recommended full custom
 Name: "mod_cabinet"; Description: "柜子扩容：家里全部柜子（置物架/柜子/金属柜/工具柜/床头柜/衣柜等）+冰箱格子宽高各×1.5，新增柜子/冰箱自动跟上（原冰箱扩容已并入）"; Types: recommended full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
-Name: "mod_cabaccess"; Description: "储藏柜直达：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料"; Types: recommended full custom
+Name: "mod_cabaccess"; Description: "储藏柜直达（直达+智能视图+筛选）：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料；按界面场景视图（食物/材料）自动收窄页签，或下拉按标签筛选柜子页签（原「柜子标签筛选」mod 已并入本组件）"; Types: recommended full custom
 Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
-Name: "mod_tagfilter"; Description: "柜子标签筛选：带容器页签的界面（工作台/烹饪等 8 个）可按标签筛选柜子页签（自储藏柜直达拆分独立，可单独安装）"; Types: recommended full custom
 Name: "mod_robotspeed"; Description: "机器人提速：修理/整理/种植机器人不再比手动慢（动作对齐手速+移速/充电/续航翻倍+三台货舱扩容；不含插槽与模块）"; Types: recommended full custom
 Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
 Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
@@ -63,7 +65,8 @@ Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/�
 [InstallDelete]
 ; 安装前预清理：先移除本项目全部插件（无论本次是否勾选），再安装所选组件——
 ; 保证最终落地状态与勾选严格一致（解决"取消勾选不移除"）。只删本项目的固定文件名：
-; 不碰第三方插件、不碰游戏原生文件、不碰玩家 cfg（未再勾选的 mod 只留 1 个惰性 cfg）。
+; 不碰第三方插件、不碰游戏原生文件、不碰玩家 cfg（未再勾选的 mod 只留 1 个惰性 cfg；
+; 唯一例外=旧柜子标签筛选 cfg——该 mod 已并入储藏柜直达，cfg 永久失效，见下）。
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"
@@ -74,6 +77,9 @@ Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll"
 Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
+; 旧独立筛选 mod 的 cfg（合并后插件已不存在，此 cfg 永久失效——清掉防误导；
+; 其开关由储藏柜直达 cfg 的 [Filter] Enable 接管，默认 true=筛选重新开启）
+Type: files; Name: "{app}\BepInEx\config\com.local.survivallog.cabinettagfilter.cfg"
 Type: files; Name: "{app}\MOD说明\背包扩容.md"
 Type: files; Name: "{app}\MOD说明\柜子扩容.md"
 Type: files; Name: "{app}\MOD说明\冰箱扩容.md"
@@ -115,10 +121,6 @@ Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
-; ---- 柜子标签筛选 ----
-Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinettagfilter.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_tagfilter; Source: "{#RelRoot}\SurvivalLog.CabinetTagFilter_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子标签筛选.md"; Flags: ignoreversion
 ; ---- 机器人提速（cfg 不预置：首跑按代码默认生成完整中文注释配置） ----
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "机器人提速.md"; Flags: ignoreversion
@@ -378,9 +380,10 @@ begin
     if not (WizardIsComponentSelected('mod_backpack') or
             WizardIsComponentSelected('mod_cabinet') or
             WizardIsComponentSelected('mod_chill') or
+            WizardIsComponentSelected('mod_cabaccess') or
+            WizardIsComponentSelected('mod_cabburden') or
             WizardIsComponentSelected('mod_quick') or
-            WizardIsComponentSelected('mod_robotspeed') or
-            WizardIsComponentSelected('mod_tagfilter')) then
+            WizardIsComponentSelected('mod_robotspeed')) then
     begin
       MsgBox('基座之外至少需要选择一个 MOD（也可以全选）。', mbError, MB_OK);
       Result := False;

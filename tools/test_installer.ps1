@@ -44,6 +44,10 @@ Set-Content (Join-Path $setupDir 'BepInEx\config\com.local.survivallog.backpacke
 New-Item (Join-Path $setupDir 'BepInEx\plugins') -ItemType Directory -Force | Out-Null
 Set-Content (Join-Path $setupDir 'BepInEx\plugins\SurvivalLog.CabinetExpand.dll') 'OLD-CABINET-DLL'
 Set-Content (Join-Path $setupDir 'BepInEx\plugins\SomeThirdPartyMod.dll') 'THIRD-PARTY-KEEP'
+# 预放旧独立筛选 mod（CabinetTagFilter 已并入储藏柜直达）的 dll + cfg：
+# 验证 InstallDelete 清理路径——合并后两者都不得残留
+Set-Content (Join-Path $setupDir 'BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll') 'OLD-TAGFILTER-DLL'
+Set-Content (Join-Path $setupDir 'BepInEx\config\com.local.survivallog.cabinettagfilter.cfg') 'OLD-TAGFILTER-CFG'
 
 $p = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$setupDir`""),'/COMPONENTS="base,mod_backpack,mod_quick"' -Wait -PassThru
 Write-Host ("安装退出码: " + $p.ExitCode)
@@ -73,6 +77,8 @@ Check 'BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.CabinetBurden.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeExpand.dll' $false
 Check 'BepInEx\plugins\SurvivalLog.FridgeChill.dll' $false
+Check 'BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll' $false
+Check 'BepInEx\config\com.local.survivallog.cabinettagfilter.cfg' $false
 Check 'BepInEx\plugins\SomeThirdPartyMod.dll' $true
 Check 'unins000.exe' $true
 

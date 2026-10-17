@@ -10,7 +10,8 @@ namespace SurvivalLog.CabinetEverywhere;
 /// 筛选通道：读容器标签（CabinetCatalog.AllContainers 统一容器扫描）+ 标签库（Config_FurnitureTag），经
 /// WebUILayer.canvasWebViewPrefab.WebView（Vuplex IWebView）ExecuteJavaScript 注入引导脚本并喂标签数据。
 /// 引导脚本每周期幂等重注（WebView 崩溃恢复重建后自动重挂），数据每周期直推（体量极小，
-/// 免维护"注入先后"时序）。JS 侧只读 tab 数据、只隐藏 DOM，不改下标不发事件。
+/// 免维护"注入先后"时序）。JS 侧截读消息、按视图/标签隐藏 DOM，A/D 步进到被藏柜子时以
+/// 页面同款事件伪造切换（不改任何下发的 tabs 数组/下标；全貌见 DESIGN.md 附录 A/C）。
 /// </summary>
 internal static class TagFilter
 {

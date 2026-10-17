@@ -77,6 +77,24 @@ foreach ($m in $mods) {
             $txt = $txt -replace '(?m)^(动作时长倍率\s*=\s).*$', '${1}2'
             $txt = $txt -replace '(?m)^(货舱格数倍率\s*=\s).*$', '${1}2'
         }
+        # CabinetEverywhere（2026-10-17 合并筛选/场景视图后）：Filter/Scenario/Debug 键归一为
+        # 发布默认，防本机实验值带进发布包（如 [Filter] Enable=false、DumpFurniture=true）。
+        # Enable 裸键仅 [Filter] 分区存在；View_* 逐键归一（默认值按界面各异，见插件 Bind）；
+        # Debug 的 Verbose/ListOnReady 由下方通用归一覆盖。
+        if ($m.Name -eq 'CabinetEverywhere') {
+            $txt = $txt -replace '(?m)^(Enable\s*=\s).*$', '${1}true'
+            $txt = $txt -replace '(?m)^(View_Cooking\s*=\s).*$',         '${1}Food'
+            $txt = $txt -replace '(?m)^(View_RatCage\s*=\s).*$',         '${1}Food'
+            $txt = $txt -replace '(?m)^(View_BrewPanel\s*=\s).*$',       '${1}Food'
+            $txt = $txt -replace '(?m)^(View_DyePanel\s*=\s).*$',        '${1}Food'
+            $txt = $txt -replace '(?m)^(View_Compressor\s*=\s).*$',      '${1}Food'
+            $txt = $txt -replace '(?m)^(View_ToolTable\s*=\s).*$',       '${1}Material'
+            $txt = $txt -replace '(?m)^(View_Shredder\s*=\s).*$',        '${1}Material'
+            $txt = $txt -replace '(?m)^(View_GreenhouseBuild\s*=\s).*$', '${1}Material'
+            $txt = $txt -replace '(?m)^(View_Trade\s*=\s).*$',           '${1}Browser'
+            $txt = $txt -replace '(?m)^(View_DroneHub\s*=\s).*$',        '${1}Browser'
+            $txt = $txt -replace '(?m)^(DumpFurniture\s*=\s).*$',        '${1}false'
+        }
         $txt = $txt -replace '(?m)^(KeepMult\s*=\s).*$',   '${1}2'
         $txt = $txt -replace '(?m)^(Verbose\s*=\s).*$',    '${1}false'
         $txt = $txt -replace '(?m)^(DiagOnOpen\s*=\s).*$', '${1}false'
