@@ -635,27 +635,29 @@
       }
       // 锚行必须是 flex 行（行内对齐的前提；官方 .cap 与 .bag-toolbar 实证满足，守卫防结构变化）
       if (anchorRow && view && ('' + view.getComputedStyle(anchorRow).display).indexOf('flex') < 0) { anchorRow = null; refEl = null; }
-      // 落位：有锚行=行内插入（static，跟随行 gap/对齐；行无 gap 再补 margin）；无锚行=col 绝对左下兜底
-      var prevPar = dd.parentElement, prevNext = dd.nextElementSibling;
+      // 落位对象=包裹器（st.ddw，按钮在包裹器内）——按钮本体不再有任何定位样式
+      var ddw = st.ddw || dd;
+      var prevPar = ddw.parentElement, prevNext = ddw.nextElementSibling;
       if (anchorRow) {
-        dd.style.position = 'static';
-        dd.style.left = ''; dd.style.right = ''; dd.style.top = ''; dd.style.bottom = '';
-        dd.style.flex = '0 0 auto';
-        dd.style.alignSelf = 'center';
-        dd.style.marginLeft = (view && parseFloat(view.getComputedStyle(anchorRow).columnGap || view.getComputedStyle(anchorRow).gap) >= 2) ? '' : '6px';
+        ddw.style.position = 'static';
+        ddw.style.left = ''; ddw.style.right = ''; ddw.style.top = ''; ddw.style.bottom = '';
+        ddw.style.flex = '0 0 auto';
+        ddw.style.alignSelf = 'center';
+        ddw.style.marginLeft = (view && parseFloat(view.getComputedStyle(anchorRow).columnGap || view.getComputedStyle(anchorRow).gap) >= 2) ? '' : '6px';
         var ref = refEl ? refEl.nextSibling : anchorRow.firstChild;
-        var wantPrev = ref ? ref.previousElementSibling : (anchorRow.lastElementSibling === dd ? dd.previousElementSibling : null);
-        if (dd.parentElement !== anchorRow || dd.previousElementSibling !== wantPrev) anchorRow.insertBefore(dd, ref);
+        var wantPrev = ref ? ref.previousElementSibling : (anchorRow.lastElementSibling === ddw ? ddw.previousElementSibling : null);
+        if (ddw.parentElement !== anchorRow || ddw.previousElementSibling !== wantPrev) anchorRow.insertBefore(ddw, ref);
       } else if (col) {
-        if (dd.parentElement !== col) col.appendChild(dd);
-        dd.style.position = 'absolute';
-        dd.style.left = '6px';
-        dd.style.bottom = (capEl ? ((colR.bottom - capEl.getBoundingClientRect().top) / k + 8) : 6) + 'px';
-        dd.style.top = 'auto'; dd.style.right = 'auto';
-        dd.style.flex = ''; dd.style.alignSelf = ''; dd.style.marginLeft = '';
+        // 兜底：包裹器绝对定位贴列左下（包裹器只要是 positioned 元素，弹层的 CSS 锚定就成立）
+        ddw.style.position = 'absolute';
+        if (ddw.parentElement !== col) col.appendChild(ddw);
+        ddw.style.left = '6px';
+        ddw.style.bottom = '6px';
+        ddw.style.top = ''; ddw.style.right = '';
+        ddw.style.flex = ''; ddw.style.alignSelf = ''; ddw.style.marginLeft = '';
       }
       // 挪位关旧弹层（防脱锚）
-      if ((dd.parentElement !== prevPar || dd.nextElementSibling !== prevNext) && st.pop && st.pop.isConnected) closePop(st);
+      if ((ddw.parentElement !== prevPar || ddw.nextElementSibling !== prevNext) && st.pop && st.pop.isConnected) closePop(st);
     } catch (e) {}
   }
 
@@ -713,22 +715,24 @@
       addRow(0, '全部柜子', null); // 首位=全部，其后 options()：其他→食物→物资（T6 排列不变）
       var opts = options();
       for (var i = 0; i < opts.length; i++) addRow(opts[i].id, opts[i].name, selById(opts[i].id));
-      // 弹层挂**按钮所在的行容器**，用 offsetTop/offsetLeft 定位——布局空间原生值与 css 同一
-      // 坐标系，按钮的 offset 就是弹层的坐标，**零换算零除法**（此前 rect÷k 各版换算误差被
-      // 距离放大：遮盖/飘远/出屏三个症状同根因。行容器 static 时补 relative——两页行容器
-      // 内无依赖定位祖先的官方绝对元素，已核）
-      var row = st.dd.parentElement;
-      if (!row) return;
-      if (view && view.getComputedStyle(row).position === 'static') row.style.position = 'relative';
-      row.appendChild(pop); // 先挂行内量尺寸（visibility:hidden 防跳）
-      var tCss = st.dd.offsetTop - pop.offsetHeight - 6; // 向上开：弹层底=按钮顶-6（同空间直接算）
-      if (tCss < 0) tCss = st.dd.offsetTop + st.dd.offsetHeight + 6; // 放不下转向下开
-      var lCss = st.dd.offsetLeft;
-      var maxL = row.clientWidth - pop.offsetWidth - 4;
-      if (lCss > maxL) lCss = Math.max(4, maxL);
-      pop.style.left = lCss + 'px';
-      pop.style.top = tCss + 'px';
+      // 弹层挂按钮的**包裹器**（st.ddw，refreshDD 与按钮一起创建，BetterTrade .bt-view 根同构），
+      // 纯 CSS 锚定：bottom:calc(100%+6px)——零 JS 坐标零判断（此前 offsetTop 方案把"放得下吗"
+      // 拿行内坐标判定，按钮行内 offsetTop 恒≈0 → 永远判放不下 → 向下开出屏；rect÷k 系则误差
+      // 被距离放大成遮盖/飘远。三个症状一个结论：JS 算坐标这条路整个是错的，CSS 锚定无路径可错）
+      var wrap = st.ddw;
+      if (!wrap || !wrap.isConnected || wrap.ownerDocument !== st.doc) return;
+      wrap.appendChild(pop);
+      // 纯 CSS 锚定（BetterTrade .PFX-menu 同款）：弹层在包裹器上方 6px；右缘溢出时翻到右对齐
+      pop.style.left = '0';
+      pop.style.bottom = 'calc(100% + 6px)';
       pop.style.visibility = '';
+      try {
+        var vw2 = st.doc.defaultView;
+        if (pop.getBoundingClientRect().right > vw2.innerWidth - 8) { // 视觉空间直读（无换算）
+          pop.style.left = 'auto';
+          pop.style.right = '0';
+        }
+      } catch (e2) {}
       st.pop = pop;
       st.popDown = function (e) { // 任意 mousedown 关闭（capture，先于页面处理）：选项行交给 click、按钮交给 toggle
         var t = e.target;
@@ -742,8 +746,9 @@
   function refreshDD(st, c) {
     try {
       if (frameMode(st) !== 'browser') {
-        // 固定视图页（food/material）无任何 UI 注入：摘除遗留下拉/弹出层（如 cfg 把该页从 browser 改走）
-        if (st.dd) { try { st.dd.remove(); } catch (e) {} st.dd = null; }
+        // 固定视图页（food/material）无任何 UI 注入：摘除遗留下拉/包裹器/弹出层（cfg 把该页改走时）
+        if (st.ddw) { try { st.ddw.remove(); } catch (e) {} st.ddw = null; st.dd = null; }
+        else if (st.dd) { try { st.dd.remove(); } catch (e) {} st.dd = null; }
         closePop(st);
         return;
       }
@@ -755,27 +760,31 @@
       var dd = st.dd;
       if (!opts.length) { if (dd) dd.style.display = 'none'; return; }
       if (!dd || !dd.isConnected || dd.ownerDocument !== st.doc) {
-        // 先清本页面遗留的触发器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一）
-        var olds = st.doc.querySelectorAll('.sltf-dd-btn, .sltf-dd-pop');
+        // 先清本页面遗留的包裹器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一；包裹器连着按钮一起清）
+        var olds = st.doc.querySelectorAll('.sltf-dd-wrap, .sltf-dd-btn, .sltf-dd-pop');
         for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
         // 样式表不在此处创建——只允许 placeDD 携有效 k 创建，杜绝任何 kk=1 错误系数帧闪现
-        //（作者实测"刚打开闪一下小的"：首帧 col 未量出系数 → 回退 body zoom=1 → 错误系数表闪一帧）
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
         // 内联只管布局——外观/字体/内衬全部由样式表管理，内联外观会压死 :hover（复审 R1 旧坑）。
-        // ▾ 用文字（BetterTrade 同款 "排序 ▾"），弃 CSS 三角。left/bottom 由 placeDD 写入。
-        dd.style.cssText = 'z-index:99998;box-sizing:border-box;min-width:0;max-width:128px;margin:0;'
+        // ▾ 用文字（BetterTrade 同款 "排序 ▾"）。
+        dd.style.cssText = 'box-sizing:border-box;min-width:0;max-width:128px;margin:0;'
           + 'cursor:pointer;overflow:hidden;'; // display/gap/padding 在样式表（归一值），内联不压
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
         dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>';
-        st.dd = dd; // 先记引用再 placeDD（锚行查找+落位都在那里）
+        // 包裹器（BetterTrade .bt-view 根同构）：弹层的纯 CSS 锚定点，按钮行内代插入的对象
+        var wrap = st.doc.createElement('div');
+        wrap.className = 'sltf-dd-wrap';
+        wrap.style.cssText = 'position:relative;display:inline-flex;max-width:130px;';
+        wrap.appendChild(dd);
+        st.dd = dd; st.ddw = wrap;
         // 旁按钮（BetterTrade 组件）可能晚于我们注入——延迟重放三轮消灭"初始落错位"
         var stR = st, cR = c;
         var retries = [500, 1500, 3000];
         for (var ri = 0; ri < retries.length; ri++) {
           (function (ms) {
-            setTimeout(function () { try { if (stR.dd && stR.dd.isConnected) placeDD(stR, stR.dd, cR || detectC(stR.doc)); } catch (e) {} }, ms);
+            setTimeout(function () { try { if (stR.ddw && stR.ddw.isConnected) placeDD(stR, stR.dd, cR || detectC(stR.doc)); } catch (e) {} }, ms);
           })(retries[ri]);
         }
       }
@@ -862,7 +871,7 @@
       // 界面（重）载：取消还在轮询的旧 init 链（首次打开期间的竞态窗口曾插出两个下拉，
       // 2026-10-16 实测），再重置状态重启初始化
       if (st.initTimer) { clearTimeout(st.initTimer); st.initTimer = 0; }
-      st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.pop = null; st.popDown = null; st.lastActiveIdx = null; st.skipEcho = null;
+      st.doc = null; st.tabs = null; st.hidden.length = 0; st.dd = null; st.ddw = null; st.pop = null; st.popDown = null; st.lastActiveIdx = null; st.skipEcho = null;
       st.pending = null;
       if (st.pendingTimer) { clearTimeout(st.pendingTimer); st.pendingTimer = 0; }
       unfreeze(st);
