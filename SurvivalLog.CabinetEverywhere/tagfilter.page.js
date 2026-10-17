@@ -1,8 +1,8 @@
 (function () {
   if (window.__SLTF__) return;
-  var LS_KEY = 'sltf_sel_v2';
-  var S = { sel: 0, owners: {}, lib: [], dim: {}, foodId: 0, kind: {}, scenario: {}, matId: 0, toolId: 0, frames: [] };
-  try { S.sel = parseInt(localStorage.getItem(LS_KEY) || '0', 10) || 0; } catch (e) {}
+  var LS_KEY = 'sltf_sel_v3'; // v2 全局单值废弃、不迁移（旧键 sltf_sel_v2 残留无害）；v3 按界面记忆
+  var S = { sel: {}, owners: {}, lib: [], dim: {}, foodId: 0, kind: {}, scenario: {}, matId: 0, toolId: 0, matFood: false, frames: [] };
+  try { S.sel = JSON.parse(localStorage.getItem(LS_KEY) || '{}') || {}; } catch (e) {} // { pageId: sel }，sel = tagId 数字 | 'other' | 0
   // ---- 消息层扣发 + 伪造切换（2026-10-15 七轮，根治到头闪烁）----
   // 官方 A/D 步进切到被藏柜子时会推一条 active=被藏柜 的 BagMsg——放行则页面先渲染它一帧
   // （内容闪现），DOM 层弹回要等 Unity 往返再渲染第二次。根治：截读时发现 active 被藏就
@@ -20,7 +20,7 @@
       var e = S.lib[i];
       S.dim[e.id] = e.dim;
       if (e.dim === 4) S.foodId = e.id; // 全部食物（食物维度的代表标签）
-      // v3：lib 条目带 icon——材料/工具维度代表标签由此求（本任务只算好存着，T6 视图判定消费）
+      // v3：lib 条目带 icon——材料/工具维度代表标签由此求（material 视图判定与材料架伪标签消费）
       if (e.icon === 'material') S.matId = e.id;
       if (e.icon === 'tool') S.toolId = e.id;
     }
@@ -28,7 +28,7 @@
   rebuildLib();
 
   // v3 归一化：owners 值从 [tagId...] 数组改为 {t:[...],kind:'c'|'f'|'r'} 对象——读取统一走
-  // 本函数，缺省 kind='c'。kind/scenario 本任务（T5）只收不消费，视图判定是 T6 的活。
+  // 本函数，缺省 kind='c'。视图判定（T6）经 shouldHide→viewAllows 直接消费 v3 对象。
   function ownerOf(k) {
     var o = S.owners[k];
     if (o == null) return { t: [], kind: 'c' };
@@ -36,22 +36,49 @@
     return { t: o.t || [], kind: o.kind || 'c' };
   }
 
-  // 选中匹配：食物=命中任一 Dim1-4 食物标签；其他=精确命中
-  function matchesSel(tags) {
-    if (S.sel === S.foodId) {
-      for (var i = 0; i < tags.length; i++) {
-        var d = S.dim[tags[i]] || 0;
-        if (d >= 1 && d <= 4) return true;
-      }
-      return false;
-    }
-    return tags.indexOf(S.sel) >= 0;
+  // ---- 记忆层 v3（按界面）：每页独立选择，键=iframe 元素 id ----
+  function pageKey(st) { return st.el && st.el.id ? st.el.id : ('f' + S.frames.indexOf(st)); }
+  function pageSel(st) { return S.sel[pageKey(st)] || 0; }
+  function frameMode(st) { return S.scenario[pageKey(st)] || 'browser'; } // 'food'|'material'|'browser'（cfg 驱动，C# scenario 段）
+  function setSel(st, v) {
+    S.sel[pageKey(st)] = v || 0;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(S.sel)); } catch (e) {}
+    st.lastActiveIdx = null; // 玩家主动换筛选：方向无意义，回到『第一个可见』语义
+    applyFrame(st);
   }
-  function shouldHide(k) {
-    if (!S.sel) return false;
+
+  // 食物域命中：任一标签落在 Dim1-4（原 matchesSel 的 foodId 分支抽出，语义不变）
+  function matchesFood(t) {
+    for (var i = 0; i < t.length; i++) { var d = S.dim[t[i]] || 0; if (d >= 1 && d <= 4) return true; }
+    return false;
+  }
+  // 视图谓词：o = {t:[tagId...], kind:'c'|'f'|'r'}，返回 true=该容器在本界面可见。
+  // browser：sel 语义同 v2（0=全部/foodId=食物域/其他=精确命中）+「其他」=未打标签容器 + 材料架伪标签；
+  // food：全部冰箱一律显示（无论有无标签），柜子/材料架按食物域（材料架伪标签必然不中→隐藏）；
+  // material：材料+工具+未打标签柜、材料架显、冰箱藏（S.matFood=T9 的 cfg 钩子，默认 false）。
+  function viewAllows(st, o) {
+    var m = frameMode(st);
+    if (m === 'browser') {
+      var sel = pageSel(st);
+      if (!sel) return true;
+      if (sel === 'other') return o.t.length === 0 && o.kind !== 'r';   // 「其他」=未打标签容器
+      if (sel === S.foodId) return matchesFood(o.t);
+      return o.t.indexOf(sel) >= 0 || (o.kind === 'r' && sel === S.matId); // 材料架伪标签
+    }
+    if (m === 'food') {
+      if (o.kind === 'f') return true;                    // 全部冰箱一律显示
+      return matchesFood(o.t);                            // 柜子/材料架按食物域（材料架必然不中→隐藏）
+    }
+    // material：材料+工具+未标签柜；不含冰箱；材料架显
+    if (o.kind === 'r') return true;
+    if (o.kind === 'f') return false;
+    return o.t.length === 0 || o.t.indexOf(S.matId) >= 0 || o.t.indexOf(S.toolId) >= 0
+        || (S.matFood && matchesFood(o.t));               // S.matFood=K2 取证后若材料组需含食物则 true（默认 false，cfg 见 Task 9）
+  }
+  function shouldHide(k, st) {
+    var o = S.owners[k];
     // 不在扫描名单里的容器（owners 无此键）：v2 语义=不藏（宁可不藏也不错藏）
-    if (S.owners[k] === undefined) return false;
-    return !matchesSel(ownerOf(k).t);
+    return o !== undefined && !viewAllows(st, o);
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -144,7 +171,7 @@
         ai = t2;
       }
       if (ai < 0 || ai >= arr.length) return false;
-      if (arr[ai] == null || !shouldHide(String(arr[ai]))) { return false; }
+      if (arr[ai] == null || !shouldHide(String(arr[ai]), st)) { return false; }
       // 弹回目标（DOM 未变，active 仍在旧柜上——方向计算按 DOM 现状）
       var cands = c.list.querySelectorAll(c.sel);
       var offset = computeOffset(c, cands, arr);
@@ -362,7 +389,7 @@
       unfreeze(st);
       for (var i = 0; i < st.hidden.length; i++) { var h = st.hidden[i]; if (h && h.el) h.el.style.display = h.prev; }
       st.hidden.length = 0;
-      if (!S.sel) return;
+      if (!S.sel) return; // v3 恒为对象（恒过）：固定视图页 sel=0 也要套隐藏，判定全在 shouldHide/viewAllows
       var cands = c.list.querySelectorAll(c.sel);
       var arr = c.pos ? st.tabs : null;
       var offset = c.pos ? computeOffset(c, cands, arr || []) : 0;
@@ -377,7 +404,7 @@
         if (isActive) activeIdx = j;
         var k = c.attr ? el.getAttribute(c.attr) : arr[j + offset];
         if (k == null) continue;
-        if (shouldHide(String(k))) {
+        if (shouldHide(String(k), st)) {
           st.hidden.push({ el: el, prev: el.style.display });
           if (isActive) activeHiddenIdx = j;
           el.style.display = 'none';
@@ -404,7 +431,8 @@
     } catch (e) {}
   }
 
-  // 下拉选项：食物汇总（Dim4 代表）+ 物资（Dim0）逐个，按官方 Order 排序——全量显示，不按使用裁剪
+  // 下拉选项：「其他」（未打标签容器）+ 食物汇总（Dim4 代表）+ 物资（Dim0）逐个按官方 Order——
+  // 全量显示，不按使用裁剪。「全部柜子」由 refreshDD 补在首位，最终排列=全部柜子→其他→食物→物资
   function options() {
     var food = null, supplies = [];
     for (var i = 0; i < S.lib.length; i++) {
@@ -413,7 +441,7 @@
       else if (e.dim === 0) { supplies.push(e); }
     }
     supplies.sort(function (a, b) { return (a.order || 0) - (b.order || 0) || a.id - b.id; });
-    var out = [];
+    var out = [{ id: 'other', name: '其他' }];
     if (food) out.push({ id: food.id, name: food.name || '食物' });
     for (var j = 0; j < supplies.length; j++) out.push({ id: supplies[j].id, name: supplies[j].name || ('#' + supplies[j].id) });
     return out;
@@ -421,10 +449,16 @@
 
   function refreshDD(st, c) {
     try {
+      if (frameMode(st) !== 'browser') {
+        // 固定视图页（food/material）无任何 UI 注入：摘除遗留下拉（如 cfg 把该页从 browser 改走）
+        if (st.dd) { try { st.dd.remove(); } catch (e) {} st.dd = null; }
+        return;
+      }
       if (!st.doc || !st.doc.body) return;
       c = c || detectC(st.doc);
       if (!c || !c.bar) return;
       var opts = options();
+      var sel = pageSel(st);
       var dd = st.dd;
       if (!opts.length) { if (dd) dd.style.display = 'none'; return; }
       if (!dd || !dd.isConnected || dd.ownerDocument !== st.doc) {
@@ -437,12 +471,15 @@
         dd.style.cssText = 'height:26px;max-width:130px;margin:2px 4px;padding:0 4px;font-size:12px;flex:0 0 auto;align-self:center;'
           + 'background:rgba(28,24,18,0.96);color:#e8dcc8;border:1px solid rgba(255,193,7,0.35);border-radius:4px;cursor:pointer;outline:none;';
         var ddRef = dd;
-        dd.addEventListener('change', function () { setSel(parseInt(ddRef.value, 10) || 0); });
+        // 值解析：「其他」是字符串选项，先判再 parseInt；setSel 只作用本界面（每页独立记忆）
+        dd.addEventListener('change', function () {
+          setSel(st, ddRef.value === 'other' ? 'other' : (parseInt(ddRef.value, 10) || 0));
+        });
         c.bar.insertBefore(dd, c.bar.firstChild);
         st.dd = dd;
       }
       dd.style.display = '';
-      var key = S.sel + '|' + opts.map(function (u) { return u.id + '.' + u.name; }).join(',');
+      var key = sel + '|' + opts.map(function (u) { return u.id + '.' + u.name; }).join(',');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
       dd.innerHTML = '';
@@ -454,18 +491,9 @@
         if (selected) o.selected = true;
         dd.appendChild(o);
       }
-      addOpt(0, '全部柜子', S.sel === 0);
-      for (var i = 0; i < opts.length; i++) addOpt(opts[i].id, opts[i].name, opts[i].id === S.sel);
+      addOpt(0, '全部柜子', sel === 0);
+      for (var i = 0; i < opts.length; i++) addOpt(opts[i].id, opts[i].name, opts[i].id === sel);
     } catch (e) {}
-  }
-
-  function setSel(v) {
-    S.sel = v || 0;
-    try { localStorage.setItem(LS_KEY, String(S.sel)); } catch (e) {}
-    for (var i = 0; i < S.frames.length; i++) {
-      S.frames[i].lastActiveIdx = null; // 玩家主动换筛选：方向无意义，回到『第一个可见』语义
-      applyFrame(S.frames[i]);
-    }
   }
 
   // 同步重挂（勿改回防抖）：页面每次 BagMsg 会整条重建页签 DOM，MutationObserver 回调是微任务、
@@ -554,12 +582,12 @@
   scanFrames();
 
   window.__SLTF__ = {
-    ver: 3, // 数据契约 v3：owners 对象化（t+kind）、lib 带 icon/color、新增 scenario 段（行为仍 v2 等价）
+    ver: 3, // 数据契约 v3：owners 对象化（t+kind）、lib 带 icon/color、scenario 段（T6 起驱动固定视图）
     setData: function (json) {
       S.owners = (json && json.owners) || {};
       S.lib = (json && json.lib) || [];
-      S.scenario = (json && json.scenario) || {}; // v3：页面 id→视图（存好不消费，T6 用）
-      S.kind = {}; // v3：ownerId→kind 平铺（存好不消费，T6 用）
+      S.scenario = (json && json.scenario) || {}; // 页面 id→'food'|'material'|'browser'（frameMode 消费，cfg 改动重推即换视图）
+      S.kind = {}; // ownerId→kind 平铺（诊断用；视图判定走 owners 原对象）
       for (var k in S.owners) S.kind[k] = ownerOf(k).kind;
       rebuildLib();
       for (var i = 0; i < S.frames.length; i++) { applyFrame(S.frames[i]); refreshDD(S.frames[i]); }
