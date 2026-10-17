@@ -624,11 +624,17 @@
       if (!dd) return;
       var col = ddCol(st, c); // 弹层锚定空间；无锚行时兜底挂点
       var view = st.doc.defaultView;
-      var k = ddScaleK(st, dd);
-      dd.__sltfK = k;
-      ensureDDStyle(st.doc, k); // 计量值按本页 k 归一（窗口缩放变化时随 placeDD 重生成）
       var refEl = null, anchorRow = null, capEl = null;
       var colR = col ? col.getBoundingClientRect() : null; // 兜底绝对定位偏移用
+      // k 从**列容器**自比值（rect 宽 ÷ offsetWidth）——列容器永远已渲染，与我们按钮的渲染
+      // 状态无关，首帧即正确。按钮自比值在未渲染时回退 body zoom，而交易页缩放在祖先层
+      //（body zoom=1）→ 首帧 k=1 → 字号按错误系数生成过小，下次刷新才恢复——作者实测
+      //"刚打开字小、滚动列表后恢复正常"的根因。
+      var k = (colR && col.offsetWidth > 50) ? (colR.width / col.offsetWidth) : 0;
+      if (!(k > 0.2 && k < 4)) k = ddScaleK(st, dd);
+      if (!(k > 0.2 && k < 4)) k = 1;
+      dd.__sltfK = k;
+      ensureDDStyle(st.doc, k); // 计量值按本页 k 归一（窗口缩放变化时随 placeDD 重生成）
       // 首选锚=.sort-btn（BetterTrade 自己的稳定锚：它每次重绘都把自己的组件 insertBefore 到
       // sort-btn 紧左边——我们若在它右边就会被它重绘挤到左边去（作者实测"顺序翻转"根因）。
       // 我们插 **sort-btn 右侧**，它的重绘永远碰不到我们，顺序稳定：[bt-view][sort][我们]）
@@ -691,7 +697,7 @@
       if (!col) return;
       ensureDDStyle(st.doc);                                        // 幂等：hover 样式表意外被摘时补回
       var sel = pageSel(st);
-      var k = ddScaleK(st, st.dd); // 定位换算用（尺寸/外观全在样式表硬抄本里，无 ÷k）
+      var k = st.dd.__sltfK || ddScaleK(st, st.dd); // placeDD 从列容器测得（首帧即正确）
       var ddr = st.dd.getBoundingClientRect();
       var pop = st.doc.createElement('div');
       pop.className = 'sltf-dd-pop';
