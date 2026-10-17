@@ -524,47 +524,30 @@
     for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
     return null;
   }
-  // 外观态样式表（随触发器注入页面 head）：**基础规则=捐献按钮的 computed style 原样照抄**
-  //（2026-10-17 作者拍板"照抄"：旁边的按钮——交易页=BetterTrade 视图按钮、调度机队=官方
-  // 一键整理——其 css 值本就是为该页缩放写好的，逐条抄来像素级一致，且免掉一切 k 反推）。
-  // 无捐献者时回退官方 gbtn.sm 规格基线。内联样式只留布局——外观/字体进样式表，否则内联
-  // 层叠压死 :hover（复审 R1 旧坑）。基础规则同时压掉 UA 的 button 默认灰底。hover=提亮一档；
-  // 选项行 .on/:hover、滚动条值克隆官方 DyePanel（快照直读）。
-  var DD_FALLBACK_BASE = '.sltf-dd-btn{height:21px;line-height:21px;font-size:12px;padding:0 10px;'
-    + 'border:1px solid rgba(164,181,70,0.5);border-radius:6px;background:rgba(0,0,0,0);color:#e8ecc8;}';
-  function ddBaseRule(donorEl, view, exH) {
-    if (!donorEl || !view) return DD_FALLBACK_BASE;
-    try {
-      var cs = view.getComputedStyle(donorEl);
-      var props = ['height', 'line-height', 'font-family', 'font-size', 'font-weight', 'padding',
-                   'border-width', 'border-style', 'border-color', 'border-radius',
-                   'background-color', 'background-image', 'background-repeat',
-                   'color', 'box-shadow'];
-      var decls = '';
-      for (var i = 0; i < props.length; i++) {
-        var v = cs.getPropertyValue(props[i]);
-        if (v && v !== 'none' && v !== 'normal') decls += props[i] + ':' + v + ';';
-      }
-      if (!decls) return DD_FALLBACK_BASE;
-      if (exH > 2 && !(parseFloat(cs.height) > 2)) decls += 'height:' + exH + 'px;'; // 捐献者高度 auto 时显式补
-      return '.sltf-dd-btn{' + decls + 'box-sizing:border-box;}';
-    } catch (e) { return DD_FALLBACK_BASE; }
-  }
-  function ensureDDStyle(doc, base) {
+  // 外观态样式表：**逐字克隆 BetterTrade 下拉库的 CSS**（从其 dll 内嵌 page.js 提取的 .PFX-btn/
+  // :hover/.PFX-active/.PFX-menu/.PFX-on 规则，PFX=bt-view，token 值 --bt-gold #fbb034、
+  // --bt-menu-bg #1d1e22 已代入）。两页同款=作者十轮要求的"样式一致"；选中某标签时按钮转金色
+  // 激活态（.on 挂类）与 BetterTrade 排序激活同语义。内联只留布局——外观进样式表，内联层叠会
+  // 压死 :hover（复审 R1 旧坑）。基础规则同时压掉 UA 的 button 默认灰底。
+  function ensureDDStyle(doc) {
     var el = doc.getElementById('sltf-dd-style');
-    if (el && base === undefined) return; // 未指定 base 且样式表在：勿动（togglePop 的补挂路径不得用回退基线覆盖捐献照抄值）
-    var txt = (base || DD_FALLBACK_BASE)
-      + '.sltf-dd-btn:hover{filter:brightness(1.25);}'
-      + '.sltf-dd-opt{background:transparent;color:#d6cdc2;}'
-      + '.sltf-dd-opt.on{color:#fff;font-weight:bold;}'
-      + '.sltf-dd-opt:hover{background:rgba(255,255,255,.08);color:#fff;}'
-      + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
-      + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
-    var el = doc.getElementById('sltf-dd-style');
-    if (el) { if (el.textContent !== txt) el.textContent = txt; return; }
+    if (el) return;
     var s = doc.createElement('style');
     s.id = 'sltf-dd-style';
-    s.textContent = txt;
+    s.textContent = '.sltf-dd-btn{font-family:inherit;font-size:12px;color:#fff;white-space:nowrap;'
+      + 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;'
+      + 'padding:4px 10px;text-align:left;cursor:pointer;}'
+      + '.sltf-dd-btn:hover{border-color:rgba(251,176,52,0.6);}'
+      + '.sltf-dd-btn.on{color:#fbb034;border-color:rgba(251,176,52,0.75);background:rgba(251,176,52,0.14);}'
+      + '.sltf-dd-opt{font-family:inherit;font-size:12px;color:#fff;white-space:nowrap;'
+      + 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:4px;'
+      + 'padding:4px 10px;text-align:left;cursor:pointer;}'
+      + '.sltf-dd-opt:hover{border-color:rgba(251,176,52,0.6);}'
+      + '.sltf-dd-opt.on{color:#fbb034;}'
+      + '.sltf-dd-pop{display:flex;flex-direction:column;gap:2px;padding:3px;border-radius:4px;'
+      + 'background:#1d1e22;border:1px solid rgba(255,255,255,0.15);}'
+      + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
+      + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
     (doc.head || doc.documentElement).appendChild(s);
   }
   function closePop(st) {
@@ -622,64 +605,49 @@
   // 字号 12/pad 横 10/icon 13/max-width 110，与官方按钮视觉等大）按 k 反推 css 值
   //（=目标/k）每轮直写（幂等：同值重写浏览器零布局变更，值变才写的门控不值得多一坨状态）。
   // 调度机队侧效果：css 25 → 视觉 21（此前 17.7，更贴官方 21）。详见 DESIGN §2.5.1。
-  // 触发器落位（fix-wave-8 定稿：**行内插入，弃一切坐标计算**）。四轮实测教训链：绝对定位自算
-  // 偏移——视口角落跑出面板(w2)→列容器+避让(w3)→zoom 换算(w4/w5)→自家弹层污染避让/初始重叠/
-  // 竖向差 6px(w6-w8)——坐标路每步都在错。正解=进邻居的行里当普通元素：交易页=插在 BetterTrade
-  // 视图按钮右侧（同 row，行内 flex 自动竖向对齐，样式照抄它）；调度机队=插进负重条行
-  //（display:flex gap:10px 实证）最左，样式抄官方一键整理。行内排布天然齐平/天然跟随缩放/
-  // 邻居卸载后行自动收拢（"自动居左"免费获得）。k 只留给弹层锚定与 maxWidth 折算。
+  // 触发器落位（fix-wave-9 终版：行内插入 + BetterTrade 组件级锚点 + 样式硬抄本）。
+  // 教训链（w2-w8）：绝对定位自算坐标每轮都在错（视口角落/zoom/避让污染/竖向偏差）→ w8 行内插入
+  // 方向对了，但锚进了 BetterTrade 组件（bt-view 根 div）**内部**——它排序激活态的样式连坐我们
+  //（作者实测：排序激活→我们也高亮）。终版锚点=组件壳之外：交易页插在 bt-view **组件壳之后**
+  //（同在 .bag-toolbar 行内，行内自动对齐、互不连坐）；调度机队插进负重条行（#bagCap 官方 flex
+  // 行实证）最左；都没有=col 绝对左下兜底。样式零运行时计算（ensureDDStyle 硬抄本）。
   function placeDD(st, dd, c) {
     try {
       if (!dd) return;
-      var col = ddCol(st, c); // 弹层锚定空间；无锚行时的兜底挂点
+      var col = ddCol(st, c); // 弹层锚定空间；无锚行时兜底挂点
       var view = st.doc.defaultView;
       var k = ddScaleK(st, dd);
       dd.__sltfK = k;
-      // 找锚行与捐献者：列底带内可见窄按钮（旁 mod 注入）=捐献者，其父行=锚行；
-      // 无窄按钮则负重条行（宽 cap）做锚行、样式捐献者另找可见的官方 .sortb
-      var donor = null, anchorRow = null, capEl = null;
+      ensureDDStyle(st.doc);
+      // 找锚参照：列底带内可见窄按钮（BetterTrade 的 bt-view-btn）。其父级若是小组件壳
+      //（子元素≤2，如 bt-view 根=btn+menu）则以**壳**为参照——插壳之后，绝不进壳内部
+      var refEl = null, anchorRow = null, capEl = null;
       var colR = col ? col.getBoundingClientRect() : null;
       if (colR) {
         var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
         for (var i = 0; i < kids.length; i++) {
           var el = kids[i];
           if (el === dd) continue;
-          if (el.closest && el.closest('.sltf-dd-pop')) continue; // 自家弹层元素不参与（其选项行在底带会被误当邻居，w6 根因）
+          if (el.closest && el.closest('.sltf-dd-pop, .sltf-dd-btn')) continue; // 自家元素不参与（弹层选项行在底带，w6 根因）
           var r = el.getBoundingClientRect();
           if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue;
           if (r.width >= DD_AVOID.wide) { if (!capEl) capEl = el; }
-          else if (r.left < colR.left + DD_AVOID.nearLeft) { donor = el; } // 窄左底按钮=捐献者（同页同类取其一即可）
+          else if (r.left < colR.left + DD_AVOID.nearLeft) { refEl = el; break; }
         }
       }
-      if (donor) anchorRow = donor.parentElement;
-      else {
+      if (refEl) {
+        var host = refEl.parentElement;
+        if (host && host !== col && host.children.length <= 2 && host.parentElement) refEl = host; // 组件壳升级
+        anchorRow = refEl.parentElement;
+      } else {
         if (!capEl && col) {
           var caps = col.querySelectorAll('[class*=cap], [id*=cap]');
           for (var ci = 0; ci < caps.length; ci++) { var cr2 = caps[ci].getBoundingClientRect(); if (cr2.width > 100) { capEl = caps[ci]; break; } }
         }
-        if (capEl) anchorRow = capEl;
-        if (col) {
-          var cands = col.querySelectorAll('.sortb, .gbtn');
-          for (var cj = 0; cj < cands.length; cj++) { var cr3 = cands[cj].getBoundingClientRect(); if (cr3.width > 4 && cr3.height > 4) { donor = cands[cj]; break; } }
-        }
+        if (capEl) anchorRow = capEl; // 负重条行最左
       }
-      // 锚行必须是 flex 行（行内对齐的前提；官方 .cap 与 BetterTrade 行实证满足，守卫防结构变化）
-      if (anchorRow && view && ('' + view.getComputedStyle(anchorRow).display).indexOf('flex') < 0) anchorRow = null;
-      // 样式照抄：捐献者 computed 整套写进基础规则；高度 auto 时用实测视觉高 ÷k 显式补
-      var dH = 21, dFS = 12;
-      if (donor && view) {
-        var dBase;
-        try {
-          var dcs = view.getComputedStyle(donor);
-          dFS = parseFloat(dcs.fontSize) || 12;
-          dH = parseFloat(dcs.height);
-          if (!(dH > 2)) dH = Math.round(donor.getBoundingClientRect().height / k);
-          dBase = ddBaseRule(donor, view, dH);
-        } catch (e) { dH = 21; dBase = DD_FALLBACK_BASE; }
-        ensureDDStyle(st.doc, dBase);
-      } else ensureDDStyle(st.doc, DD_FALLBACK_BASE);
-      dd.__sltfDonor = { h: dH, fs: dFS };
-      dd.style.maxWidth = Math.round(((donor ? donor.getBoundingClientRect().width : 60) * 2) / k) + 'px';
+      // 锚行必须是 flex 行（行内对齐的前提；官方 .cap 与 .bag-toolbar 实证满足，守卫防结构变化）
+      if (anchorRow && view && ('' + view.getComputedStyle(anchorRow).display).indexOf('flex') < 0) { anchorRow = null; refEl = null; }
       // 落位：有锚行=行内插入（static，跟随行 gap/对齐；行无 gap 再补 margin）；无锚行=col 绝对左下兜底
       var prevPar = dd.parentElement, prevNext = dd.nextElementSibling;
       if (anchorRow) {
@@ -688,7 +656,7 @@
         dd.style.flex = '0 0 auto';
         dd.style.alignSelf = 'center';
         dd.style.marginLeft = (view && parseFloat(view.getComputedStyle(anchorRow).columnGap || view.getComputedStyle(anchorRow).gap) >= 2) ? '' : '6px';
-        var ref = (donor && donor.parentElement === anchorRow) ? donor.nextSibling : anchorRow.firstChild;
+        var ref = refEl ? refEl.nextSibling : anchorRow.firstChild;
         var wantPrev = ref ? ref.previousElementSibling : (anchorRow.lastElementSibling === dd ? dd.previousElementSibling : null);
         if (dd.parentElement !== anchorRow || dd.previousElementSibling !== wantPrev) anchorRow.insertBefore(dd, ref);
       } else if (col) {
@@ -722,38 +690,33 @@
       if (!col) return;
       ensureDDStyle(st.doc);                                        // 幂等：hover 样式表意外被摘时补回
       var sel = pageSel(st);
-      var k = ddScaleK(st, st.dd); // 与 placeDD 同一 k（单一系数管锚定+尺寸）
+      var k = ddScaleK(st, st.dd); // 定位换算用（尺寸/外观全在样式表硬抄本里，无 ÷k）
       var ddr = st.dd.getBoundingClientRect();
       var pop = st.doc.createElement('div');
       pop.className = 'sltf-dd-pop';
+      // 外观（背景/描边/圆角/内衬/gap）全在 ensureDDStyle 的 .sltf-dd-pop（BetterTrade 菜单硬抄本）；
+      // 这里只留布局定位与滚动上限（视觉目标 ÷k：宽 104-150、高 ~190≈10 行）
       pop.style.cssText = 'position:absolute;z-index:99999;visibility:hidden;'
-        + 'min-width:' + Math.round(104 / k) + 'px;max-width:' + Math.round(150 / k) + 'px;max-height:' + Math.round(190 / k) + 'px;overflow-y:auto;'
-        + 'padding:3px;border-radius:5px;background:rgba(20,18,14,0.96);border:1px solid rgba(164,181,70,0.5);'
-        + 'box-shadow:0 6px 18px rgba(0,0,0,.65);';
+        + 'min-width:' + Math.round(104 / k) + 'px;max-width:' + Math.round(150 / k) + 'px;max-height:' + Math.round(190 / k) + 'px;overflow-y:auto;';
       function addRow(id, name, lib) {
         var on = id === sel;
         var b = st.doc.createElement('button');
         b.type = 'button';
         b.className = 'sltf-dd-opt' + (on ? ' on' : '');
         b.setAttribute('data-interactive', '');
-        // 背景/文字色/加粗不在内联——外观态（基础/.on/:hover）统一由 ensureDDStyle 层叠管理
-        //（同按钮复审 R1：内联背景/色会把 :hover 整条压死；.on 挂钩=上面 className 已带）。
-        // 行高/字号/icon 跟捐献按钮的 css 值直接走（同空间原值，无需 ÷k——照抄即正确）
-        var dn = st.dd.__sltfDonor || { h: 21, fs: 12 };
-        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:' + Math.max(14, Math.round(dn.h - 2)) + 'px;padding:0 8px;margin:0;'
-          + 'border:0;border-radius:4px;font-family:inherit;font-size:' + dn.fs + 'px;line-height:1;'
-          + 'white-space:nowrap;cursor:pointer;text-align:left;';
-        var isz = Math.max(10, Math.round(dn.fs));
+        // 外观/字体/内衬全在样式表（.sltf-dd-opt 硬抄本，与按钮同款）；内联只留布局
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;margin:0;';
+        var isz = 14; // BetterTrade .PFX-ico 同值
         var ico = st.doc.createElement('span');
         ico.style.cssText = 'display:flex;width:' + isz + 'px;height:' + isz + 'px;flex:0 0 auto;'
-          + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
+          + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设
         ico.innerHTML = iconSvg(lib ? tagIcon(lib.icon) : (id === 'other' ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), isz);
         var txt = st.doc.createElement('span');
         txt.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;';
         txt.textContent = name;
         b.appendChild(ico);
         b.appendChild(txt);
-        if (on) { // 选中标记（DyePanel .dd-it.on 的 bold/高亮，标记位用 ✓）
+        if (on) { // 选中标记（BetterTrade .PFX-on 同语义：金色文字，另加 ✓）
           var ok = st.doc.createElement('span');
           ok.style.cssText = 'flex:0 0 auto;';
           ok.textContent = '\u2713';
@@ -808,22 +771,18 @@
         // 先清本页面遗留的触发器/弹出层（初始化竞态窗口曾插出两个，保此文档内唯一）
         var olds = st.doc.querySelectorAll('.sltf-dd-btn, .sltf-dd-pop');
         for (var q = 0; q < olds.length; q++) { try { olds[q].remove(); } catch (e) {} }
-        ensureDDStyle(st.doc, DD_FALLBACK_BASE); // 基础规则先落官方规格基线；placeDD 随后用捐献按钮的 computed 值整套替换（照抄）
+        ensureDDStyle(st.doc); // BetterTrade 下拉库硬抄本（两页同款，作者要求的"样式一致"）
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
-        // 内联只管布局——高/字体/边框/背景全部由样式表（捐献照抄）管理，内联外观会压死 :hover
-        //（复审 R1 旧坑）。left/bottom 由 placeDD 测量后写入（每次重算，勿写死）。
-        dd.style.cssText = 'position:absolute;z-index:99998;box-sizing:border-box;min-width:0;margin:0;'
-          + 'font-family:inherit;cursor:pointer;'
-          + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;';
+        // 内联只管布局——外观/字体/内衬全部由样式表管理，内联外观会压死 :hover（复审 R1 旧坑）。
+        // ▾ 用文字（BetterTrade 同款 "排序 ▾"），弃 CSS 三角。left/bottom 由 placeDD 写入。
+        dd.style.cssText = 'z-index:99998;box-sizing:border-box;min-width:0;max-width:128px;margin:0;'
+          + 'cursor:pointer;display:inline-flex;align-items:center;gap:4px;overflow:hidden;';
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
         dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;flex:0 0 auto"></span>'
-          + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
-          + '<span style="flex:0 0 auto;width:0;height:0;pointer-events:none;'
-          + 'border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #b9b0a6"></span>';
-        st.dd = dd; // 先记引用再 placeDD（挂列容器+落位都在那里，不挂 body——视口角落会跑出面板外）
-        // 捐献者/旁按钮可能晚于我们注入（BetterTrade 时序）——延迟重放三轮消灭"初始重叠到
-        // 首次交互才修正"（作者实测交易页刚打开两按钮重叠）。placeDD 幂等且自带样式照抄
+          + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>';
+        st.dd = dd; // 先记引用再 placeDD（锚行查找+落位都在那里）
+        // 旁按钮（BetterTrade 组件）可能晚于我们注入——延迟重放三轮消灭"初始落错位"
         var stR = st, cR = c;
         var retries = [500, 1500, 3000];
         for (var ri = 0; ri < retries.length; ri++) {
@@ -832,17 +791,17 @@
           })(retries[ri]);
         }
       }
-      dd.style.display = 'flex'; // 显式恢复：'' 会清掉 cssText 的 display:flex（回退 inline-block 布局散架）
-      placeDD(st, dd, c); // 列容器锚定+测量避让+捐献样式照抄，每次重算（外来按钮卸载→自动回贴列左缘；须在 __sltfKey 缓存返回之前）
-      // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
-      var dn = dd.__sltfDonor || { h: 21, fs: 12 }; // 捐献按钮 css 快照（字号=图标尺寸，同空间原值）
+      dd.style.display = 'inline-flex';
+      placeDD(st, dd, c); // 锚行查找+行内落位，每次重算（外来按钮卸载→行自动收拢；须在 __sltfKey 缓存返回之前）
+      // 选中态：文案+图标+官方色+按钮激活类（.on=金色系，BetterTrade 排序激活同语义）
       var lib = selById(sel);
-      var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
-      var icoSz = Math.max(10, Math.round(dn.fs));
+      var txt = (sel ? (lib ? lib.name : '其他') : '全部柜子') + ' \u25BE';
+      var icoSz = 14; // BetterTrade .PFX-ico 同值
       var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), icoSz);
       var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
+      dd.classList.toggle('on', !!sel);
       dd.querySelector('.sltf-dd-txt').textContent = txt;
       var icoEl = dd.querySelector('.sltf-dd-ico');
       icoEl.innerHTML = ico;
