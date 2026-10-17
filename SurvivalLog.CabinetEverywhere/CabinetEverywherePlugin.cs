@@ -11,6 +11,9 @@ using Object = UnityEngine.Object;
 
 namespace SurvivalLog.CabinetEverywhere;
 
+/// <summary>场景视图：Food=食物标签柜+全部冰箱；Material=材料/工具/未标签柜（不含冰箱）；Browser=下拉自由筛选。</summary>
+public enum ScenarioView { Food, Material, Browser }
+
 /// <summary>
 /// 储藏柜直达（独立 mod）。
 ///
@@ -45,6 +48,10 @@ public sealed class CabinetEverywherePlugin : BasePlugin
     internal static ConfigEntry<bool> DumpFurniture;
     internal static ConfigEntry<bool> FilterEnable;
 
+    // 场景视图（键=实测 iframe id，T1 report L203-214：Trade 不是 TradeUI、Brew 页 id=BrewPanel）
+    internal static ConfigEntry<ScenarioView> ViewCooking, ViewRatCage, ViewBrewPanel, ViewDyePanel, ViewCompressor,
+                                              ViewToolTable, ViewShredder, ViewGreenhouseBuild, ViewTrade, ViewDroneHub;
+
     internal static volatile bool Rerun = true;
 
     public override void Load()
@@ -71,6 +78,20 @@ public sealed class CabinetEverywherePlugin : BasePlugin
             "标签筛选总开关：关闭后不注入筛选（场景视图也一并失效，容器页签全部显示）。");
         FilterEnable.SettingChanged += (object s, System.EventArgs e) => { Rerun = true; };
 
+        // 场景视图默认值按 spec 场景表：烹饪/老鼠笼/酿酒/颜料桶/口粮压制机=Food，
+        // 工作台/粉碎机/温室=Material，无人机交易/调度机队=Browser（键名=实测页面 id）
+        const string viewDesc = "界面视图：Food=食物标签柜+全部冰箱；Material=材料/工具/未标签柜（不含冰箱）；Browser=下拉自由筛选。";
+        ViewCooking         = Config.Bind("Scenario", "View_Cooking",         ScenarioView.Food,    "烹饪" + viewDesc);
+        ViewRatCage         = Config.Bind("Scenario", "View_RatCage",         ScenarioView.Food,    "老鼠笼" + viewDesc);
+        ViewBrewPanel       = Config.Bind("Scenario", "View_BrewPanel",       ScenarioView.Food,    "酿酒桶" + viewDesc);
+        ViewDyePanel        = Config.Bind("Scenario", "View_DyePanel",        ScenarioView.Food,    "颜料桶" + viewDesc);
+        ViewCompressor      = Config.Bind("Scenario", "View_Compressor",      ScenarioView.Food,    "口粮压制机" + viewDesc);
+        ViewToolTable       = Config.Bind("Scenario", "View_ToolTable",       ScenarioView.Material, "工作台" + viewDesc);
+        ViewShredder        = Config.Bind("Scenario", "View_Shredder",        ScenarioView.Material, "粉碎机" + viewDesc);
+        ViewGreenhouseBuild = Config.Bind("Scenario", "View_GreenhouseBuild", ScenarioView.Material, "温室工程台" + viewDesc);
+        ViewTrade           = Config.Bind("Scenario", "View_Trade",           ScenarioView.Browser, "无人机交易" + viewDesc);
+        ViewDroneHub        = Config.Bind("Scenario", "View_DroneHub",        ScenarioView.Browser, "调度机队（无人机站）" + viewDesc);
+
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         IncludeFurnitureIds.SettingChanged += reload;
         ExcludeFurnitureIds.SettingChanged += reload;
@@ -79,6 +100,16 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         EnableCooking.SettingChanged += reload;
         EnableRatCage.SettingChanged += reload;
         EnableBrew.SettingChanged += reload;
+        ViewCooking.SettingChanged += reload;
+        ViewRatCage.SettingChanged += reload;
+        ViewBrewPanel.SettingChanged += reload;
+        ViewDyePanel.SettingChanged += reload;
+        ViewCompressor.SettingChanged += reload;
+        ViewToolTable.SettingChanged += reload;
+        ViewShredder.SettingChanged += reload;
+        ViewGreenhouseBuild.SettingChanged += reload;
+        ViewTrade.SettingChanged += reload;
+        ViewDroneHub.SettingChanged += reload;
         DumpFurniture.SettingChanged += (object s, System.EventArgs e) => { CabinetCatalog.DumpRequested = true; };
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<AccessTicker>())

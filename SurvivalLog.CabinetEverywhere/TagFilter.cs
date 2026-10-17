@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using BepInEx.Configuration;
 using Il2CppInterop.Runtime;
 
 namespace SurvivalLog.CabinetEverywhere;
@@ -99,8 +100,11 @@ internal static class TagFilter
     }
 
     /// <summary>
-    /// 标签数据 JSON：owners = ownerId→[tagId...]（家中全部容器，含空标签；材料架补"材料"伪标签），
-    /// lib = 标签库（含 dim：0=物资，1/2/3=食物细分行，4=全部食物——JS 侧把 1-4 汇总为一个"食物"选项）。
+    /// 标签数据 JSON v3：owners = ownerId→{t:[tagId...], kind:'c'|'f'|'r'}（家中全部容器，含空标签；
+    /// 材料架补"材料"伪标签保留在 t 数组内）；lib = 标签库（含 dim：0=物资，1/2/3=食物细分行，4=全部
+    /// 食物——JS 侧把 1-4 汇总为一个"食物"选项；v3 追加 icon/color 原样字符串透出，JS 不解析只透传）；
+    /// scenario = 页面 id→"food"|"material"|"browser"（cfg [Scenario] View_*，页面 id 用 T1 实测清单——
+    /// Trade 不是 TradeUI；T5 仅下发，JS 消费在 T6）。
     /// </summary>
     private static string BuildDataJson()
     {
@@ -130,33 +134,51 @@ internal static class TagFilter
                     var t = pair.Value;
                     if (t == null) continue;
                     int id = 0, order = 0, dim = 0;
-                    string name = null;
+                    string name = null, icon = null, color = null;
                     try
                     {
                         id = t.ID;
                         order = t.Order;
                         dim = t.Dim;
                         name = string.IsNullOrEmpty(t.TagName_Local) ? t.TagName : t.TagName_Local;
+                        icon = t.IconKey;   // T1 实测：System.String（33 键 TAG_ICONS 之一）
+                        color = t.Color;    // T1 实测：System.String（色值字符串，原样透出）
                     }
                     catch { continue; }
                     if (!first) sb.Append(',');
                     first = false;
                     sb.Append("{\"id\":").Append(id).Append(",\"order\":").Append(order)
                       .Append(",\"dim\":").Append(dim)
-                      .Append(",\"name\":\"").Append(EscapeJs(name)).Append("\"}");
+                      .Append(",\"name\":\"").Append(EscapeJs(name)).Append("\"")
+                      .Append(",\"icon\":\"").Append(EscapeJs(icon)).Append("\"")
+                      .Append(",\"color\":\"").Append(EscapeJs(color)).Append("\"}");
                 }
         }
         catch (Exception e)
         {
             WarnOnce("lib", "标签库读取失败: " + e.Message);
         }
-        sb.Append("]}");
+
+        // scenario 段（v3 新增）：页面 id→视图字符串，页面 id 与 cfg 键后缀同为 T1 实测清单
+        sb.Append("],\"scenario\":{");
+        sb.Append("\"Cooking\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewCooking)).Append("\",");
+        sb.Append("\"RatCage\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewRatCage)).Append("\",");
+        sb.Append("\"BrewPanel\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewBrewPanel)).Append("\",");
+        sb.Append("\"DyePanel\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewDyePanel)).Append("\",");
+        sb.Append("\"Compressor\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewCompressor)).Append("\",");
+        sb.Append("\"ToolTable\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewToolTable)).Append("\",");
+        sb.Append("\"Shredder\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewShredder)).Append("\",");
+        sb.Append("\"GreenhouseBuild\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewGreenhouseBuild)).Append("\",");
+        sb.Append("\"Trade\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewTrade)).Append("\",");
+        sb.Append("\"DroneHub\":\"").Append(ViewStr(CabinetEverywherePlugin.ViewDroneHub)).Append("\"");
+        sb.Append("}}");
         return sb.ToString();
     }
 
+    /// <summary>v3：owner 值对象形式 {"t":[tagId...],"kind":"c|f|r"}（Kind 直出 char；材料架伪标签仍追加在 t 内）。</summary>
     private static void AppendOwner(StringBuilder sb, CabinetCatalog.ContainerInst c, int materialTagId)
     {
-        sb.Append('"').Append(c.OwnerId).Append("\":[");
+        sb.Append('"').Append(c.OwnerId).Append("\":{\"t\":[");
         var ids = c.TagIds;
         int n = ids?.Length ?? 0;
         // 材料架伪标签：不能打标签但只能放材料，筛"材料"时照常显示
@@ -171,7 +193,19 @@ internal static class TagFilter
             if (n > 0) sb.Append(',');
             sb.Append(materialTagId);
         }
-        sb.Append(']');
+        sb.Append("],\"kind\":\"").Append(c.Kind).Append("\"}");
+    }
+
+    /// <summary>cfg 枚举 → scenario JSON 值：Food→"food" / Material→"material" / Browser→"browser"。</summary>
+    private static string ViewStr(ConfigEntry<ScenarioView> e)
+    {
+        var v = e?.Value ?? ScenarioView.Browser;
+        return v switch
+        {
+            ScenarioView.Food => "food",
+            ScenarioView.Material => "material",
+            _ => "browser",
+        };
     }
 
     /// <summary>"材料"标签的 ID：标签库 IconKey=="material" 的那条（JS 侧 TAG_NAME_FALLBACK 同款键）。</summary>

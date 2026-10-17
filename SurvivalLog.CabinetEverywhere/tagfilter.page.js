@@ -1,7 +1,7 @@
 (function () {
   if (window.__SLTF__) return;
   var LS_KEY = 'sltf_sel_v2';
-  var S = { sel: 0, owners: {}, lib: [], dim: {}, foodId: 0, frames: [] };
+  var S = { sel: 0, owners: {}, lib: [], dim: {}, foodId: 0, kind: {}, scenario: {}, matId: 0, toolId: 0, frames: [] };
   try { S.sel = parseInt(localStorage.getItem(LS_KEY) || '0', 10) || 0; } catch (e) {}
   // ---- 消息层扣发 + 伪造切换（2026-10-15 七轮，根治到头闪烁）----
   // 官方 A/D 步进切到被藏柜子时会推一条 active=被藏柜 的 BagMsg——放行则页面先渲染它一帧
@@ -14,13 +14,27 @@
   function rebuildLib() {
     S.dim = {};
     S.foodId = 0;
+    S.matId = 0;
+    S.toolId = 0;
     for (var i = 0; i < S.lib.length; i++) {
       var e = S.lib[i];
       S.dim[e.id] = e.dim;
       if (e.dim === 4) S.foodId = e.id; // 全部食物（食物维度的代表标签）
+      // v3：lib 条目带 icon——材料/工具维度代表标签由此求（本任务只算好存着，T6 视图判定消费）
+      if (e.icon === 'material') S.matId = e.id;
+      if (e.icon === 'tool') S.toolId = e.id;
     }
   }
   rebuildLib();
+
+  // v3 归一化：owners 值从 [tagId...] 数组改为 {t:[...],kind:'c'|'f'|'r'} 对象——读取统一走
+  // 本函数，缺省 kind='c'。kind/scenario 本任务（T5）只收不消费，视图判定是 T6 的活。
+  function ownerOf(k) {
+    var o = S.owners[k];
+    if (o == null) return { t: [], kind: 'c' };
+    if (Array.isArray(o)) return { t: o, kind: 'c' }; // 旧 v2 数组形状兜底（C# 已只发 v3，正常不会再来）
+    return { t: o.t || [], kind: o.kind || 'c' };
+  }
 
   // 选中匹配：食物=命中任一 Dim1-4 食物标签；其他=精确命中
   function matchesSel(tags) {
@@ -35,8 +49,9 @@
   }
   function shouldHide(k) {
     if (!S.sel) return false;
-    var t = S.owners[k];
-    return t !== undefined && !matchesSel(t);
+    // 不在扫描名单里的容器（owners 无此键）：v2 语义=不藏（宁可不藏也不错藏）
+    if (S.owners[k] === undefined) return false;
+    return !matchesSel(ownerOf(k).t);
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -539,10 +554,13 @@
   scanFrames();
 
   window.__SLTF__ = {
-    ver: 2,
+    ver: 3, // 数据契约 v3：owners 对象化（t+kind）、lib 带 icon/color、新增 scenario 段（行为仍 v2 等价）
     setData: function (json) {
       S.owners = (json && json.owners) || {};
       S.lib = (json && json.lib) || [];
+      S.scenario = (json && json.scenario) || {}; // v3：页面 id→视图（存好不消费，T6 用）
+      S.kind = {}; // v3：ownerId→kind 平铺（存好不消费，T6 用）
+      for (var k in S.owners) S.kind[k] = ownerOf(k).kind;
       rebuildLib();
       for (var i = 0; i < S.frames.length; i++) { applyFrame(S.frames[i]); refreshDD(S.frames[i]); }
     },
