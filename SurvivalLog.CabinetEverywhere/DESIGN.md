@@ -135,20 +135,25 @@
   列左缘（作者核心诉求「自动居左」；重算时机=MutationObserver 页签栏子树变动 + C# 5s setData
   直推兜底）。挂列容器=位置恒在界面面板内（前两版教训：页签行末被挤变形、body+fixed 视口
   角落跑出面板外）。Vue 重渲染摘除由既有 isConnected/ownerDocument 重建分支兜底（重建后
-  placeDD 重挂重算）。**尺寸/配色克隆官方 `.gbtn.sm`**（2026-10-17 作者反馈四轮：「和旁边排序
-  按钮一样大」——调度机队页签行 sortBagBtn2 实测 63×21）：高 21px/行高 21/字号 12/图标 13px/
-  padding 0 10/圆角 6/字色 #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/max-width 110
-  （icon+label ellipsis+▾）/min-width 40，▾ 箭头改 flex 尾项（padding 0 10 下不压字）。
-  **外观态（触发器基础背景/hover、选项行 .on/:hover）统一由 ensureDDStyle 注入页面的样式表
-  层叠管理，内联 cssText 只留布局/尺寸**——`:hover` 写不了内联，且被状态规则覆盖的属性留在
-  内联会把样式表 :hover 压死（内联层叠恒高于作者样式表，复审 R1 曾因此 hover 无效）。
-- **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；**锚定除 body zoom**（公式
-  照抄官方 showFitTip，见 §2.5.1）：坐标=按钮 rect ÷zoom 下方 +4、溢出视口（innerHeight÷zoom）
-  向上弹、再为负贴 4；行多时 max-height 190px（约 10 行）+滚动（滚动逻辑不变，滚动条值克隆
-  DyePanel `.dd-list`）。尺寸适配小按钮（fix-wave-4）：min-width 104/max-width 150（label
-  ellipsis）/行高 19/字号 11/图标 12/圆角 5/背景 rgba(20,18,14,.96)/描边与按钮同家族
-  rgba(164,181,70,.5)。锚点 `st.dd.getBoundingClientRect()` 与触发器挂载点无关（触发器改挂
-  列容器后零改动）。
+placeDD 重挂重算）。**尺寸/配色克隆官方 `.gbtn.sm`**（2026-10-17 作者反馈四轮：「和旁边排序
+按钮一样大」——调度机队页签行 sortBagBtn2 实测 63×21）：视觉目标高 21/行高 21/字号 12/图标
+13px/padding 0 10/圆角 6/字色 #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/max-width 110
+（icon+label ellipsis+▾）/min-width 40，▾ 箭头改 flex 尾项（padding 0 10 下不压字）。cssText
+写 k=1 基线值，**placeDD 每轮按有效缩放系数 k 反推覆盖**（高/行高/字号/padding/icon/
+max-width=目标/k，fix-wave-5）——任何缩放层级下按钮视觉恒等大（调度机队 css 25→视觉 21）。
+**外观态（触发器基础背景/hover、选项行 .on/:hover）统一由 ensureDDStyle 注入页面的样式表
+层叠管理，内联 cssText 只留布局/尺寸**——`:hover` 写不了内联，且被状态规则覆盖的属性留在
+内联会把样式表 :hover 压死（内联层叠恒高于作者样式表，复审 R1 曾因此 hover 无效）。
+- **弹出层（fix-wave-5 重做挂载/锚定）**：挂**列容器**（ddCol，与触发器同容器同空间——不再挂
+  body+fixed，视口换算整条作废），`position:absolute`、z-index 99999（col 已由 ddCol 补
+  relative，两页 col 均无 overflow 裁切已核 CSS）。锚定与按钮同空间取 rect 差再 ÷k（见
+  §2.5.1）：**向上开优先** `top=(ddr.top-colR.top)/k-ph-4`，放不下（`top+ph>col.clientHeight`）
+  或出顶（`top<0`）转向下 `(ddr.bottom-colR.top)/k+4`；左对齐按钮左缘
+  `left=(ddr.left-colR.left)/k`，右溢出钳制 `col.clientWidth-pw-4`（pw/clientWidth 同为布局
+  空间直接比）。弹层尺寸同步按 k 反推视觉规格（fix-wave-5）：行高 19/行字号 11/icon 12/
+  min-width 104/max-width 150（label ellipsis）/max-height 190（约 10 行）+滚动（滚动逻辑
+  不变，滚动条值克隆 DyePanel `.dd-list`）/圆角 5/背景 rgba(20,18,14,.96)/描边与按钮同家族
+  rgba(164,181,70,.5)。
   TradeUI 是 Vue 页会整条重渲染可能摘掉 popup——只清引用不重建（重开由按钮 click 触发），
   触发器本体走 isConnected 重插。
 - **选项行**：`<button>` + `data-interactive` 双保险（官方 clickThrough selector 收
@@ -157,26 +162,32 @@
   选中 ✓ 标记。任意 mousedown（capture）关闭。
 - 固定视图页（food/material）无任何 UI 注入；cfg 把某页从 browser 改走时自动摘除遗留下拉。
 
-#### 2.5.1 body zoom：rect 与 css 双空间（2026-10-17 fix-wave-4 实证，后续所有 UI 注入任务的硬知识）
+#### 2.5.1 有效缩放系数 k：两页缩放层级不同的实证 + 按钮自比值通用解（2026-10-17 fix-wave-4/5 实证，后续所有 UI 注入任务的硬知识）
 
-- 游戏 WebUI 各页面 `body` 带 CSS `zoom`（视口适配；本机实测 ≈0.845，随分辨率/窗口变化）。
-  **`getBoundingClientRect` 等 rect 是缩放后的视觉像素，`element.style` 写的 left/top 是缩放前
-  的 css 布局像素——同一坐标在两空间相差 1/zoom**。rect 直接写进 style 会让元素渲染位置
-  偏移（实证：DroneHub 弹层 css.top=548 渲染在 y=463，548×0.845≈463；Trade 页避让偏移未除
-  zoom 造成与旁列按钮 ~4px 视觉重叠）。
-- **官方先例**：`webui-core.js` 的 `showFitTip`（ellipsis 气泡）——官方注释「body 可能整体缩放：
-  元素矩形是缩放后的像素，气泡挂在 body 下要换回缩放前的坐标」，定位公式
-  `top = r.bottom / zoom + 4`、溢出判定 `window.innerHeight / zoom`、翻转 `r.top / zoom - th - 4`。
-  本 mod 弹层锚定逐行照抄。
-- **本 mod 三处换算点**（fix-wave-4 起全部已除）：① 弹层 `togglePop` 锚定（rect/zm+4、视口
-  innerWidth/innerHeight 同除、左缘 rect.left/zm 钳制）；② `placeDD` 避让偏移
-  （`(colR.bottom - r.top)/zm + 8`、`(r.right - colR.left)/zm + 6`）；③ 触发器本体挂列容器
-  `position:absolute`（left/bottom 全程 css 布局空间自洽，无需换算）。
-- **不除的三处（勿改）**：placeDD 的 band/nearLeft/wide 判定（colR 与 r 同为 rect 空间，比较
-  自洽）；默认贴边 left=6/bottom=6（小值视觉差 ~1px 无感，保持简单）；弹层自身尺寸
-  （offsetHeight 等——弹层是 body 子元素，其布局值本就在 css 空间）。
-- **规则**：凡「rect 读出来 → 写进 style」必须 ÷zoom；「rect 与 rect 比较」不用除；css 定量值
-  勿与 rect 数值混算（fix-wave-4 起弹层 min/max-width 全用固定 css 值，不再 Math.max 取 rect.width）。
+- **双空间问题**：`getBoundingClientRect` 等 rect 是缩放后的**视觉像素**，`element.style` 写的
+  left/top/height 是缩放前的 **css 布局像素**——同一坐标在两空间相差 1/缩放系数。rect 直接写进
+  style 会让元素渲染位置/尺寸偏移（fix-wave-4 实证：DroneHub 弹层 css.top=548 渲染在 y=463）。
+- **fix-wave-5 实证：缩放挂哪层两页不同**——调度机队（DroneHub）=body 带 CSS `zoom`（本机
+  ≈0.845，`getComputedStyle(body).zoom` 测得到）；**交易页（Trade）=祖先层（#app 链）缩放
+  ≈0.62、body zoom=1**——fix-wave-4 只读 body zoom 在交易页失效（按钮 css 高 21 渲染为 13、
+  避让偏移除错系数→与 bt-view-btn 视觉重叠、弹层锚定同错）。结论：**检测缩放挂哪层不可靠**。
+- **通用解（k 方案）**：不检测挂哪层，用**按钮自身比值**测作用于它的有效系数：
+  `k = dd.getBoundingClientRect().height ÷ dd 的 css 高`（css 高是我们写的内联 px，布局空间；
+  rect 是全部祖先累计缩放后的视觉 px，比值即有效系数）。分母用 placeDD 记录的当前 css 高
+  （`__sltfCssH`，初始 21）而非常量——按 k 反推写 21/k 后 rect→21，若仍除 21 则 k 回摆→1、
+  下轮又写回 21，**尺寸在两值间振荡**。按钮未渲染（rect 高 0）时回退
+  `parseFloat(getComputedStyle(body).zoom)||1`（仅覆盖 body 层页；祖先层页得 1，下一轮
+  refreshDD≈5s 自愈）。自比值对加性偏差（边框等）自带收敛到视觉目标。
+- **视觉规格按 k 反推**：按钮（高 21/字号 12/pad 横 10/icon 13/max-width 110）与弹层（行高
+  19/行字号 11/icon 12/min 104/max 150/max-height 190）的 css 值=视觉目标÷k，每轮直写
+  （幂等）——任何缩放层级下视觉恒等大；调度机队侧 css 25→视觉 21（fix-wave-4 时代的 17.7
+  一并修正）。按钮显式 `box-sizing:border-box`（rect 量的高=写的高，比值干净）。
+- **弹层搬进列容器（单一 k 管到底）**：弹层不再挂 body+fixed（那要管视口换算），改挂 ddCol
+  列容器与按钮同空间，`position:absolute`，锚定全用同空间 rect 差再 ÷k（公式见 §2.5 弹出层）；
+  ph/pw 与 col.clientWidth/clientHeight 本就是布局空间，同空间比较无需再除。
+- **规则**：凡「rect 读出来 → 写进 style」必须 ÷k；「rect 与 rect 比较」不用除；css 定量值
+  勿与 rect 数值混算；官方先例 `webui-core.js` showFitTip 的 body zoom 公式仅适用于「缩放确实
+  挂在 body」的页面（fix-wave-4 的教训——挂祖先层时该公式静默失效）。
 
 ### 2.6 代码结构
 
@@ -286,6 +297,15 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
     （旧版即有，克隆样式时未消除）。修法=**外观态全部移入 ensureDDStyle 样式表**（触发器基础
     背景/hover + 选项行基础/.on/:hover 同根顺修——选项行内联背景/文字色同样压死自己的 :hover），
     内联只留布局/尺寸，层叠自然生效不用 !important。
+  - **缩放检测通用化（fix-wave-5，作者反馈五轮）**：CDP 活体实锤**两页缩放层级不同**——调度
+    机队=body zoom（≈0.845，fix-wave-4 的 body zoom 检测恰好测对）；**交易页=祖先层（#app 链）
+    缩放 ≈0.62、body zoom=1**——body zoom 单点检测在交易页静默失效（按钮 css 高 21 渲染 13、
+    避让偏移除错系数与 bt-view-btn 重叠、弹层锚定同错）。修法=**不检测挂哪层，用按钮自身
+    比值**：`k = 按钮 rect.height ÷ 其 css 高`（内联写的 px，分母用 placeDD 记录的当前值而非
+    常量 21，防反推后比值回摆振荡；未渲染回退 body zoom，下一轮 5s 自愈）；placeDD 避让偏移
+    全部 ÷k；按钮/弹层视觉规格（21/12/10/13/110、19/11/12/104/150/190）按 k 反推 css 值每轮
+    直写——任何层级下视觉恒等大；**弹层搬进列容器**（ddCol 公共函数，与按钮同空间）absolute
+    锚定=同空间 rect 差 ÷k 单一系数管到底，body+fixed 时代的视口换算整条作废（§2.5、§2.5.1）。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 
