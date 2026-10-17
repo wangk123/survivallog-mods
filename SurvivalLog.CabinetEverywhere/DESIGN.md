@@ -135,13 +135,19 @@
   列左缘（作者核心诉求「自动居左」；重算时机=MutationObserver 页签栏子树变动 + C# 5s setData
   直推兜底）。挂列容器=位置恒在界面面板内（前两版教训：页签行末被挤变形、body+fixed 视口
   角落跑出面板外）。Vue 重渲染摘除由既有 isConnected/ownerDocument 重建分支兜底（重建后
-  placeDD 重挂重算）。**尺寸**对齐旁列 BetterTrade 排序按钮（实测 sort-btn 59×18）：高 18px/
-  字号 10/图标 11px/padding 0 8/圆角 3/max-width 88（label ellipsis）/min-width 40，▾ 箭头改
-  flex 尾项（padding 0 8 下不压字）。视觉克隆官方 DyePanel `.dd-btn` 神韵（半透明底色
-  rgba(28,24,18,.88)），hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联）。
-- **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；坐标=按钮 rect 下方、溢出
-  视口向上弹、再放不下贴底；行多时 max-height+滚动（滚动条值克隆 DyePanel `.dd-list`）。
-  锚点 `st.dd.getBoundingClientRect()` 与触发器挂载点无关（触发器改挂列容器后零改动）。
+  placeDD 重挂重算）。**尺寸/配色克隆官方 `.gbtn.sm`**（2026-10-17 作者反馈四轮：「和旁边排序
+  按钮一样大」——调度机队页签行 sortBagBtn2 实测 63×21）：高 21px/行高 21/字号 12/图标 13px/
+  padding 0 10/圆角 6/字色 #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/max-width 110
+  （icon+label ellipsis+▾）/min-width 40，▾ 箭头改 flex 尾项（padding 0 10 下不压字）。hover
+  提亮底色 rgba(255,255,255,.06)——hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联，
+  ensureDDStyle 样式表通道即 hover 实现，无需 mouseenter 监听）。
+- **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；**锚定除 body zoom**（公式
+  照抄官方 showFitTip，见 §2.5.1）：坐标=按钮 rect ÷zoom 下方 +4、溢出视口（innerHeight÷zoom）
+  向上弹、再为负贴 4；行多时 max-height 190px（约 10 行）+滚动（滚动逻辑不变，滚动条值克隆
+  DyePanel `.dd-list`）。尺寸适配小按钮（fix-wave-4）：min-width 104/max-width 150（label
+  ellipsis）/行高 19/字号 11/图标 12/圆角 5/背景 rgba(20,18,14,.96)/描边与按钮同家族
+  rgba(164,181,70,.5)。锚点 `st.dd.getBoundingClientRect()` 与触发器挂载点无关（触发器改挂
+  列容器后零改动）。
   TradeUI 是 Vue 页会整条重渲染可能摘掉 popup——只清引用不重建（重开由按钮 click 触发），
   触发器本体走 isConnected 重插。
 - **选项行**：`<button>` + `data-interactive` 双保险（官方 clickThrough selector 收
@@ -149,6 +155,27 @@
   兜底与 BackpackUI.html 副本同步维护）+ 官方色（lib.color → currentColor 控 svg 色）+
   选中 ✓ 标记。任意 mousedown（capture）关闭。
 - 固定视图页（food/material）无任何 UI 注入；cfg 把某页从 browser 改走时自动摘除遗留下拉。
+
+#### 2.5.1 body zoom：rect 与 css 双空间（2026-10-17 fix-wave-4 实证，后续所有 UI 注入任务的硬知识）
+
+- 游戏 WebUI 各页面 `body` 带 CSS `zoom`（视口适配；本机实测 ≈0.845，随分辨率/窗口变化）。
+  **`getBoundingClientRect` 等 rect 是缩放后的视觉像素，`element.style` 写的 left/top 是缩放前
+  的 css 布局像素——同一坐标在两空间相差 1/zoom**。rect 直接写进 style 会让元素渲染位置
+  偏移（实证：DroneHub 弹层 css.top=548 渲染在 y=463，548×0.845≈463；Trade 页避让偏移未除
+  zoom 造成与旁列按钮 ~4px 视觉重叠）。
+- **官方先例**：`webui-core.js` 的 `showFitTip`（ellipsis 气泡）——官方注释「body 可能整体缩放：
+  元素矩形是缩放后的像素，气泡挂在 body 下要换回缩放前的坐标」，定位公式
+  `top = r.bottom / zoom + 4`、溢出判定 `window.innerHeight / zoom`、翻转 `r.top / zoom - th - 4`。
+  本 mod 弹层锚定逐行照抄。
+- **本 mod 三处换算点**（fix-wave-4 起全部已除）：① 弹层 `togglePop` 锚定（rect/zm+4、视口
+  innerWidth/innerHeight 同除、左缘 rect.left/zm 钳制）；② `placeDD` 避让偏移
+  （`(colR.bottom - r.top)/zm + 8`、`(r.right - colR.left)/zm + 6`）；③ 触发器本体挂列容器
+  `position:absolute`（left/bottom 全程 css 布局空间自洽，无需换算）。
+- **不除的三处（勿改）**：placeDD 的 band/nearLeft/wide 判定（colR 与 r 同为 rect 空间，比较
+  自洽）；默认贴边 left=6/bottom=6（小值视觉差 ~1px 无感，保持简单）；弹层自身尺寸
+  （offsetHeight 等——弹层是 body 子元素，其布局值本就在 css 空间）。
+- **规则**：凡「rect 读出来 → 写进 style」必须 ÷zoom；「rect 与 rect 比较」不用除；css 定量值
+  勿与 rect 数值混算（fix-wave-4 起弹层 min/max-width 全用固定 css 值，不再 Math.max 取 rect.width）。
 
 ### 2.6 代码结构
 
@@ -245,6 +272,14 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
     被作者实锤跑出界面面板外——重做为 placeDD 列容器锚定（高>300 祖先）+ 测量避让
     （窄左底按钮让位/宽底栏上移/外来按钮卸载自动贴边，DD_AVOID 阈值常量），尺寸对齐旁列
     BetterTrade 排序按钮 59×18（§2.5）；CDP --dd 断言同步改为 absolute+列容器+贴列左下。
+  - **筛选按钮/弹层 zoom 适配（fix-wave-4，作者反馈四轮）**：CDP 活体实锤游戏页面 body 带
+    CSS zoom（本机 ≈0.845）——rect（视觉空间）与 css 定位（布局空间）相差 1/zoom，官方
+    tooltip（webui-core.js showFitTip）定位即 `r.bottom / zoom + 4`。弹层锚定与 placeDD 避让
+    偏移全部照官方公式除 zoom（弹层贴身按钮下方，DroneHub「css.top=548 渲染在 y=463」与
+    Trade 页 ~4px 重叠两症状根除）；按钮尺寸/配色克隆官方 `.gbtn.sm`（实测 63×21：高 21/
+    字号 12/图标 13/padding 0 10/圆角 6/边框 rgba(164,181,70,.5)/背景透明，hover 提亮底色）；
+    弹层尺寸适配小按钮（行高 19/字号 11/图标 12/min 104/max 150/max-height 190≈10 行/
+    圆角 5/背景 rgba(20,18,14,.96)）。机制与不除项记录 §2.5.1（后续所有 UI 注入任务的硬知识）。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 

@@ -508,7 +508,7 @@
     } catch (e) {}
     return TAG_ICONS_FALLBACK[key] || TAG_ICONS_FALLBACK.misc;
   }
-  // 官方 svg 字符串补齐尺寸/填色：默认 14x14、触发器传 11（对齐 sort-btn 59x18 配套）；根节点无 fill 时补 fill="currentColor"
+  // 官方 svg 字符串补齐尺寸/填色：默认 14x14、触发器传 13（对齐 gbtn.sm 63×21 配套）；根节点无 fill 时补 fill="currentColor"
   //（由所在元素 style.color 控色=官方 BackpackUI 同款机制；子路径自带 fill="#fff" 等保持不动）
   function iconSvg(html, size) {
     var s = String(html || '');
@@ -524,13 +524,14 @@
     for (var i = 0; i < S.lib.length; i++) if (S.lib[i].id === sel) return S.lib[i];
     return null;
   }
-  // hover/滚动条需样式表（内联样式写不了 :hover），随触发器一次性注入页面 head；
-  // 值克隆官方 DyePanel 的 .dd-btn:hover / .dd-it:hover / .dd-list::-webkit-scrollbar（快照直读）
+  // hover/滚动条需样式表（内联样式写不了 :hover——本表就是 hover 通道，无需 mouseenter 监听），
+  // 随触发器一次性注入页面 head；触发器 hover=克隆官方 gbtn.sm 语义（仅提亮底色一档，
+  // 2026-10-17 fix-wave-4），选项行/滚动条值克隆官方 DyePanel 的 .dd-it:hover / .dd-list::-webkit-scrollbar（快照直读）
   function ensureDDStyle(doc) {
     if (doc.getElementById('sltf-dd-style')) return;
     var s = doc.createElement('style');
     s.id = 'sltf-dd-style';
-    s.textContent = '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.32);}'
+    s.textContent = '.sltf-dd-btn:hover{background:rgba(255,255,255,.06);}'
       + '.sltf-dd-opt:hover{background:rgba(255,255,255,.08);color:#fff;}'
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
@@ -547,6 +548,9 @@
   // relative（仅 computed static 才设，幂等）。随后测量列底带内的元素做避让：宽底栏（负重条）
   // → 排它上方；窄左底按钮（外来 mod 的视图/排序按钮）→ 排它右侧——按钮卸载后带内空了、
   // 下次重算自动回贴列左缘。popup 锚点走 getBoundingClientRect（与挂载点无关），不受影响。
+  // body zoom（2026-10-17 fix-wave-4）：rect=视觉空间、style 写的 left/bottom=布局空间，两空间差
+  // 1/zoom——避让偏移（rect 读出→写进 style）必须 /zm；band 判定（colR vs r 同为 rect）不除；
+  // 默认贴边 6px 小值不除（视觉差 ~1px 无感，保持简单）。详见 DESIGN §2.5.1。
   function placeDD(st, dd, c) {
     try {
       if (!dd || !c || !c.bar) return;
@@ -560,6 +564,9 @@
       var view = st.doc.defaultView;
       if (view && col !== st.doc.body && view.getComputedStyle(col).position === 'static') col.style.position = 'relative'; // body 不动（其初始包含块语义已够，改根布局风险大）
       if (dd.parentElement !== col) col.appendChild(dd); // 挂列容器（幂等重挂；Vue 重渲染摘除由 isConnected 重建分支兜底）
+      // rect（视觉）→ css（布局）换算系数：官方 showFitTip 同款（webui-core.js，官方注释
+      // 「body 可能整体缩放：元素矩形是缩放后的像素……要换回缩放前的坐标」）
+      var zm = (view && parseFloat(view.getComputedStyle(st.doc.body).zoom)) || 1;
       var left = 6, bottom = 6; // 默认贴列左下缘
       var colR = col.getBoundingClientRect();
       var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
@@ -567,11 +574,11 @@
         var k = kids[i];
         if (k === dd) continue;
         var r = k.getBoundingClientRect();
-        if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue; // 只看列底带内的元素
+        if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue; // 只看列底带内的元素（rect 同空间比较，不除 zoom）
         if (r.width >= DD_AVOID.wide) {
-          bottom = Math.max(bottom, (colR.bottom - r.top) + 8); // 宽底栏（负重条类）→ 排它上方
+          bottom = Math.max(bottom, (colR.bottom - r.top) / zm + 8); // 宽底栏（负重条类）→ 排它上方（偏移写 css：rect 差 /zm）
         } else if (r.left < colR.left + DD_AVOID.nearLeft) {
-          left = Math.max(left, (colR.right < 0 ? 0 : r.right - colR.left) + 6); // 窄左底按钮 → 排它右侧
+          left = Math.max(left, (colR.right < 0 ? 0 : (r.right - colR.left) / zm) + 6); // 窄左底按钮 → 排它右侧（同 /zm）
         }
       }
       dd.style.left = left + 'px';
@@ -582,7 +589,10 @@
   }
 
   // 弹出层：挂 st.doc.body（position:fixed 防 overflow 裁切），坐标=按钮 rect 下方、溢出视口则向上弹；
-  // 行多时 max-height+滚动（容器值克隆 DyePanel .dd-list）。选项行/触发器都是 <button>
+  // 行多时 max-height+滚动（滚动逻辑不变，值 2026-10-17 fix-wave-4 适配小按钮：min 104/max 150/
+  // max-height 190≈10 行）。锚定公式**照抄官方 showFitTip**（webui-core.js）：rect（视觉空间）
+  // /zm 换回 css（布局空间），视口宽高同样 innerWidth/zm——弹层尺寸（offsetHeight 等，body 子元素）
+  // 本就是布局空间，无需再除。选项行/触发器都是 <button>
   //（官方 clickThrough selector 收 button/[data-interactive]；选项行再加 data-interactive 双保险，照 brief）
   function togglePop(st) {
     try {
@@ -595,8 +605,8 @@
       var pop = st.doc.createElement('div');
       pop.className = 'sltf-dd-pop';
       pop.style.cssText = 'position:fixed;z-index:99999;visibility:hidden;'
-        + 'min-width:' + Math.max(120, rect.width) + 'px;max-width:260px;max-height:266px;overflow-y:auto;'
-        + 'padding:3px;border-radius:6px;background:#1b1612;border:1px solid rgba(255,255,255,.2);'
+        + 'min-width:104px;max-width:150px;max-height:190px;overflow-y:auto;'
+        + 'padding:3px;border-radius:5px;background:rgba(20,18,14,0.96);border:1px solid rgba(164,181,70,0.5);'
         + 'box-shadow:0 6px 18px rgba(0,0,0,.65);';
       function addRow(id, name, lib) {
         var on = id === sel;
@@ -604,14 +614,14 @@
         b.type = 'button';
         b.className = 'sltf-dd-opt' + (on ? ' on' : '');
         b.setAttribute('data-interactive', '');
-        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:26px;padding:0 7px;margin:0;'
-          + 'border:0;background:transparent;border-radius:4px;font-family:inherit;font-size:12px;line-height:1;'
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:19px;padding:0 8px;margin:0;'
+          + 'border:0;background:transparent;border-radius:4px;font-family:inherit;font-size:11px;line-height:1;'
           + 'white-space:nowrap;cursor:pointer;text-align:left;color:' + (on ? '#fff' : '#d6cdc2') + ';'
           + (on ? 'font-weight:bold;' : '');
         var ico = st.doc.createElement('span');
-        ico.style.cssText = 'display:flex;width:14px;height:14px;flex:0 0 auto;'
+        ico.style.cssText = 'display:flex;width:12px;height:12px;flex:0 0 auto;'
           + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
-        ico.innerHTML = iconSvg(lib ? tagIcon(lib.icon) : (id === 'other' ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG));
+        ico.innerHTML = iconSvg(lib ? tagIcon(lib.icon) : (id === 'other' ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), 12);
         var txt = st.doc.createElement('span');
         txt.style.cssText = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;';
         txt.textContent = name;
@@ -630,14 +640,18 @@
       var opts = options();
       for (var i = 0; i < opts.length; i++) addRow(opts[i].id, opts[i].name, selById(opts[i].id));
       st.doc.body.appendChild(pop);
-      // 定位：先挂 body 量尺寸（visibility:hidden 防跳），下方优先、溢出向上、再放不下贴底
-      var vw = st.doc.defaultView ? st.doc.defaultView.innerWidth : 0;
-      var vh = st.doc.defaultView ? st.doc.defaultView.innerHeight : 0;
+      // 定位：先挂 body 量尺寸（visibility:hidden 防跳），下方优先、溢出向上、再放不下贴底。
+      // 官方公式照抄（showFitTip）：全部坐标 /zm 换回布局空间，视口 innerWidth/Height 同除——
+      // 不除则 css.top 偏大 1/0.845≈18%（DroneHub 实测 css.top=548 渲染在 y=463 的根因）
+      var dv = st.doc.defaultView;
+      var zm = (dv && parseFloat(dv.getComputedStyle(st.doc.body).zoom)) || 1;
+      var vw = dv ? dv.innerWidth / zm : 0;
+      var vh = dv ? dv.innerHeight / zm : 0;
       var ph = pop.offsetHeight, pw = pop.offsetWidth;
-      var top = rect.bottom + 3;
-      if (top + ph > vh - 4) top = rect.top - ph - 3;
-      if (top < 0) top = Math.max(0, vh - ph - 4);
-      var left = Math.min(Math.max(4, rect.left), Math.max(4, vw - pw - 4));
+      var top = rect.bottom / zm + 4;
+      if (top + ph > vh) top = rect.top / zm - ph - 4;
+      if (top < 0) top = 4;
+      var left = Math.min(Math.max(4, rect.left / zm), Math.max(4, vw - pw - 4));
       pop.style.left = left + 'px';
       pop.style.top = top + 'px';
       pop.style.visibility = '';
@@ -673,18 +687,19 @@
         ensureDDStyle(st.doc);
         dd = st.doc.createElement('button');
         dd.type = 'button'; dd.className = 'sltf-dd-btn'; dd.title = '按标签筛选容器页签';
-        // 视觉克隆官方 DyePanel .dd-btn 神韵、尺寸对齐旁列 BetterTrade 排序按钮（实测 sort-btn
-        // 59×18）：高 18/字号 10/图标 11/padding 0 8/圆角 3/max-width 88（label ellipsis）/min-width 40。
-        // ▾ 箭头=同款 CSS 三角、flex 尾项（非绝对定位，padding 0 8 下不再压字）；hover 见 ensureDDStyle。
+        // 视觉克隆官方 .gbtn.sm（2026-10-17 fix-wave-4，作者要求「和旁边排序按钮一样大」——调度
+        // 机队页签行 sortBagBtn2 实测 63×21）：高 21/行高 21/字号 12/padding 0 10/圆角 6/字色
+        // #e8ecc8/背景透明/边框 1px rgba(164,181,70,.5)/图标 13/max-width 110（icon+label
+        // ellipsis+▾）/min-width 40。hover 提亮底色走 ensureDDStyle 的 :hover 样式表通道。
+        // ▾ 箭头=CSS 三角、flex 尾项（非绝对定位，padding 0 10 下不压字）。
         // left/bottom 不在 cssText 里——落位全部由 placeDD 测量后写入（每次重算，勿写死）
         dd.style.cssText = 'position:absolute;z-index:99998;'
-          + 'height:18px;min-width:40px;max-width:88px;margin:0;padding:0 8px;'
-          + 'font-size:10px;font-family:inherit;line-height:1;cursor:pointer;'
-          + 'color:#e8dcc8;background:rgba(28,24,18,0.88);border:1px solid rgba(255,193,7,0.35);border-radius:3px;'
-          + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;'
-          + 'transition:background .15s,border-color .15s;';
+          + 'height:21px;line-height:21px;min-width:40px;max-width:110px;margin:0;padding:0 10px;'
+          + 'font-size:12px;font-family:inherit;cursor:pointer;'
+          + 'color:#e8ecc8;background:rgba(0,0,0,0);border:1px solid rgba(164,181,70,0.5);border-radius:6px;'
+          + 'display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;';
         dd.addEventListener('click', function (e) { e.stopPropagation(); togglePop(st); });
-        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:11px;height:11px;flex:0 0 auto"></span>'
+        dd.innerHTML = '<span class="sltf-dd-ico" style="display:flex;width:13px;height:13px;flex:0 0 auto"></span>'
           + '<span class="sltf-dd-txt" style="min-width:0;overflow:hidden;text-overflow:ellipsis"></span>'
           + '<span style="flex:0 0 auto;width:0;height:0;pointer-events:none;'
           + 'border-left:3px solid transparent;border-right:3px solid transparent;border-top:4px solid #b9b0a6"></span>';
@@ -695,7 +710,7 @@
       // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
       var lib = selById(sel);
       var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
-      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), 11);
+      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), 13);
       var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
