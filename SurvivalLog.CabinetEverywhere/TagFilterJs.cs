@@ -1,4 +1,4 @@
-namespace SurvivalLog.CabinetTagFilter;
+namespace SurvivalLog.CabinetEverywhere;
 
 /// <summary>
 /// 标签筛选的 JS 引导脚本（运行在 Root.html 主帧，经 IWebView.ExecuteJavaScript 注入）。

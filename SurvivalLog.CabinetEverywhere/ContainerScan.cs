@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using SurvivalLog.ModShared;
 
-namespace SurvivalLog.CabinetTagFilter;
+namespace SurvivalLog.CabinetEverywhere;
 
 /// <summary>
 /// 家中容器枚举（筛选用）：单遍直扫 AgentManager.agentList，凡 BagId&gt;0 的**储物**家具
@@ -93,12 +93,12 @@ internal static class ContainerScan
             if (!_loggedOnce && _home.Count > 0)
             {
                 _loggedOnce = true;
-                CabinetTagFilterPlugin.Log.LogInfo("[CabinetTagFilter] 家中容器 " + _home.Count + " 个进入筛选名单（含冰箱/柜子/置物架/材料架）");
+                CabinetEverywherePlugin.Log.LogInfo("[CabinetEverywhere.筛选] 家中容器 " + _home.Count + " 个进入筛选名单（含冰箱/柜子/置物架/材料架）");
             }
         }
         catch (Exception e)
         {
-            CabinetTagFilterPlugin.Log.LogWarning("[CabinetTagFilter] 容器枚举失败: " + e.Message);
+            CabinetEverywherePlugin.Log.LogWarning("[CabinetEverywhere.筛选] 容器枚举失败: " + e.Message);
         }
     }
 

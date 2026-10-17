@@ -43,6 +43,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
     internal static ConfigEntry<bool> Verbose;
     internal static ConfigEntry<bool> ListOnReady;
     internal static ConfigEntry<bool> DumpFurniture;
+    internal static ConfigEntry<bool> FilterEnable;
 
     internal static volatile bool Rerun = true;
 
@@ -66,6 +67,9 @@ public sealed class CabinetEverywherePlugin : BasePlugin
             "配置表就绪时在日志列出发现的全部柜子家具名单（首次核对用，可关）。");
         DumpFurniture = Config.Bind("Debug", "DumpFurniture", false,
             "置 true 后（游戏运行中改 cfg 约 5 秒内生效）在日志列出家中全部带包家具明细：owner/配置/名称/锁定态/是否入选。排查'新柜子不生效'用，平时关。");
+        FilterEnable = Config.Bind("Filter", "Enable", true,
+            "标签筛选总开关：关闭后不注入筛选（场景视图也一并失效，容器页签全部显示）。");
+        FilterEnable.SettingChanged += (object s, System.EventArgs e) => { Rerun = true; };
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         IncludeFurnitureIds.SettingChanged += reload;
@@ -128,6 +132,13 @@ internal sealed class AccessTicker : MonoBehaviour
             // 2) 白名单注入（工作台/无人机交易/无人机站/粉碎机/温室）
             if (CabinetEverywherePlugin.EnableCraftSource.Value)
                 CraftSourceInjector.Ensure(cfgIds);
+
+            // 4) 筛选：容器枚举 + JS 注入/喂标签数据（原独立 Ticker 的 5s 周期，幂等）
+            if (CabinetEverywherePlugin.FilterEnable.Value)
+            {
+                ContainerScan.Refresh();
+                TagFilter.Tick();
+            }
         }
 
         // 3) 页签注入（烹饪/老鼠笼/酿酒）

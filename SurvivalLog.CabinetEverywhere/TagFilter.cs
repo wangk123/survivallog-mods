@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Il2CppInterop.Runtime;
 
-namespace SurvivalLog.CabinetTagFilter;
+namespace SurvivalLog.CabinetEverywhere;
 
 /// <summary>
 /// 筛选通道：读容器标签（ContainerScan）+ 标签库（Config_FurnitureTag），经
@@ -65,16 +65,16 @@ internal static class TagFilter
                 new Action<string>(r =>
                 {
                     var ok = r != null && r.StartsWith("OK", StringComparison.Ordinal);
-                    CabinetTagFilterPlugin.Log.LogInfo(
-                        "[CabinetTagFilter] 同源探针: " + r +
+                    CabinetEverywherePlugin.Log.LogInfo(
+                        "[CabinetEverywhere.筛选] 同源探针: " + r +
                         (ok ? "" : "（非 OK：Root↔iframe 无 DOM 通道，筛选不生效，需换方案）"));
                 }));
             web.ExecuteJavaScript(js, cb);
         }
         catch (Exception e)
         {
-            CabinetTagFilterPlugin.Log.LogInfo(
-                "[CabinetTagFilter] 探针回调委托不可用（不影响功能，仅少了日志回读）: " + e.Message);
+            CabinetEverywherePlugin.Log.LogInfo(
+                "[CabinetEverywhere.筛选] 探针回调委托不可用（不影响功能，仅少了日志回读）: " + e.Message);
         }
     }
 
@@ -198,6 +198,6 @@ internal static class TagFilter
     private static void WarnOnce(string key, string msg)
     {
         if (Warned.Add(key))
-            CabinetTagFilterPlugin.Log.LogWarning("[CabinetTagFilter] " + msg);
+            CabinetEverywherePlugin.Log.LogWarning("[CabinetEverywhere.筛选] " + msg);
     }
 }
