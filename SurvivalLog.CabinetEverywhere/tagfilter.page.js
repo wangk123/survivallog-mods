@@ -622,49 +622,50 @@
   // 字号 12/pad 横 10/icon 13/max-width 110，与官方按钮视觉等大）按 k 反推 css 值
   //（=目标/k）每轮直写（幂等：同值重写浏览器零布局变更，值变才写的门控不值得多一坨状态）。
   // 调度机队侧效果：css 25 → 视觉 21（此前 17.7，更贴官方 21）。详见 DESIGN §2.5.1。
+  // 触发器落位（fix-wave-8 定稿：**行内插入，弃一切坐标计算**）。四轮实测教训链：绝对定位自算
+  // 偏移——视口角落跑出面板(w2)→列容器+避让(w3)→zoom 换算(w4/w5)→自家弹层污染避让/初始重叠/
+  // 竖向差 6px(w6-w8)——坐标路每步都在错。正解=进邻居的行里当普通元素：交易页=插在 BetterTrade
+  // 视图按钮右侧（同 row，行内 flex 自动竖向对齐，样式照抄它）；调度机队=插进负重条行
+  //（display:flex gap:10px 实证）最左，样式抄官方一键整理。行内排布天然齐平/天然跟随缩放/
+  // 邻居卸载后行自动收拢（"自动居左"免费获得）。k 只留给弹层锚定与 maxWidth 折算。
   function placeDD(st, dd, c) {
     try {
       if (!dd) return;
-      var col = ddCol(st, c);
-      if (!col) return;
-      if (dd.parentElement !== col) col.appendChild(dd); // 挂列容器（幂等重挂；Vue 重渲染摘除由 isConnected 重建分支兜底）
+      var col = ddCol(st, c); // 弹层锚定空间；无锚行时的兜底挂点
       var view = st.doc.defaultView;
       var k = ddScaleK(st, dd);
-      dd.__sltfK = k; // 供 refreshDD/togglePop 用（定位换算）
-      // 先测避让（band 判定 colR vs r 同为 rect 不除 k；偏移写 css 才 ÷k）。
-      // **自家弹层元素必须排除**——弹层选项行就落在列底带内，不排除的话弹层一开，下一次
-      // refreshDD 就把按钮"避让"到自己的选项行右侧、关掉又挪回（"点一下换一个位置"根因）。
-      // 窄左底邻居同时就是**样式捐献者**（照抄对象）。
-      var left = 6, bottom = 6, nbH = 0, donor = null;
-      var colR = col.getBoundingClientRect();
-      var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
-      for (var i = 0; i < kids.length; i++) {
-        var el = kids[i];
-        if (el === dd) continue;
-        if (el.closest && el.closest('.sltf-dd-pop')) continue; // 自家弹层（含选项行）不参与避让
-        var r = el.getBoundingClientRect();
-        if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue; // 只看列底带内的元素（rect 同空间比较，不除 k）
-        if (r.width >= DD_AVOID.wide) {
-          bottom = Math.max(bottom, (colR.bottom - r.top) / k + 8); // 宽底栏（负重条类）→ 排它上方（偏移写 css：rect 差 ÷k）
-        } else if (r.left < colR.left + DD_AVOID.nearLeft) {
-          left = Math.max(left, (colR.right < 0 ? 0 : (r.right - colR.left) / k) + 6); // 窄左底按钮 → 排它右侧（同 ÷k）
-          if (r.height > nbH) { nbH = r.height; donor = el; } // 旁边按钮=样式捐献者（照抄）
+      dd.__sltfK = k;
+      // 找锚行与捐献者：列底带内可见窄按钮（旁 mod 注入）=捐献者，其父行=锚行；
+      // 无窄按钮则负重条行（宽 cap）做锚行、样式捐献者另找可见的官方 .sortb
+      var donor = null, anchorRow = null, capEl = null;
+      var colR = col ? col.getBoundingClientRect() : null;
+      if (colR) {
+        var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
+        for (var i = 0; i < kids.length; i++) {
+          var el = kids[i];
+          if (el === dd) continue;
+          if (el.closest && el.closest('.sltf-dd-pop')) continue; // 自家弹层元素不参与（其选项行在底带会被误当邻居，w6 根因）
+          var r = el.getBoundingClientRect();
+          if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue;
+          if (r.width >= DD_AVOID.wide) { if (!capEl) capEl = el; }
+          else if (r.left < colR.left + DD_AVOID.nearLeft) { donor = el; } // 窄左底按钮=捐献者（同页同类取其一即可）
         }
       }
-      // 捐献者兜底：列底带没有旁按钮时（调度机队），抄官方页签行的排序按钮——**只认可见的**
-      //（标题栏收起时 sortBagBtn1 rect 为 0，隐藏按钮抄回来的样式不可信）
-      if (!donor) {
-        var cands = col.querySelectorAll('.sortb, .gbtn');
-        for (var ci = 0; ci < cands.length; ci++) {
-          var cr = cands[ci].getBoundingClientRect();
-          if (cr.width > 4 && cr.height > 4) { donor = cands[ci]; break; }
+      if (donor) anchorRow = donor.parentElement;
+      else {
+        if (!capEl && col) {
+          var caps = col.querySelectorAll('[class*=cap], [id*=cap]');
+          for (var ci = 0; ci < caps.length; ci++) { var cr2 = caps[ci].getBoundingClientRect(); if (cr2.width > 100) { capEl = caps[ci]; break; } }
         }
-        var sb2 = st.doc.getElementById('sortBagBtn2');
-        if (!donor && sb2 && sb2.getBoundingClientRect().width > 4) donor = sb2;
+        if (capEl) anchorRow = capEl;
+        if (col) {
+          var cands = col.querySelectorAll('.sortb, .gbtn');
+          for (var cj = 0; cj < cands.length; cj++) { var cr3 = cands[cj].getBoundingClientRect(); if (cr3.width > 4 && cr3.height > 4) { donor = cands[cj]; break; } }
+        }
       }
-      // 样式照抄：捐献者 computed 值整套写进基础规则。**高度为 auto（内容撑高）时抄不回来**——
-      // 用捐献者实测视觉高 ÷k 折成显式 px 补进规则（否则我们的内容 icon+文字+箭头 撑出的高度≠捐献者，
-      // 交易页实测"高度没对齐"根因）
+      // 锚行必须是 flex 行（行内对齐的前提；官方 .cap 与 BetterTrade 行实证满足，守卫防结构变化）
+      if (anchorRow && view && ('' + view.getComputedStyle(anchorRow).display).indexOf('flex') < 0) anchorRow = null;
+      // 样式照抄：捐献者 computed 整套写进基础规则；高度 auto 时用实测视觉高 ÷k 显式补
       var dH = 21, dFS = 12;
       if (donor && view) {
         var dBase;
@@ -676,21 +677,30 @@
           dBase = ddBaseRule(donor, view, dH);
         } catch (e) { dH = 21; dBase = DD_FALLBACK_BASE; }
         ensureDDStyle(st.doc, dBase);
-      } else {
-        ensureDDStyle(st.doc, DD_FALLBACK_BASE);
-      }
+      } else ensureDDStyle(st.doc, DD_FALLBACK_BASE);
       dd.__sltfDonor = { h: dH, fs: dFS };
-      // 唯一的尺寸类内联：label 比捐献者长（"全部柜子"4 字 vs "排序"2 字），给个上限防撑爆，
-      // 上限=捐献按钮视觉宽×2（÷k 回 css）；图标/箭头跟捐献字号走，样式表管其余全部
-      dd.style.maxWidth = Math.round(((nbH > 0 && donor ? donor.getBoundingClientRect().width : 60) * 2) / k) + 'px';
-      // 落位（每次重算，外来按钮卸载→自动回贴列左缘）。按钮挪位时关掉旧弹层——弹层锚定的是
-      // 开层那一刻的按钮位置，按钮走了弹层就成了脱锚孤儿
-      var prevL = dd.style.left, prevB = dd.style.bottom;
-      dd.style.left = left + 'px';
-      dd.style.bottom = bottom + 'px';
-      dd.style.top = 'auto';
-      dd.style.right = 'auto';
-      if ((prevL !== dd.style.left || prevB !== dd.style.bottom) && st.pop && st.pop.isConnected) closePop(st);
+      dd.style.maxWidth = Math.round(((donor ? donor.getBoundingClientRect().width : 60) * 2) / k) + 'px';
+      // 落位：有锚行=行内插入（static，跟随行 gap/对齐；行无 gap 再补 margin）；无锚行=col 绝对左下兜底
+      var prevPar = dd.parentElement, prevNext = dd.nextElementSibling;
+      if (anchorRow) {
+        dd.style.position = 'static';
+        dd.style.left = ''; dd.style.right = ''; dd.style.top = ''; dd.style.bottom = '';
+        dd.style.flex = '0 0 auto';
+        dd.style.alignSelf = 'center';
+        dd.style.marginLeft = (view && parseFloat(view.getComputedStyle(anchorRow).columnGap || view.getComputedStyle(anchorRow).gap) >= 2) ? '' : '6px';
+        var ref = (donor && donor.parentElement === anchorRow) ? donor.nextSibling : anchorRow.firstChild;
+        var wantPrev = ref ? ref.previousElementSibling : (anchorRow.lastElementSibling === dd ? dd.previousElementSibling : null);
+        if (dd.parentElement !== anchorRow || dd.previousElementSibling !== wantPrev) anchorRow.insertBefore(dd, ref);
+      } else if (col) {
+        if (dd.parentElement !== col) col.appendChild(dd);
+        dd.style.position = 'absolute';
+        dd.style.left = '6px';
+        dd.style.bottom = (capEl ? ((colR.bottom - capEl.getBoundingClientRect().top) / k + 8) : 6) + 'px';
+        dd.style.top = 'auto'; dd.style.right = 'auto';
+        dd.style.flex = ''; dd.style.alignSelf = ''; dd.style.marginLeft = '';
+      }
+      // 挪位关旧弹层（防脱锚）
+      if ((dd.parentElement !== prevPar || dd.nextElementSibling !== prevNext) && st.pop && st.pop.isConnected) closePop(st);
     } catch (e) {}
   }
 
