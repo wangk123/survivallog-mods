@@ -125,15 +125,23 @@
 
 ### 2.5 自绘下拉（2026-10-17 重做，替代原生 select）
 
-- **触发器**：挂 `st.doc.body`、`position:fixed` 于**界面左下角**（`DD_POS={left:8,bottom:8}`，
-  2026-10-17 作者实测指定换位：原页签行末挂点会被 DroneHub 官方「一键整理」按钮 sortBagBtn2
-  顶变形/右移，交易页另有其他 mod 的排序按钮同挤行末）——挂 body 免疫页签行/Vue 整条重渲染，
-  重建兜底走 isConnected/ownerDocument 判断。视觉克隆官方 DyePanel `.dd-btn` 神韵并按作者
-  指定缩小（高 22px/字号 11/图标 12px/最大宽 110px label ellipsis/半透明底色 rgba(28,24,18,.88)），
-  hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联）。已知落点风险：DroneHub 左栏
-  底部官方负重条 #bagCap 可能与左下角重叠（作者自选位置，不避让）。
+- **触发器落位（placeDD，2026-10-17 作者反馈三轮定稿）**：**列容器内绝对定位+测量避让**，每次
+  refreshDD 重算、不写死坐标——从页签行（c.bar）向上取第一个高>300 的父级为列容器（Trade=.col、
+  DroneHub=#paneMine 实测命中；走到 body/html 根则兜底 c.bar.parentElement），col 为 static 时补
+  relative（幂等），触发器 `position:absolute` 挂列容器内、默认贴左下（left 6/bottom 6），并测量
+  列底带（`DD_AVOID.band=30px`）内元素避让：**宽底栏**（≥200px，如 DroneHub 负重条 #bagCap）
+  → 排它上方（bottom=cap 高+8）；**窄左底按钮**（左缘在列左 250px 内，如交易页他 mod 的
+  bt-view-btn）→ 排它右侧（left=按钮右缘+6）——外来 mod 按钮卸载后带内空、下次重算自动回贴
+  列左缘（作者核心诉求「自动居左」；重算时机=MutationObserver 页签栏子树变动 + C# 5s setData
+  直推兜底）。挂列容器=位置恒在界面面板内（前两版教训：页签行末被挤变形、body+fixed 视口
+  角落跑出面板外）。Vue 重渲染摘除由既有 isConnected/ownerDocument 重建分支兜底（重建后
+  placeDD 重挂重算）。**尺寸**对齐旁列 BetterTrade 排序按钮（实测 sort-btn 59×18）：高 18px/
+  字号 10/图标 11px/padding 0 8/圆角 3/max-width 88（label ellipsis）/min-width 40，▾ 箭头改
+  flex 尾项（padding 0 8 下不压字）。视觉克隆官方 DyePanel `.dd-btn` 神韵（半透明底色
+  rgba(28,24,18,.88)），hover 样式随触发器一次性注入页面 head（`:hover` 写不了内联）。
 - **弹出层**：挂 `st.doc.body`、`position:fixed` 防 overflow 裁切；坐标=按钮 rect 下方、溢出
   视口向上弹、再放不下贴底；行多时 max-height+滚动（滚动条值克隆 DyePanel `.dd-list`）。
+  锚点 `st.dd.getBoundingClientRect()` 与触发器挂载点无关（触发器改挂列容器后零改动）。
   TradeUI 是 Vue 页会整条重渲染可能摘掉 popup——只清引用不重建（重开由按钮 click 触发），
   触发器本体走 isConnected 重插。
 - **选项行**：`<button>` + `data-interactive` 双保险（官方 clickThrough selector 收
@@ -233,6 +241,10 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
   - **筛选触发器换位缩小（fix-wave-2）**：从页签行末改为界面左下角 body 级固定悬浮
     （DD_POS 常量，§2.5），躲开 DroneHub 官方一键整理按钮与他 mod 排序按钮；CDP --dd
     断言同步改为 fixed+body+左下角。
+  - **筛选触发器自适应落位（fix-wave-3，作者反馈三轮）**：fix-wave-2 的 body+fixed 视口角落
+    被作者实锤跑出界面面板外——重做为 placeDD 列容器锚定（高>300 祖先）+ 测量避让
+    （窄左底按钮让位/宽底栏上移/外来按钮卸载自动贴边，DD_AVOID 阈值常量），尺寸对齐旁列
+    BetterTrade 排序按钮 59×18（§2.5）；CDP --dd 断言同步改为 absolute+列容器+贴列左下。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 
@@ -444,8 +456,8 @@ hasActive 清单=轻量消息漏扣=闪；事件签名不符=伪造失效/错位
 - （v1 原生 select 时代）下拉框插入各页页签栏首位；`select` 本就在官方 clickThrough 交互同步
   清单（webui-core.js），矩形自动上报 Unity，点击穿透原生生效。压缩机 `#tabs` 重建时清
   innerHTML、交易页 Vue 重渲染可能摘除——观察器自动重插（isConnected 检查）。
-  （2026-10-17 起为自绘下拉：触发器行末滚动区外 + body 级 popup，见 §2.5；clickThrough 走
-  button/[data-interactive] 通道。）
+  （2026-10-17 起为自绘下拉：触发器列容器内 absolute 贴左下 + body 级 popup，见 §2.5；
+  clickThrough 走 button/[data-interactive] 通道。）
 - **防闪烁铁律**：页面每次 BagMsg 整条重建页签 DOM，任何"防抖后处理"都会让被藏页签闪现
   （80ms 防抖=闪烁根因，实测）；MutationObserver 回调是**微任务、绘制前执行**——必须回调内
   **同步**套 display:none。只改 display（attribute）不会再触发 childList 观察器，无循环。

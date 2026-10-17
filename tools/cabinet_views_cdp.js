@@ -6,7 +6,7 @@
 //
 // 用法（三种模式）：
 //   node tools/cabinet_views_cdp.js <pageId>                计数断言：可见页签数 + 结构性事实
-//   node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言：存在性/挂载位置（body、fixed、左下角）
+//   node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言：存在性/挂载位置（absolute+列容器内+贴列左下）
 //   node tools/cabinet_views_cdp.js --mem <pageId> <tagId>  记忆断言：localStorage sltf_sel_v3 与触发器文本
 //     tagId = 标签数字 id | 'other'（其他/未打标签） | 0（全部柜子）
 //     --mem 只读比对，不模拟点击：CDP evaluate 不经屏幕输入链路，直改 localStorage/调 __SLTF__
@@ -22,7 +22,7 @@
 //
 // ---- EXPECT 回填说明（作者）----
 // 下方 EXPECT 常量块 = 期望「可见页签数」，-1=未回填 → 跳过该页计数断言（结构性事实仍断言：
-// 固定页无 .sltf-dd-btn、browser 页有且挂 body+fixed+左下角）。回填流程：
+// 固定页无 .sltf-dd-btn、browser 页有且挂列容器 absolute 贴左下）。回填流程：
 //   1) 进测试存档打开目标界面 → 2) 跑本脚本 <pageId> 看 "visible=N" 与明细
 //   3) 按存档柜子打标实况核对 N（语义见上方分组注释，spec §3 场景视图表）
 //   4) 填入 EXPECT 后复跑应全绿。
@@ -101,16 +101,25 @@ function probeFrame() {
   var dd = document.querySelector('.sltf-dd-btn');
   var ddInfo = null;
   if (dd) {
-    // 触发器 2026-10-17 起挂 body、position:fixed 左下角（DD_POS）——断言按新挂点取证
+    // 触发器 2026-10-17 第三轮起挂列容器（placeDD：高>300 祖先）、position:absolute 贴列左下
+    //（测量避让：窄左底按钮让位/宽底栏上移）——断言按锚定列+几何距离取证（与实现同源的走法）
     var cs = null;
     try { var dv = dd.ownerDocument.defaultView; if (dv) cs = dv.getComputedStyle(dd); } catch (e) {}
+    var dr = dd.getBoundingClientRect();
+    var col = null;
+    for (var p = dd.parentElement; p; p = p.parentElement) {
+      if (p === document.body || p === document.documentElement) break; // 列容器=面板布局子树，不认 body/html 根
+      try { if (p.getBoundingClientRect().height > 300) { col = p; break; } } catch (e) {}
+    }
+    var cr = col ? col.getBoundingClientRect() : null;
     ddInfo = {
       connected: dd.isConnected,
       displayNone: dd.style.display === 'none',
       pos: cs ? cs.position : '',
-      onBody: !!dd.parentElement && dd.parentElement === dd.ownerDocument.body, // 挂在 body=免疫页签行/Vue 整条重渲染
-      left: cs ? parseFloat(cs.left) : NaN,
-      bottom: cs ? parseFloat(cs.bottom) : NaN,
+      inCol: !!col, // 挂在高度>300 的列容器内（在面板内，不再挂 body 挂视口角落）
+      colDesc: col ? ((col.id ? '#' + col.id : '') + '.' + col.className) : null,
+      leftInCol: cr ? dr.left - cr.left : NaN,    // 距列容器左缘（避让窄左按钮后仍应 <120）
+      bottomInCol: cr ? cr.bottom - dr.bottom : NaN, // 距列容器底缘（避让宽底栏后仍应 <60）
       parentDesc: dd.parentElement ? ((dd.parentElement.id ? '#' + dd.parentElement.id : '') + '.' + dd.parentElement.className) : null,
       text: (dd.textContent || '').trim().slice(0, 16),
     };
@@ -143,7 +152,7 @@ function usage() {
     '',
     '用法:',
     '  node tools/cabinet_views_cdp.js <pageId>                计数断言（可见页签数 + 结构性事实）',
-    '  node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言（存在/body挂载+fixed+左下角）',
+    '  node tools/cabinet_views_cdp.js --dd <pageId>           下拉断言（absolute+列容器内+贴列左下）',
     '  node tools/cabinet_views_cdp.js --mem <pageId> <tagId>  记忆断言（tagId=数字|other|0；作者选过后读态比对）',
     '',
     'pageId: ' + ids,
@@ -341,16 +350,17 @@ async function main() {
   }
 }
 
-// browser 组的下拉存在性 + 位置硬事实（计数/dd 两模式共用）：2026-10-17 起触发器=body 挂载 +
-// position:fixed + 左下角（DD_POS={left:8,bottom:8}，作者实测指定换位——行末会被 DroneHub 官方
-// sortBagBtn2/交易页他 mod 排序按钮挤变形）；左下角阈值 left<40 且 bottom<40 容微调余量
+// browser 组的下拉存在性 + 位置硬事实（计数/dd 两模式共用）：2026-10-17 第三轮起触发器=列容器内
+// absolute 贴左下（placeDD 动态锚定：从页签行向上取高>300 祖先为列容器并测量避让——窄左底按钮
+// 让位/宽底栏上移/外来按钮卸载自动贴边；不再挂 body+fixed 视口角落——作者实锤会跑出面板外）。
+// 距离阈值：距列左<120（避让 bt-view 类按钮后≈64，贴边=6）、距列底<60（避让负重条后≈cap高+8）
 function assertDdPresent(checks, p) {
   const has = !!p.dd;
   checks.ok('下拉触发器 .sltf-dd-btn 存在（browser 页应有）', has, has ? 'text="' + p.dd.text + '" parent=' + p.dd.parentDesc : '未找到——mod 未注入或 lib 为空');
   if (has) {
-    checks.ok('触发器 computed position=fixed', p.dd.pos === 'fixed', '实际=' + p.dd.pos);
-    checks.ok('触发器挂在 body（免疫页签行/Vue 重渲染）', p.dd.onBody, '实际 parent=' + p.dd.parentDesc);
-    checks.ok('触发器落左下角（left<40 且 bottom<40）', p.dd.left < 40 && p.dd.bottom < 40, 'left=' + p.dd.left + ' bottom=' + p.dd.bottom);
+    checks.ok('触发器 computed position=absolute', p.dd.pos === 'absolute', '实际=' + p.dd.pos);
+    checks.ok('触发器挂在高度>300 的列容器内', p.dd.inCol, p.dd.colDesc ? '锚定列=' + p.dd.colDesc + '（parent=' + p.dd.parentDesc + '）' : '祖先链无高>300 列容器（parent=' + p.dd.parentDesc + '）');
+    checks.ok('触发器贴列左下（距列左<120 且距列底<60，测量避让后落点）', p.dd.leftInCol < 120 && p.dd.bottomInCol < 60, '距列左=' + p.dd.leftInCol + 'px 距列底=' + p.dd.bottomInCol + 'px');
   }
 }
 
