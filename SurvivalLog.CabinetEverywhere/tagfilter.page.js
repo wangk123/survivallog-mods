@@ -533,7 +533,6 @@
   var DD_VIS = 0.647; // 交易页校准：css×0.647=视觉 px
   function ensureDDStyle(doc, k) {
     var kk = (k && k > 0.2 && k < 4) ? k : 1;
-    var s = DD_VIS / kk; // 本页 css 缩放因子：css = 视觉 ÷ k = 视觉设计 × s / DD_VIS …直接：视觉=btCss*DD_VIS, css=视觉/k
     var px = function (btCss) { return (btCss * DD_VIS / kk).toFixed(2) + 'px'; };
     var txt = '.sltf-dd-btn{font-family:inherit;font-size:' + px(12) + ';line-height:1.5;color:#fff;white-space:nowrap;'
       + 'background:rgba(255,255,255,0.06);border:' + px(1) + ' solid rgba(255,255,255,0.15);border-radius:' + px(4) + ';'
@@ -551,6 +550,7 @@
       + '.sltf-dd-pop::-webkit-scrollbar{width:6px;}'
       + '.sltf-dd-pop::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px;}';
     var el = doc.getElementById('sltf-dd-style');
+    if (el && k === undefined) return; // 无 k 调用（togglePop 补挂/重建分支）一律不动已有表——否则按 kk=1 整表重写，把归一值打回错误系数（作者实测"点开列表尺寸跳变"根因，采样实锤 sheet 字体 12.26→7.76）
     if (el) { if (el.__sltfK !== kk) { el.textContent = txt; el.__sltfK = kk; } return; }
     var st = doc.createElement('style');
     st.id = 'sltf-dd-style';
