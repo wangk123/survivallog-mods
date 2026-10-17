@@ -721,22 +721,26 @@
       // innerWidth/innerHeight 换算随挂载点一并作废（fix-wave-5）。
       var colR = col.getBoundingClientRect();
       var ph = pop.offsetHeight, pw = pop.offsetWidth;
+      var openUp = true;
       var top = (ddr.top - colR.top) / k - ph - 4;
-      if (top + ph > col.clientHeight || top < 0) top = (ddr.bottom - colR.top) / k + 4;
+      if (top + ph > col.clientHeight || top < 0) { top = (ddr.bottom - colR.top) / k + 4; openUp = false; }
       var left = (ddr.left - colR.left) / k;
       var maxL = col.clientWidth - pw - 4;
       if (left > maxL) left = Math.max(4, maxL);
       pop.style.left = left + 'px';
       pop.style.top = top + 'px';
       pop.style.visibility = '';
-      // 贴身自校（作者实测"列表遮盖按钮"）：表值 k 与实际缩放的微小偏差经长距离 ÷k 换算放大
-      // 成下坠遮盖。用渲染后的实际 rect 做一次局部校正——只看弹层底与按钮顶的视觉差，
-      // 一次到位（BetterTrade tooltip placeInside 同款思路），不测页面缩放、无累积误差
+      // 贴身吸附（双向）：表值 k 与实际缩放的微小偏差经长距离 ÷k 换算放大成偏移（交易页
+      // 表现为遮盖、调度机队表现为飘远——同根因两个方向）。用渲染后的实际 rect 把弹层边缘
+      // **精确吸附**到按钮边缘 ±6px：向上开=弹层底贴按钮顶-6；向下开=弹层顶贴按钮底+6。
+      // 一次到位、双向修正（BetterTrade tooltip placeInside 同思路），残余误差≈间距×偏差率<0.2px
       try {
         var pr2 = pop.getBoundingClientRect();
         var br2 = st.dd.getBoundingClientRect();
-        if (pr2.bottom > br2.top - 3) {
-          pop.style.top = (parseFloat(pop.style.top) - (pr2.bottom - br2.top + 6) / k) + 'px';
+        if (openUp) {
+          pop.style.top = (parseFloat(pop.style.top) - (pr2.bottom - (br2.top - 6)) / k) + 'px';
+        } else {
+          pop.style.top = (parseFloat(pop.style.top) + ((br2.bottom + 6) - pr2.top) / k) + 'px';
         }
       } catch (e2) {}
       st.pop = pop;
