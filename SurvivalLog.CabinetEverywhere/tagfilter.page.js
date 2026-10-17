@@ -606,39 +606,57 @@
       if (dd.parentElement !== col) col.appendChild(dd); // 挂列容器（幂等重挂；Vue 重渲染摘除由 isConnected 重建分支兜底）
       var k = ddScaleK(st, dd);
       dd.__sltfK = k; // 供 refreshDD 的 iconSvg 取尺寸（placeDD 先于其执行）
-      // 视觉规格按 k 反推（box-sizing:border-box 保证 css 高=边框盒高=rect 量的就是它）
-      var h = Math.round(21 / k);
-      dd.__sltfCssH = h; // 记下本轮写的 css 高——ddScaleK 的分母（勿常量 21，见其注释的振荡问题）
-      dd.style.height = h + 'px';
-      dd.style.lineHeight = h + 'px';
-      dd.style.fontSize = (12 / k).toFixed(1) + 'px';
-      dd.style.padding = '0 ' + Math.round(10 / k) + 'px';
-      dd.style.maxWidth = Math.round(110 / k) + 'px';
-      var icoEl = dd.querySelector('.sltf-dd-ico');
-      if (icoEl) {
-        var isz = Math.round(13 / k) + 'px';
-        icoEl.style.width = isz;
-        icoEl.style.height = isz;
-      }
-      // 测量避让：band 判定（colR vs r 同为 rect）不除 k；偏移写 css 才 ÷k
-      var left = 6, bottom = 6; // 默认贴列左下缘（小值不除 k：视觉差 ~1px 无感，保持简单）
+      // 先测避让（尺寸依赖测量结果）：band 判定（colR vs r 同为 rect）不除 k；偏移写 css 才 ÷k。
+      // **自家弹层元素必须排除**——弹层选项行就落在列底带内，不排除的话弹层一开，下一次
+      // refreshDD 就把按钮"避让"到自己的选项行右侧、关掉又挪回（作者实测"点一下换一个位置"根因）
+      var left = 6, bottom = 6, nbH = 0; // nbH=窄邻居（旁边的按钮）视觉高——按钮尺寸跟它对齐的依据
       var colR = col.getBoundingClientRect();
       var kids = col.querySelectorAll('button, [class*=cap], [id*=cap]');
       for (var i = 0; i < kids.length; i++) {
-        var k2 = kids[i];
-        if (k2 === dd) continue;
-        var r = k2.getBoundingClientRect();
+        var el = kids[i];
+        if (el === dd) continue;
+        if (el.closest && el.closest('.sltf-dd-pop')) continue; // 自家弹层（含选项行）不参与避让
+        var r = el.getBoundingClientRect();
         if (r.width <= 0 || r.top <= colR.bottom - DD_AVOID.band) continue; // 只看列底带内的元素（rect 同空间比较，不除 k）
         if (r.width >= DD_AVOID.wide) {
           bottom = Math.max(bottom, (colR.bottom - r.top) / k + 8); // 宽底栏（负重条类）→ 排它上方（偏移写 css：rect 差 ÷k）
         } else if (r.left < colR.left + DD_AVOID.nearLeft) {
           left = Math.max(left, (colR.right < 0 ? 0 : (r.right - colR.left) / k) + 6); // 窄左底按钮 → 排它右侧（同 ÷k）
+          if (r.height > nbH) nbH = r.height; // 旁边按钮的视觉高=我们的目标高（作者要求"和它一样大"，逐页精确）
         }
       }
+      // 视觉规格：高=旁边窄邻居的视觉高（有邻居就跟它一样大；无邻居用 21=调度机队官方 sortb 视觉高），
+      // css 值=视觉÷k。box-sizing:border-box 保证 css 高=边框盒高=rect 量的就是它。
+      var visH = (nbH > 8) ? Math.round(nbH) : 21;
+      dd.__sltfVisH = visH; // togglePop 的行高/字号跟按钮视觉规格走
+      var h = Math.round(visH / k);
+      dd.__sltfCssH = h; // 记下本轮写的 css 高——ddScaleK 的分母（勿常量 21，见其注释的振荡问题）
+      dd.style.height = h + 'px';
+      dd.style.lineHeight = h + 'px';
+      var fs = (visH >= 20 ? 12 : 11); // 邻居 18px 级用 11 号字，21px 级用 12（跟随官方两页规格）
+      dd.style.fontSize = (fs / k).toFixed(1) + 'px';
+      dd.style.padding = '0 ' + Math.round(10 / k) + 'px';
+      dd.style.maxWidth = Math.round(110 / k) + 'px';
+      var icoEl = dd.querySelector('.sltf-dd-ico');
+      if (icoEl) {
+        var isz = Math.round((visH >= 20 ? 13 : 11) / k) + 'px';
+        icoEl.style.width = isz;
+        icoEl.style.height = isz;
+      }
+      var arw = dd.lastElementChild; // ▾ 箭头（CSS 三角）：边框宽同按 k 反推，否则缩放页上小得看不见
+      if (arw && arw.tagName === 'SPAN') {
+        arw.style.borderLeftWidth = Math.max(2, Math.round(3 / k)) + 'px';
+        arw.style.borderRightWidth = Math.max(2, Math.round(3 / k)) + 'px';
+        arw.style.borderTopWidth = Math.max(3, Math.round(4 / k)) + 'px';
+      }
+      // 落位（每次重算，外来按钮卸载→自动回贴列左缘）。按钮挪位时关掉旧弹层——弹层锚定的是
+      // 开层那一刻的按钮位置，按钮走了弹层就成了脱锚孤儿（漂在半空的"离按钮老远"观感来源之一）
+      var prevL = dd.style.left, prevB = dd.style.bottom;
       dd.style.left = left + 'px';
       dd.style.bottom = bottom + 'px';
       dd.style.top = 'auto';
       dd.style.right = 'auto';
+      if ((prevL !== dd.style.left || prevB !== dd.style.bottom) && st.pop && st.pop.isConnected) closePop(st);
     } catch (e) {}
   }
 
@@ -676,11 +694,13 @@
         b.setAttribute('data-interactive', '');
         // 背景/文字色/加粗不在内联——外观态（基础/.on/:hover）统一由 ensureDDStyle 层叠管理
         //（同按钮复审 R1：内联背景/色会把 :hover 整条压死；.on 挂钩=上面 className 已带）。
-        // 行高/字号/icon 按 k 反推视觉规格（19/11/12）
-        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:' + Math.round(19 / k) + 'px;padding:0 8px;margin:0;'
-          + 'border:0;border-radius:4px;font-family:inherit;font-size:' + (11 / k).toFixed(1) + 'px;line-height:1;'
+        // 行高/字号/icon 跟触发器的视觉规格走（__sltfVisH 由 placeDD 量邻居定出，逐页与旁边按钮对齐）
+        var visH = st.dd.__sltfVisH || 21;
+        var rfs = (visH >= 20 ? 12 : 11);
+        b.style.cssText = 'display:flex;align-items:center;gap:6px;width:100%;height:' + Math.round((visH - 1) / k) + 'px;padding:0 8px;margin:0;'
+          + 'border:0;border-radius:4px;font-family:inherit;font-size:' + (rfs / k).toFixed(1) + 'px;line-height:1;'
           + 'white-space:nowrap;cursor:pointer;text-align:left;';
-        var isz = Math.round(12 / k);
+        var isz = Math.round((visH >= 20 ? 12 : 10) / k);
         var ico = st.doc.createElement('span');
         ico.style.cssText = 'display:flex;width:' + isz + 'px;height:' + isz + 'px;flex:0 0 auto;'
           + (lib && lib.color ? 'color:' + lib.color + ';' : ''); // 官方色控 svg（currentColor），空色不设=页面默认
@@ -772,10 +792,11 @@
       dd.style.display = 'flex'; // 显式恢复：'' 会清掉 cssText 的 display:flex（回退 inline-block 布局散架）
       placeDD(st, dd, c); // 列容器锚定+测量避让+按 k 反推视觉规格，每次重算（外来按钮卸载→自动回贴列左缘；须在 __sltfKey 缓存返回之前）
       // 选中态文案+图标+官方色（缓存键命中即跳过——observer 回调高频，避免重复 DOM 写；键含渲染结果）
-      var kk = dd.__sltfK || 1; // placeDD 刚测得的有效缩放系数（icon 尺寸同按 k 反推：视觉 13）
+      var kk = dd.__sltfK || 1; // placeDD 刚测得的有效缩放系数（icon 尺寸同按 k 反推，视觉跟随 visH）
+      var kVis = dd.__sltfVisH || 21;
       var lib = selById(sel);
       var txt = sel ? (lib ? lib.name : '其他') : '全部柜子';
-      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), Math.round(13 / kk));
+      var ico = iconSvg(sel && lib ? tagIcon(lib.icon) : (sel ? TAG_ICONS_FALLBACK.misc : ICON_ALL_SVG), Math.round((kVis >= 20 ? 13 : 11) / kk));
       var key = sel + '|' + txt + '|' + ico + '|' + (lib && lib.color ? lib.color : '');
       if (dd.__sltfKey === key) return;
       dd.__sltfKey = key;
