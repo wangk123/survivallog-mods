@@ -52,7 +52,7 @@
 |---|---|
 | `FridgeChillPlugin.cs` | 入口：配置定义、Rerun、注入 Ticker、挂 TalentCapPatch |
 | `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）；KeepMult≤1.01 直接跳过 |
-| `TalentCapPatch`（同文件） | Harmony Postfix 接管 `FoodPreservationRules.ApplyFridgeColdEnhance`：把 0.1 下限换成 1/MaxTotalMult；KeepMult≤1 或异常时交还原生结果。注意 ApplyColdChainEnhance 与其同一段原生代码，只 patch 一个名字即覆盖两条通道 |
+| `TalentCapBytePatch`（同文件） | 零开销**字节补丁**：改写 Apply 函数内读取 0.1 常量的 movss 指令的 rel32，指向 int3 间隙里的自备 scratch float（=1/MaxTotalMult）。签名扫描+旧槽值校验+回读自证三重安全闸，任何一步不符即功能关闭回落原生。ApplyColdChainEnhance 与其同一段原生代码，一处覆盖两条通道 |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll）：RewriteFridgeChill 按 `Config_Furniture.BagId ∈ 名单 && ColdRate>0` 定位冰箱家具 |
 
 ## 4. 配置项（com.local.survivallog.fridgechill.cfg）
@@ -94,6 +94,10 @@
   修正本文档 §2 旧"独立叠加"表述。同日实测发现修复器误伤合法天赋档（日志实锤：6 件 ts=0.5
   被改 1.0，显示保质翻倍=西瓜 2000 天事件），**修复器彻底移除**——"绝不写 Data_Item"红线自此零例外。
   取证工具链：tools/il2cppdumper + tools/disasm_tool + 新增 tools/mdump（SRM 元数据 dumper）。
+- 同日（待发版，二改）：TalentCapPatch 首版 Harmony 挂钩在物品密集界面卡顿（调用方地图：
+  OnSyncItem/ExecuteSwap/ComputeItemTimeScale/ReduxUI 显示等 12 处，每次调用付原生↔托管
+  跳转成本，无人机交易界面明显），改为 **TalentCapBytePatch 零开销字节补丁**（movss 的 rel32
+  重定向到 int3 间隙 scratch float；签名扫描+旧槽值校验+回读自证三重安全闸），移除 0Harmony 依赖。
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 
