@@ -12,7 +12,17 @@
 
 - 家具保鲜时长倍率 = `1 / Config_Furniture.ColdRate`（ComputeItemTimeScale 运行时直读）。
   原生冰箱 ColdRate = 0.2 → 保质 ×5；本 mod 对名单内冰箱把 `ColdRate ÷ KeepMult`（默认 2）→ ×10。
-- 天赋（Buff/AE_FridgeColdEnhance）按比例压低 ColdRate，**下限 0.1**，与本 mod 改表**独立叠加**。
+- 天赋（Buff/AE_FridgeColdEnhance）走**计算层乘法**（2026-10-18 反汇编 @0x292E200 实证）：
+  `有效值 = max(ColdRate × (1−天赋比率), 0.1)`——0.1=MinColdRate 是编译期常量，**乘完天赋后才封底**；
+  天赋比率≤0 时直接返回表值、不经过下限。原生满天赋（比率 0.5）恰把 0.2 压到 0.1，即原生冰箱封顶 ×10。
+- **与天赋/每日规划加成的关系（修正旧"独立叠加"表述）**：保鲜加成共四条通道——
+  冰箱（AE_FridgeColdEnhance，走上式）、冷链房间（AE_ColdChainKeeper，同一函数作用于区域系数）、
+  仓储（AE_StorageShelfLife）/背包（AE_BackpackShelfLife）（收尾 `×1/(1+比率)` 无下限）。
+  后三条与本 mod 完全正交；**冰箱通道曾被 0.1 下限钳制**（表值 0.1 后任何天赋比率都被钳回，
+  天赋零收益、显示恒 ×10——即"天赋不涨保鲜率"现象的根因）。
+  本次起用 `TalentCapPatch` 把下限换成 `1/MaxTotalMult`（默认 ×100，可配；10=原生等价回退位），
+  mod 与天赋恢复严格乘法正交："我们是我们，天赋是天赋"。补丁对原生玩家零影响
+  （原生路径到不了新下限以下）；冷链封顶同步抬高属一致行为。
 - 界面"保鲜率"显示读同一字段（Round(1/ColdRate)），自动跟随——**显示 10 倍 = mod 生效铁证**。
 - 物品级快照：`Data_Item.TimeScale` 在物品**进入容器时**按当时系数算好存档，读档不重算。
   因此改系数只影响**新放入**的物品；已在冰箱里的旧食物**移出再放回一次**即按新系数重算。
@@ -22,10 +32,12 @@
 - v1.1.0 曾直接把物品 `TimeScale ×0.5` 试图让旧物品立即翻倍：TimeScale 参与"进出容器换算"，
   直接改它 → 换算基准被污染 → **一进一出保质期减半**（用户实锤：菠菜 13 天一进一出变 6.5 天）。
 - v1.2.0 起定稿正确语义（用户原话）："修改冰箱对食物保质期的影响系数，不是直接修改食物保质期"。
-- 当前代码里唯一的物品写操作是 `RepairV11TimeScale()`：**一次性修复 v1.1.0 写坏并存档的值**
-  （坏值 0.385 区段 ×2 还原；冰箱正确值 0.0385 不碰，见 §3）。修复完自然静默。
+- v1.2.0 曾附带存档修复器（v1.1.0 残留 ts ×2 还原），**2026-10-18 彻底移除**：其判定区间
+  [0.30,0.55] 只按事故值 0.385 标定，未覆盖合法天赋档位——当天实测误伤 6 件 ts=0.5 的物品
+  （显示保质翻倍=西瓜 2000 天事件）。**自此全套件零物品写入、零存档写入，无任何例外。**
+- 档位表保留仅作取证参考（判别存档里历史数值的语义用），不再驱动任何写操作。
 
-### TimeScale 档位表（修复逻辑的判别依据）
+### TimeScale 档位表（历史取证参考，不驱动任何写操作）
 
 | 值 | 含义 |
 |---|---|
@@ -38,8 +50,9 @@
 
 | 文件 | 职责 |
 |---|---|
-| `FridgeChillPlugin.cs` | 入口：配置定义、Rerun、注入 Ticker |
-| `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）+ RepairV11TimeScale（一次性修复）；KeepMult≤1.01 直接跳过 |
+| `FridgeChillPlugin.cs` | 入口：配置定义、Rerun、注入 Ticker、挂 TalentCapPatch |
+| `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）；KeepMult≤1.01 直接跳过 |
+| `TalentCapPatch`（同文件） | Harmony Postfix 接管 `FoodPreservationRules.ApplyFridgeColdEnhance`：把 0.1 下限换成 1/MaxTotalMult；KeepMult≤1 或异常时交还原生结果。注意 ApplyColdChainEnhance 与其同一段原生代码，只 patch 一个名字即覆盖两条通道 |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll）：RewriteFridgeChill 按 `Config_Furniture.BagId ∈ 名单 && ColdRate>0` 定位冰箱家具 |
 
 ## 4. 配置项（com.local.survivallog.fridgechill.cfg）
@@ -47,6 +60,7 @@
 | 键 | 默认 | 说明 |
 |---|---|---|
 | KeepMult | 2 | 保鲜倍数：2 = 保质期翻倍（ColdRate÷2）；1 = 不改 |
+| MaxTotalMult | 100 | 总保鲜倍数上限：表值改写与天赋/规划等加成合并后的封顶；10 = 原生 ×10（不抬高）；低于 10 按 10 处理；KeepMult≤1 时不生效 |
 | BagIds | 空 | 冰箱 BagId 名单（留空用默认 1004,115000,115001,115005,3002，可追加） |
 | Verbose | false | 输出每条明细 |
 
@@ -75,6 +89,11 @@
 - v1.1.0（2026-10-02）：错误方案（写 TimeScale）→ 菠菜事故；
 - v1.2.0：定稿"只改 ColdRate 系数"，并带一次性存档修复；
 - v1.3.0：名单/日志定稿；v1.3.1：统一套件版本号。
+- 本次（2026-10-18，待发版）：反汇编实证原生公式与四通道后，新增 TalentCapPatch 抬高总保鲜
+  封顶（MaxTotalMult 默认 ×100 可配），修复"冰箱通道天赋/规划加成被 MinColdRate=0.1 钳制"；
+  修正本文档 §2 旧"独立叠加"表述。同日实测发现修复器误伤合法天赋档（日志实锤：6 件 ts=0.5
+  被改 1.0，显示保质翻倍=西瓜 2000 天事件），**修复器彻底移除**——"绝不写 Data_Item"红线自此零例外。
+  取证工具链：tools/il2cppdumper + tools/disasm_tool + 新增 tools/mdump（SRM 元数据 dumper）。
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 

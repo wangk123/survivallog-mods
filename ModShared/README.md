@@ -27,7 +27,6 @@ Config_Bag / Config_Furniture **内存表直写工具**：表访问、进程内�
 | `RewriteBurden(targets, mult, verbose)` | 改名单内 Config_Bag.Burden（负重快照，需重读档体现） |
 | `RewriteFridgeChill(bagTargets, keepMult, verbose)` | 改 `BagId∈名单 && ColdRate>0` 家具的 ColdRate ÷ keepMult |
 | `InvalidateBagSizeIndex(cm, lines)` | `_bagSizeSet = null` 懒重建 |
-| `RepairV11TimeScale()` | **一次性**修复 FridgeChill v1.1.0 写坏并存档的物品 TimeScale（0.385 区段 ×2；<0.1 冰箱正确值不碰），按 InstanceId 防重复 |
 
 ## WelcomeTip.cs（防盗署名气泡，2026-10-14）
 
@@ -49,5 +48,6 @@ Config_Bag / Config_Furniture **内存表直写工具**：表访问、进程内�
 - `BagTableRw.cs` 是 4 个扩容系 mod 的公共依赖：改动必须逐一评估对 Backpack/Cabinet/FridgeExpand/FridgeChill 的影响，
   并同步更新对应 DESIGN.md。
 - `WelcomeTip.cs` 是全部 7 个套件 mod 的公共依赖：改动需同步更新 7 份 DESIGN.md 的"防盗署名气泡"节并全量重编。
-- 任何新增写操作先过红线检查：**不写 Data_Item / 不写存档**（唯一例外 RepairV11TimeScale 是修复历史损伤；
+- 任何新增写操作先过红线检查：**不写 Data_Item / 不写存档，零例外**（曾有的唯一例外
+  RepairV11TimeScale 已于 2026-10-18 连同其调用点彻底移除——其判定区间误伤合法天赋档位；
   WelcomeTip 只读状态不写任何数据）。

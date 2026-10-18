@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
 using SurvivalLog.ModShared;
 using UnityEngine;
@@ -31,6 +32,7 @@ public sealed class FridgeChillPlugin : BasePlugin
     internal static ManualLogSource Log;
 
     internal static ConfigEntry<float> KeepMult;
+    internal static ConfigEntry<float> MaxTotalMult;
     internal static ConfigEntry<string> BagIds;
     internal static ConfigEntry<bool> Verbose;
 
@@ -42,6 +44,8 @@ public sealed class FridgeChillPlugin : BasePlugin
         Log = base.Log;
         KeepMult = Config.Bind("Chill", "KeepMult", 2f,
             "保鲜倍数：2 = 食物在冰箱里的保质期翻倍（ColdRate÷2）。1 = 不改。");
+        MaxTotalMult = Config.Bind("Chill", "MaxTotalMult", 100f,
+            "总保鲜倍数上限：表值改写与天赋/规划等加成合并后的封顶。默认 100；10 = 原生上限 ×10（即不抬高）。保鲜关闭（KeepMult≤1）时本项不生效。");
         BagIds = Config.Bind("Chill", "BagIds", "",
             "冰箱 BagId 名单（逗号分隔；留空用默认 1004,115000,115001,115005,3002，可追加）。");
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细。");
@@ -49,13 +53,29 @@ public sealed class FridgeChillPlugin : BasePlugin
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         KeepMult.SettingChanged += (object s2, System.EventArgs e2) => { Rerun = true; };
         BagIds.SettingChanged += reload;
+        MaxTotalMult.SettingChanged += (object s3, System.EventArgs e3) =>
+            Log.LogInfo($"[FridgeChill] 总保鲜封顶调整为 ×{Math.Max(10f, MaxTotalMult.Value):0.##}（下次计算即生效）");
+
+        // 抬高保鲜总上限（TalentCapPatch）：原生 MinColdRate=0.1 会把本 mod 表值之上的
+        // 天赋加成钳为零（2026-10-18 反汇编实证，详见该类注释与 DESIGN.md §2）。
+        try
+        {
+            var harmony = new Harmony(Guid);
+            harmony.PatchAll();
+            Log.LogInfo($"[FridgeChill] 天赋上限补丁已挂：总保鲜封顶 ×{Math.Max(10f, MaxTotalMult.Value):0.##}" +
+                        $"（原生 ×10；表值改写与天赋/规划加成恢复纯乘法叠加）");
+        }
+        catch (Exception e)
+        {
+            Log.LogError($"[FridgeChill] 天赋上限补丁挂载失败，回落为原生 ×10 封顶（天赋加成会被钳制但无其他影响）：{e.Message}");
+        }
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<ChillTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<ChillTicker>();
         var go = new GameObject("FridgeChill.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<ChillTicker>();
-        Log.LogInfo($"[FridgeChill] loaded：保鲜 ×{KeepMult.Value}");
+        Log.LogInfo($"[FridgeChill] loaded：保鲜 ×{KeepMult.Value}，总封顶 ×{Math.Max(10f, MaxTotalMult.Value):0.##}");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
@@ -90,24 +110,62 @@ internal sealed class ChillTicker : MonoBehaviour
         var targets = FridgeChillPlugin.BuildTargets();
         var (scanned, changed, lines) = BagTable.RewriteFridgeChill(
             targets, FridgeChillPlugin.KeepMult.Value, FridgeChillPlugin.Verbose.Value);
-        // 一次性修复 v1.1.0 写坏并存档的 TimeScale（0.385 区段 ×2 还原；冰箱正确值 0.0385 不碰）
-        var (repaired, repairLines) = BagTable.RepairV11TimeScale();
+        // v1.1.0 存档修复器已于 2026-10-18 彻底移除（实测误伤合法天赋档 0.5→1.0、
+        // 显示保质翻倍；"绝不写 Data_Item"红线自此零例外）。
 
         if (scanned < 0) { FridgeChillPlugin.Rerun = true; return; }
         FridgeChillPlugin.Rerun = false;
 
-        if (changed > 0 || repaired > 0 || FridgeChillPlugin.Verbose.Value)
+        if (changed > 0 || FridgeChillPlugin.Verbose.Value)
         {
             foreach (var l in lines) FridgeChillPlugin.Log.LogInfo("[FridgeChill] " + l);
-            foreach (var l in repairLines) FridgeChillPlugin.Log.LogInfo("[FridgeChill] " + l);
         }
 
         if (!_announced && scanned >= 0)
         {
             _announced = true;
             FridgeChillPlugin.Log.LogInfo(
-                $"[FridgeChill] 生效：{scanned} 个冰箱家具受管（原生保鲜 ×5 → 现 ×{5 * FridgeChillPlugin.KeepMult.Value:0.#}，仅改系数）。" +
-                (repaired > 0 ? $" 已修复 v1.1.0 存档损伤 {repaired} 件物品的保质显示（如菠菜 6.5→13 天）。" : ""));
+                $"[FridgeChill] 生效：{scanned} 个冰箱家具受管（原生保鲜 ×5 → 现 ×{5 * FridgeChillPlugin.KeepMult.Value:0.#}，仅改系数；总封顶 ×{Math.Max(10f, FridgeChillPlugin.MaxTotalMult.Value):0.##}，天赋/规划可继续叠加）。");
         }
+    }
+}
+
+/// <summary>
+/// 保鲜总上限抬高（2026-10-18 反汇编实证后落地）。
+///
+/// 原生公式（FoodPreservationRules.ApplyFridgeColdEnhance，@0x292E200）：
+///   coldRate >= 1 或 talentRatio <= 0 → 原样返回 coldRate（不经过下限）；
+///   否则 → max(coldRate × (1 − talentRatio), 0.1)。   // 0.1=MinColdRate，乘完天赋后才封底
+/// 后果：本 mod 表值 0.1 已坐在下限上，任何天赋比率都被钳回 0.1（天赋零收益、冰箱显示恒 ×10）。
+/// 0.1 是编译期常量（.rdata 单槽位，被全代码段 178 处共享，不可直改），故用 Harmony 等价重算。
+///
+/// 本补丁：下限换成 1/MaxTotalMult（默认 0.01 = ×100）。mod 与天赋严格乘法正交；
+/// MaxTotalMult=10 时与原生完全等价（安全回退位）。任何异常/关闭状态交还原生结果。
+/// 注意：ApplyColdChainEnhance 与本函数同一段原生代码（编译器合并相同实现），只 patch 本名
+/// 即覆盖冰箱/冷链房间两条通道的全部调用点（冷链封顶同步抬高，属一致行为，非削弱）；
+/// 仓储(AE_StorageShelfLife)/背包(AE_BackpackShelfLife)通道不经过此函数，零影响。
+/// </summary>
+[HarmonyPatch(typeof(GameCore.HotUpdate.FoodPreservationRules),
+    nameof(GameCore.HotUpdate.FoodPreservationRules.ApplyFridgeColdEnhance))]
+internal static class TalentCapPatch
+{
+    static void Postfix(ref float __result, float coldRate, float talentRatio)
+    {
+        try
+        {
+            var keep = FridgeChillPlugin.KeepMult;
+            var max = FridgeChillPlugin.MaxTotalMult;
+            if (keep == null || max == null) return;
+            if (keep.Value <= 1.01f) return;            // 保鲜关闭 → 原生语义
+            float maxTotal = max.Value;
+            if (maxTotal < 10f) maxTotal = 10f;         // 不允许低于原生 ×10（防止反向收紧）
+            float floor = 1f / maxTotal;
+            float want = (coldRate >= 1f || talentRatio <= 0f)
+                ? coldRate
+                : coldRate * Math.Max(0f, 1f - talentRatio);
+            if (want < floor) want = floor;             // 统一执行总封顶
+            __result = want;
+        }
+        catch { /* 任何异常保持 __result = 原生结果 */ }
     }
 }

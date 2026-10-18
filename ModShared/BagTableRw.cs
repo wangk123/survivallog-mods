@@ -192,56 +192,10 @@ public static class BagTable
         catch (Exception e) { lines.Add("WARN _bagSizeSet 置空失败: " + e.Message); }
     }
 
-    // ---- v1.1.0 残留修复：恢复被写坏的 TimeScale ----
-    // v1.1.0 曾把物品 TimeScale ×0.5 且被存档持久化：家/背包物品 0.769→0.385
-    // （显示保质期折半，菠菜 13→6.5 天）；冰箱物品 0.0769→0.0385（碰巧等于
-    // 新系数 ColdRate=0.1 的正确值，无需动）。两类差 10 倍，可精准区分：
-    // 仅 ts ∈ [0.30,0.55] 的按 ×2 恢复；ts<0.1（冰箱正确值）绝不碰。
-    private static readonly System.Collections.Generic.HashSet<long> Restored = new();
-
-    public static (int restored, List<string> lines) RepairV11TimeScale()
-    {
-        var lines = new List<string>();
-        GameCore.HotUpdate.Battle.Logic.BattleLogicWorld world = null;
-        try
-        {
-            if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.Battle.Logic.BattleLogicWorld>.IsInstanceCreated)
-                return (0, lines);
-            world = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.Battle.Logic.BattleLogicWorld>.Instance;
-        }
-        catch { return (0, lines); }
-        var im = world?._ItemManager;
-        var oc = im?.OwnerCache;
-        if (oc == null) return (0, lines);
-
-        int restored = 0;
-        try
-        {
-            foreach (var kv in oc)
-            {
-                var list = im.GetItemDataList(kv.Key);
-                if (list == null) continue;
-                foreach (var it in list)
-                {
-                    if (it == null || it.InstanceId <= 0) continue;
-                    if (Restored.Contains(it.InstanceId)) continue;
-                    float ts = 0f;
-                    try { ts = it.TimeScale; } catch { }
-                    if (ts >= 0.30f && ts <= 0.55f)
-                    {
-                        it.TimeScale = ts * 2f;
-                        Restored.Add(it.InstanceId);
-                        restored++;
-                        if (restored <= 5)
-                            lines.Add($"ITEM {it.InstanceId}(cfg={it.ItemConfigId}) TimeScale {ts:0.###} -> {ts * 2f:0.###}（恢复 v1.1.0 损伤）");
-                    }
-                }
-            }
-        }
-        catch (Exception e) { lines.Add("WARN 修复扫描失败: " + e.Message); }
-        if (restored > 5) lines.Add($"...共恢复 {restored} 件");
-        return (restored, lines);
-    }
+    // v1.1.0 存档修复器（RepairV11TimeScale）已于 2026-10-18 彻底移除：
+    // 它是"绝不写 Data_Item"红线下唯一的特许例外，且判定区间 [0.30,0.55] 只按事故值 0.385
+    // 标定、未覆盖合法天赋档位——2026-10-18 实测误伤 6 件 ts=0.5 的物品（显示保质翻倍）。
+    // 自此全套件零物品写入、零存档写入，无任何例外。
 
     public static string Name(GameCore.HotUpdate.Config_Bag bag)
     {
