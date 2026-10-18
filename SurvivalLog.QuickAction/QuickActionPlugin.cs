@@ -77,7 +77,7 @@ public sealed class QuickActionPlugin : BasePlugin
             "周期结算类自动跳过。0=恢复原值。");
         MaintMs = Config.Bind(gsec, "房屋维护Ms", boot.maint,
             "房屋维护动作（RepairFurniture 分类，约 78 条可改：布置/安装/移动/拆除陷阱、安装家具）。\n" +
-            "修理/加固本体系 10 条为周期结算（收益∝耗时），自动跳过。0=恢复原值。");
+            "修理/加固主体已实证固定收益、正常提速；个别收益∝耗时的（如钻研构造）自动跳过。0=恢复原值。");
         MiscMs = Config.Bind(gsec, "杂项交互Ms", boot.misc,
             "杂项交互（Other 分类中玩家可触发的，约 135 条：搜查/翻找/查看/开关电器/拾取/家务）。\n" +
             "内部行为（情绪播报/呕吐腹泻/系统动作）不被家具或物品引用，自动跳过。0=恢复原值。");
@@ -344,6 +344,10 @@ internal sealed class QuickTicker : MonoBehaviour
         30,          // 修补房门（15 秒，玩家修门主体动作；ECID30 仅 End 一次性消耗，修复量=固定）
         43,          // 修复电力（60 秒，与 30 共用效果行；同机制）
         44,          // 修复窗户（15 秒，ECID44 仅 End 一次性消耗；同机制）
+        9071,        // 加固窗户（15 秒，家具功能 2126 窗户本体加固主体动作。效果行与 118 逐列
+                     // 全等：AInt=1800/SInt=-5/StInt=-10 纯劳动消耗、IV 全 0，同一
+                     // AE_AddFurnitureDurabilityMax=IntValue×层数 固定收益机制。2026-10-18
+                     // 玩家实测窗户加固 15 秒未提速排查补入；ActionWatch 证实 FuncId=2126→9071）
         118,         // 加固房门（15 秒，AE_AddFurnitureDurabilityMax=IntValue×层数 固定）
         120,         // 修理工作台（30 秒，ECID120 每周期饱食-5/体力-10 纯消耗；同机制）
     };
