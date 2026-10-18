@@ -29,6 +29,15 @@ namespace SurvivalLog.CabinetExpand;
 ///
 /// 合并后的单写者原则：全游戏只有本 mod 写 Config_Bag.Size（BackpackExpand 只管玩家
 /// 背包链 1-11，名单与家具发现天然不相交）——彻底消除旧"双 mod 共管 ×2.25 双乘"风险。
+///
+/// 第三组"载具"（2026-10-18 用户拍板"只扩载具和家里的购物袋，宽高各×1.5"）：
+/// 载具后备箱 = Config_Vehicle(档位).TrunkBagId → Config_Bag（自行车站/轿车/SUV，
+/// VehicleShop 换挡，包 ID 运行时枚举自动跟上新车）；家门口塑料袋（购物袋）= 专用包
+/// VehicleConfig.DoorBoxBagId=1023（家具 1024 表面默认 2003 是纸箱/睡袋等场景共用包，
+/// 门口袋系统用自己的 1023，无家具引用故家具自动发现天然扫不到）。数量上限
+/// DoorBoxMaxCount=2 深度固化（存档 schema 就是 DoorBoxItems/DoorBoxItems2 两个字段），
+/// 不加袋子数，扩格子即达成"每个袋子装更多"。溢出行为实证：到家卸货 TryMoveBagAll
+/// 能装多少装多少，装不下的留在后备箱不丢失。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class CabinetExpandPlugin : BasePlugin
@@ -36,7 +45,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
     public const string Guid = "com.local.survivallog.cabinetexpand";
     public const string Name = "CabinetExpand";
     // 跟随套件 version.json，发版时同步（版本号由作者定义）
-    public const string Version = "1.3.5";
+    public const string Version = "1.3.6";
 
     internal static ManualLogSource Log;
 
@@ -44,6 +53,8 @@ public sealed class CabinetExpandPlugin : BasePlugin
     internal static ConfigEntry<float> HeightMult;
     internal static ConfigEntry<float> FridgeWidthMult;
     internal static ConfigEntry<float> FridgeHeightMult;
+    internal static ConfigEntry<float> VehicleWidthMult;
+    internal static ConfigEntry<float> VehicleHeightMult;
     internal static ConfigEntry<int> MaxCols;
     internal static ConfigEntry<string> ExtraIds;
     internal static ConfigEntry<string> ExcludeIds;
@@ -52,6 +63,12 @@ public sealed class CabinetExpandPlugin : BasePlugin
     internal static ConfigEntry<bool> DiagOnOpen;
 
     internal static volatile bool Rerun = true;
+
+    /// <summary>家门口塑料袋专用包（VehicleConfig.DoorBoxBagId 常量的本 mod 镜像，2026-10-18 反汇编实证）。</summary>
+    internal const int DoorBoxBagId = 1023;
+
+    /// <summary>载具组当前受管包快照（门口袋初始化诊断用：核对实际 bagConfigId 是否在管）。</summary>
+    internal static volatile System.Collections.Generic.HashSet<int> ManagedVehicleBags;
 
     /// <summary>
     /// 冰箱组静态种子（原 FridgeExpand 默认名单成员，3002 除外——箱子族有大量非冷链
@@ -93,6 +110,10 @@ public sealed class CabinetExpandPlugin : BasePlugin
             "冰箱宽度倍数（四舍五入取整）。1 = 还原原生。原冰箱扩容 mod 已并入本 mod。");
         FridgeHeightMult = Config.Bind("Expand", "FridgeHeightMult", 1.5f,
             "冰箱高度倍数（四舍五入取整）。1 = 还原原生。");
+        VehicleWidthMult = Config.Bind("Expand", "VehicleWidthMult", 1.5f,
+            "载具与门口购物袋宽度倍数（四舍五入取整）。名单=Config_Vehicle 全部后备箱包(自动跟上新车)+门口塑料袋专用包 1023。1 = 还原原生。");
+        VehicleHeightMult = Config.Bind("Expand", "VehicleHeightMult", 1.5f,
+            "载具与门口购物袋高度倍数（四舍五入取整）。1 = 还原原生。");
         MaxCols = Config.Bind("Expand", "MaxCols", 23,
             "扩容后的宽度上限（倍数取整后再封顶；0 = 不封顶）。默认 23 = 与超大型置物架同宽，" +
             "所有柜子页签宽度统一，各界面只需一档缩放、切柜子不跳尺寸。材料架受影响：30→23 列（540→414 格）。");
@@ -113,6 +134,8 @@ public sealed class CabinetExpandPlugin : BasePlugin
         HeightMult.SettingChanged += reload;
         FridgeWidthMult.SettingChanged += reload;
         FridgeHeightMult.SettingChanged += reload;
+        VehicleWidthMult.SettingChanged += reload;
+        VehicleHeightMult.SettingChanged += reload;
         MaxCols.SettingChanged += reload;
         ExtraIds.SettingChanged += reload;
         ExcludeIds.SettingChanged += reload;
@@ -140,6 +163,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
         ViewportFit.Attach();
         Log.LogInfo($"[CabinetExpand] loaded：柜子宽×{WidthMult.Value} 高×{HeightMult.Value}；" +
                     $"冰箱宽×{FridgeWidthMult.Value} 高×{FridgeHeightMult.Value}（已并入原冰箱扩容）；" +
+                    $"载具与购物袋宽×{VehicleWidthMult.Value} 高×{VehicleHeightMult.Value}；" +
                     $"视口守卫 {(ViewportFit.Enabled.Value ? "开" : "关")}");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
@@ -219,6 +243,58 @@ public sealed class CabinetExpandPlugin : BasePlugin
         }
         catch { }
         return "?";
+    }
+
+    /// <summary>
+    /// 载具组发现（2026-10-18）：枚举 Config_Vehicle 全部行取 TrunkBagId（档位→包，
+    /// 新车自动跟上）+ 门口塑料袋专用包 1023（VehicleConfig.DoorBoxBagId 常量镜像）。
+    /// 这两个来源都没有家具引用，与家具自动发现天然不相交；仍防御性从柜子/冰箱组
+    /// 摘除撞号包（载具语义优先）并记日志。ExcludeIds 同样对载具组生效。
+    /// tableReady=Config_Vehicle 表是否已加载（主菜单阶段为 false——车表随对局世界
+    /// 加载，届时由 Ticker 补录名单；1023 种子不受影响，恒生效）。
+    /// </summary>
+    internal static HashSet<int> DiscoverVehicles(
+        HashSet<int> cabinets, HashSet<int> fridges, List<string> notes, out bool tableReady)
+    {
+        var vehicles = new HashSet<int>();
+        var cm = BagTable.Cm();
+        tableReady = false;
+
+        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Vehicle> vdict = null;
+        try { vdict = cm == null ? null : cm._Config_Vehicle_Dict; } catch { }
+        if (vdict != null && vdict.Count > 0)
+        {
+            tableReady = true;
+            foreach (var pair in vdict)
+            {
+                var v = pair.Value;
+                if (v == null) continue;
+                int trunkId = 0;
+                try { trunkId = v.TrunkBagId; } catch { continue; }
+                if (trunkId <= 0) continue;
+                if (vehicles.Add(trunkId))
+                    notes?.Add($"{pair.Key}({VehName(v)})→包{trunkId}({BagName(trunkId)})");
+            }
+        }
+
+        if (vehicles.Add(DoorBoxBagId))
+            notes?.Add($"门口塑料袋→包{DoorBoxBagId}({BagName(DoorBoxBagId)})");
+
+        foreach (var id in BagTable.ParseIds(ExcludeIds.Value)) vehicles.Remove(id);
+
+        // 撞号防御：包同时被家具发现收录时归载具组（当前名单实证无撞号，纯保险）
+        foreach (var id in vehicles)
+        {
+            if (cabinets.Remove(id) || fridges.Remove(id))
+                notes?.Add($"包{id} 同时命中家具发现，已归载具组");
+        }
+        return vehicles;
+    }
+
+    private static string VehName(GameCore.HotUpdate.Config_Vehicle v)
+    {
+        try { return v.Name_Local ?? v.Name ?? "?"; }
+        catch { return "?"; }
     }
 
     // ── 宽度封顶（2026-10-16）：本地原尺寸缓存 + 分流 + 封顶改写，不动 ModShared ──
@@ -339,11 +415,33 @@ public sealed class CabinetExpandPlugin : BasePlugin
 internal static class BagInitDiag
 {
     private static readonly System.Collections.Generic.HashSet<int> Seen = new();
+    // 门口袋/载具实证钉子（always-on，不受 DiagOnOpen 控制，每包只打一次）：
+    // 受管载具包的实例初始化必打（=扩容在真实容器上落地）；2003（纸箱共包，门口袋
+    // 若被版本改绑的候选）也提示一次——门口袋显示未扩容时据回报定夺（IsDoorBox 标志
+    // 在 BagFurniture 非 BagComponent，跨类取不可靠，弃用标志改按包打点）。
+    private static readonly System.Collections.Generic.HashSet<int> Watched = new();
+    internal static readonly int DoorBoxAltId = 2003; // 家具 1024 表面默认包（场景共包，不扩）
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(GameCore.HotUpdate.Battle.Logic.BagComponent), "OnInit")]
     private static void Postfix(GameCore.HotUpdate.Battle.Logic.BagComponent __instance, int bagConfigId)
     {
+        try
+        {
+            var managed = CabinetExpandPlugin.ManagedVehicleBags;
+            if (managed != null && managed.Contains(bagConfigId) && Watched.Add(bagConfigId))
+                CabinetExpandPlugin.Log.LogInfo(
+                    $"[CabinetExpand][载具] 包 {bagConfigId}（{BagNameSafe(bagConfigId)}）实例初始化，扩容已生效");
+            else if (bagConfigId == DoorBoxAltId && Watched.Add(bagConfigId))
+                CabinetExpandPlugin.Log.LogInfo(
+                    $"[CabinetExpand][门口袋核对] 检测到共包 {DoorBoxAltId}（{BagNameSafe(DoorBoxAltId)}，纸箱/睡袋等场景共用）实例初始化。" +
+                    "门口购物袋若未扩容而其他柜子正常，说明该版本门口袋改绑此包，请回报本行。");
+        }
+        catch (Exception e)
+        {
+            CabinetExpandPlugin.Log.LogWarning("[CabinetExpand][载具] 诊断读取失败: " + e.Message);
+        }
+
         if (!CabinetExpandPlugin.DiagOnOpen.Value) return;
         try
         {
@@ -370,15 +468,25 @@ internal static class BagInitDiag
             CabinetExpandPlugin.Log.LogWarning("[CabinetExpand][诊断] OnInit 读取失败: " + e.Message);
         }
     }
+
+    private static string BagNameSafe(int bagConfigId)
+    {
+        try
+        {
+            var cm = BagTable.Cm();
+            var dict = cm == null ? null : BagTable.BagDict(cm);
+            if (dict != null && dict.TryGetValue(bagConfigId, out var bag) && bag != null)
+                return BagTable.Name(bag);
+        }
+        catch { }
+        return "?";
+    }
 }
 
 internal sealed class CabinetTicker : MonoBehaviour
 {
     public CabinetTicker(IntPtr ptr) : base(ptr) { }
     public CabinetTicker() { }
-
-    private float _check;
-    private bool _announced;
 
     public void Update()
     {
@@ -391,6 +499,12 @@ internal sealed class CabinetTicker : MonoBehaviour
         var fridgeNotes = new List<string>();
         var (cabinets, fridges) = CabinetExpandPlugin.DiscoverTargets(fridgeNotes);
         if (cabinets == null) { CabinetExpandPlugin.Rerun = true; return; }
+
+        var vehicleNotes = new List<string>();
+        bool vehTableReady;
+        var vehicles = CabinetExpandPlugin.DiscoverVehicles(cabinets, fridges, vehicleNotes, out vehTableReady)
+                       ?? new HashSet<int>();
+        CabinetExpandPlugin.ManagedVehicleBags = vehicles;
 
         var listAll = CabinetExpandPlugin.ListOnReady.Value && !_announced;
         var lines = new List<string>();
@@ -416,6 +530,17 @@ internal sealed class CabinetTicker : MonoBehaviour
         // scanned2 < 0 只在配置表整体未就绪时发生，此时 scanned1 也会 <0，上面已返回
         lines.AddRange(lines2);
 
+        // 载具组：与柜子/冰箱同分流（宽度封顶保护背包双栏视图，超宽的包本地封顶改写）
+        var (vehiclesNormal, vehiclesCap) = CabinetExpandPlugin.PartitionByCap(vehicles, CabinetExpandPlugin.VehicleWidthMult.Value, cap);
+        var (scanned3, _, lines3) = BagTable.RewriteSize(
+            vehiclesNormal, CabinetExpandPlugin.VehicleWidthMult.Value, CabinetExpandPlugin.VehicleHeightMult.Value,
+            CabinetExpandPlugin.Verbose.Value || listAll);
+        if (scanned3 < 0) { CabinetExpandPlugin.Rerun = true; return; }
+        lines.AddRange(lines3);
+        if (vehiclesCap.Count > 0)
+            lines.AddRange(CabinetExpandPlugin.CappedRewrite(vehiclesCap,
+                CabinetExpandPlugin.VehicleWidthMult.Value, CabinetExpandPlugin.VehicleHeightMult.Value, cap));
+
         if (fridgesCap.Count > 0)
             lines.AddRange(CabinetExpandPlugin.CappedRewrite(fridgesCap,
                 CabinetExpandPlugin.FridgeWidthMult.Value, CabinetExpandPlugin.FridgeHeightMult.Value, cap));
@@ -436,8 +561,24 @@ internal sealed class CabinetTicker : MonoBehaviour
                 $"[CabinetExpand] 生效：{cabinetsNormal.Count + cabinetsCap.Count} 个柜子包（宽×{CabinetExpandPlugin.WidthMult.Value} 高×{CabinetExpandPlugin.HeightMult.Value}" +
                 (cabinetsCap.Count > 0 ? $"，{cabinetsCap.Count} 包宽度封顶≤{cap}" : "") + "）+ " +
                 $"{fridges.Count} 个冰箱包（宽×{CabinetExpandPlugin.FridgeWidthMult.Value} 高×{CabinetExpandPlugin.FridgeHeightMult.Value}" +
-                (fridgesCap.Count > 0 ? $"，{fridgesCap.Count} 包宽度封顶≤{cap}" : "") + "）；" +
-                "名单=家具表自动发现+黑名单，新增柜子/冰箱自动跟上。");
+                (fridgesCap.Count > 0 ? $"，{fridgesCap.Count} 包宽度封顶≤{cap}" : "") + "）+ " +
+                $"{vehicles.Count} 个载具包（宽×{CabinetExpandPlugin.VehicleWidthMult.Value} 高×{CabinetExpandPlugin.VehicleHeightMult.Value}" +
+                (vehiclesCap.Count > 0 ? $"，{vehiclesCap.Count} 包宽度封顶≤{cap}" : "") + "）；" +
+                "名单=家具表自动发现+黑名单，新增柜子/冰箱/车辆自动跟上。");
+        }
+
+        // 车表随对局世界加载（主菜单阶段未就绪）：就绪首轮补录完整载具名单（1023 种子
+        // 已在生效播报里，此后新增的后备箱包改写时自带 BAG 明细行）
+        if (vehTableReady && !_vehListed)
+        {
+            _vehListed = true;
+            CabinetExpandPlugin.Log.LogInfo(
+                "[CabinetExpand] 载具组补录（Config_Vehicle 全档后备箱+门口塑料袋 1023，新车自动跟上）：" +
+                string.Join("、", vehicleNotes));
         }
     }
+
+    private float _check;
+    private bool _announced;
+    private bool _vehListed;
 }

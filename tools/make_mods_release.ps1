@@ -73,6 +73,12 @@ foreach ($m in $mods) {
         $txt = [System.IO.File]::ReadAllText($dstCfg, [System.Text.Encoding]::UTF8)
         $txt = $txt -replace '(?m)^(WidthMult\s*=\s).*$',  '${1}1.5'
         $txt = $txt -replace '(?m)^(HeightMult\s*=\s).*$', '${1}1.5'
+        # Fridge*/Vehicle* 倍数键一并归一（v1.3.6：此前仅裸 Width/HeightMult 有归一，
+        # Fridge 键漏网是隐患；Vehicle 键随载具组新增，默认同为 1.5）
+        $txt = $txt -replace '(?m)^(FridgeWidthMult\s*=\s).*$',  '${1}1.5'
+        $txt = $txt -replace '(?m)^(FridgeHeightMult\s*=\s).*$', '${1}1.5'
+        $txt = $txt -replace '(?m)^(VehicleWidthMult\s*=\s).*$',  '${1}1.5'
+        $txt = $txt -replace '(?m)^(VehicleHeightMult\s*=\s).*$', '${1}1.5'
         # BurdenMult 同名不同义：背包=2（倍增玩家背包），柜子负重=1000（解除家具限制）——按 mod 区分
         if ($m.Name -eq 'BackpackExpand') { $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$', '${1}2' }
         if ($m.Name -eq 'CabinetBurden') {
