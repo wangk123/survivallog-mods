@@ -29,3 +29,6 @@ tools/*.session.json
 # WebUI 源码快照（游戏本体资源导出，同 il2cpp_out 约定：可再获取，不入库）
 tools/webui_src/
 .worktrees/
+
+# mdump 工具的元数据 dump 产物（6.6MB 级文本，本地留用不入库；工具源码本身入库）
+tools/mdump/*.txt
