@@ -52,7 +52,7 @@
 |---|---|
 | `FridgeChillPlugin.cs` | 入口：配置定义、Rerun、注入 Ticker、挂 TalentCapPatch |
 | `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）；KeepMult≤1.01 直接跳过 |
-| `TalentCapBytePatch`（同文件） | 零开销**字节补丁**：改写 Apply 函数内读取 0.1 常量的 movss 指令的 rel32，指向 int3 间隙里的自备 scratch float（=1/MaxTotalMult）。签名扫描+旧槽值校验+回读自证三重安全闸，任何一步不符即功能关闭回落原生。ApplyColdChainEnhance 与其同一段原生代码，一处覆盖两条通道 |
+| `TalentCapBytePatch`（同文件） | 零开销**字节补丁**：改写 Apply 函数内读取 0.1 常量的 movss 指令的 rel32，指向 int3 间隙里的自备 scratch float（=1/MaxTotalMult）。签名扫描+旧槽值校验+回读自证三重安全闸，任何一步不符即功能关闭回落原生。ApplyColdChainEnhance 与其同一段原生代码，一处覆盖两条通道。**scratch 页权限必须 0x40 RWX（2026-10-18 v1.3.7 闪退事故）**：int3 间隙与在役函数同 4KB 页，误用 0x04（RW 无执行权）→ 页上任何函数一执行即 AccessViolation 首启必崩；实测禁用即恢复、改 0x40 后带补丁满速运行（日志"签名命中 1 处取 1"后持续存活） |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll）：RewriteFridgeChill 按 `Config_Furniture.BagId ∈ 名单 && ColdRate>0` 定位冰箱家具 |
 
 ## 4. 配置项（com.local.survivallog.fridgechill.cfg）

@@ -236,7 +236,10 @@ internal static class TalentCapBytePatch
             }
             if (gap < 0) { log.LogWarning("[FridgeChill] 天赋上限补丁：无 int3 间隙可用，功能关闭"); return; }
             _scratch = (IntPtr)((long)secStart + gap);
-            VirtualProtect(_scratch, (UIntPtr)8, 0x04, out _); // PAGE_READWRITE
+            // 必须开 0x40（RWX）：int3 间隙所在的 4KB 页上有在役函数，页级权限不含 EXECUTE
+            // 会让任何线程执行到该页即 AccessViolation——v1.3.7 首启闪退根因（当时误用 0x04
+            // 只读写剥执行权，实测禁用本插件即恢复）。保持 RWX 不恢复：UpdateFloor 还要重写。
+            VirtualProtect(_scratch, (UIntPtr)8, 0x40, out _); // PAGE_EXECUTE_READWRITE
 
             // ⑤ 改写目标指令 rel32 → scratch
             VirtualProtect(insn, (UIntPtr)8, 0x40, out var oldProt); // PAGE_EXECUTE_READWRITE
