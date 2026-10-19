@@ -56,7 +56,8 @@
   // 视图谓词：o = {t:[tagId...], kind:'c'|'f'|'r'}，返回 true=该容器在本界面可见。
   // browser：sel 语义同 v2（0=全部/foodId=食物域/其他=精确命中）+「其他」=未打标签容器 + 材料架伪标签；
   // food：全部冰箱一律显示（无论有无标签），柜子/材料架按食物域（材料架伪标签必然不中→隐藏）；
-  // material：材料+工具+未打标签柜、材料架显、冰箱藏（S.matFood=T9 的 cfg 钩子，默认 false）。
+  // material：材料+工具标签柜（未打标签柜不进——2026-10-19 作者定版：通信设备等无标签容器
+  //   混进工作台既无用又放大整表重算成本；要看无标签柜去 Browser 视图选「其他」）、材料架显、冰箱藏。
   function viewAllows(st, o) {
     var m = frameMode(st);
     if (m === 'browser') {
@@ -70,10 +71,10 @@
       if (o.kind === 'f') return true;                    // 全部冰箱一律显示
       return matchesFood(o.t);                            // 柜子/材料架按食物域（材料架必然不中→隐藏）
     }
-    // material：材料+工具+未标签柜；不含冰箱；材料架显
+    // material：材料+工具标签柜；不含冰箱、不含未打标签柜；材料架显
     if (o.kind === 'r') return true;
     if (o.kind === 'f') return false;
-    return o.t.length === 0 || o.t.indexOf(S.matId) >= 0 || o.t.indexOf(S.toolId) >= 0
+    return o.t.indexOf(S.matId) >= 0 || o.t.indexOf(S.toolId) >= 0
         || (S.matFood && matchesFood(o.t));               // S.matFood：K2 取证结论为「工作台需含食物域」时才加 cfg Scenario.MaterialIncludeFood 并经 scenario JSON 推送（当前无此键，默认 false）
   }
   function shouldHide(k, st) {

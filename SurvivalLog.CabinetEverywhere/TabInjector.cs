@@ -180,8 +180,9 @@ internal static class TabInjector
     /// <summary>
     /// 注入后触发界面重推：WebUIVm 绑定是脏标记制（MarkAllMsgDirty → OnMsgChange 序列化推送 JS），
     /// ObservableList.Add 后必须走一遍 VM 的重推，JS 才会收到 bagTabs（TriggerStateSubscribe 实证无效）。
+    /// ToolTablePruner 修剪 CabinetTabs 后同用此通道。
     /// </summary>
-    private static void Repush(GameCore.HotUpdate.ReduxUI.ReduxUISystem rus, Il2CppSystem.Type uiType)
+    internal static void Repush(GameCore.HotUpdate.ReduxUI.ReduxUISystem rus, Il2CppSystem.Type uiType)
     {
         try
         {

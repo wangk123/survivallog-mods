@@ -39,10 +39,11 @@
 
 - **Food**：全部冰箱一律显示（无论有无标签）；柜子按食物域命中（任一标签 Dim 1-4）显示；
   材料架必然不中→隐藏。
-- **Material**：材料 + 工具 + 未打标签的柜子显示；材料架显示；**冰箱隐藏**。
-  材料组当前实现 = 材料+工具+未标签（不含冰箱、不含食物域柜子）。**语义以 K2 取证结论
-  为准**（工作台配方是否消耗食物域材料，作者节点取证中）；若 K2 结论需含食物，后续版本
-  再加 cfg 开关（当前无此键，勿在文档/说明里写"已支持"）。
+- **Material**：材料 + 工具标签的柜子显示；材料架显示；**冰箱隐藏；未打标签柜隐藏
+  （2026-10-19 作者定版：通信设备等无标签容器混进工作台既无用又放大整表重算成本；
+  要看无标签柜切 Browser 选「其他」）**。材料组当前实现 = 材料+工具（不含冰箱、不含
+  未标签、不含食物域柜子）。S.matFood 钩子保留（K2 若定"工作台需含食物域"再启用，
+  当前无此键，勿在文档/说明里写"已支持"）。
 - **Browser**：下拉自由筛选，选项 = 全部柜子 / 其他（未打标签容器）/ 食物（Dim 1-4 汇总）/
   物资维度（Dim 0）逐标签按官方 Order；材料架补"材料"伪标签参与筛选。选中态按界面记忆
   （localStorage `sltf_sel_v3`，键 = iframe 元素 id），重启保持。
@@ -179,10 +180,11 @@
 
 | 文件 | 职责 |
 |---|---|
-| `CabinetEverywherePlugin.cs` | 入口：配置定义（Access/Filter/Scenario/Debug 四区）、AccessTicker（慢通道 5s：名单重扫+白名单+统一扫描+筛选；快通道 0.5s：页签注入轮询） |
+| `CabinetEverywherePlugin.cs` | 入口：配置定义（Access/Filter/Scenario/Debug 四区）、AccessTicker（慢通道 5s：名单重扫+白名单+统一扫描+筛选；快通道 0.5s：页签注入轮询+工作台修剪轮询） |
 | `CabinetCatalog.cs` | 统一容器扫描：单遍产出 AllContainers（筛选）+ HomeInstances（直达）+ 包镜像补全 + DumpFurniture 诊断 |
 | `CraftSourceInjector.cs` | 白名单注入（幂等 Add + 日志自证） |
-| `TabInjector.cs` | 烹饪/老鼠笼/酿酒/颜料桶 页签注入（会话防重、缺则补挂、Repush 重推） |
+| `ToolTablePruner.cs` | 工作台 CabinetTabs 修剪：扫描=所见（2026-10-19/20 制作卡顿治理，见 2.7） |
+| `TabInjector.cs` | 烹饪/老鼠笼/酿酒/颜料桶 页签注入（会话防重、缺则补挂、Repush 重推；Repush 供 Pruner 共用） |
 | `TagFilter.cs` | WebView 注入通道：幂等引导 + 标签数据 JSON v3 + scenario 段 + 同源探针 |
 | `tagfilter.page.js` | 内嵌资源 JS：截读页签数据、DOM 隐藏、消息层扣发+伪造切换、回声丢弃、场景视图判定、自绘下拉 |
 | `ModShared\BagTableRw.cs` | 共享源码（ConfigManager/FurnDict/ParseIds/FurnName，编译进本 dll） |
@@ -191,6 +193,44 @@
 改完必须 `node --check` + 重编 dll + 部署复测（A/D 步进/到头/边界落点/交易页卡死是回归高危区，
 见附录 C 演进史）。
 
+### 2.7 工作台页签修剪：扫描=所见（2026-10-19/20 制作卡顿治理，v1.3.8 起默认行为）
+
+**问题链（docs\工作台制作卡顿取证档案_2026-10-19.md G3/G12）**：原生每次重算
+（RefreshRecipeList，工作台开着期间制作事件驱动高频触发）按 CabinetTabs **逐容器**取物品
+扫描全部配方（成本=Σ容器物品行×配方数）；白名单是类型粒度，表达不了实例标签 → 此前
+"全量进列表 + JS 藏显示"，显示收窄了、扫描没收窄，制作批量+3 倍速时高频全量重算=卡顿主放大项。
+
+**做法**（零 Harmony，状态列表操作，TabInjector 同手法）：开台后 0.5s 轮询——
+- 首见条目登记全量底（ownerId/config/name/IsRack）；
+- 按视图谓词（与 tagfilter.page.js viewAllows **同语义**：Material=材料/工具标签+材料架伪标签，
+  Food=食物域 dim1-4，Browser 不剪；ownerId 不在容器表→放行，JS 对 undefined 同款）计算期望集；
+- 对账收敛：移出新隐藏（**活动页签不剪**，防原生 activeLeftTab 错位）+ 按登记加回新可见
+  （标签变更即时生效），签名不变则零动作零重推；
+- 修剪后重排全部 Index=列表位次并平移 ActiveLeftTab（索引语义 JS 实证：activeLeftTab<2=背包/
+  抽屉，柜子页签从 +2 起，TAB_SWITCH{j+2}）；动过列表才 `Repush`（MarkAllMsgDirty+OnMsgChange）。
+
+**边界**：背包/工作台抽屉不在 CabinetTabs（原生 GetAllLinkedOwnerIds 另加），永不受影响；
+自动取料随列表收窄（所见即所取料范围）；交易/无人机站/粉碎机/温室不受本组件影响（Browser
+全量语义 / 它们无高频重算）。原生开台瞬间的一次全量重算仍在（RA_Open 先跑、修剪 0.5s 后到），
+卡顿场景是制作期间的高频重算，开台一次性成本与现状相同。
+
+**日志**：汇总行常开（开台登记 N 条 / 修剪 X 加回 Y 扫描集=N）；逐条判定明细走
+`Debug.Verbose`（发版关开关即静默，不删代码——2026-10-19/20 作者定版的工作方式）。
+修剪为默认行为（v1.3.8 起无独立开关，回滚=降级 dll）。
+
+
+### 2.8 工作台袋刷新合并：一次做一次算（2026-10-19/20 制作卡顿治理第二步）
+
+**量化依据（ToolTableProbe 实测，维修零件×10）**：重算 53 次/制作期（5.3 次/秒），单次 avg 38.9ms
+max 65ms；每件完成 TryCreateItem 230~263ms。级联构成（G4/G14）：单件完成的同帧里 材料移除×N +
+产物入包×M 各触发一次全量重算，加 RA_Result 自身+自动级联 ×2 → 每件 5~6 次。
+
+**做法（作者定版设计，否决固定频率阀）**：Harmony prefix 挂 `Ac_ToolTable_RefreshBag.SendAction()`
+（无参，袋变更→RA_RefreshBag→RefreshRecipeList 风暴的统一入口）——同帧多次触发只挂待办、
+下一帧由 AccessTicker（每帧最先）补派一次；补派走原生完整派发管线（界面自然重推，区别于
+已回滚的"计算层跳过"阀）。RA_Result 内部重算不碰（每件保留 1 次）。
+**每件完成 = 1+1 = 最多 2 次重算；显示滞后一帧（16~33ms）**；点配方/制作/收产物原路径零影响。
+补派期间 _flushing 直通防自环。默认行为（v1.3.8 起无独立开关）。
 ## 3. 配置项（com.local.survivallog.cabineteverywhere.cfg）
 
 | 分区.键 | 默认 | 说明 |
@@ -208,7 +248,8 @@
 | Debug.ListOnReady | true | 启动日志列全名单（核对用） |
 | Debug.DumpFurniture | false | 全量家具明细诊断（owner/map/楼层/判定，热改约 5s 生效） |
 
-视图枚举：Food=食物标签柜+全部冰箱；Material=材料/工具/未标签柜（不含冰箱）；
+视图枚举：Food=食物标签柜+全部冰箱；Material=材料/工具标签柜（不含冰箱与未打标签柜，
+2026-10-19 定版）；
 Browser=下拉自由筛选。发版打包时 make_mods_release.ps1 会把 Include/ExcludeFurnitureIds 归一
 为空、ExcludeBagIds 保留默认、Filter.Enable 归一 true、Scenario.View_* 归一发布默认、
 Debug 全关（防本机实验值带进发布包）。
@@ -223,8 +264,10 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
 - 与 4 个扩容 mod 零冲突（一个管格子数量，本 mod 管出现在哪些界面/可见性）。
 - 温室/粉碎机连带认柜子（白名单 5 消费方共用，无法只开部分界面——属增益）。
 - 柜子页签遵守原生规则：无负重语义；保鲜看家具冷链属性（柜子非冷链，食物放柜子不保鲜——原生行为）。
-- 筛选是显示层：不改下发给界面的 tab 数组/下标（索引制界面切错柜子的根因，附录 C §C6），
-  自动取料链不受影响。
+- 筛选是显示层：**除工作台外**不改下发给界面的 tab 数组/下标（索引制界面切错柜子的根因，
+  附录 C §C6）；工作台是唯一例外——2.7 修剪直接改 CabinetTabs（改后重排 Index+平移
+  ActiveLeftTab+Repush，2026-10-19/20 卡顿治理，扫描=所见）。
+  工作台自动取料随列表收窄（所见即取料范围，符合直觉）；其余界面自动取料链不受影响。
 - interop 依据：`ToolCabinetConfig.CraftSourceFurnitureIds` 静态属性直访（先例
   ConfigManager._bagSizeSet）；`Il2CppType.From()` 转换 UI 类型参数；`R3.ReactiveProperty<T>`
   构造可 new；`agentComponentDictionary` 按 Type 索引直达组件（无泛型/枚举坑）。

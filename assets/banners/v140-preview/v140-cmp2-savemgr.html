@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>v1.4.0 候选02 存档管理 · 对比图 1080x1920</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#1b1b1f; font-family:"Microsoft YaHei","SimHei","PingFang SC",sans-serif; }
+  .cover { width:1080px; height:1920px; position:relative; overflow:hidden; margin:48px auto;
+    background: radial-gradient(1200px 900px at 50% 36%, #23252b 0%, #16171b 55%, #0f1013 100%); color:#f2efe6; }
+  .cover::before { content:""; position:absolute; inset:0;
+    background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size:72px 72px; }
+  .stripe { position:absolute; left:0; right:0; height:44px; z-index:3;
+    background: repeating-linear-gradient(-45deg, #f5c518 0 38px, #17181c 38px 76px); }
+  .stripe.top { top:0; } .stripe.bot { bottom:0; }
+  .wm { position:absolute; top:30%; left:50%; transform:translate(-50%,-50%);
+    font-family:Impact,"Arial Black",sans-serif; font-size:430px; line-height:1; letter-spacing:8px;
+    color:transparent; -webkit-text-stroke:3px rgba(245,197,24,.10); z-index:1; }
+  .inner { position:relative; z-index:2; height:100%; display:flex; flex-direction:column; align-items:center;
+    padding:110px 90px 108px; text-align:center; }
+  .badge { border:2px solid rgba(245,197,24,.85); color:#f5c518; font-size:32px; letter-spacing:6px;
+    padding:14px 36px; font-weight:700; }
+  .kicker { margin-top:44px; color:#9aa0a8; font-size:30px; letter-spacing:12px; }
+  .kicker b { color:#f5c518; font-family:Impact,"Arial Black",sans-serif; font-size:36px; letter-spacing:3px; }
+  .title { margin-top:22px; font-size:136px; font-weight:900; color:#ffffff; letter-spacing:10px;
+    text-shadow:0 10px 44px rgba(0,0,0,.65); line-height:1.1; }
+  .desc { margin-top:26px; font-size:38px; color:#cfd3da; letter-spacing:4px; }
+  .desc s { color:#8b9099; }
+  .desc b { color:#7fd18a; font-weight:900; }
+  .panel { width:880px; border:1px solid; background:rgba(255,255,255,.03); text-align:left; }
+  .panel .head { display:flex; align-items:center; gap:20px; padding:22px 36px; font-size:36px;
+    font-weight:900; letter-spacing:5px; border-bottom:1px dashed; }
+  .panel .head .tag { font-family:Impact,"Arial Black",sans-serif; font-size:30px; letter-spacing:2px;
+    padding:6px 16px; flex:none; }
+  .panel .rows { padding:10px 0 16px; }
+  .panel .row { display:flex; align-items:flex-start; gap:22px; padding:20px 36px 6px; font-size:32px;
+    line-height:1.45; color:#d9dde3; letter-spacing:2px; }
+  .panel.before { border-color:rgba(224,59,48,.55); }
+  .panel.before .head { color:#ff6b61; border-color:rgba(224,59,48,.5); }
+  .panel.before .head .tag { color:#fff; background:#e03b30; }
+  .panel.before .row .mk { flex:none; font-weight:900; color:#e03b30; font-size:30px; margin-top:3px; }
+  .panel.after { border-color:rgba(127,209,138,.55); }
+  .panel.after .head { color:#7fd18a; border-color:rgba(127,209,138,.5); }
+  .panel.after .head .tag { color:#17181c; background:#7fd18a; }
+  .panel.after .row { color:#e9ede2; }
+  .panel.after .row .mk { flex:none; font-weight:900; color:#7fd18a; font-size:30px; margin-top:3px; }
+  .panel.after .row b { color:#f5c518; font-weight:900; }
+  .swap { margin:30px 0; font-size:30px; font-weight:900; color:#17181c; background:#f5c518;
+    padding:12px 46px; letter-spacing:8px; }
+  .vote { margin-top:38px; width:880px; border:2px dashed rgba(245,197,24,.55); background:rgba(245,197,24,.06);
+    padding:26px 20px; font-size:35px; color:#e8e6dd; letter-spacing:4px; }
+  .vote b { font-size:44px; color:#f5c518; font-weight:900; }
+  .foot { margin-top:auto; font-size:30px; color:#8f959d; letter-spacing:7px; }
+  .stamp { position:absolute; z-index:4; top:1220px; right:64px; width:206px; height:206px; border:9px solid #e03b30;
+    border-radius:50%; color:#e03b30; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:50px; font-weight:900; letter-spacing:4px; line-height:1.25; transform:rotate(-13deg); opacity:.95;
+    background:rgba(15,16,19,.55); }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="stripe top"></div>
+  <div class="stripe bot"></div>
+  <div class="wm">02</div>
+  <div class="inner">
+    <div class="badge">「生存日志」SURVIVAL LOG</div>
+    <div class="kicker">V1.4.0 候选 MOD · <b>02</b> 号</div>
+    <div class="title">存档管理</div>
+    <div class="desc"><s>存错档只能含泪重开</s> ➜ <b>备份回档随手来</b></div>
+    <div class="panel before">
+      <div class="head"><span class="tag">VANILLA</span>没有 MOD 的今天</div>
+      <div class="rows">
+        <div class="row"><span class="mk">✕</span><span>手滑存错一档，几百小时的囤货差点清零</span></div>
+        <div class="row"><span class="mk">✕</span><span>想回档反悔？游戏里没有后悔药</span></div>
+        <div class="row"><span class="mk">✕</span><span>大件装修不敢试，怕一试就毁了整个档</span></div>
+      </div>
+    </div>
+    <div class="swap">▼ 装 上 MOD ▼</div>
+    <div class="panel after">
+      <div class="head"><span class="tag">MOD ON</span>装上 MOD 之后</div>
+      <div class="rows">
+        <div class="row"><span class="mk">✓</span><span>多存位管理，重要节点<b>随手备份</b></span></div>
+        <div class="row"><span class="mk">✓</span><span>装修翻车改主意，<b>一键回档</b>随时反悔</span></div>
+        <div class="row"><span class="mk">✓</span><span>大胆试大胆囤，档在人在心里不慌</span></div>
+      </div>
+    </div>
+    <div class="vote">想让它先上线？评论区扣 <b>2</b></div>
+    <div class="foot">全部 MOD 免费 · 点关注蹲 V1.4.0</div>
+  </div>
+  <div class="stamp">02<br>候选</div>
+</section>
+
+</body>
+</html>

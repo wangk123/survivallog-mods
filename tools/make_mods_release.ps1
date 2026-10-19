@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿﻿$ErrorActionPreference = 'Stop'
 $game     = 'E:\SteamLibrary\steamapps\common\Survival Log'
 $projRoot = 'E:\Game\Mod\mod_stack'
 $relRoot  = Join-Path $projRoot 'release'
@@ -114,6 +114,9 @@ foreach ($m in $mods) {
             $txt = $txt -replace '(?m)^(View_Trade\s*=\s).*$',           '${1}Browser'
             $txt = $txt -replace '(?m)^(View_DroneHub\s*=\s).*$',        '${1}Browser'
             $txt = $txt -replace '(?m)^(DumpFurniture\s*=\s).*$',        '${1}false'
+            $txt = $txt -replace '(?m)^(PerfLog\s*=\s).*$',            '${1}false'
+            $txt = $txt -replace '(?m)^(PruneToolTableTabs\s*=\s).*$',   '${1}true'
+            $txt = $txt -replace '(?m)^(CoalesceBagRefresh\s*=\s).*$',  '${1}true'
         }
         $txt = $txt -replace '(?m)^(KeepMult\s*=\s).*$',   '${1}2'
         $txt = $txt -replace '(?m)^(Verbose\s*=\s).*$',    '${1}false'

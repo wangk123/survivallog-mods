@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace SurvivalLog.CabinetEverywhere;
 
-/// <summary>场景视图：Food=食物标签柜+全部冰箱；Material=材料/工具/未标签柜（不含冰箱）；Browser=下拉自由筛选。</summary>
+/// <summary>场景视图：Food=食物标签柜+全部冰箱；Material=材料/工具标签柜（不含冰箱与未打标签柜，2026-10-19 定版）；Browser=下拉自由筛选。</summary>
 public enum ScenarioView { Food, Material, Browser }
 
 /// <summary>
@@ -84,7 +84,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
 
         // 场景视图默认值按 spec 场景表：烹饪/老鼠笼/酿酒/颜料桶/口粮压制机=Food，
         // 工作台/粉碎机/温室=Material，无人机交易/调度机队=Browser（键名=实测页面 id）
-        const string viewDesc = "界面视图：Food=食物标签柜+全部冰箱；Material=材料/工具/未标签柜（不含冰箱）；Browser=下拉自由筛选。";
+        const string viewDesc = "界面视图：Food=食物标签柜+全部冰箱；Material=材料/工具标签柜（不含冰箱与未打标签柜，通信设备等无标签容器不进，要看请切 Browser 选「其他」）；Browser=下拉自由筛选。";
         ViewCooking         = Config.Bind("Scenario", "View_Cooking",         ScenarioView.Food,    "烹饪" + viewDesc);
         ViewRatCage         = Config.Bind("Scenario", "View_RatCage",         ScenarioView.Food,    "老鼠笼" + viewDesc);
         ViewBrewPanel       = Config.Bind("Scenario", "View_BrewPanel",       ScenarioView.Food,    "酿酒桶" + viewDesc);
@@ -126,6 +126,11 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         Log.LogInfo("[CabinetEverywhere] loaded：白名单注入=" + EnableCraftSource.Value +
                     "，页签注入=烹饪/老鼠笼/酿酒/颜料桶(" + EnableCooking.Value + "/" + EnableRatCage.Value + "/" + EnableBrew.Value + "/" + EnableDye.Value + ")");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
+
+        // 性能探针（Debug.Verbose 门控，发版归一 false）：纯测量零行为改动，卡顿定数用
+        if (Verbose.Value) ToolTableProbe.Install();
+        // 袋刷新帧尾合并（一次做一次算）：默认行为
+        RefreshCoalescer.Install();
     }
 }
 
@@ -140,7 +145,12 @@ internal sealed class AccessTicker : MonoBehaviour
 
     public void Update()
     {
-        try { Tick(Time.deltaTime); }
+        try
+        {
+            // 帧尾合并补派：必须每帧最先跑（在 0.5s/5s 门闩之前）
+            RefreshCoalescer.Flush();
+            Tick(Time.deltaTime);
+        }
         catch { /* 单帧异常不终止轮询 */ }
     }
 
@@ -183,5 +193,10 @@ internal sealed class AccessTicker : MonoBehaviour
         if (_fastCheck < 0.5f) return;
         _fastCheck = 0f;
         TabInjector.PollAll();
+
+        // 工作台页签修剪（扫描=所见）：仅当白名单注入+筛选都开着才有意义
+        if (CabinetEverywherePlugin.EnableCraftSource.Value &&
+            CabinetEverywherePlugin.FilterEnable.Value)
+            ToolTablePruner.Poll();
     }
 }
