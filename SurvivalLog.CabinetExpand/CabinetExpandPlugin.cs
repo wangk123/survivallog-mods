@@ -45,7 +45,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
     public const string Guid = "com.local.survivallog.cabinetexpand";
     public const string Name = "CabinetExpand";
     // 跟随套件 version.json，发版时同步（版本号由作者定义）
-    public const string Version = "1.3.7";
+    public const string Version = "1.3.8";
 
     internal static ManualLogSource Log;
 

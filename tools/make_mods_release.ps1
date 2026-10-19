@@ -1,4 +1,4 @@
-﻿﻿$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $game     = 'E:\SteamLibrary\steamapps\common\Survival Log'
 $projRoot = 'E:\Game\Mod\mod_stack'
 $relRoot  = Join-Path $projRoot 'release'
