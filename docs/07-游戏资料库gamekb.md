@@ -107,7 +107,7 @@ gamekb/
    `<ver>/diff_from_<prev>.md`。关注类列表自动取自 moddeps.json（`-Focus` 参数）。
 7. **兼容核对**：`node tools/gamekb/modcompat_check.js <ver>` → 结果追加进 diff 报告。
 8. **表数据（半自动）**：打印提示"启动游戏跑 ConfigDumpProbe"。`-AutoProbe` 开关可选全自动：
-   `steam://rungameid/4164790` 拉起 → 轮询 `BepInEx\gamekb_tables\<buildid>\_DONE.txt`（表就绪
+   `steam://rungameid/4164790` 拉起 → 轮询 `BepInEx\gamekb_tables\<runtime_assets_version>\_DONE.txt`（版本号=meta.json 的 runtime_assets_version，采集前从游戏目录 RuntimeAssets_MainPackage.version 读得）（表就绪
    约 15–25 秒后写出）→ 确认后 taskkill + 回读进程死透再收文件。**作者正在玩时绝不自动杀进程**
    （runtime-probe 红线：先守望等游戏进程自然退出；无法确认闲置就退出自动模式留给人工）。
 9. **收尾打印**：ADDED/REMOVED 类型数、modcompat ✓/✗、表 dump 状态、`notes` 提醒人工补要点。
@@ -131,7 +131,7 @@ gamekb/
 
   值序列化：基础类型直出；List/字典递归 JSON；遇到非可序列化类型降级为 `ToString()` 并在
   `_index.json` 标注该字段 degraded。
-- **产物与自证**：逐表写 `BepInEx\gamekb_tables\<buildid>\`，全部写完后写 `_index.json`（表名/
+- **产物与自证**：逐表写 `BepInEx\gamekb_tables\<runtime_assets_version>\`（进程内拿不到 buildid，以 RuntimeAssets 版本号为键），全部写完后写 `_index.json`（表名/
   行数/字段清单/每表内容哈希）再写 `_DONE.txt`（总表数/总行数/时间戳）——sync 以 `_DONE.txt`
   为成功判据（BepInEx 日志强杀不落盘红线：自证文件即真相）。
 - **零配置**：不写 cfg（cfg 首跑固化坑）、不挂 Harmony（纯读）、每文件写完即 Flush 关闭。
