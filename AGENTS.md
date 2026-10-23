@@ -59,7 +59,7 @@ powershell -File tools/publish.ps1
 `gamekb_sync.ps1` → 过目 `diff_from_*.md`（类型增删/变更 + modcompat 结果）→ modcompat 全绿 → 实机启动一次看各 mod 自证"生效" → 有红灯才改代码 → 走发版。
 
 **发版**（docs/05）：
-作者在 version.json 定号 → CHANGELOG 补该版小节 → `publish.ps1`（校验→构建→打包→安装器→回归→打 tag→GitHub Release 仅说明）→ 安装包传百度网盘。
+作者在 version.json 定号 → CHANGELOG 补该版小节 → `publish.ps1`（校验→构建→打包→安装器→回归→打 tag→GitHub Release 仅说明）。
 
 ## 五、文档地图
 
