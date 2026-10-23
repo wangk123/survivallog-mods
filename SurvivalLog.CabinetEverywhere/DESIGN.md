@@ -3,6 +3,7 @@
 > 本文档随源码存放在 mod 自己的文件夹内；**每次迭代改动必须同步更新本文档**
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json；机制与实证结论长期有效。
+> 验证于 gamekb：`2026-10-23_26157732`（游戏 buildid 26157732 / RuntimeAssets 1.1.19611，实机全绿）
 > 2026-10-17 合并重写：原独立 mod `SurvivalLog.CabinetTagFilter` 并回本 mod，其设计文档
 > （DESIGN-TagFilter-Archive.md）全部技术取证与演进史保留在**附录 C**，原文件已删除。
 

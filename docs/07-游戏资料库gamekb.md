@@ -2,7 +2,7 @@
 
 > 2026-10-23 设计定稿（作者拍板"按推荐方案"）。本文档是 gamekb 的权威说明（"项目记忆文档"），
 > 与 [05-版本管理与发版.md](05-版本管理与发版.md) 同级：05 管"怎么发版"，本文管"游戏更新了怎么同步资料、怎么核对 mod 兼容"。
-> 状态：**设计定稿，实施待排期**（实施步骤见 §10；实施完成后本行改为"已实施"并补迭代维护清单）。
+> 状态：**已实施（2026-10-23）**。工具在 `tools/gamekb/`，数据在本地 `gamekb/`（gitignored）。
 
 ## 0. 已定决策（2026-10-23 作者拍板）
 
@@ -226,3 +226,13 @@ gamekb/
   10 个配置行类、ActionType/FurnitureType 枚举——全部存活；
 - 字节签名：FridgeChill 20 字节签名新 DLL 唯一命中 @0x29756C5、旧槽值 0.1，与运行时日志互证；
 - 运行时：interop 自动重生、9 插件全部"生效"。
+
+## 13. 迭代维护清单（改动类型 → 必须同步的章节）
+
+| 改动 | 同步 |
+|---|---|
+| 新增 mod / mod 改挂钩点（Harmony 目标、表字段、字节签名） | `tools/gamekb/moddeps.json` + 该 mod DESIGN.md"验证于 gamekb"行 |
+| 游戏更新 | 跑 `gamekb_sync.ps1`；新目录 meta.json 的 notes 补要点；diff_from_*.md 过目 |
+| 探针行为变化（表格式/目录键/自证文件） | 本文 §6 + `SurvivalLog.ConfigDumpProbe` 头注释 |
+| 工具 CLI 变化 | `tools/gamekb/README.md` |
+| 发版流程变化 | docs/05 与本文 §8 互相校对 |
