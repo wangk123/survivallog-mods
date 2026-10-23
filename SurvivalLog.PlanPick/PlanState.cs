@@ -1,0 +1,183 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace SurvivalLog.PlanPick;
+
+/// <summary>
+/// 运行时状态读取 + payload 组装。
+/// 已实证访问路径（gamekb 2026-10-23_26157732 dump）：
+/// - Redux: BaseSingleton&lt;ReduxUISystem&gt;.Instance.reduxStoreLayer.dataTree.TryGetValue(Il2CppType.From(typeof(State_X)), out BaseReduxState)（CabinetCatalog 同款）
+/// - State_UI_RogueSelect: Day(int) / CachedSurvivalPlanIds(List&lt;int&gt; 今日候选，刷新后重建)
+/// - State_Web_RogueSelect: OwnPoints(ReactiveProperty&lt;int&gt; → .Value)
+/// - State_Data_Talent: SurvivalPlanningIds(List&lt;int&gt; 已激活)
+/// - ConfigManager.GetCurrentPlayerSelectId() 静态；BattleLogicWorld._ConditionSetManager 内部属性（interop 可直读）
+/// - ConditionSetManager.CheckConditionSet(int, long=0, bool=false) → bool（官方特殊条件判定）
+/// </summary>
+internal static class PlanState
+{
+    private static HashSet<int> _today;      // 今日候选（含刷新后）
+    private static int _day = -1;
+
+    internal static int CurrentDay() { ReadStates(); return _day; }
+    internal static bool IsTodayCandidate(int id) { ReadStates(); return _today != null && _today.Contains(id); }
+
+    /// <summary>读 Redux 状态树。任何一步失败保持旧值（下一轮重试）。</summary>
+    private static void ReadStates()
+    {
+        try
+        {
+            if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.IsInstanceCreated) return;
+            var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
+            var dataTree = rus?.reduxStoreLayer?.dataTree;
+            if (dataTree == null) return;
+
+            GameCore.HotUpdate.ReduxUI.BaseReduxState raw;
+            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect)), out raw);
+            var ui = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect>();
+            if (ui != null)
+            {
+                _day = ui.Day;
+                var cached = ui.CachedSurvivalPlanIds;     // il2cpp List<int>
+                if (cached != null)
+                {
+                    var set = new HashSet<int>();
+                    for (int i = 0; i < cached.Count; i++) set.Add(cached[i]);
+                    _today = set;
+                }
+            }
+        }
+        catch { /* 保持旧值 */ }
+    }
+
+    /// <summary>组装 payload JSON。返回 false=依赖未就绪（不推送）。</summary>
+    internal static bool TryBuildPayload(out string json, out List<string> logs)
+    {
+        json = null; logs = new List<string>();
+        var cm = SurvivalLog.ModShared.BagTable.Cm();
+        if (cm == null || !PlanCatalog.Build(cm)) return false;
+        ReadStates();
+        if (_day < 0) return false;
+
+        int role = 1; try { role = GameCore.HotUpdate.ConfigManager.GetCurrentPlayerSelectId(); } catch { }
+        int points = 0;
+        HashSet<int> activated = null;
+        try
+        {
+            var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
+            var dataTree = rus?.reduxStoreLayer?.dataTree;
+            GameCore.HotUpdate.ReduxUI.BaseReduxState raw;
+            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect)), out raw);
+            var web = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect>();
+            if (web != null && web.OwnPoints != null) points = web.OwnPoints.Value;
+            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out raw);
+            var talent = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Data_Talent>();
+            if (talent?.SurvivalPlanningIds != null)
+            {
+                activated = new HashSet<int>();
+                var sp = talent.SurvivalPlanningIds;
+                for (int i = 0; i < sp.Count; i++) activated.Add(sp[i]);
+            }
+        }
+        catch { }
+        if (activated == null) return false;
+
+        // 条件管理器（特殊条件判定）
+        GameCore.HotUpdate.Battle.Logic.ConditionSetManager csm = null;
+        try { csm = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.Battle.Logic.BattleLogicWorld>.Instance?._ConditionSetManager; } catch { }
+
+        // 角色名表
+        var roleNames = new Dictionary<int, string>();
+        try { foreach (var kv in cm._Config_PlayerSelect_Dict) roleNames[kv.Key] = kv.Value.Name_Local ?? ("角色" + kv.Key); } catch { }
+
+        var mult = Math.Max(1f, PlanPickPlugin.CostMultiplier.Value);
+        var showLocked = PlanPickPlugin.ShowLocked.Value; var showUnpooled = PlanPickPlugin.ShowUnpooled.Value;
+
+        var sb = new StringBuilder(64 * 1024);
+        sb.Append("{\"plans\":[");
+        int n = 0, shown = 0;
+        foreach (var p in PlanCatalog.Plans)
+        {
+            n++;
+            if (p.UnlockDay == null && !showUnpooled) continue;
+            // lockState: bought/locked/ok（点数是否够 JS 侧用 points 判，不在此算）
+            string state; var reasons = new List<string>();
+            if (activated.Contains(p.Id)) state = "bought";
+            else
+            {
+                if (p.UnlockDay != null && _day < p.UnlockDay.Value) reasons.Add("第 " + p.UnlockDay.Value + " 天解锁（当前第 " + _day + " 天）");
+                foreach (var pre in p.PrereqIds) if (!activated.Contains(pre))
+                    {
+                        var preName = PlanCatalog.Plans.Find(x => x.Id == pre)?.Name ?? ("#" + pre);
+                        reasons.Add("需先激活「" + preName + "」");
+                    }
+                if (p.RoleIds.Count > 0 && !p.RoleIds.Contains(role))
+                    reasons.Add("仅限「" + JoinRoleNames(p.RoleIds, roleNames) + "」的专属规划");
+                if (p.SpecialDesc.Count > 0)
+                {
+                    if (csm != null)
+                    {
+                        // 特殊条件走官方判定；无条件(0)视为满足；判定异常按未满足（展示原因，不误放行）
+                        bool ok;
+                        try { ok = p.ConditionSetId == 0 || csm.CheckConditionSet(p.ConditionSetId); }
+                        catch { ok = false; }
+                        if (!ok) reasons.AddRange(p.SpecialDesc);
+                    }
+                    else reasons.AddRange(p.SpecialDesc);
+                }
+                state = reasons.Count > 0 ? (showLocked ? "locked" : "skip") : "ok";
+            }
+            if (state == "skip") continue;
+            if (n > 1 && shown > 0) sb.Append(',');
+            sb.Append("{\"id\":").Append(p.Id)
+              .Append(",\"name\":\"").Append(J(p.Name)).Append("\",\"desc\":\"").Append(J(p.Desc)).Append('"')
+              .Append(",\"icon\":\"").Append(J(p.Icon)).Append("\",\"cost\":").Append(p.Cost)
+              .Append(",\"isReget\":").Append(p.IsReget ? "true" : "false")
+              .Append(",\"cat\":\"").Append(p.Cat).Append("\",\"sub\":").Append(p.Sub == null ? "null" : "\"" + J(p.Sub) + "\"")
+              .Append(",\"unlockDay\":").Append(p.UnlockDay == null ? "null" : p.UnlockDay.Value.ToString())
+              .Append(",\"today\":").Append(_today != null && _today.Contains(p.Id) ? "true" : "false")
+              .Append(",\"exclusive\":").Append(p.RoleIds.Count > 0 ? "true" : "false")
+              .Append(",\"state\":\"").Append(state).Append("\",\"reasons\":[");
+            for (int i = 0; i < reasons.Count; i++) { if (i > 0) sb.Append(','); sb.Append('"').Append(J(reasons[i])).Append('"'); }
+            sb.Append("]}");
+            shown++;
+        }
+        sb.Append("],\"categories\":[{\"key\":\"attribute\",\"name\":\"属性成长\"},{\"key\":\"function\",\"name\":\"功能强化\"},")
+          .Append("{\"key\":\"expand\",\"name\":\"家具扩建\"},{\"key\":\"material\",\"name\":\"物资贸易\"}]")
+          .Append(",\"today\":[");
+        if (_today != null)
+        {
+            var ids = new List<int>(_today); ids.Sort();
+            for (int i = 0; i < ids.Count; i++) { if (i > 0) sb.Append(','); sb.Append(ids[i]); }
+        }
+        sb.Append("],\"points\":").Append(points).Append(",\"mult\":").Append(mult.ToString("0.##"))
+          .Append(",\"day\":").Append(_day).Append(",\"role\":").Append(role)
+          .Append(",\"roleNames\":{");
+        int rn = 0; foreach (var kv in roleNames) { if (rn++ > 0) sb.Append(','); sb.Append(kv.Key).Append(":\"").Append(J(kv.Value)).Append('"'); }
+        sb.Append("}}");
+        json = sb.ToString();
+        logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，倍率 x" + mult.ToString("0.##") + "）");
+        return shown > 0;
+    }
+
+    private static string JoinRoleNames(List<int> ids, Dictionary<int, string> names)
+    {
+        var parts = new List<string>();
+        foreach (var id in ids) parts.Add(names.TryGetValue(id, out var n) ? n : ("角色" + id));
+        return string.Join(" / ", parts);
+    }
+
+    private static string J(string s) { /* 最小 JSON 转义 */
+        if (string.IsNullOrEmpty(s)) return "";
+        var sb = new StringBuilder(s.Length + 8);
+        foreach (var c in s)
+        {
+            if (c == '"' || c == '\\') sb.Append('\\').Append(c);
+            else if (c == '\n') sb.Append("\\n"); else if (c == '\r') sb.Append("\\r");
+            else if (c == '\t') sb.Append("\\t");
+            else if (c < 0x20) sb.Append("\\u").Append(((int)c).ToString("x4"));
+            else sb.Append(c);
+        }
+        return sb.ToString();
+    }
+}

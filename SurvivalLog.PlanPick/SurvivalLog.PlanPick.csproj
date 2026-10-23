@@ -44,6 +44,10 @@
       <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\Il2CppSystem.Core.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="R3">
+      <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\R3.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="HotUpdate">
       <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\interop\HotUpdate.dll</HintPath>
       <Private>false</Private>

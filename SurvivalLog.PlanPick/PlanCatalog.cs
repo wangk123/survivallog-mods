@@ -11,6 +11,7 @@ internal sealed class PlanEntry
     public int Id; public string Name = "", Desc = "", Icon = "", Cat = "function", Sub; // Sub=null→独立
     public int Cost; public bool IsReget; public int? UnlockDay;                 // null=不入池
     public List<int> PrereqIds = new(); public List<string> SpecialDesc = new(); public List<int> RoleIds = new();
+    public int ConditionSetId;                                             // 官方特殊条件判定用（0=无条件）
 }
 
 internal static class PlanCatalog
@@ -95,7 +96,7 @@ internal static class PlanCatalog
         foreach (var r in rows)
         {
             var e = new PlanEntry { Id = r.ID, Name = r.Name_Local ?? "", Desc = r.Dec_Local ?? "",
-                Icon = r.WebIcon ?? "", Cost = r.LvUpCost, IsReget = r.IsReget, Cat = CatOf(r) };
+                Icon = r.WebIcon ?? "", Cost = r.LvUpCost, IsReget = r.IsReget, Cat = CatOf(r), ConditionSetId = r.ConditionSetId };
             e.UnlockDay = planDay.TryGetValue(r.ID, out var ud) ? ud : (int?)null;
             if (r.ConditionSetId != 0 && condById.TryGetValue(r.ConditionSetId, out var c))
             {
