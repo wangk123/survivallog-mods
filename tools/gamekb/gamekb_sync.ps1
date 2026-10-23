@@ -43,6 +43,7 @@ if ($captured) {
     Write-Host ("resuming table collection for existing capture: " + $captured.Name)
     $verDir = $captured.FullName
 }
+$node = Get-Command node -ErrorAction SilentlyContinue   # hoisted above the fresh-capture wrapper so resume mode (step 8 modcompat append) can use it too
 if (-not $captured) {
 
 # ---- 3. pre-flight: dumper exe present + no unclaimed outputs (BEFORE creating dirs) ----
@@ -90,7 +91,6 @@ if ($LASTEXITCODE -ge 8) { Write-Host ('ERROR: robocopy failed ' + $LASTEXITCODE
 
 # ---- 7. diff vs previous version ----
 $prev = Get-ChildItem $kbRoot -Directory | Where-Object { $_.Name -ne (Split-Path -Leaf $verDir) } | Sort-Object Name -Descending | Select-Object -First 1
-$node = Get-Command node -ErrorAction SilentlyContinue
 if ($prev -and $node) {
     $diffMd = Join-Path $verDir ('diff_from_' + ($prev.Name -replace '_\d+$','') + '.md')
     & node (Join-Path $repo 'tools\gamekb\dumpdiff.js') (Join-Path $prev.FullName 'il2cpp\dump.cs') (Join-Path $verDir 'il2cpp\dump.cs') '--moddeps' (Join-Path $repo 'tools\gamekb\moddeps.json') | Out-File $diffMd -Encoding utf8
@@ -122,6 +122,13 @@ if (Test-Path $doneMarker) {
     if (Test-Path $tablesDst) { Remove-Item $tablesDst -Recurse -Force }
     Move-Item $tablesSrc $tablesDst
     Write-Host ("tables collected: " + (Get-Content (Join-Path $tablesDst '_DONE.txt') -TotalCount 1))
+    # tables-aware modcompat re-run (append-once): the game-side _DONE marker is gone after the move above,
+    # so this fires only immediately after a successful collection - resume reruns hit the else branch instead.
+    $diffMdAfter = Get-ChildItem $verDir -Filter 'diff_from_*.md' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($diffMdAfter -and $node) {
+        & node (Join-Path $repo 'tools\gamekb\modcompat_check.js') $verDir | Tee-Object -FilePath $diffMdAfter.FullName -Append
+        Write-Host ("modcompat (tables-aware) appended to " + $diffMdAfter.Name)
+    }
 } else {
     Write-Host ('TABLES PENDING: launch the game once (probe writes BepInEx\gamekb_tables\' + $raVer + '), then rerun this script to collect.')
 }

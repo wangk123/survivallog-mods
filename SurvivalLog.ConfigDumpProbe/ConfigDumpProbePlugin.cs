@@ -138,6 +138,11 @@ internal sealed class ProbeTicker : MonoBehaviour
         var ver = RuntimeAssetsVersion();
         var dir = System.IO.Path.Combine(Paths.BepInExRootPath, "gamekb_tables", ver);
         System.IO.Directory.CreateDirectory(dir);
+        if (System.IO.File.Exists(System.IO.Path.Combine(dir, "_DONE.txt")))
+        {
+            ActionProbeLog($"skip：{dir} 已有 _DONE.txt（本版已采，免重复 dump）");
+            return;
+        }
         ActionProbeLog($"开始 dump：ver={ver} 目标={dir}");
 
         var index = new List<object>();
