@@ -1,0 +1,93 @@
+{
+  "StackLimit999": {
+    "harmony": [
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "SetItemCount" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "IncreaseItemCount" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "RemoveItem", "params": 1 },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "RemoveItem", "params": 2 },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "AddItem", "params": 8 },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "OnCookingQuickMove" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "OnCookingDragMove" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "TrackCookingBagTransition" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "TryPreSplitForCooking" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "TryReturnCookingIngredientToBag" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ItemManager", "method": "RefreshCookingPendingIfSource" },
+      { "type": "GameCore.HotUpdate.ReduxUI.WebUIVm", "method": "HandleCallback" }
+    ],
+    "configFields": [
+      { "accessor": "_Config_Item_Dict", "rowType": "Config_Item", "fields": ["StackLimit"] }
+    ],
+    "nativeSigs": []
+  },
+  "CabinetExpand": {
+    "harmony": [
+      { "type": "GameCore.HotUpdate.Battle.Logic.BagComponent", "method": "OnInit" }
+    ],
+    "configFields": [
+      { "accessor": "_Config_Bag_Dict", "rowType": "Config_Bag", "fields": ["Size", "Burden"] },
+      { "accessor": "_Config_Vehicle_Dict", "rowType": "Config_Vehicle", "fields": [] }
+    ],
+    "nativeSigs": []
+  },
+  "CabinetEverywhere": {
+    "harmony": [
+      { "type": "GameCore.HotUpdate.ReduxUI.Reducer_Web_ToolTable", "method": "RefreshRecipeList" },
+      { "type": "GameCore.HotUpdate.Battle.Logic.ToolTableManager", "method": "TryCreateItem" },
+      { "type": "GameCore.HotUpdate.ReduxUI.Ac_ToolTable_RefreshBag", "method": "SendAction" }
+    ],
+    "configFields": [
+      { "accessor": "_Config_Furniture_Dict", "rowType": "Config_Furniture", "fields": [] }
+    ],
+    "nativeSigs": []
+  },
+  "CabinetBurden": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_Bag_Dict", "rowType": "Config_Bag", "fields": ["Burden"] },
+      { "accessor": "_Config_Furniture_Dict", "rowType": "Config_Furniture", "fields": [] }
+    ],
+    "nativeSigs": []
+  },
+  "BackpackExpand": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_Bag_Dict", "rowType": "Config_Bag", "fields": ["Size", "Burden"] }
+    ],
+    "nativeSigs": []
+  },
+  "QuickAction": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_Action_Dict", "rowType": "Config_Action", "fields": ["During"] },
+      { "accessor": "_Config_Effect_Dict", "rowType": "Config_Effect", "fields": ["IntValue0"] },
+      { "accessor": "_Config_FurnitureFunc_Dict", "rowType": "Config_FurnitureFunc", "fields": ["ActionIds"] },
+      { "accessor": "_Config_Item_Dict", "rowType": "Config_Item", "fields": ["UseAction"] }
+    ],
+    "nativeSigs": []
+  },
+  "RobotSpeed": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_RobotAttribute_Dict", "rowType": "Config_RobotAttribute", "fields": ["WorkSpeedRatio"] }
+    ],
+    "nativeSigs": []
+  },
+  "FridgeChill": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_Furniture_Dict", "rowType": "Config_Furniture", "fields": ["ColdRate"] }
+    ],
+    "nativeSigs": [
+      { "name": "TalentCapBytePatch",
+        "sigHex": "F30F5CD9F30F5FD3F30F59D0F30F1005????????F30F5FC2C3",
+        "rel32ByteOff": 16, "expectOldSlot": 0.1, "expectHits": 1 }
+    ]
+  },
+  "RoleUnlock": {
+    "harmony": [],
+    "configFields": [
+      { "accessor": "_Config_DefenseLv_Dict", "rowType": "Config_DefenseLv", "fields": ["unlock_recipes_P1", "unlock_recipes_P2", "unlock_recipes_P3", "unlock_recipes_P4"] }
+    ],
+    "nativeSigs": []
+  }
+}
