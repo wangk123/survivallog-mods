@@ -30,5 +30,10 @@ tools/*.session.json
 tools/webui_src/
 .worktrees/
 
+# gamekb 游戏资料库（版本快照：dump/表数据/二进制/WebUI 镜像均为游戏本体衍生物，版权红线只留本地）
+gamekb/
+# SDD 工作区（本地过程文件）
+.superpowers/
+
 # mdump 工具的元数据 dump 产物（6.6MB 级文本，本地留用不入库；工具源码本身入库）
 tools/mdump/*.txt
