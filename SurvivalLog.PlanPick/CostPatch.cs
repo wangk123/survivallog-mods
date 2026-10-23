@@ -19,10 +19,14 @@ internal static class CostPatch
 
     private static void Prefix(int talentId)
     {
+        // 自愈：上次提升若未收尾（理论同步重入），先还原该行再继续（Task6 评审加固）
+        if (_boostedId != 0)
+            try { var stale = SurvivalLog.ModShared.BagTable.Cm()?.Get_Config_Talent(_boostedId); if (stale != null) stale.LvUpCost = _origCost; }
+            catch { }
         _boostedId = 0;
         try
         {
-            var mult = Math.Max(1f, PlanPickPlugin.CostMultiplier.Value);
+            var mult = PlanPickPlugin.Multiplier;
             if (mult <= 1f) return;                       // 无倍率零干预
             if (PlanState.IsTodayCandidate(talentId)) return;   // 今日候选：官方原价路径
             var cm = SurvivalLog.ModShared.BagTable.Cm();

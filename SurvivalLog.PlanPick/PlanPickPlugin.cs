@@ -29,7 +29,7 @@ public sealed class PlanPickPlugin : BasePlugin
     {
         Log = base.Log;
         CostMultiplier = Config.Bind("Cost", "CostMultiplier", 2f,
-            "自选规划（不在今日候选名单）的生存点消耗倍率。默认 2=翻倍；1=免代价。今日候选内购买始终原价。");
+            "自选规划（不在今日候选名单）的生存点消耗倍率。默认 2=翻倍；1=原价（无加价）。今日候选内购买始终原价。");
         ShowLocked = Config.Bind("List", "ShowLocked", true, "列表展示未解锁规划（置灰+点击弹原因）。");
         ShowUnpooled = Config.Bind("List", "ShowUnpooled", true, "列表展示从不进入抽取池的规划（机器人图纸/拾荒无人机）。");
         ListOnReady = Config.Bind("Debug", "ListOnReady", true, "首次数据就绪时在日志列统计（分类计数/今日候选）。");
@@ -45,6 +45,12 @@ public sealed class PlanPickPlugin : BasePlugin
         go.AddComponent<PlanTicker>();
         Log.LogInfo("[PlanPick] loaded：自选规划入口待注入（倍率 x" + CostMultiplier.Value + "）");
         WelcomeTip.Install(Log);
+    }
+
+    /// <summary>倍率统一出口：NaN/非法→1（Math.Max(1f,NaN)=NaN，(int)Round(NaN) 会毒化表行）；夹取 [1,100]。</summary>
+    internal static float Multiplier
+    {
+        get { var m = CostMultiplier.Value; if (float.IsNaN(m) || m < 1f) m = 1f; if (m > 100f) m = 100f; return m; }
     }
 }
 

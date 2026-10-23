@@ -90,7 +90,7 @@ internal static class PlanState
         var roleNames = new Dictionary<int, string>();
         try { foreach (var kv in cm._Config_PlayerSelect_Dict) roleNames[kv.Key] = kv.Value.Name_Local ?? ("角色" + kv.Key); } catch { }
 
-        var mult = Math.Max(1f, PlanPickPlugin.CostMultiplier.Value);
+        var mult = PlanPickPlugin.Multiplier;
         var multStr = mult.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); // 小数点逗号区域仍输出 JSON 合法数字
         var showLocked = PlanPickPlugin.ShowLocked.Value; var showUnpooled = PlanPickPlugin.ShowUnpooled.Value;
 
