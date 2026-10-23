@@ -58,6 +58,7 @@ internal static class Injector
         if (!_announced)
         {
             _announced = true;
+            if (!PlanPickPlugin.ListOnReady.Value) return;   // cfg 关闭则首轮不打统计
             foreach (var l in PlanCatalog.BuildLog) PlanPickPlugin.Log.LogInfo("[PlanPick] 目录: " + l);
             foreach (var l in logs) PlanPickPlugin.Log.LogInfo("[PlanPick] " + l);
         }

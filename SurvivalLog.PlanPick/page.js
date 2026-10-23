@@ -25,8 +25,9 @@ const S = {
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* 自选价：今日候选原价，否则原价 × 倍率（payload.mult，C# cfg） */
-function payCost(p) { return p.today ? p.cost : p.cost * S.mult; }
+/* 自选价：今日候选原价，否则 原价 × 倍率 四舍五入取整（payload.mult，C# cfg）——与 C# 实扣
+   (int)Math.Round(orig*mult) 对齐，小数倍率下展示/乐观扣点即实际扣费值 */
+function payCost(p) { return p.today ? p.cost : Math.round(p.cost * S.mult); }
 
 /* 展示态：payload.state 优先（bought/locked）；ok 但点数不足 → poor（唯一 JS 侧显示逻辑） */
 function stateOf(p) {

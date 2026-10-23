@@ -74,9 +74,10 @@
    （一级分类 tab + 二级筛选 chips + 状态筛选 + 排序 + 搜索 + 卡片列表 + 确认弹窗 + 原因弹泡）。
    确认弹窗只显示 原价/自选价/购买后余额 三行，**不加说明文案**（作者反馈定稿）。
    - **数据全部 C# 算好推送**（`ExecuteJavaScript` 一次性灌 JSON）：每张卡的
-     `{id,name,desc,icon,cost,baseCost,cat,sub,unlockDay,lockState,lockReason,exclusive,isToday}`；
+     字段契约见 §3.1（v1 草案的 `baseCost/lockState/lockReason/isToday` 已并入
+     `cost/state/reasons[]/today`，以 §3.1 为准）；
      JS 零跨端推导（背包 UI 之训：显示层不自算，照抄 computed）。
-   - lockState/lockReason 由 C# 组合：已激活 > 天数未到 > 前置未购 > 角色不符 > 特殊条件未满足。
+   - state/reasons[] 由 C# 组合：已激活 > 天数未到 > 前置未购 > 角色不符 > 特殊条件未满足。
    - 点数不足不是 locked：图标不灰、按钮"点数不足"、点击 toast 实数。
 2. **购买**：JS 直接 `window.parent.postMessage({type:'CLICK_BUY', data:{id}, sourcePageId:'RogueSelect'})`。
    官方链自动完成扣点/激活/`RA_BuySuccess`→Web 推送刷新（含 ownPoints）；mod 侧下一轮巡检重推真相数据。
@@ -238,3 +239,10 @@
   2. 倍率 sanitize——`PlanPickPlugin.Multiplier` 统一出口（NaN/<1→1、>100→100），
     替换 CostPatch/PlanState 两处裸读（`Math.Max(1f,NaN)`=NaN，`(int)Round(NaN)` 会毒化表行）；
   3. cfg 文案——CostMultiplier 描述"1=免代价"改"1=原价（无加价）"（1 是原价不是免费）。
+- 2026-10-24 终审 Minor×5（全分支评审收尾）：
+  1. ListOnReady cfg 落地——Injector 首轮目录/候选统计打点受其开关（此前绑了配置但未生效）；
+  2. payCost 取整对齐——page.js 自选价 `Math.round(cost×mult)`，与 C# 实扣
+     `(int)Math.Round(orig*mult)` 一致（小数倍率下展示=实扣）；
+  3. PlanCatalog 构建异常封顶——BuildLog 与上一条相同不再追加（每 2s 重试防无限增长）；
+  4. §3 字段名勘误（本条上方）；moddeps 补 ConditionSet.BuffNeed/HistoryCount、
+    删未读的 RandomGroup.GroupType。

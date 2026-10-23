@@ -96,9 +96,9 @@
     ],
     "configFields": [
       { "accessor": "_Config_Talent_Dict", "rowType": "Config_Talent", "fields": ["Type", "Available", "LvUpCost", "WebIcon", "ConditionSetId", "PlayerSelectId", "Name_Local", "Dec_Local", "IsReget"] },
-      { "accessor": "_Config_RandomGroup_Dict", "rowType": "Config_RandomGroup", "fields": ["GroupType", "IdList"] },
+      { "accessor": "_Config_RandomGroup_Dict", "rowType": "Config_RandomGroup", "fields": ["IdList"] },
       { "accessor": "_Config_DailyRandom_Dict", "rowType": "Config_DailyRandom", "fields": ["Day", "RandomPlanID", "SpecifiedPlanID"] },
-      { "accessor": "_Config_ConditionSet_Dict", "rowType": "Config_ConditionSet", "fields": ["TalentNeed", "SurvivalToDay", "NeedFurnitureIds", "EventTag", "DefenseLevel", "NeedTrapObtainable", "Source"] },
+      { "accessor": "_Config_ConditionSet_Dict", "rowType": "Config_ConditionSet", "fields": ["TalentNeed", "SurvivalToDay", "NeedFurnitureIds", "EventTag", "DefenseLevel", "NeedTrapObtainable", "BuffNeed", "HistoryCount", "Source"] },
       { "accessor": "_Config_PlayerSelect_Dict", "rowType": "Config_PlayerSelect", "fields": ["Name_Local"] }
     ],
     "nativeSigs": []

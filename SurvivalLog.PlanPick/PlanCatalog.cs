@@ -26,7 +26,14 @@ internal static class PlanCatalog
         var dailyDict = cm._Config_DailyRandom_Dict; var condDict = cm._Config_ConditionSet_Dict;
         if (talentDict == null || groupDict == null || dailyDict == null || condDict == null) return false;
         try { BuildCore(talentDict, groupDict, dailyDict, condDict); return true; }
-        catch (Exception e) { Plans = null; BuildLog.Add("构建异常: " + e.Message); return false; }
+        // 每 2s 重试下 BuildLog 只保留首条异常（与上一条相同则不重复添加，防无限增长）
+        catch (Exception e)
+        {
+            Plans = null;
+            var msg = "构建异常: " + e.Message;
+            if (BuildLog.Count == 0 || BuildLog[BuildLog.Count - 1] != msg) BuildLog.Add(msg);
+            return false;
+        }
     }
 
     private static void BuildCore(
