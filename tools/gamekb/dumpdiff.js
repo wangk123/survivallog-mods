@@ -7,9 +7,6 @@
 'use strict';
 const fs = require('fs');
 
-const [,, oldPath, newPath, ...focus] = process.argv;
-if (!oldPath || !newPath) { console.error('usage: node _dumpdiff.js <old> <new> [focus substrs]'); process.exit(2); }
-
 function cleanLine(l) {
   l = l.replace(/\r$/, '');
   l = l.replace(/ \/\/ 0x[0-9A-Fa-f]{5,}$/i, '');   // 方法地址注释（VA 级）
@@ -50,89 +47,95 @@ function parse(path) {
 
 module.exports = { parseDump: parse };
 
-// --moddeps <path>：从 moddeps.json 收集关注类短名（harmony[].type + configFields[].rowType 的最后一段）
-let moddepsFocus = null;
-{
-  const i = process.argv.indexOf('--moddeps');
-  if (i >= 0) {
-    const md = JSON.parse(fs.readFileSync(process.argv[i + 1], 'utf8'));
-    const set = new Set();
-    for (const mod of Object.values(md))
-      for (const h of (mod.harmony || [])) set.add(h.type.split('.').pop());
-    for (const mod of Object.values(md))
-      for (const c of (mod.configFields || [])) set.add(c.rowType.split('.').pop());
-    moddepsFocus = [...set];
-  }
-}
+// ---- CLI ----
+if (require.main === module) {
+  const [,, oldPath, newPath, ...focus] = process.argv;
+  if (!oldPath || !newPath) { console.error('usage: node dumpdiff.js <old> <new> [focus substrs]'); process.exit(2); }
 
-// focus 净化：剔除 --moddeps 开关与它的值；有 moddeps 时把依赖类型短名并入关注列表
-const _mdIdx = process.argv.indexOf('--moddeps');
-const focusList = (moddepsFocus
-  ? [...focus.filter(f => f !== '--moddeps' && (_mdIdx < 0 || f !== process.argv[_mdIdx + 1])), ...moddepsFocus]
-  : focus.filter(f => !f.startsWith('--')));
-
-const oldT = parse(oldPath), newT = parse(newPath);
-const added = [], removed = [], changed = [];
-for (const [k, v] of newT) if (!oldT.has(k)) added.push(k);
-for (const [k] of oldT) if (!newT.has(k)) removed.push(k);
-for (const [k, v] of oldT) {
-  const n = newT.get(k);
-  if (!n) continue;
-  if (v.body.join('\n') !== n.body.join('\n')) changed.push(k);
-}
-
-// 游戏侧优先（GameCore/无命名空间=Assembly-CSharp），库侧靠后
-const gameFirst = k => /^(GameCore|HotUpdate)\./.test(k) ? 0 : 1;
-const srt = (a, b) => gameFirst(a) - gameFirst(b) || a.localeCompare(b);
-added.sort(srt); removed.sort(srt); changed.sort(srt);
-
-console.log(`OLD types=${oldT.size}  NEW types=${newT.size}`);
-console.log(`ADDED=${added.length}  REMOVED=${removed.length}  CHANGED=${changed.length}`);
-
-const dump = (title, arr) => {
-  console.log(`\n==== ${title} (${arr.length}) ====`);
-  for (const k of arr) console.log('  ' + k);
-};
-dump('ADDED (game-side first)', added);
-dump('REMOVED', removed);
-
-// 变更类：给成员级增删（前 400 个足够）
-console.log(`\n==== CHANGED detail (${changed.length}, first 400) ====`);
-let shown = 0;
-for (const k of changed) {
-  if (shown++ >= 400) { console.log('  ... (truncated)'); break; }
-  const o = oldT.get(k).body, n = newT.get(k).body;
-  const oSet = new Map(); for (const l of o) oSet.set(l, (oSet.get(l) || 0) + 1);
-  const nSet = new Map(); for (const l of n) nSet.set(l, (nSet.get(l) || 0) + 1);
-  const plus = [], minus = [];
-  for (const [l, c] of nSet) { const d = c - (oSet.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) plus.push(l); }
-  for (const [l, c] of oSet) { const d = c - (nSet.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) minus.push(l); }
-  if (!plus.length && !minus.length) continue; // 仅顺序变化
-  console.log(`\n-- ${k}`);
-  for (const l of minus) console.log('  - ' + l.trim());
-  for (const l of plus) console.log('  + ' + l.trim());
-}
-
-// 关注类：无论是否在 changed 里都单独完整对比
-if (focusList.length) {
-  console.log(`\n==== FOCUS ====`);
-  for (const sub of focusList) {
-    let hits = 0;
-    for (const [k] of oldT) {
-      if (!k.includes(sub)) continue;
-      hits++;
-      const n = newT.get(k);
-      if (!n) { console.log(`\n## ${k}: REMOVED !!!`); continue; }
-      const o = oldT.get(k).body, nB = n.body;
-      const oS = new Map(); for (const l of o) oS.set(l, (oS.get(l) || 0) + 1);
-      const nS = new Map(); for (const l of nB) nS.set(l, (nS.get(l) || 0) + 1);
-      const plus = [], minus = [];
-      for (const [l, c] of nS) { const d = c - (oS.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) plus.push(l); }
-      for (const [l, c] of oS) { const d = c - (nS.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) minus.push(l); }
-      console.log(`\n## ${k}: ${plus.length || minus.length ? 'CHANGED' : 'IDENTICAL'}`);
-      for (const l of minus) console.log('  - ' + l.trim());
-      for (const l of plus) console.log('  + ' + l.trim());
+  // --moddeps <path>：从 moddeps.json 收集关注类短名（harmony[].type + configFields[].rowType 的最后一段）
+  let moddepsFocus = null;
+  {
+    const i = process.argv.indexOf('--moddeps');
+    if (i >= 0) {
+      const md = JSON.parse(fs.readFileSync(process.argv[i + 1], 'utf8'));
+      const set = new Set();
+      for (const mod of Object.values(md))
+        for (const h of (mod.harmony || [])) set.add(h.type.split('.').pop());
+      for (const mod of Object.values(md))
+        for (const c of (mod.configFields || [])) set.add(c.rowType.split('.').pop());
+      moddepsFocus = [...set];
     }
-    if (!hits) console.log(`\n## (no old type matches "${sub}")`);
+  }
+
+  // focus 净化：剔除 --moddeps 开关与它的值；有 moddeps 时把依赖类型短名并入关注列表
+  const _mdIdx = process.argv.indexOf('--moddeps');
+  const focusList = (moddepsFocus
+    ? [...focus.filter(f => f !== '--moddeps' && (_mdIdx < 0 || f !== process.argv[_mdIdx + 1])), ...moddepsFocus]
+    : focus.filter(f => !f.startsWith('--')));
+
+  const oldT = parse(oldPath), newT = parse(newPath);
+  const added = [], removed = [], changed = [];
+  for (const [k, v] of newT) if (!oldT.has(k)) added.push(k);
+  for (const [k] of oldT) if (!newT.has(k)) removed.push(k);
+  for (const [k, v] of oldT) {
+    const n = newT.get(k);
+    if (!n) continue;
+    if (v.body.join('\n') !== n.body.join('\n')) changed.push(k);
+  }
+
+  // 游戏侧优先（GameCore/无命名空间=Assembly-CSharp），库侧靠后
+  const gameFirst = k => /^(GameCore|HotUpdate)\./.test(k) ? 0 : 1;
+  const srt = (a, b) => gameFirst(a) - gameFirst(b) || a.localeCompare(b);
+  added.sort(srt); removed.sort(srt); changed.sort(srt);
+
+  console.log(`OLD types=${oldT.size}  NEW types=${newT.size}`);
+  console.log(`ADDED=${added.length}  REMOVED=${removed.length}  CHANGED=${changed.length}`);
+
+  const dump = (title, arr) => {
+    console.log(`\n==== ${title} (${arr.length}) ====`);
+    for (const k of arr) console.log('  ' + k);
+  };
+  dump('ADDED (game-side first)', added);
+  dump('REMOVED', removed);
+
+  // 变更类：给成员级增删（前 400 个足够）
+  console.log(`\n==== CHANGED detail (${changed.length}, first 400) ====`);
+  let shown = 0;
+  for (const k of changed) {
+    if (shown++ >= 400) { console.log('  ... (truncated)'); break; }
+    const o = oldT.get(k).body, n = newT.get(k).body;
+    const oSet = new Map(); for (const l of o) oSet.set(l, (oSet.get(l) || 0) + 1);
+    const nSet = new Map(); for (const l of n) nSet.set(l, (nSet.get(l) || 0) + 1);
+    const plus = [], minus = [];
+    for (const [l, c] of nSet) { const d = c - (oSet.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) plus.push(l); }
+    for (const [l, c] of oSet) { const d = c - (nSet.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) minus.push(l); }
+    if (!plus.length && !minus.length) continue; // 仅顺序变化
+    console.log(`\n-- ${k}`);
+    for (const l of minus) console.log('  - ' + l.trim());
+    for (const l of plus) console.log('  + ' + l.trim());
+  }
+
+  // 关注类：无论是否在 changed 里都单独完整对比
+  if (focusList.length) {
+    console.log(`\n==== FOCUS ====`);
+    for (const sub of focusList) {
+      let hits = 0;
+      for (const [k] of oldT) {
+        if (!k.includes(sub)) continue;
+        hits++;
+        const n = newT.get(k);
+        if (!n) { console.log(`\n## ${k}: REMOVED !!!`); continue; }
+        const o = oldT.get(k).body, nB = n.body;
+        const oS = new Map(); for (const l of o) oS.set(l, (oS.get(l) || 0) + 1);
+        const nS = new Map(); for (const l of nB) nS.set(l, (nS.get(l) || 0) + 1);
+        const plus = [], minus = [];
+        for (const [l, c] of nS) { const d = c - (oS.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) plus.push(l); }
+        for (const [l, c] of oS) { const d = c - (nS.get(l) || 0); if (d > 0) for (let i = 0; i < d; i++) minus.push(l); }
+        console.log(`\n## ${k}: ${plus.length || minus.length ? 'CHANGED' : 'IDENTICAL'}`);
+        for (const l of minus) console.log('  - ' + l.trim());
+        for (const l of plus) console.log('  + ' + l.trim());
+      }
+      if (!hits) console.log(`\n## (no old type matches "${sub}")`);
+    }
   }
 }
