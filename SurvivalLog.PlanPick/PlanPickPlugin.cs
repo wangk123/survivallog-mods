@@ -35,6 +35,9 @@ public sealed class PlanPickPlugin : BasePlugin
         ListOnReady = Config.Bind("Debug", "ListOnReady", true, "首次数据就绪时在日志列统计（分类计数/今日候选）。");
         Verbose = Config.Bind("Debug", "Verbose", false, "每轮推送输出明细。");
 
+        var harmony = new HarmonyLib.Harmony(Guid);
+        harmony.PatchAll();
+
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<PlanTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<PlanTicker>();
         var go = new GameObject("PlanPick.Ticker");
