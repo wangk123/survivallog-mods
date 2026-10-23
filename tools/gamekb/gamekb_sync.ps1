@@ -34,7 +34,16 @@ $raVer = (Get-Content (Join-Path $game 'SurvivalLog_Data\StreamingAssets\Package
 if (-not $raVer) { $raVer = 'unknown' }
 $kbRoot = Join-Path $repo 'gamekb'
 $existing = Get-ChildItem $kbRoot -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match ('_' + $buildId + '$') }
-if ($existing) { Write-Host ("no update: buildid {0} already captured as {1}" -f $buildId, $existing[0].Name); exit 0 }
+$captured = $null
+if ($existing) { $captured = $existing[0] }
+$kbDone = $null
+if ($captured) { $kbDone = Join-Path $captured.FullName 'tables\_DONE.txt' }
+if ($captured -and (Test-Path $kbDone)) { Write-Host ("no update: buildid {0} already captured as {1}" -f $buildId, $captured.Name); exit 0 }
+if ($captured) {
+    Write-Host ("resuming table collection for existing capture: " + $captured.Name)
+    $verDir = $captured.FullName
+}
+if (-not $captured) {
 
 # ---- 3. pre-flight: dumper exe present + no unclaimed outputs (BEFORE creating dirs) ----
 $dumperDir = Join-Path $repo 'tools\il2cppdumper'
@@ -88,6 +97,7 @@ if ($prev -and $node) {
     & node (Join-Path $repo 'tools\gamekb\modcompat_check.js') $verDir | Tee-Object -FilePath $diffMd -Append
     Write-Host ("diff written: " + $diffMd)
 }
+}
 
 # ---- 8. tables: manual or -AutoProbe ----
 $doneMarker = Join-Path $game ('BepInEx\gamekb_tables\' + $raVer + '\_DONE.txt')
@@ -111,7 +121,7 @@ if (Test-Path $doneMarker) {
     $tablesDst = Join-Path $verDir 'tables'
     if (Test-Path $tablesDst) { Remove-Item $tablesDst -Recurse -Force }
     Move-Item $tablesSrc $tablesDst
-    Write-Host ("tables collected: " + (Get-Content $doneMarker -TotalCount 1))
+    Write-Host ("tables collected: " + (Get-Content (Join-Path $tablesDst '_DONE.txt') -TotalCount 1))
 } else {
     Write-Host ('TABLES PENDING: launch the game once (probe writes BepInEx\gamekb_tables\' + $raVer + '), then rerun this script to collect.')
 }
