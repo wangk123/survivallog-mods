@@ -40,7 +40,7 @@ function buildGolden(q) {
       id: p.id, name: p.name, desc: p.desc,
       icon: p.icon ? p.icon.replace(/^\//, '../../') : null,   // 还原官方 WebIcon 原值（../../Res/...）
       cost: p.cost, isReget: p.isReget, cat: p.cat, sub: p.sub, unlockDay: p.unlockDay,
-      today: todayIds.includes(p.id), exclusive: p.role || [],
+      today: todayIds.includes(p.id), exclusive: (p.role || []).length > 0,   // 与 C# payload 同构：bool（RoleIds.Count>0）
       state: reasons.length ? 'locked' : 'ok', reasons,
     };
   });
@@ -188,6 +188,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     ok(/仅限「(打工仔|大学生|仓库管理员|退伍军人)( \/ .+)?」的专属规划/.test(roleWhy),
         '角色锁因用官方角色名: ' + roleWhy.replace(/\n/g, ' ').slice(0, 80));
     await page.locator('#ppWhy').click();
+    // H2) exclusive=true（payload 布尔口径）→ 卡片渲染「专」徽章
+    const exCnt = await page.evaluate(() => [...document.querySelectorAll('.pp-tag')].filter(e => e.textContent === '专').length);
+    ok(exCnt > 0, 'exclusive=true 规划渲染「专」徽章: ' + exCnt);
 
     // I) 确认弹窗：无提示句（仅三行）/ 非今日卡 ×2 数学 / 今日卡原价
     await page.click('.pp-tab[data-tab="all"]');
@@ -231,6 +234,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.evaluate(() => fetch('golden.json').then(r => r.json()).then(g => { __PlanPickBoot(g); __PlanPickBoot(g); }));
     await sleep(250);
     eq(await page.locator('.pp-overlay').count(), 1, '重复 boot 后仍恰好一个弹层');
+    eq(await page.locator('#pp-style').count(), 1, '重复 boot 后样式仍只一份');
     eq(await page.locator('.pp-entry-btn').count(), 1, '重复 boot 后仍一个入口按钮');
     ok((await page.locator('.pp-card').count()) > 0, '重复 boot 后列表仍渲染');
 

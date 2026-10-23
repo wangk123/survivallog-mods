@@ -18,7 +18,7 @@ public sealed class PlanPickPlugin : BasePlugin
     public const string Name = "PlanPick";
     public const string Version = "1.3.8";
 
-    internal static ManualLogSource Log;
+    internal static new ManualLogSource Log;
     internal static ConfigEntry<float> CostMultiplier;   // 自选倍率（1=原价；<1 按 1 处理）
     internal static ConfigEntry<bool> ShowLocked;        // 未解锁项展示（置灰+原因）
     internal static ConfigEntry<bool> ShowUnpooled;      // 不入池规划（图纸/无人机）展示
@@ -45,11 +45,11 @@ public sealed class PlanPickPlugin : BasePlugin
     }
 }
 
-/// <summary>2s 巡检：WebView 就绪→注入 page.js→推数据。Task 4/5 填充 Update 逻辑。</summary>
+/// <summary>2s 巡检：WebView 就绪→注入 page.js→推数据（详见 Injector）。</summary>
 internal sealed class PlanTicker : MonoBehaviour
 {
     public PlanTicker(IntPtr ptr) : base(ptr) { }
     public PlanTicker() { }
     private float _check;
-    private void Update() { _check += Time.deltaTime; if (_check < 2f) return; _check = 0; }
+    private void Update() { _check += Time.deltaTime; if (_check < 2f) return; _check = 0; Injector.Tick(); }
 }

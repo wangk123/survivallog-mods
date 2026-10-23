@@ -441,7 +441,7 @@ function cardHtml(p) {
     const badges =
         (p.today ? '<span class="pp-tag today">今日·原价</span>' : '') +
         (p.unlockDay === null ? '<span class="pp-tag unpooled">不入池</span>' : '') +
-        ((p.exclusive || []).length ? '<span class="pp-tag">专</span>' : '') +
+        (p.exclusive ? '<span class="pp-tag">专</span>' : '') +
         (p.isReget ? '<span class="pp-tag reget">可重购</span>' : '');
     const lockBadge = st === 'locked' ? '<div class="pp-lock-badge">未解锁</div>' : '';
     const cls = 'pp-card ' + (st === 'locked' ? 'locked' : st === 'bought' ? 'bought' : st === 'poor' ? 'tooexpensive' : '');

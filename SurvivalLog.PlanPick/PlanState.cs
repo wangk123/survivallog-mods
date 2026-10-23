@@ -91,6 +91,7 @@ internal static class PlanState
         try { foreach (var kv in cm._Config_PlayerSelect_Dict) roleNames[kv.Key] = kv.Value.Name_Local ?? ("角色" + kv.Key); } catch { }
 
         var mult = Math.Max(1f, PlanPickPlugin.CostMultiplier.Value);
+        var multStr = mult.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); // 小数点逗号区域仍输出 JSON 合法数字
         var showLocked = PlanPickPlugin.ShowLocked.Value; var showUnpooled = PlanPickPlugin.ShowUnpooled.Value;
 
         var sb = new StringBuilder(64 * 1024);
@@ -130,15 +131,15 @@ internal static class PlanState
             if (state == "skip") continue;
             if (n > 1 && shown > 0) sb.Append(',');
             sb.Append("{\"id\":").Append(p.Id)
-              .Append(",\"name\":\"").Append(J(p.Name)).Append("\",\"desc\":\"").Append(J(p.Desc)).Append('"')
-              .Append(",\"icon\":\"").Append(J(p.Icon)).Append("\",\"cost\":").Append(p.Cost)
+              .Append(",\"name\":\"").Append(JsEscapePublic(p.Name)).Append("\",\"desc\":\"").Append(JsEscapePublic(p.Desc)).Append('"')
+              .Append(",\"icon\":\"").Append(JsEscapePublic(p.Icon)).Append("\",\"cost\":").Append(p.Cost)
               .Append(",\"isReget\":").Append(p.IsReget ? "true" : "false")
-              .Append(",\"cat\":\"").Append(p.Cat).Append("\",\"sub\":").Append(p.Sub == null ? "null" : "\"" + J(p.Sub) + "\"")
+              .Append(",\"cat\":\"").Append(p.Cat).Append("\",\"sub\":").Append(p.Sub == null ? "null" : "\"" + JsEscapePublic(p.Sub) + "\"")
               .Append(",\"unlockDay\":").Append(p.UnlockDay == null ? "null" : p.UnlockDay.Value.ToString())
               .Append(",\"today\":").Append(_today != null && _today.Contains(p.Id) ? "true" : "false")
               .Append(",\"exclusive\":").Append(p.RoleIds.Count > 0 ? "true" : "false")
               .Append(",\"state\":\"").Append(state).Append("\",\"reasons\":[");
-            for (int i = 0; i < reasons.Count; i++) { if (i > 0) sb.Append(','); sb.Append('"').Append(J(reasons[i])).Append('"'); }
+            for (int i = 0; i < reasons.Count; i++) { if (i > 0) sb.Append(','); sb.Append('"').Append(JsEscapePublic(reasons[i])).Append('"'); }
             sb.Append("]}");
             shown++;
         }
@@ -150,13 +151,13 @@ internal static class PlanState
             var ids = new List<int>(_today); ids.Sort();
             for (int i = 0; i < ids.Count; i++) { if (i > 0) sb.Append(','); sb.Append(ids[i]); }
         }
-        sb.Append("],\"points\":").Append(points).Append(",\"mult\":").Append(mult.ToString("0.##"))
+        sb.Append("],\"points\":").Append(points).Append(",\"mult\":").Append(multStr)
           .Append(",\"day\":").Append(_day).Append(",\"role\":").Append(role)
           .Append(",\"roleNames\":{");
-        int rn = 0; foreach (var kv in roleNames) { if (rn++ > 0) sb.Append(','); sb.Append(kv.Key).Append(":\"").Append(J(kv.Value)).Append('"'); }
+        int rn = 0; foreach (var kv in roleNames) { if (rn++ > 0) sb.Append(','); sb.Append(kv.Key).Append(":\"").Append(JsEscapePublic(kv.Value)).Append('"'); }
         sb.Append("}}");
         json = sb.ToString();
-        logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，倍率 x" + mult.ToString("0.##") + "）");
+        logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，倍率 x" + multStr + "）");
         return shown > 0;
     }
 
@@ -167,7 +168,7 @@ internal static class PlanState
         return string.Join(" / ", parts);
     }
 
-    private static string J(string s) { /* 最小 JSON 转义 */
+    internal static string JsEscapePublic(string s) { /* 最小 JSON 转义（Injector 嵌 page.js 复用） */
         if (string.IsNullOrEmpty(s)) return "";
         var sb = new StringBuilder(s.Length + 8);
         foreach (var c in s)
