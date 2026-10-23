@@ -1,0 +1,2 @@
+# golden.json 由 run_tests.js 内存合成（/golden.json 动态响应），若日后落盘也不入库
+golden.json
