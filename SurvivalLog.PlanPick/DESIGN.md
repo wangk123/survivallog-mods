@@ -308,3 +308,7 @@
   退格入转运（C# 收 \b、page 侧逐字符 slice）；订阅 FocusedInputFieldChanged 失败（il2cpp 泛型
   委托 ConvertDelegate 参数原生指针不匹配——已知坑）且经实证非官方路径，整体删除。
   最终组合=门(SetKeyboardEnabled)+转运(inputString 非 ASCII+\b)，两职责单一。
+- 2026-10-24 装机十轮（IME 白名单解锁——作者情报定案）：游戏按界面白名单解锁中文 IME（仅工作台
+  配方搜索等少数界面；规划页不在名单→搜狗不组合、字母直透网页）。照抄解锁动作：键盘门开期间
+  UnityEngine.Input.imeCompositionMode = On（组合挂 Unity 窗口），门关还原原值。IME On 后
+  inputString 成为唯一文本通道（裸键转发无输入），转运过滤器放宽为退格+全部可打印字符。

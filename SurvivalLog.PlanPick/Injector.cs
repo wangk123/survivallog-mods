@@ -102,6 +102,7 @@ internal static class Injector
     // 删=全灭——S3 实证）。中文：官方机制=Unity inputString 转运（S3 实证：官方工作台打中文时
     // inputString 出组合字）——OfferImeChars 收非 ASCII+退格，FlushIme 无条件冲刷（页面侧守卫）。
     private static bool _kbHanded;
+    private static UnityEngine.IMECompositionMode _prevIme = UnityEngine.IMECompositionMode.Auto;
     private static bool _logHanded, _logReturned, _warnedNoKey;
 
     /// <summary>0.3s 快通道：键盘门 + IME 转运冲刷。</summary>
@@ -113,15 +114,28 @@ internal static class Injector
         if (active && !_kbHanded)
         {
             _kbHanded = true;
-            try { layer.SetKeyboardEnabled(true); }
+            try
+            {
+                layer.SetKeyboardEnabled(true);
+                // 官方按界面白名单解锁 IME（作者情报：仅工作台配方搜索等少数界面；实证：规划页搜狗不组合字母直透）。
+                // 照抄解锁：门开期间 Unity IME 组合 On——组合挂 Unity 窗口，inputString 收全量字符；
+                // 转运随之收 ASCII+汉字（IME On 时裸键转发无输入，无双投）。门关还原，交还游戏白名单管理。
+                _prevIme = UnityEngine.Input.imeCompositionMode;
+                UnityEngine.Input.imeCompositionMode = UnityEngine.IMECompositionMode.On;
+            }
             catch (Exception e) { _kbHanded = false; PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(true) 异常: " + e.Message); return; }
-            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页激活，键盘交给网页（SetKeyboardEnabled true）"); }
+            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页激活，键盘交给网页（SetKeyboardEnabled + IME On）"); }
         }
         else if (!active && _kbHanded)
         {
             _kbHanded = false;
-            try { layer.SetKeyboardEnabled(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(false) 异常: " + e.Message); }
-            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏"); }
+            try
+            {
+                layer.SetKeyboardEnabled(false);
+                UnityEngine.Input.imeCompositionMode = _prevIme;
+            }
+            catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(false) 异常: " + e.Message); }
+            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏（IME 还原）"); }
         }
         FlushIme(layer);
     }
@@ -142,7 +156,7 @@ internal static class Injector
         lock (_imeLock)
         {
             foreach (var c in s)
-                if (c >= 128 && c != '\u3000') _imeBuf += c;   // 汉字/全角符号；全角空格过滤
+                if (c == '\b' || (c >= 32 && c != 127)) _imeBuf += c;   // IME On 后 inputString 是唯一文本通道：退格+全部可打印（含 ASCII/汉字/全角）
         }
     }
 
