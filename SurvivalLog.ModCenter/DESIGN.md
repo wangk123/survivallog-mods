@@ -4,8 +4,9 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 6 配置桥完成**（Meta 九表 + 快照/写链路 +
-> 消息协议 + Save 防抖；RobotSpeed 改值热生效装机实测，见 §6；任务 5 注入骨架见 §5；
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 7 面板 UI 完成**（panel.js 原型 v4 完整移植：
+> 左列/配置页/四类控件/覆盖清单/toast/徽标图例 + 协议回传；主菜单 41/41 断言 + 游戏内
+> OutSetting 实机断言 4/4，见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe` 默认关）。
 
 ## 1. 功能定位
@@ -23,7 +24,7 @@
 |---|---|---|
 | C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（cfg `[Disabled]` 名单）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
 | 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
-| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 长出完整面板） | 面板 UI 与交互。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（后两者任务 6 推送存根：存 `__mcLastSnapshot` / `__mcLastEvent`，任务 7 换真渲染）为既定契约，全程一致；键盘上报任务 8 |
+| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；键盘上报任务 8 |
 
 panel.js 作为内嵌资源随 dll 分发，不落盘、不改游戏资源文件（同 CabinetEverywhere
 tagfilter.page.js 模式）。
@@ -176,7 +177,7 @@ entry.Value = 3f;
   `面板消息: [{"type":"MC_OPEN","host":".../UI/MainUI/MainUI.html"}]` 等 5 条——
   Eval 回调委托（DelegateSupport 包装）实测可用。
 - **游戏内 OutSetting 断言未跑**（读档会动作者存档，自动化不冒险），代码路径与主菜单
-  同一脚本分支（仅锚点/插入方式不同），留任务 7 首轮实机复核——这是本任务唯一未实证点。
+  同一脚本分支（仅锚点/插入方式不同）——**任务 7 已补实机断言（§6.5.3），4/4 PASS**。
 
 ## 6. 配置桥与消息协议（任务 6，2026-10-24）
 
@@ -206,6 +207,9 @@ entry.Value = 3f;
 | MC_CLOSE | — | 立即落盘全部脏 cfg（防抖收口） |
 | MC_EVIDENCE | tag | 验证辅助（只读）：写 `BepInEx/ModCenter_evidence.txt`（RobotSpeed 移速倍率 entry 值 + Config_RobotAttribute 表快照，表读复用 BridgeProbe.Table）；正常玩家不触发 |
 
+- **逐条 try（任务 7 落地，原 §6.2 旧债收口）**：HandleOutbox 的批内循环每条消息独立
+  try/catch——单条异常只弃该条（warn 日志），不弃同批后续（面板滑条连发+关闭常同批到达）。
+
 - **guid 路由**：完整 GUID / En 短名 / GUID 尾段均可（大小写不敏感；`'RobotSpeed'`、`'robotspeed'`、
   `'com.local.survivallog.robotspeed'` 同效）。
 - **key 路由**：主键 / 任一 writeKeys / 组合展示键（联动项 `"Expand.WidthMult + HeightMult"`）均可；
@@ -230,8 +234,71 @@ MC_EVIDENCE 轮询读表：MoveSpeed 4.8→9.6（=2.4×4，≤5s）→ 写回 2 
 一轮（false→名单落盘 `com.local.survivallog.modcenter.cfg [Disabled]`→true→恢复）；MC_CLOSE 即时
 落盘断言。证据：`.superpowers/sdd/2026-10-24-modcenter/task-6-report.md`（输出全文）。
 
+### 6.5 面板 UI（任务 7，2026-10-24）
+
+#### 6.5.1 移植要点（原型 v4 → panel.js 的实装差异）
+
+- **可点元素改造（T5 结论的执行）**：宿主页 clickThrough 清单是
+  `.unity-interactive, button, input, select, a, [data-interactive]`——原型的 `<span>` 迷你开关
+  改为 `<button>`（自带全量样式重置），左列 mod 行是 `<div>` 故显式带 `data-interactive`；
+  数值/滑条/下拉天然在清单内。全部选择器锚定 `#__mc_overlay` + `__mc` 前缀（零样式泄漏）。
+- **状态语义**：`ST.sel` 记住当前选中 mod（跨开关面板保持——重开面板回到上次页，实测确认）；
+  `toggleMod` **乐观翻转直接改写快照对象内的 mod 字段**——`__mcLastSnapshot` 与 `ST.snap` 同引用，
+  故"快照里 enabled 已变"≠"C# 已回推"；判真推送用 `__mcSnapSeq`（`__mcRender` 每次自增，
+  CDP 断言/未来 UI 逻辑都应以此为准）。
+- **改值链**：input 事件即时 `MC_SET`，滑条 100ms 节流（首条立即发、窗口内合并为末值补发；
+  实测 5 连发 → 恰好 2 条消息 [首值,末值]）；数值框 input 阶段发送钳制值但不重写在打文本，
+  change 时归位显示；下拉走 change。bool/下拉/滑条全部乐观更新本地 `it.v`（C# 不为 MC_SET 推
+  快照，重绘不打断拖动）。`section/key` 从展示键 `k` 按首个 `.` 拆分（现役节名不含点；
+  联动项整串作 key 恰等于 `MetaItem.K`，桥 Match 命中）。
+- **ovr 序列化（面板侧承担，T6 评审备忘 B 兑现）**：增/删/拖 → 本地数组编辑 → 序列化
+  `id:ms,id:ms`（**按 id 升序 canonical**）整串 `MC_SET 其他.Overrides`；打开面板从快照 `ovr`
+  数组初始化；实测 8012 增(1000)→拖(250)→快照往返 `[{id:8012,ms:250}]`→删("")→`[]`，cfg 盘上
+  `Overrides = 8012:250` → `""` 精确还原。
+- **toast**：按徽标四档小字（now≈5秒内/reload=读档后/cfg=生效视该 mod——本任务套件全有徽标，
+  cfg 档文案就绪待 T14）；`MC_SET_FAIL` 到达时以错误样式覆盖乐观 toast。
+- **tp 空数组**：渲染"第三方 MOD"分类头 + "（暂无第三方 mod 接入）"占位行（T14 填充后自动长行）。
+
+#### 6.5.2 实机现状备忘：UiFit.Mode/Enabled 写路径
+
+装机版 CabinetExpand.dll（作者现装，10-20 构建）尚未 Bind `UiFit.Mode`（cfg 无该键；仓库源
+ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta 兜底展示，写被桥拒绝回
+`MC_SET_FAIL`（与 RoleUnlock Plan.* 待 T8 同类，**设计内行为**，实测 FAIL 回执+错误 toast+cfg
+零改动）。作者部署新版 CabinetExpand 后该写自动转 OK 路径，无需改本 mod。
+
+#### 6.5.3 实测记录（2026-10-24，主菜单 41/41 + 游戏内 4/4）
+
+- 主菜单（`tools/_mc_fixture.js menu`）：面板布局（样式/头/关闭/四徽标图例/toast/左列 10 行
+  =9 套件+自身锁定/tp 空占位/三分类头）→ 9 页逐项对账（分组标题/项数/控件类型/联动动态注记
+  与快照自洽；仅启停页=占位文案）→ **PlanPick Cost min=100/max=300 反射合入断言（T5/6 遗留 D，
+  快照+DOM 双侧）** → 自身页防呆文案 → 滑条（消息形态 guid/section/key/value 数值型 + OK 回执
+  + 配对数值框联动 + toast + 节流形态）→ bool（消息值=布尔型/UI 翻转/回执）→ 下拉（FAIL 路径，
+  §6.5.2）→ reload 徽标 toast → 左列启停（消息形态/真回推 snapSeq/行置灰/停用横幅/[Disabled]
+  落盘/还原）→ ovr 往返 → ✕ 关闭（overlay 移除+MC_CLOSE）→ 全部被写 cfg 还原基线。
+  截图 `task-7-shot-panel.png`。
+- 游戏内（遗留 A）：`loadgame` 模式点"继续生存灾后 · 第90天"进对局 → SendKeys ESC
+  （`tools/_mc_sendkey.ps1`，AppActivate+SendKeys）→ `outsetting` 模式断言：入口
+  `BUTTON.main-btn` 在 `.menu-list` 内、`insertBefore` 位置正确（本档暂停菜单无 .btn-restart，
+  锚点自动退化为 .btn-exit——**相邻兄弟规则的退化路径首次实机验证**，entry 紧邻其后）→
+  点击开面板（挂 OutSetting 文档，10 行渲染）→ ✕ 关闭干净 → 共存扫描（#ppEntry 所在页未开，
+  前后扫描一致、无残留 overlay）。跑两轮均 4/4 PASS。截图 `task-7-shot-outsetting.png`。
+- **读档安全处置**：进对局后游戏自身在继续时做存档槽轮转（.bytes→.bak）并在约 13s 后自动
+  落盘一次（暂停菜单打开前后）；主存档被写入约 90 秒世界漂移。验证后已用游戏自己的 .bak
+  **复制还原**（md5 与作者 18:48 原态一致），HistorySave 本就同哈希未动——作者存档零净变化。
+  教训：该游戏"继续"≠只读，后续自动化进对局前必须先备份 Saves 目录。
+- 生命周期红线遵守：steam:// 启动；期间作者两次短暂上号（18:42-18:48 干扰首轮运行、按红线
+  未杀未等自然退出后重跑）；验证后 taskkill + sleep 3 + tasklist 原始输出确认死透。
+
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 7：面板 UI 完整移植。`panel.js` 空壳→完整面板（原型 v4 `<style>` 面板段 +
+  renderSide/renderCfg/ctl/toast/toggle/ovr 逻辑；span 开关改 button、行 div 带
+  data-interactive 以进 clickThrough；ST.sel 记忆选中；toggle 乐观翻转+`__mcSnapSeq` 真推送
+  判据；滑条 100ms 节流；ovr 面板侧序列化 canonical 排序；tp 空占位）；`ConfigBridge.cs`
+  HandleOutbox 逐条 try（单条异常不弃同批后续，§6.2 旧债收口）；新增
+  `tools/_mc_fixture.js`（menu/loadgame/outsetting 三模式装机断言）与 `tools/_mc_sendkey.ps1`
+  （游戏窗口 ESC 注入）。实测：主菜单 41/41、OutSetting 4/4（遗留 A）、PlanPick 反射范围断言
+  （遗留 D）、ovr 序列化往返、UiFit.Mode 拒绝路径（§6.5.2）；DESIGN 新增 §6.5。
 - 2026-10-24 任务 6：配置桥正式化。新增 `Meta.cs`（九表）/`Payload.cs`（DTO+手写 JSON）/
   `ConfigBridge.cs`（快照/写/启停名单/消息分发/Save 防抖/MC_EVIDENCE）；`ModCenterPlugin.cs`
   Ticker 接 Pump、BridgeProbe.Table 转 internal、探针注释去已证伪期望值（真原值 2.4 口径）；

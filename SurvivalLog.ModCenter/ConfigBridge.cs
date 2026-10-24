@@ -321,28 +321,34 @@ internal static class ConfigBridge
             foreach (var el in doc.RootElement.EnumerateArray())
             {
                 if (el.ValueKind != JsonValueKind.Object) continue;
-                var type = GetStr(el, "type");
-                switch (type)
+                // 逐条 try（任务 7，DESIGN §6.2 旧债收口）：批内消息互相独立，
+                // 单条异常只弃该条——不弃同批后续（面板滑条+关闭常同批到达）。
+                try
                 {
-                    case "MC_OPEN":
-                        PushRender(BuildSnapshot().ToJson());
-                        break;
-                    case "MC_CLOSE": // 面板关闭：立即落盘全部脏 cfg（防抖收口）
-                        FlushDirty();
-                        break;
-                    case "MC_SET":
-                        HandleSet(GetStr(el, "guid"), GetStr(el, "section"), GetStr(el, "key"), el);
-                        break;
-                    case "MC_TOGGLE_MOD":
-                        HandleToggle(GetStr(el, "guid"), el);
-                        break;
-                    case "MC_EVIDENCE": // 验证辅助（只读）：写证据文件供装机断言（见 DESIGN §6.4）
-                        WriteEvidence(GetStr(el, "tag"));
-                        break;
-                    default:
-                        if (!string.IsNullOrEmpty(type)) Log("忽略未知消息类型: " + type);
-                        break;
+                    var type = GetStr(el, "type");
+                    switch (type)
+                    {
+                        case "MC_OPEN":
+                            PushRender(BuildSnapshot().ToJson());
+                            break;
+                        case "MC_CLOSE": // 面板关闭：立即落盘全部脏 cfg（防抖收口）
+                            FlushDirty();
+                            break;
+                        case "MC_SET":
+                            HandleSet(GetStr(el, "guid"), GetStr(el, "section"), GetStr(el, "key"), el);
+                            break;
+                        case "MC_TOGGLE_MOD":
+                            HandleToggle(GetStr(el, "guid"), el);
+                            break;
+                        case "MC_EVIDENCE": // 验证辅助（只读）：写证据文件供装机断言（见 DESIGN §6.4）
+                            WriteEvidence(GetStr(el, "tag"));
+                            break;
+                        default:
+                            if (!string.IsNullOrEmpty(type)) Log("忽略未知消息类型: " + type);
+                            break;
+                    }
                 }
+                catch (Exception e) { Log("warn 单条消息处理异常(" + (GetStr(el, "type") ?? "?") + "): " + e.Message); }
             }
         }
         catch (Exception e) { Log("warn 消息解析异常: " + e.Message); }
