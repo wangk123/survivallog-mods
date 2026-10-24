@@ -34,18 +34,18 @@ public sealed class CabinetSizePlugin : BasePlugin
     {
         const string g = "柜子宽度上限：档位与自定义条目超出即夹到此值（0=不封顶，超宽可能挤出屏幕自担风险）。默认 20=官方原生最大宽度（材料架列数），官方自适应设计预算内。";
         MaxWidth = Config.Bind("Global", "MaxWidth", 20, g);
-        MaxHeight = Config.Bind("Global", "MaxHeight", 12,
-            "柜子高度上限（0=不封顶）。默认 12=原生全表最大行数。");
-        Preset = Config.Bind("Global", "Preset", 1, "默认值预设版本（勿手改）：mod 升级后未手动调过的条目自动跟新默认值。");
+        MaxHeight = Config.Bind("Global", "MaxHeight", 16,
+            "柜子高度上限（0=不封顶）。默认 16=当前特大档高度（作者 2026-10-25 实测定稿）。");
+        Preset = Config.Bind("Global", "Preset", BagSections.CurrentPreset, "默认值预设版本（勿手改）：mod 升级后未手动调过的条目自动跟新默认值。");
         ExcludeIds = Config.Bind("Global", "ExcludeIds", "", "追加排除的 BagId（逗号分隔）：在默认黑名单之外额外恢复官方原值。");
-        SmallW = Config.Bind("Tier.Small", "Width", 10, "小档宽度（原生格数≤60 的柜子自动落此档）。");
-        SmallH = Config.Bind("Tier.Small", "Height", 12, "小档高度。");
-        MediumW = Config.Bind("Tier.Medium", "Width", 14, "中档宽度（原生格数 61~99）。");
+        SmallW = Config.Bind("Tier.Small", "Width", 14, "小档宽度（原生格数≤60 的柜子自动落此档）。");
+        SmallH = Config.Bind("Tier.Small", "Height", 10, "小档高度。");
+        MediumW = Config.Bind("Tier.Medium", "Width", 16, "中档宽度（原生格数 61~99）。");
         MediumH = Config.Bind("Tier.Medium", "Height", 12, "中档高度。");
         LargeW = Config.Bind("Tier.Large", "Width", 18, "大档宽度（原生格数 100~149）。");
-        LargeH = Config.Bind("Tier.Large", "Height", 12, "大档高度。");
+        LargeH = Config.Bind("Tier.Large", "Height", 14, "大档高度。");
         XLargeW = Config.Bind("Tier.XLarge", "Width", 20, "特大档宽度（原生格数≥150）。");
-        XLargeH = Config.Bind("Tier.XLarge", "Height", 12, "特大档高度。");
+        XLargeH = Config.Bind("Tier.XLarge", "Height", 16, "特大档高度。");
         ListOnReady = Config.Bind("Debug", "ListOnReady", true, "首次生效时在日志/trace 列出全部受管包与尺寸前后（核对名单用）。");
         DiagOnOpen = Config.Bind("Debug", "DiagOnOpen", false, "读档时在日志列出全部容器的 BagConfigId（排查某柜不生效，平时关防刷屏）。");
 
