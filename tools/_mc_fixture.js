@@ -87,19 +87,22 @@ async function connect(t0, log) {
     }
   }
   log('CDP connected');
-  const pageDeadline = Date.now() + 180000;
+  const page = await findRootPage(browser, 180000, log);
+  return { browser, page };
+}
+
+// Root page may be a transient boot page that closes — re-acquire on every poll.
+async function findRootPage(browser, budgetMs, log) {
+  const deadline = Date.now() + budgetMs;
   for (;;) {
-    let page = null;
     for (const ctx of browser.contexts()) {
       for (const p of ctx.pages()) {
         let has = false;
         try { has = await p.evaluate(() => !!document.querySelector('#iframe-container')); } catch (e) { has = false; }
-        if (has) { page = p; break; }
+        if (has) return p;
       }
-      if (page) break;
     }
-    if (page) return { browser, page };
-    if (Date.now() > pageDeadline) { log('FAIL: no Root page'); await browser.close(); process.exit(2); }
+    if (Date.now() > deadline) { log('FAIL: no Root page'); await browser.close(); process.exit(2); }
     await sleep(POLL_MS);
   }
 }
@@ -119,20 +122,33 @@ function snapEnabledOf(page, guid) {
 async function menuMode() {
   const t0 = Date.now();
   const log = (m) => console.log('[' + Math.round((Date.now() - t0) / 1000) + 's] ' + m);
-  const { browser, page } = await connect(t0, log);
+  let browserRef;
+  let page;
+  {
+    const conn = await connect(t0, log);
+    browserRef = conn.browser;
+    page = conn.page;
+  }
 
-  // wait for MainUI + entry + panel bootstrap
-  const ready = () => page.evaluate((tail) => {
-    const fs = document.querySelectorAll('#iframe-container iframe');
-    for (let i = 0; i < fs.length; i++) {
-      try {
-        const d = fs[i].contentDocument;
-        if (d && d.location.pathname.indexOf(tail) !== -1)
-          return !!(d.getElementById('__mc_entry') && window.__mcDrain && window.__mcRender);
-      } catch (e) {}
+  // wait for MainUI + entry + panel bootstrap (page may close/reopen during boot: re-acquire)
+  const ready = async () => {
+    try {
+      return await page.evaluate((tail) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try {
+            const d = fs[i].contentDocument;
+            if (d && d.location.pathname.indexOf(tail) !== -1)
+              return !!(d.getElementById('__mc_entry') && window.__mcDrain && window.__mcRender);
+          } catch (e) {}
+        }
+        return false;
+      }, MAIN_HTML);
+    } catch (e) {
+      try { page = await findRootPage(browserRef, 5000, () => {}); } catch (e2) { return false; }
+      return false;
     }
-    return false;
-  }, MAIN_HTML);
+  };
   const entryDeadline = Date.now() + 150000;
   for (;;) {
     if (await ready()) break;
@@ -478,7 +494,8 @@ async function menuMode() {
   const ev1 = await waitEvent('MC_SET_OK');
   const sent1 = await sentSince(m0);
   F.sliderSet = { r1, ev1, sent1 };
-  V.sliderMsgShape = !!(firstOf(sent1, 'MC_SET') && sent1.find((s) => s.type === 'MC_SET' && s.guid === RS_GUID && s.section === Z.secRs && s.key === Z.moveKey && s.value === 3.5));
+  const rsFullK = Z.secRs + '.' + Z.moveKey; // C1 fix: key = FULL display string
+  V.sliderMsgShape = !!(firstOf(sent1, 'MC_SET') && sent1.find((s) => s.type === 'MC_SET' && s.guid === RS_GUID && s.section === Z.secRs && s.key === rsFullK && s.value === 3.5));
   V.sliderOkReceipt = !!(ev1 && ev1.k === Z.secRs + '.' + Z.moveKey && ev1.badge === 'now');
   V.sliderSiblingSync = !!(r1 && r1.sibling === '3.5');
   const toast1 = await page.evaluate((tail) => {
@@ -505,11 +522,11 @@ async function menuMode() {
   const burstDl = Date.now() + 8000;
   for (;;) {
     sent2 = await sentSince(m2);
-    if (sent2.filter((s) => s.key === Z.moveKey).length >= 2) break;
+    if (sent2.filter((s) => s.type === 'MC_SET' && s.key === rsFullK).length >= 2) break;
     if (Date.now() > burstDl) break;
     await sleep(500);
   }
-  F.throttleBurst = sent2.filter((s) => s.key === Z.moveKey);
+  F.throttleBurst = sent2.filter((s) => s.type === 'MC_SET' && s.key === rsFullK);
   const burst = F.throttleBurst;
   V.throttleShape = burst.length >= 2 && burst.length <= 4
     && burst[0].value === 4 && burst[burst.length - 1].value === 4.5;
@@ -518,6 +535,58 @@ async function menuMode() {
   await setRange(0, 1, 2);
   await waitEvent('MC_SET_OK');
   F.rsAfter = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.robotspeed.cfg', Z.secRs, Z.moveKey));
+
+  // ---- interaction 1b: linked sliders end-to-end (C1 regression, 4 linked MC_SET) ----
+  // key must be the FULL display string ("Expand.WidthMult + HeightMult") so the C#
+  // Match hits its it.K branch; then TrySet writes BOTH writeKeys equal. Assert:
+  // message shape -> MC_SET_OK -> both keys equal new value on disk -> restore.
+  const LINKED = [
+    { name: Z.bp, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg',
+      k: 'Expand.WidthMult + HeightMult', g: 0, i: 0, keys: ['WidthMult', 'HeightMult'] },
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+      k: 'Expand.WidthMult + HeightMult', g: 0, i: 0, keys: ['WidthMult', 'HeightMult'] },
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+      k: 'Expand.FridgeWidthMult + FridgeHeightMult', g: 0, i: 1, keys: ['FridgeWidthMult', 'FridgeHeightMult'] },
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+      k: 'Expand.VehicleWidthMult + VehicleHeightMult', g: 0, i: 2, keys: ['VehicleWidthMult', 'VehicleHeightMult'] },
+  ];
+  const readPair = (file, keys) => keys.map((k) => stripNonCodeLines(readCfgSection(file, 'Expand', k)));
+  F.linked = [];
+  for (const L of LINKED) {
+    const entry = { k: L.k, step: [] };
+    const orig = readPair(L.file, L.keys);
+    entry.orig = orig;
+    entry.pairEqual = orig[0] != null && orig[0] === orig[1];
+    if (!entry.pairEqual) { F.linked.push(entry); continue; } // unequal pair: cannot round-trip safely, skip
+    await clickRow(guidOf[L.name]);
+    await sleep(60);
+    const mk = await sentMark();
+    await setRange(L.g, L.i, 2.5);
+    const ev = await waitEvent('MC_SET_OK', 12000);
+    const sent = firstOf(await sentSince(mk), 'MC_SET');
+    entry.msg = sent && { section: sent.section, key: sent.key, value: sent.value };
+    entry.evOk = !!(ev && ev.k === L.k && ev.badge === 'now');
+    // both keys equal 2.5 on disk after debounce flush
+    let pair = null;
+    const dl = Date.now() + 12000;
+    for (;;) {
+      pair = readPair(L.file, L.keys);
+      if (pair[0] === '2.5' && pair[1] === '2.5') break;
+      if (Date.now() > dl) break;
+      await sleep(600);
+    }
+    entry.afterSet = pair;
+    // restore original pair value (equal pair -> one linked write restores both)
+    await setRange(L.g, L.i, parseFloat(orig[0]));
+    await waitEvent('MC_SET_OK', 12000);
+    F.linked.push(entry);
+  }
+  // final pair check happens in the "final facts" settle below (after close flush)
+  V.linkedMsgShape = F.linked.every((e) => !e.pairEqual
+    || (e.msg && e.msg.section === 'Expand' && e.msg.key === e.k && e.msg.value === 2.5));
+  V.linkedOkReceipt = F.linked.every((e) => !e.pairEqual || e.evOk);
+  V.linkedBothKeysEqual = F.linked.every((e) => !e.pairEqual
+    || (e.afterSet && e.afterSet[0] === '2.5' && e.afterSet[1] === '2.5'));
 
   // ---- interaction 3: bool (RoleUnlock flower seeds off/on) ----
   await clickRow(guidOf[Z.ru]);
@@ -548,7 +617,7 @@ async function menuMode() {
   await waitEvent('MC_SET_OK');
   const sent3set = firstOf(sent3, 'MC_SET');
   F.boolSet = { flower0, b1, ev3, sent3: sent3set, b2 };
-  V.boolMsgShape = !!(sent3set && sent3set.key === 'UnlockFlowerSeeds' && sent3set.value === !flower0);
+  V.boolMsgShape = !!(sent3set && sent3set.key === 'Vine.UnlockFlowerSeeds' && sent3set.value === !flower0);
   V.boolUiToggle = !!(b1 && b1.on === !flower0 && b1.aria === String(!flower0)
     && b2 && b2.on === flower0);
   V.boolOkReceipt = !!(ev3 && ev3.badge === 'now');
@@ -599,7 +668,7 @@ async function menuMode() {
   await sleep(300);
   const uifitModeAfter = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg', 'UiFit', 'Mode'));
   F.selSet = { ev4, sent4, toast4, uifitModeBefore, uifitModeAfter };
-  V.selMsgShape = !!(sent4 && sent4.section === 'UiFit' && sent4.key === 'Mode' && sent4.value === 'Zoom');
+  V.selMsgShape = !!(sent4 && sent4.section === 'UiFit' && sent4.key === 'UiFit.Mode' && sent4.value === 'Zoom');
   if (uifitModeBefore == null) {
     // entry absent in deployed install: designed reject path (MC_SET_FAIL + err toast, cfg untouched)
     V.selOkReceipt = !!(ev4 && ev4.type === 'MC_SET_FAIL' && ev4.k === 'UiFit.Mode')
@@ -881,6 +950,7 @@ async function menuMode() {
 
   // wait disk settle, then final facts
   await sleep(4000);
+  const linkedFinalPairs = LINKED.map((L) => ({ k: L.k, pair: readPair(L.file, L.keys) }));
   F.final = {
     rs: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.robotspeed.cfg', Z.secRs, Z.moveKey)),
     uifitMode: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg', 'UiFit', 'Mode')),
@@ -888,7 +958,11 @@ async function menuMode() {
     burden: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'BurdenMult')),
     ovr: stripNonCodeLines(readCfgSection(QA_CFG, '\u5176\u4ed6', 'Overrides')),
     pdDisabled: readCfgSection(MC_CFG, 'Disabled', PD_GUID),
+    linkedPairs: linkedFinalPairs,
   };
+  V.linkedRestored = F.linked.every((e, i) => !e.pairEqual
+    || (linkedFinalPairs[i] && linkedFinalPairs[i].pair[0] === e.orig[0]
+      && linkedFinalPairs[i].pair[1] === e.orig[1]));
   V.restoredStates = (F.final.rs === (F.rsBefore || '2'))
     && F.final.uifitMode === (F.selSet ? F.selSet.uifitModeBefore : F.final.uifitMode)
     && F.final.flower === (F.ruBefore || 'false')
@@ -897,7 +971,7 @@ async function menuMode() {
 
   try { await page.screenshot({ path: SHOT_DIR + '/task-7-shot-panel.png' }); } catch (e) {}
 
-  await browser.close();
+  await browserRef.close();
   console.log('---- facts ----');
   console.log(JSON.stringify({
     layout: F.layout, planpickCost: F.planpickCost,
@@ -907,6 +981,7 @@ async function menuMode() {
       return acc;
     }, {}) : null,
     sliderSet: F.sliderSet, throttleBurst: F.throttleBurst,
+    linked: F.linked,
     toast1: F.toast1, boolSet: F.boolSet, selSet: F.selSet, toast5: F.toast5, toggle: F.toggle,
     burdenBefore: F.burdenBefore,
     ovrAdd: F.ovrAdd, ovrDrag: F.ovrDrag, ovrSnap1: F.ovrSnap1, qaCfgMid: F.qaCfgMid,
@@ -934,6 +1009,10 @@ async function menuMode() {
     ['2  slider sibling number sync', V.sliderSiblingSync],
     ['2  slider toast shown', V.sliderToast],
     ['2  slider 100ms throttle burst shape', V.throttleShape],
+    ['C1x4 linked MC_SET key = full display k', V.linkedMsgShape],
+    ['C1x4 linked MC_SET_OK receipt', V.linkedOkReceipt],
+    ['C1x4 linked writeKeys both = 2.5 on disk', V.linkedBothKeysEqual],
+    ['C1x4 linked pairs restored to baseline', V.linkedRestored],
     ['2  bool toggle msg + UI + receipt', V.boolMsgShape && V.boolUiToggle && V.boolOkReceipt],
     ['2  select msg + receipt', V.selMsgShape && V.selOkReceipt],
     ['2  reload-badge toast (读档后)', V.reloadBadgeToast],

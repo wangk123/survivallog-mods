@@ -382,9 +382,14 @@
     var i = String(k).indexOf('.');
     return i === -1 ? ['', k] : [String(k).slice(0, i), String(k).slice(i + 1)];
   }
+  /* C1 修复（评审 Fix Round 1）：key 一律发**完整展示键 k 原串**（"节.键" / 联动"节.键A + 键B"），
+   * section 仍发解析出的节前缀（供 C# Match 的节名前置校验）。此前剥前缀后的联动 key
+   * "WidthMult + HeightMult" 在 C# Match 三候选（Key/WKeys/组合 K）全不命中——背包+柜子
+   * 4 个联动滑条 MC_SET 必败。整串发后命中 it.K 分支（组合展示键逐字相等）；
+   * 非联动项整串 = it.K 同样命中；ovr 走 ovrCommit 固定 section='其他'/key='Overrides'（it.Key 分支）。 */
   function sendSet(m, it, value) {
     var r = routeOf(it.k);
-    window.__mcOutbox.push({ type: 'MC_SET', guid: m.guid, section: r[0], key: r[1], value: value });
+    window.__mcOutbox.push({ type: 'MC_SET', guid: m.guid, section: r[0], key: it.k, value: value });
   }
   function serializeOvr(m) {
     return (m.ovr || []).slice().sort(function (a, b) { return a.id - b.id; })
@@ -584,6 +589,9 @@
     var el = S.root;
     S.root = null; S.side = S.cfg = S.sub = S.toastEl = null;
     if (el.isConnected && el.parentNode) el.parentNode.removeChild(el);
+    /* 关闭即清节流句柄（评审备忘 3）：撤销未触发的 trailing 补发，面板关闭后不再发消息 */
+    for (var id in TH) if (TH[id] && TH[id].timer != null) clearTimeout(TH[id].timer);
+    TH = Object.create(null);
     window.__mcOutbox.push({ type: 'MC_CLOSE' });
   };
   window.__mcEsc = function (e) {

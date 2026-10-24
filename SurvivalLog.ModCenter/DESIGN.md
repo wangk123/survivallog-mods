@@ -242,15 +242,21 @@ MC_EVIDENCE 轮询读表：MoveSpeed 4.8→9.6（=2.4×4，≤5s）→ 写回 2 
   `.unity-interactive, button, input, select, a, [data-interactive]`——原型的 `<span>` 迷你开关
   改为 `<button>`（自带全量样式重置），左列 mod 行是 `<div>` 故显式带 `data-interactive`；
   数值/滑条/下拉天然在清单内。全部选择器锚定 `#__mc_overlay` + `__mc` 前缀（零样式泄漏）。
+- **观感取舍**：原型遮罩的 `backdrop-filter:blur(3px)` 未迁（纯色 rgba(5,6,10,.8) 加深替代）——
+  WebView 内全屏实时模糊的 性能/兼容 保守取舍，观感差异仅在背景糊化。
 - **状态语义**：`ST.sel` 记住当前选中 mod（跨开关面板保持——重开面板回到上次页，实测确认）；
   `toggleMod` **乐观翻转直接改写快照对象内的 mod 字段**——`__mcLastSnapshot` 与 `ST.snap` 同引用，
   故"快照里 enabled 已变"≠"C# 已回推"；判真推送用 `__mcSnapSeq`（`__mcRender` 每次自增，
   CDP 断言/未来 UI 逻辑都应以此为准）。
 - **改值链**：input 事件即时 `MC_SET`，滑条 100ms 节流（首条立即发、窗口内合并为末值补发；
-  实测 5 连发 → 恰好 2 条消息 [首值,末值]）；数值框 input 阶段发送钳制值但不重写在打文本，
-  change 时归位显示；下拉走 change。bool/下拉/滑条全部乐观更新本地 `it.v`（C# 不为 MC_SET 推
-  快照，重绘不打断拖动）。`section/key` 从展示键 `k` 按首个 `.` 拆分（现役节名不含点；
-  联动项整串作 key 恰等于 `MetaItem.K`，桥 Match 命中）。
+  实测 5 连发 → 恰好 2 条消息 [首值,末值]；`__mcClose` 清空节流句柄，关闭后无补发）。数值框
+  input 阶段发送钳制值但不重写在打文本，change 时归位显示；下拉走 change。bool/下拉/滑条全部
+  乐观更新本地 `it.v`（C# 不为 MC_SET 推快照，重绘不打断拖动）。
+- **MC_SET 路由（Fix Round 1 定案）**：`section` 发展示键 `k` 按首个 `.` 解析的节前缀，
+  **`key` 一律发完整 `k` 原串**（"节.键" / 联动"节.键A + 键B"）——C# `Match` 的 `it.K` 分支
+  逐字命中（单键项整串即 `it.K`，联动项即组合展示键）。**禁止**再发剥前缀的 key：联动项
+  "WidthMult + HeightMult" 在 Key/WKeys/K 三候选全不命中（初版实坑，背包/柜子 4 滑条写必败，
+  fixture 已补 4 条端到端断言回归）。`其他.Overrides` 走 ovrCommit 固定 section/key（it.Key 分支）。
 - **ovr 序列化（面板侧承担，T6 评审备忘 B 兑现）**：增/删/拖 → 本地数组编辑 → 序列化
   `id:ms,id:ms`（**按 id 升序 canonical**）整串 `MC_SET 其他.Overrides`；打开面板从快照 `ovr`
   数组初始化；实测 8012 增(1000)→拖(250)→快照往返 `[{id:8012,ms:250}]`→删("")→`[]`，cfg 盘上
@@ -291,6 +297,11 @@ ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta �
 
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 7 Fix Round 1（评审 NO-GO 三项）：①C1——`sendSet` 改发完整展示键 `k` 原串
+  （初版剥前缀的联动 key 在桥 Match 三候选全不命中，背包/柜子 4 联动滑条写必败；
+  §6.5.1 路由段重写），fixture 补 4 条联动端到端断言（消息形态→OK 回执→两键同值落盘→还原）；
+  ②`__mcClose` 清节流句柄（备忘 3）；③DESIGN 补观感取舍注（备忘 2）。实测见 task-7-report
+  Fix Round 1。
 - 2026-10-24 任务 7：面板 UI 完整移植。`panel.js` 空壳→完整面板（原型 v4 `<style>` 面板段 +
   renderSide/renderCfg/ctl/toast/toggle/ovr 逻辑；span 开关改 button、行 div 带
   data-interactive 以进 clickThrough；ST.sel 记忆选中；toggle 乐观翻转+`__mcSnapSeq` 真推送
