@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ModCenter 原型 v2 — 游戏内 Mod 管理菜单</title>
+<title>ModCenter 原型 v3 — 游戏内 Mod 管理菜单</title>
 <style>
   :root{
     --bg:#0d0f14; --frame-bg:#14171f; --panel:#171a23; --panel-2:#1d212c;
@@ -50,9 +50,6 @@
     linear-gradient(180deg,#171a17,#1c2018 60%,#141712)}
   .scene.game .hud-tl{position:absolute; left:16px; top:14px; display:flex; gap:10px; font-size:15px; color:#e6e0d0aa}
   .scene.game .hud-tl span{background:#00000042; padding:4px 12px; border-radius:14px; border:1px solid #ffffff1a}
-  .scene.game .hud-br{position:absolute; right:16px; bottom:14px; display:flex; gap:8px}
-  .scene.game .hud-br i{width:44px; height:44px; border-radius:8px; background:#00000052; border:1px solid #ffffff22}
-  .scene.game .hud-br i:first-child{border-color:#e8a33d88}
   .scene.game .hud-tr{position:absolute; right:140px; top:14px; display:flex; gap:8px; align-items:center}
   .scene.game .hud-map{position:absolute; right:16px; top:14px; width:110px; height:78px; border-radius:8px; background:#0f1116cc; border:1px solid #ffffff1f}
   .scene.game .fake-center{color:#cfd3c3aa; font-size:15px; letter-spacing:4px}
@@ -125,9 +122,8 @@
   .item .info .ck{font-size:11px; color:var(--txt-faint); font-family:Consolas,monospace; margin-top:2px}
   .item .ctl{width:min(300px,42%); flex-shrink:0; display:flex; align-items:center; gap:10px; justify-content:flex-end}
   .item .badge{width:96px; flex-shrink:0; text-align:right; font-size:11.5px}
-  .b-now{color:var(--ok)} .b-reload{color:var(--warn)} .b-reboot{color:var(--cold)}
+  .b-now{color:var(--ok)} .b-reload{color:var(--warn)} .b-reboot{color:var(--cold)} .b-cfg{color:#b8a1e3}
 
-  /* 动作覆盖清单 */
   .ovr-add{display:flex; gap:8px; align-items:center; padding:10px 4px 6px}
   .ovr-add input{width:120px; background:#0f1219; border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:5px 9px; font-size:13px; font-family:Consolas,monospace}
   .ovr-add button{
@@ -175,13 +171,13 @@
 <body>
 
 <div class="demo-bar">
-  <b>ModCenter 原型 v2</b>
+  <b>ModCenter 原型 v3</b>
   <div class="seg" id="ctxSeg">
     <button data-ctx="menu" class="on">模拟：主菜单（读档前）</button>
     <button data-ctx="game">模拟：游戏内（读档后）</button>
   </div>
-  <span>入口已改为官方菜单列表项（主菜单列表 / 游戏内菜单弹层），不再是左上角齿轮。</span>
-  <span class="tip">2026-10-24 v2 · 配套 spec：2026-10-24-modcenter-design.md</span>
+  <span>套件 mod 精简定制页 + 第三方 mod 通用识别页（示例）。</span>
+  <span class="tip">2026-10-24 v3 · 配套 spec：2026-10-24-modcenter-design.md</span>
 </div>
 
 <div class="frame" id="frame">
@@ -202,7 +198,7 @@
     </div>
     <div class="hud-map"></div>
     <div class="fake-center">··· 游 戏 画 面 ···</div>
-    <div class="hud-br"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="hud-br" id="hudBr"><i></i><i></i><i></i><i></i><i></i></div>
     <div class="mc-pop" id="gamePop">
       <span>设置</span><span>图鉴</span><span class="ent" id="entryGame">MOD 管理</span><span>退出游戏</span>
     </div>
@@ -226,8 +222,9 @@
           <span class="b-now">⚡ 立即生效（≤5秒）</span>
           <span class="b-reload">📁 读档后生效</span>
           <span class="b-reboot">🔄 重启后生效</span>
+          <span class="b-cfg">⚙ 已写入 cfg（生效视该 mod）</span>
         </span>
-        <span style="margin-left:auto">停用 = 立即软停（还原原值）+ 下次启动不再加载</span>
+        <span style="margin-left:auto">套件停用 = 立即软停 + 下次启动不加载；第三方停用 = 重启级</span>
       </div>
     </div>
   </div>
@@ -240,16 +237,17 @@ const BADGE = {
   now:    {t:'⚡ 立即生效', cls:'b-now'},
   reload: {t:'📁 读档后',   cls:'b-reload'},
   reboot: {t:'🔄 重启后',   cls:'b-reboot'},
+  cfg:    {t:'⚙ 已写入 cfg', cls:'b-cfg'},
 };
 
-/* ============ 元数据 v2（作者 2026-10-24 原型评审反馈版） ============ */
+/* ============ 元数据 v3（默认值与原 mod cfg 一致；宽高倍率=滑条锚定宽值+注记实际宽高） ============ */
 const MODS = [
 { id:'backpackexpand', name:'背包扩容', en:'BackpackExpand', enabled:true,
   desc:'一个倍率搞定：自动计算背包宽度与高度（超游戏上限自动封顶）；负重单独调。',
   groups:[
     {sec:'扩容', items:[
-      {k:'Expand.Mult', l:'背包倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
-       note:'自动计算宽与高，超出游戏列数上限自动封顶'},
+      {k:'Expand.WidthMult + HeightMult', l:'背包倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'当前 宽1.5×高1.5（与原 mod 默认一致）· 拖动后宽高同步为新倍率，超上限自动封顶'},
       {k:'Expand.BurdenMult', l:'负重倍率', t:'int', v:2, min:1, max:10, st:1, b:'reload',
        note:'表值即时改，既有背包读档后体现'},
     ]},
@@ -258,10 +256,12 @@ const MODS = [
   desc:'普通柜 / 冰箱 / 载具三档各自一个倍率：自动计算宽与高（超上限自动封顶）。',
   groups:[
     {sec:'扩容', items:[
-      {k:'Expand.Mult', l:'普通柜倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now'},
-      {k:'Expand.FridgeMult', l:'冰箱倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now'},
-      {k:'Expand.VehicleMult', l:'载具倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
-       note:'三项均自动计算宽与高，超上限自动封顶'},
+      {k:'Expand.WidthMult + HeightMult', l:'普通柜倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'当前 宽1.5×高2.0（原 mod 默认）· 拖动后宽高同步为新倍率'},
+      {k:'Expand.FridgeWidthMult + FridgeHeightMult', l:'冰箱倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'当前 宽1.5×高2.0（原 mod 默认）· 拖动后宽高同步为新倍率'},
+      {k:'Expand.VehicleWidthMult + VehicleHeightMult', l:'载具倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'当前 宽1.5×高2.0（原 mod 默认）· 拖动后宽高同步为新倍率'},
     ]},
     {sec:'视口自适应', items:[
       {k:'UiFit.Enabled', l:'启用视口自适应', t:'bool', v:true, b:'now'},
@@ -291,25 +291,8 @@ const MODS = [
   ovr:[{id:9075, ms:1000}],   /* 动作覆盖清单（动态） */
 },
 { id:'cabineteverywhere', name:'柜子直达+筛选', en:'CabinetEverywhere', enabled:true,
-  desc:'全容器作为制作/烹饪/酿造等取料源直达；柜子页签标签筛选与场景固定视图。',
-  groups:[
-    {sec:'直达', items:[
-      {k:'Access.EnableCraftSource', l:'制作取料直达', t:'bool', v:true, b:'now'},
-      {k:'Access.EnableCooking', l:'烹饪台直达', t:'bool', v:true, b:'now'},
-      {k:'Access.EnableRatCage',  l:'鼠笼直达', t:'bool', v:true, b:'now'},
-      {k:'Access.EnableBrew',     l:'酿造直达', t:'bool', v:true, b:'now'},
-      {k:'Access.EnableDye',      l:'染色直达', t:'bool', v:true, b:'now'},
-    ]},
-    {sec:'标签筛选', items:[
-      {k:'Filter.Enable', l:'启用标签筛选', t:'bool', v:true, b:'now'},
-    ]},
-    {sec:'场景固定视图（共 10 项，示意 4 项）', items:[
-      {k:'Scenario.View_Cooking', l:'灶台视图', t:'sel', v:'Food', opts:['Food','Material','Browser','Off'], b:'now'},
-      {k:'Scenario.View_Brew',    l:'酿造视图', t:'sel', v:'Food', opts:['Food','Material','Browser','Off'], b:'now'},
-      {k:'Scenario.View_Workbench', l:'工作台视图', t:'sel', v:'Material', opts:['Food','Material','Browser','Off'], b:'now'},
-      {k:'Scenario.View_DroneHub',  l:'无人机枢纽视图', t:'sel', v:'Browser', opts:['Food','Material','Browser','Off'], b:'now'},
-    ]},
-  ]},
+  desc:'全容器作为制作/烹饪/酿造等取料源直达；柜子页签标签筛选与场景固定视图。仅支持启用/停用。',
+  groups:[]},
 { id:'roleunlock', name:'角色解锁', en:'RoleUnlock', enabled:true,
   desc:'角色专属内容逐项解锁；关闭即还原官方门槛。',
   groups:[
@@ -352,9 +335,18 @@ const MODS = [
   ]},
 { id:'predisasterspeed', name:'灾前加速', en:'PreDisasterSpeed', enabled:true,
   desc:'灾变倒计时前的官方速度条增强（热键变档 + 真三倍校正）。仅支持启用/停用。',
+  groups:[]},
+];
+
+/* 第三方 mod（通用识别，示例数据；真实版自动反射枚举其 cfg 渲染） */
+const TP = [
+{ id:'statsui-demo', name:'StatsUI（示例）', en:'第三方 mod', enabled:true,
+  desc:'通用识别：自动读取该 mod cfg 的键 / 类型 / 描述 / 范围渲染；配置改动即时写入，生效时机取决于该 mod 是否监听配置变更。',
   groups:[
-    {sec:'总控', items:[
-      {k:'General.Enabled', l:'灾前加速', t:'bool', v:true, b:'now'},
+    {sec:'配置（自动读取自该 mod 的 cfg）', tp:true, items:[
+      {k:'UI.AlwaysOnTop', l:'面板常显', t:'bool', v:true, b:'cfg'},
+      {k:'UI.Scale', l:'面板缩放', t:'float', v:1.0, min:0.5, max:2, st:0.1, b:'cfg'},
+      {k:'Perf.RefreshMs', l:'刷新间隔（毫秒）', t:'int', v:500, min:100, max:5000, st:100, b:'cfg'},
     ]},
   ]},
 ];
@@ -378,8 +370,22 @@ function renderSide(){
       <span class="st" style="background:var(--accent)"></span><span class="nm">${SELF.name}</span>
       <span class="mini-sw lock" title="防呆：面板不可停用自身"></span>
     </div>`;
+  h += `<div class="cat">第三方 MOD（通用识别）</div>`;
+  TP.forEach((m,i)=>{
+    const gi = i - 100;
+    h += `<div class="mod-row ${m.enabled?'':'off'} ${cur===gi?'sel':''}" data-i="${gi}">
+      <span class="st"></span><span class="nm">${m.name}</span>
+      <span class="mini-sw ${m.enabled?'on':''}" data-act="toggle" data-i="${gi}"></span>
+    </div>`;
+  });
   side.innerHTML = h;
 }
+
+function curMod(){
+  if(cur>=-1 && cur<MODS.length) return MODS[cur];
+  return TP[cur+100];
+}
+function isTP(){ return cur < -1 || cur >= MODS.length; }
 
 function ctlHtml(it, gi, ii){
   if(it.t==='bool'){
@@ -409,7 +415,8 @@ function renderCfg(){
       </div>`;
     return;
   }
-  const m = MODS[cur];
+  const m = curMod();
+  const tp = isTP();
   let h = `
     <div class="mod-title"><h2>${m.name}</h2><span class="en">${m.en}</span></div>
     <div class="mod-desc">${m.desc}</div>
@@ -417,11 +424,15 @@ function renderCfg(){
       <span class="mini-sw big-sw ${m.enabled?'on':''}" data-act="toggle" data-i="${cur}"></span>
       <div>
         <div class="lbl">${m.enabled?'已启用':'已停用'}</div>
-        <div class="hint">停用 = 行为立即停止（还原原值）+ 下次启动不再加载；重新启用即恢复全部配置。</div>
+        <div class="hint">${tp
+          ? '停用 = 下次启动不再加载该 mod（重启级：退出时禁用其 dll）；重新启用即恢复。'
+          : '停用 = 行为立即停止（还原原值）+ 下次启动不再加载；重新启用即恢复全部配置。'}</div>
       </div>
     </div>
     <div class="stop-banner ${m.enabled?'':'show'}">
-      ⛔ 该 mod 当前已停用。此处修改仍会写入 cfg 保存，但需<b>重新启用后</b>才会生效。
+      ${tp
+        ? '⛔ 已标记停用：本次会话该 mod 仍在运行，<b>下次启动后</b>不再加载。'
+        : '⛔ 该 mod 当前已停用。此处修改仍会写入 cfg 保存，但需<b>重新启用后</b>才会生效。'}
     </div>`;
   m.groups.forEach((g,gi)=>{
     h += `<div class="grp"><h3>${g.sec}</h3>${
@@ -437,6 +448,10 @@ function renderCfg(){
       </div>`).join('')
     }</div>`;
   });
+  if(m.groups.length===0){
+    h += `<div class="grp"><h3>配置</h3>
+      <div class="ovr-empty">该 mod 仅支持启用 / 停用，无暴露的配置项。</div></div>`;
+  }
   /* 动作覆盖清单（仅动作加速） */
   if(m.ovr){
     h += `<div class="grp"><h3>动作覆盖（单个动作单独调）</h3>
@@ -466,10 +481,11 @@ function renderCfg(){
 
 function toast(main, badge){
   const t = document.getElementById('toast');
-  t.innerHTML = `${main}<small>已写入 cfg · ${
-    badge==='now' ? BADGE.now.t+'（约5秒内）' :
-    badge==='reload' ? '表值即时改 · '+BADGE.reload.t+'对既有容器体现' :
-    BADGE.reboot.t
+  t.innerHTML = `${main}<small>${
+    badge==='now'    ? '已写入 cfg · ⚡ 立即生效（约5秒内）' :
+    badge==='reload' ? '已写入 cfg · 表值即时改 · 📁 读档后对既有容器体现' :
+    badge==='cfg'    ? '已写入该 mod cfg · 生效时机取决于该 mod 是否监听配置变更' :
+    '已写入 · 🔄 重启后生效'
   }</small>`;
   t.classList.add('show');
   clearTimeout(toast._h);
@@ -477,12 +493,14 @@ function toast(main, badge){
 }
 
 function toggleMod(i){
-  const m = MODS[i];
+  const m = (i>=0 && i<MODS.length) ? MODS[i] : TP[i+100];
+  const tp = !(i>=0 && i<MODS.length);
   m.enabled = !m.enabled;
   renderSide(); renderCfg();
-  toast(m.enabled
-    ? `${m.name} 已启用：恢复生效（≤5秒）`
-    : `${m.name} 已停用：行为立即还原，下次启动不再加载`, 'now');
+  toast(tp
+    ? (m.enabled ? `${m.name} 已恢复启用：下次启动正常加载` : `${m.name} 已标记停用：下次启动不再加载（重启级）`)
+    : (m.enabled ? `${m.name} 已启用：恢复生效（≤5秒）` : `${m.name} 已停用：行为立即还原，下次启动不再加载`),
+    'now');
 }
 
 side.addEventListener('click', e=>{
@@ -497,15 +515,15 @@ cfg.addEventListener('click', e=>{
   if(sw){ toggleMod(+sw.dataset.i); return; }
   const set = e.target.closest('[data-act="set"]');
   if(set && set.classList.contains('mini-sw')){
-    const it = MODS[cur].groups[+set.dataset.g].items[+set.dataset.i];
+    const m = curMod();
+    const it = m.groups[+set.dataset.g].items[+set.dataset.i];
     it.v = !it.v;
     set.classList.toggle('on', it.v);
-    toast(`${MODS[cur].name} · ${it.l} → ${it.v?'开':'关'}`, it.b);
+    toast(`${m.name} · ${it.l} → ${it.v?'开':'关'}`, it.b);
   }
-  /* 覆盖清单：新增 / 删除 */
   const add = e.target.closest('[data-act="ovr-add"]');
   if(add){
-    const m = MODS[cur];
+    const m = curMod();
     const inp = document.getElementById('ovrNewId');
     const id = parseInt(inp.value);
     if(!isNaN(id) && id>0 && !m.ovr.some(o=>o.id===id)){
@@ -517,7 +535,7 @@ cfg.addEventListener('click', e=>{
   }
   const del = e.target.closest('[data-act="ovr-del"]');
   if(del){
-    const m = MODS[cur];
+    const m = curMod();
     const idx = +del.dataset.idx;
     const gone = m.ovr[idx].id;
     m.ovr.splice(idx,1);
@@ -529,7 +547,7 @@ cfg.addEventListener('click', e=>{
 cfg.addEventListener('input', e=>{
   const el = e.target;
   if(!el.dataset || !el.dataset.act) return;
-  const m = MODS[cur];
+  const m = curMod();
   if(el.dataset.act==='ovr-set'){
     const v = parseFloat(el.value);
     if(!isNaN(v)){

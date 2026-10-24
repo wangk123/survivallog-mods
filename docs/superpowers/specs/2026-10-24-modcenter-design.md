@@ -1,11 +1,12 @@
 # ModCenter（游戏内 Mod 管理菜单）设计文档
 
-- 日期：2026-10-24（v2，作者原型评审反馈已并入）
+- 日期：2026-10-24（v3，两轮作者原型评审反馈已并入）
 - 状态：待作者复评（配套可交互原型：[2026-10-24-modcenter-prototype.html](./2026-10-24-modcenter-prototype.html)）
 - 决策记录：
   - ①管理范围 = **9 mod**（7 套件 + PlanPick + PreDisasterSpeed；**不含 StackLimit999**；**柜子负重 CabinetBurden 移出**——作者计划后期并入柜子扩容，v1 不纳入管理）；
   - ②停用语义 = 立即软停 + 下次启动彻底不加载（评估结论：改动量小、还原路径大半为现役代码，风险低）；
-  - ③v2 原型评审反馈：配置项全面精简重梳（见 §7）；入口从左上角齿轮改为**官方菜单列表注入**；关闭按钮改图标化（修复 v1 文本溢出）；全 mod 不暴露 Debug 组。
+  - ③v2 反馈：配置项全面精简重梳；入口从左上角齿轮改为**官方菜单列表注入**；关闭按钮图标化；全 mod 不暴露 Debug 组；
+  - ④v3 反馈：**默认值与原 mod cfg 保持一致**（运行时从 ConfigEntry 反射读取，元数据表不手抄防漂移）；**柜子直达也仅支持启停**（与灾前加速同款）；灾前加速去掉总控组（顶部启停即全部）；**第三方 mod 通用接入标准**（反射枚举渲染通用配置页 + 重启级启停，见 §7.10）。
 
 ## 1. 背景与目标
 
@@ -26,7 +27,7 @@
 | CabinetExpand | 柜子扩容 | 普通/冰箱/载具三档倍率 + 视口自适应 | 新增 gate（UiFit 已有热停先例沿用） |
 | FridgeChill | 保鲜增强 | 保鲜时长倍率 + 天赋上限倍率 | 新增 gate + 补 Ticker 早退还原 |
 | QuickAction | **动作加速** | 五分类动作耗时 + 单动作覆盖清单 | 新增 gate（0=恢复原值语义已备） |
-| CabinetEverywhere | 柜子直达+筛选 | 直达开关 + 标签筛选 + 场景视图 | 新增 gate + 补白名单对称移除 |
+| CabinetEverywhere | 柜子直达+筛选 | 直达 + 标签筛选 + 场景视图 | **仅启停开关**；补白名单对称移除（停用还原用） |
 | RoleUnlock | 角色解锁 | 逐项"解锁 xxx"开关 | 新增 gate + 补 2 个无开关项 |
 | RobotSpeed | 机器人提速 | 六维倍率 + 对齐手动 | 新增 gate（原值缓存幂等已备） |
 | PlanPick | 自选生存规划 | 自选规划 + 加成百分比 | 入口注入加 gate |
@@ -36,10 +37,10 @@
 
 ### 2.2 非目标与暴露原则
 
-- 不做 BepInEx 插件级运行时卸载（平台无此能力，用两层启停语义替代，见 §6）；
+- 不做 BepInEx 插件级运行时卸载（平台无此能力，套件用两层启停语义替代见 §6，第三方用重启级禁用见 §7.10）；
 - 不做 mod 安装/卸载/更新（安装器职责不变）；
-- 不渲染元数据表未登记的插件（含第三方 mod）；
-- **面板只暴露 §7 清单内的配置项**；未列出的 cfg 键（各 mod 的 Debug.* 组、名单类 ExtraIds/ExcludeIds/BagIds/FurnitureIds、PreDisasterSpeed 的 TrueThreeX/Hotkeys 等）**仍在 mod 侧保留生效**，供高级用户手编 cfg 文件调整，面板不展示——mod 代码零删减；
+- **套件 mod 只暴露 §7 清单内的配置项**；未列出的 cfg 键（各 mod 的 Debug.* 组、名单类 ExtraIds/ExcludeIds/BagIds/FurnitureIds、柜子直达的 Access.*/Filter.*/Scenario.*、PreDisasterSpeed 的 TrueThreeX/Hotkeys 等）**仍在 mod 侧保留生效**，供高级用户手编 cfg 文件调整，面板不展示——mod 代码零删减；
+- **第三方 mod 不走元数据表**，走 §7.10 通用识别页（反射枚举其 cfg 自动渲染 + 重启级启停）；
 - QuickAction 一次性迁移项（boot.ini、DefaultsV21，QuickActionPlugin.cs:68-101/125-150）不进菜单；
 - ModCenter 自身**不允许在面板里停用**（列表中显示但开关置灰 + 防呆提示）。
 
@@ -107,8 +108,9 @@
 1. **枚举**：BepInEx Chainloader `PluginInfos` → `BasePlugin` 实例 → 反射取 `Config`（可见性实施首日验证——BepInEx 生态 ConfigurationManager 同款成熟手法）；
 2. **写**：`entry.Value = 新值` → 触发目标 mod 现役 `SettingChanged → Rerun` → 其 Ticker ≤5s 幂等重写内存表；**单倍率项由面板同时写宽高两键等值**（见 §7，mod cfg 结构不动）；
 3. **读**：启动快照 + 每次打开面板刷新（防玩家外部手改 cfg 造成脏读）；动作覆盖清单解析 `其他.Overrides` 字符串（`id:ms` 逗号分隔），写回序列化同格式；
-4. **元数据表**：ModCenter 内置 9 mod 页面定义（guid、显示名、分组、排序、项定义：section/key、控件、范围、徽标、中文描述、联动写键规则）。9 mod 是作者可控封闭集合，硬编码可维护；新增 mod = 加一段定义；
-5. **首跑固化坑无关**：管理菜单写内存 Value + Save，不走 Bind 默认值路径（ModShared/README.md:43 坑不相干）。
+4. **元数据表**：ModCenter 内置 9 mod 页面定义（guid、显示名、分组、排序、项定义：section/key、控件、徽标、中文描述、联动写键规则）。**默认值与取值范围不在元数据表手抄**——运行时从 `ConfigEntry.DefaultValue` 与 `AcceptableValueRange` 反射读取，与原 mod 永远一致（防漂移）；9 mod 是作者可控封闭集合，硬编码元数据可维护，新增 mod = 加一段定义；
+5. **第三方枚举**：Chainloader 里未登记进元数据表的插件，自动进"第三方 MOD"分组走通用页（§7.10）；插件未能反射到 ConfigFile 的（异常/非标准），列出行但页面显示"无法识别配置"；
+6. **首跑固化坑无关**：管理菜单写内存 Value + Save，不走 Bind 默认值路径（ModShared/README.md:43 坑不相干）。
 
 ## 6. 启停机制（两层语义）
 
@@ -135,7 +137,7 @@
 
 ## 7. 配置项清单（v2 精简版，元数据表蓝本）
 
-原则（作者 v2 评审定）：背包/柜子**只给一个倍率**（面板同时写宽高两键等值，超上限 mod 既有逻辑封顶）；**不暴露**宽高单项、追加/排除名单、Debug 组；命名直观（"解锁 xxx"）；灾前加速只留启停。
+原则（作者 v2/v3 评审定）：背包/柜子**只给一个倍率**（面板同时写宽高两键等值，超上限 mod 既有逻辑封顶）；**不暴露**宽高单项、追加/排除名单、Debug 组；命名直观（"解锁 xxx"）；柜子直达与灾前加速**仅启停**；**默认值与范围运行时反射读 ConfigEntry，与原 mod 一致**（下表默认值仅为示意快照）。宽高键默认不一致的（柜子扩容 W1.5/H2.0）：滑条锚定宽值、项下注记当前实际宽×高，拖动后两键同步为新值——未拖动前 mod 保持原默认行为不变。
 
 徽标：⚡立即 ≤5s / 📁表即时改·既有容器读档后体现 / 🔄重启后。
 
@@ -167,11 +169,8 @@
 | 动作覆盖清单（增删改） | 其他.Overrides（`id:ms` 串解析/写回） | 清单：ID 输入+新增；行=滑条 0~5000+删除 | 空 | ⚡ |
 
 ### 柜子直达+筛选（CabinetEverywhere）
-| 面板项 | 背后 cfg | 控件 | 默认 | 徽标 |
-|---|---|---|---|---|
-| 制作取料 / 烹饪台 / 鼠笼 / 酿造 / 染色 直达 | Access.Enable*（5 键） | 开关 | true | ⚡ |
-| 启用标签筛选 | Filter.Enable | 开关 | true | ⚡ |
-| 场景固定视图（10 项：灶台/酿造/工作台/无人机枢纽等） | Scenario.View_*（10 键） | 下拉 Food/Material/Browser/Off | 各异 | ⚡ |
+
+**仅支持启用/停用**（顶部启停开关即全部）。Access.*/Filter.*/Scenario.* 等 cfg 保留生效不暴露。
 
 ### 角色解锁（RoleUnlock）
 | 面板项 | 背后 cfg | 控件 | 默认 | 徽标 |
@@ -198,11 +197,27 @@
 | 展示不入池规划 | List.ShowUnpooled | 开关 | true | ⚡ |
 
 ### 灾前加速（PreDisasterSpeed）
-| 面板项 | 背后 cfg | 控件 | 默认 | 徽标 |
-|---|---|---|---|---|
-| 灾前加速（仅启停） | General.Enabled | 开关 | true | 即时（钩子零行为） |
+
+**仅支持启用/停用**（顶部启停开关即全部，映射 `General.Enabled`）。无配置项。
 
 > 注：TrueThreeX / Hotkeys.Enabled / Debug.Verbose 等仍存在于 cfg 并生效，面板不展示（§2.2 暴露原则）。
+
+### 第三方 mod 通用接入标准（v3 定，= §7.10）
+
+**识别与渲染（推荐反射枚举，比 cfg 文件解析更稳）**：
+
+- 枚举 Chainloader 全部插件 → 未登记进套件元数据表的进"第三方 MOD"分组；
+- 通用页直接反射读其 `ConfigFile` 全部 entry：section/key/类型/描述/AcceptableValueRange → 自动渲染对应控件（bool 开关、数值滑条、文本框），默认值同源读取；
+- 写入同样走 `ConfigEntry.Value`（触发该 mod 的 SettingChanged——监听了的立即热生效，没监听的写入 cfg 待其下次读取，面板徽标统一为"⚙ 已写入 cfg（生效视该 mod）"）；
+- 为何不解析 cfg 文件：BepInEx cfg 文本格式有转义/中文坑，且改文件不触发任何事件（必须重启）；反射方案是 ConfigurationManager 的生态标准做法，读写都走内存。
+
+**启停（重启级）**：
+
+- 第三方 mod 无我们的 gate，无法软停——诚实降级为"重启级停用"：停用 = 游戏退出时把其 dll 重命名为 `<原名>.disabled`（BepInEx 只加载 .dll 后缀，改名即不加载）；启用 = 改回原名；
+- 运行中 dll 被系统锁定无法改名 → 挂进程退出钩子（Application.quitting）执行；强杀进程钩子不跑 → 标记残留，下次启动 ModCenter 检测到"已标记停用但 dll 未改名"时补提示；
+- 面板文案明确标注：本次会话该 mod 仍在运行，下次启动后不再加载。
+
+**边界与豁免**：探针类（ActionProbe 等）不出现在枚举里（不随套件分发时不装）；ModCenter 自身与套件 9 mod 走专属页不走通用页。
 
 ## 8. 现役 mod 改动清单
 
@@ -223,16 +238,18 @@
 | 5 | 自注入元素互扰（前科：漏审） | `__mc` 前缀 + 独立锚点 + 回归夹具照 CabinetEverywhere 模式 |
 | 6 | FridgeChill/CabinetEverywhere 两处现役补丁 | 装机回归（属"改 mod 必同步 DESIGN.md"范围） |
 | 7 | Vuplex 回调线程写 cfg | 各 mod Rerun 为置标志模式天然安全；仍以探针确认回调线程上下文 |
+| 8 | **第三方 dll 重命名禁用**（v3 新增）：退出钩子强杀不跑→标记残留；dll 文件锁；第三方安装器更新时困惑 | 退出钩子执行 + 下次启动残留检测提示；重命名失败明确报错不静默；面板标注"重启级" |
 
 ## 10. 测试与验收
 
 ### 回归夹具（CDP 断言脚本，照 `tools/devtools_cdp_test.js` 模式）
 
 1. 两阶段入口出现性（主菜单菜单列表项 + 游戏内系统菜单项/降级按钮）；
-2. 9 页渲染完整（元数据对账，含覆盖清单解析往返）；
+2. 9 页渲染完整（元数据对账，含覆盖清单解析往返）；默认值/范围与各 mod cfg 实际 Bind 一致（反射断言，防元数据漂移）；
 3. 改值热生效：改一个倍率 → ≤5s 内表值变化（探针读表断言）；联动项宽高两键同值；
 4. 启停还原：关闭 → 原值回归；重新启用 → 恢复；
-5. `__mc` 元素与既有注入（PlanPick/PreDisasterSpeed/TagFilter）共存无互扰。
+5. `__mc` 元素与既有注入（PlanPick/PreDisasterSpeed/TagFilter）共存无互扰；
+6. 第三方通用页（拿仓库内一个非套件 dll 实测，如 ViewportProbe）：枚举出现、通用控件渲染、写入落 cfg、标记停用→重启后 dll 改名生效。
 
 ### 装机实测（作者验收清单）
 
