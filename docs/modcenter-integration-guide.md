@@ -50,6 +50,9 @@ ModCenter 启动后反射枚举 BepInEx Chainloader 的全部插件（套件 9 m
 </ItemGroup>
 ```
 
+> 注意：`modcenter.json` 文件请存为 **UTF-8 无 BOM**——带 BOM 的 JSON 解析必败，会被 ModCenter
+> 的容错层静默降级 Tier 0（面板仍能识别你的 mod，只是清单定制不生效，ModCenter 日志有 warn 行）。
+
 `modcenter.json` 全字段参考（v1）：
 
 ```json

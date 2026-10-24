@@ -4,9 +4,15 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 16 Tier 2 深度对接 + 重启级 dll 禁用完成**
-> （Contracts 编入 + 反射 duck-typing 发现 + 软停回调/状态回报见 §6.10；DllDisabler 分离进程改名/
-> 强杀残留自愈同节；任务 15 Tier 1 声明式清单见 §6.9；任务 14 Tier 0 第三方通用页见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
+> `tools/gamekb/moddeps.json`）。当前状态：**全 18 任务实机定稿（2026-10-25）**——三档第三方
+> 接入（Tier 0 通用页 §6.8 / Tier 1 声明式清单 §6.9 / Tier 2 深度对接 + 重启级 dll 禁用 §6.10）；
+> 启停两层（套件 mod 直写 `General.Enabled` 热还原 §6.3/§6.7——PDS 重启级例外与 CabinetSize
+> 未接 gate 现状见 §6.3；第三方三层分流 §6.10）；主菜单
+> 与游戏内 ESC 菜单各一个**列表入口**（§1/§5/§6.5.3）；键盘门（§6.6）；回归夹具六模式
+> `tools/mc_fixture.js`（§3）。发版接线：publish.ps1 `$suiteMods` + installer.iss 组件表已改稿
+> **留作者工作树核入**（作者脏文件不代提交，清单见任务 18 报告）。作者人工验收清单（6 项体感）
+> 见 `.superpowers/sdd/2026-10-24-modcenter/task-17-report.md` §5。
+> （分任务细节：任务 15 Tier 1 声明式清单见 §6.9；任务 14 Tier 0 第三方通用页见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
 > 复用见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe`
 > 默认关）。
@@ -37,6 +43,11 @@ tagfilter.page.js 模式）。
 - 装机自证：Load 写 `<BepInEx 根>/ModCenter_loaded.txt`（硬规则 9，不依赖 LogOutput.log；
   本机绝对路径 `E:/SteamLibrary/steamapps/common/Survival Log/BepInEx/ModCenter_loaded.txt`，
   代码用 `Paths.BepInExRootPath` 拼接以兼容发布到其他机器）。
+- 回归夹具：`tools/mc_fixture.js` **六模式**（`menu` 全量对账 / `toggle` 启停热还原 /
+  `enterworld` 开面板进对局 / `ingame` 对局共存 / `outsetting` 游戏内入口 / `loadgame` 兼容
+  保留），exit 0=全 PASS（SKIP 不判负）/ 1=断言 FAIL / 2=环境性不结论。改 ConfigBridge /
+  Meta / panel.js 后先跑 `menu` + `toggle` 两模式回归（连 DevTools 9222，主菜单阶段即可，
+  无需读档；六模式口径与全量实证见任务 17 报告）。
 - 引用结构抄 CabinetEverywhere.csproj（BepInEx core + interop 游戏目录引用，`Private=false`
   不拷贝产物）；`ModShared/WelcomeTip.cs` 链接编译（套件防盗署名气泡，publish.ps1 要求）。
 
@@ -225,7 +236,9 @@ entry.Value = 3f;
   `MetaMod.EnabledSection/EnabledKey`，默认 General:Enabled，与 T9-T12 九 mod Bind 一致；
   全套件无键名差异，字段留作个别 mod 例外位）。写入经 §4.1 同款事件链触发该 mod 现役
   `SettingChanged→Rerun`：热关闭=其 Ticker 首行 gate 按原值缓存还原并停写（≤其轮询周期），
-  重开=重新落笔。Save 走统一防抖（MarkDirty 该 mod cfg）。**旧的本插件 cfg `[Disabled]`
+  重开=重新落笔（例外：PDS 无 Rerun 订阅——`General.Enabled` 系既有键复用，重启级语义
+  =Injector 停注入，见其 DESIGN；Meta 该页为仅启停形态。CabinetSize 未 Bind 该键，见 §7 T17）。
+  Save 走统一防抖（MarkDirty 该 mod cfg）。**旧的本插件 cfg `[Disabled]`
   名单机制已移除**（避免双轨；快照真值源=各 mod entry 本身，旧 cfg 里残留的 `[Disabled]` 节
   无人再读，行为惰性）。dll 不在链上 / entry 不存在（旧版 dll）→ 拒写并 Log。
 - 快照 `enabled = 插件在链上 && entry 值`（entry 缺失按 Bind 默认 true 兜底）。
@@ -265,6 +278,9 @@ MC_EVIDENCE 轮询读表：MoveSpeed 4.8→9.6（=2.4×4，≤5s）→ 写回 2 
   逐字命中（单键项整串即 `it.K`，联动项即组合展示键）。**禁止**再发剥前缀的 key：联动项
   "WidthMult + HeightMult" 在 Key/WKeys/K 三候选全不命中（初版实坑，背包/柜子 4 滑条写必败，
   fixture 已补 4 条端到端断言回归）。`其他.Overrides` 走 ovrCommit 固定 section/key（it.Key 分支）。
+  **T17 补（B3）**：`Match` 的 K 分支已**前置放行**（完整展示键逐字命中且 mod 内唯一时先于节守卫
+  执行）——点分节名键（首例=柜子 v3 `Tier.Small.Width`，routeOf 首点切分出 section="Tier"）
+  此前必被"节.键"守卫拦截全拒；短键/ovr 分支仍走节守卫，行为不变。
 - **ovr 序列化（面板侧承担，T6 评审备忘 B 兑现）**：增/删/拖 → 本地数组编辑 → 序列化
   `id:ms,id:ms`（**按 id 升序 canonical**）整串 `MC_SET 其他.Overrides`；打开面板从快照 `ovr`
   数组初始化；实测 8012 增(1000)→拖(250)→快照往返 `[{id:8012,ms:250}]`→删("")→`[]`，cfg 盘上
@@ -326,10 +342,16 @@ ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta �
   2. 层丢失收尾（`layer == null` 且已交出）：PlanPick 只复位标志；本面板状态由 JS 消息驱动，
      层没了 ⇒ WebView/JS 也没了 ⇒ 面板必已消亡且永远等不到 MC_CLOSE——就地还原 IME 静态
      （Unity 侧，层死不影响）并复位开合状态，防键盘门漏开（键盘门标志随层销毁，新层默认门关）。
-- **panel.js 孤儿看门狗**（Root 侧 1s interval，宿主 iframe 消亡不影响 Root 定时器）：面板开
-  着的根突然 `!isConnected`（如暂停菜单被 Unity 侧 ESC 收起、页面被游戏重建）⇒ 补发
+- **panel.js 孤儿看门狗**（Root 侧 1s interval，宿主 iframe 消亡不影响 Root 定时器）：
+  宿主死亡判据 = `宿主 doc.defaultView.frameElement` 为 null 或失连（**T17 修复**：本引擎
+  Vuplex/CEF 里被移除 iframe 的孤儿文档内元素 `isConnected` 恒 true——旧判据"面板根
+  `!isConnected`"对宿主 iframe 被移除永不触发，开面板进对局键盘门漏开实锤；frameElement 对
+  "iframe 被移除"与"文档被导航"两死法均实测归 null，且其自身属 Root 文档、isConnected 语义
+  正常）。面板开着时宿主死亡（如暂停菜单被 Unity 侧 ESC 收起、开面板直接点继续进对局）⇒ 补发
   `MC_CLOSE{why:'host-doc-gone'}`（键盘门还原 + 脏 cfg 落盘收口）。✕/点遮罩仍是保底关闭
-  路径（T5 结论：OutSetting 的 ESC 被 Unity 截走，ESC 仅增强）。
+  路径（T5 结论：OutSetting 的 ESC 被 Unity 截走，ESC 仅增强）。前瞻脚注：若未来出现宿主 =
+  Root 顶层文档的挂载形态，frameElement 恒 null 会在开面板 1s 后误关——当前架构入口只喂
+  iframe 文档，不可达；Vuplex 升级后建议复跑 `enterworld` 模式验证两死法仍成立。
 - **自证（硬规则 9）**：每次沿写一行 `<BepInEx 根>/ModCenter_kb.txt`（Load 时清空）：
   `OPEN kb=on ime Auto->On`（kb 读回自 `get_IsKeyboardEnabled`）/ `CLOSE kb=off ime->Auto`
   （还原值）/ `ORPHAN(layer-lost) ime->X kb-dies-with-layer`。CDP 合成键不受 Vuplex 门控，
@@ -549,6 +571,14 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
 
 ## 7. 迭代维护清单
 
+- 2026-10-25 任务 18（文档终版 + 发版接线，零代码改动）：状态头改"全 18 任务实机定稿"口径
+  （三档接入/启停两层/双列表入口/键盘门/六模式夹具 + task-17-report §5 验收清单衔接）；§3 补
+  `mc_fixture.js` 六模式条目；§6.5.1 补 B3；§6.6.1 看门狗判据文案对齐 T17 修复；§7 T17 条目补
+  B3/B4/验收清单。PreDisasterSpeed DESIGN 补 cfg 表与 ModCenter 启停位记载（既有键复用）；
+  指南 §三补 BOM 勘误（清单文件存 UTF-8 无 BOM，BOM 会被容错层静默降级 Tier 0）。
+  publish.ps1 `$suiteMods` 与 installer.iss 组件表加 ModCenter——两文件系作者脏文件，
+  **只改内容不代提交**（改动行清单见 task-18-report）。moddeps.json 复核无需变更（本计划无
+  新游戏侧挂钩点/表字段/字节签名；T4 登记的 Config_RobotAttribute 读依赖在役）。
 - 2026-10-25 任务 17：Meta 柜子位对齐作者 CabinetSize v3 终表。原条目（`Expand.WidthMult/
   FridgeWidthMult/VehicleWidthMult` 联动倍率 + `UiFit.*`）是作者 CabinetSize 倍率原型期（c899f20
   换位时点）的形状；作者 aa20303→d02e985 演进为**档位模型**（Bind 面 = `Global.MaxWidth/
@@ -565,6 +595,12 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   开面板进对局（或 ESC 收暂停菜单）键盘门漏开（enterworld 实证 kb 恒 on，人工 ESC 才还原）。
   改判 `宿主 doc.defaultView.frameElement`（iframe 被移除或文档被导航均 null，两死法实测）
   + `frameElement.isConnected`（Root 文档内元素，语义正常）。§6.6 孤儿看门狗机制段随之生效。
+  T17 另两修：③ `ConfigBridge.Match` 完整展示键逐字命中**前置放行**（B3，§6.5.1 路由段补记）
+  ——点分节名键（首例=柜子 v3 `Tier.Small.Width`，routeOf 首点切分出 section="Tier"）此前
+  必被节守卫全拒；④ CabinetSize 侧 `ApplyHotKeys` 与本 mod 防抖落盘竞态（B4：陈旧文件 mtime
+  事件被 Ticker Poll 在新写之后处理，旧盘值被当"记事本热改"赋回，UI 与 cfg 脱钩）——修在对方
+  mod（`_lastBindChangeUtc` 陈旧文件闸，见其 DESIGN），**作者复核项**。延后项 6 项全闭环与
+  作者人工验收清单（6 项体感）见 task-17-report.md §3/§5。
 - 2026-10-25 任务 16 Fix Round 1（评审 P2+P3）：P2 子目录 dll 禁用——分离进程 `-NewName` 改喂
   `Split-Path -Leaf`（带路径名必败→静默失败+重复残留 toast）、`AbsentDisabled` 改递归扫描且
   返回相对名**剥 `.disabled`**（原递归化时首版漏剥后缀，实机抽查抓出即修）、启用反向改名同 Leaf；

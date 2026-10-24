@@ -23,6 +23,20 @@
 | 桥+落地 | SpeedLink.cs | **Harmony prefix 观察者挂 WebUILayer.OnPageMessage**（不拦截不修改），识别 3/CoreUI0/PDS_SPEED → 调官方 Ac_CoreUI1_SpeedChange.SendAction；CoreUI0 消失且档位≠1 自动归 1x |
 | UI | page.js（EmbeddedResource） | 五键条挂 **.action-row 尾部（官方位：左下横排，兜底 .bottom-left→.top-center）**；点击 postMessage 契约；官方 TimeScaleMsg 高亮映射；慢速本地态 |
 
+### cfg 配置表（含 ModCenter 启停位，2026-10-25 补记）
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| General.Enabled | true | 总开关（**ModCenter 面板启停位**——面板"灾前加速"页为仅启停形态，顶部开关直写该键；TrueThreeX/Hotkeys 不进面板）。false=`Injector.Tick` 首行早退（停注入；已挂 Harmony 桥仅观察 page.js 点击回程，页面不在即无事可做）——**重启级语义**，对已在档对局下次启动完全生效（cfg 描述原文口径） |
+| General.TrueThreeX | true | 真×3 校正（§5） |
+| Hotkeys.Enabled | true | 灾前快捷键 ~ / 1 / 2 / 3 / 4（§5） |
+| Debug.Verbose | false | 注入/payload 明细日志 |
+
+注：本键为**既有键复用**（ModCenter 计划 T12 核价确认零改动）；套件内其余 8 mod 的启停门为
+热还原型（T9-T12 模板，false 触发运行中还原），本 mod 是重启级——面板停用时套件通用横幅
+（"此处修改仍会写入 cfg 保存，但需重新启用后才会生效"）对该页如实适用（注入已停，改 cfg
+确需重新启用+重启链路生效）。
+
 ## 3. 契约（改前必读）
 
 - page.js 契约：`__PdsInstalled` 守卫 / `__PdsBoot({s1,s2})` / 点击 postMessage
@@ -59,6 +73,9 @@
 
 ## 7. 迭代记录
 
+- 2026-10-25（ModCenter 任务 18 终审补漏）：DESIGN 补 cfg 配置表——`General.Enabled` 为
+  **ModCenter 面板启停位**（面板"灾前加速"页仅启停形态直写该键；T12 复用既有键零改动，
+  语义=重启级：Injector.Tick 首行早退停注入）。此前该键仅在 §2 概述括号里带过。
 - 2026-10-24 终审 I-1 修复：安装回执 v==2（新装页）时重置 payload 签名门强制下一 tick 重推——修菜单期签名门被烧掉、`__PdsBoot` 永不送达的隐患（当时表值恰=默认值无症状）；夹具 C 组 boot 换非默认 {s1:3,s2:33} 钉死"高亮由 payload 驱动"。
 - 2026-10-24 装机二轮（作者实测两问题）：①点击无效——MessageEmitted 订阅实机编组失败，桥改 Harmony prefix 观察者挂 WebUILayer.OnPageMessage（page.js 点击契约不变）；②位置——五键条从 .top-center 尾部挪到官方位 .action-row 尾部（左下横排，对齐 CoreUI1 .action-panel 布局；兜底链 .action-row→.bottom-left→.top-center）。
 

@@ -352,6 +352,44 @@
           "MoveSpeed",
           "Comment"
         ]
+      },
+      {
+        "accessor": "_Config_Action_Dict",
+        "rowType": "Config_Action",
+        "fields": [
+          "During"
+        ]
+      },
+      {
+        "accessor": "_Config_Bag_Dict",
+        "rowType": "Config_Bag",
+        "fields": [
+          "Size",
+          "Burden"
+        ]
+      },
+      {
+        "accessor": "_Config_Furniture_Dict",
+        "rowType": "Config_Furniture",
+        "fields": [
+          "ColdRate",
+          "BagId"
+        ]
+      },
+      {
+        "accessor": "_Config_Talent_Dict",
+        "rowType": "Config_Talent",
+        "fields": [
+          "PlayerSelectId"
+        ]
+      },
+      {
+        "accessor": "_Config_ProductionList_Dict",
+        "rowType": "Config_ProductionList",
+        "fields": [
+          "craft_level",
+          "show_level"
+        ]
       }
     ],
     "nativeSigs": []
