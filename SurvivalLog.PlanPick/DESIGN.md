@@ -321,3 +321,11 @@
   byState 同权）——tab/chips 数量随搜索实时联动、0 计数系列隐藏、选中二级被搜没自动回"全部"。
   打字期间 tab 计数只原位改数字（updateTabCounts 不重建 DOM——重建会打断输入框焦点/IME 组合），
   子栏重建无输入框不受影响。夹具 61 断言全绿（新增搜索联动 3 条）。
+- 2026-10-24 装机验证收官（作者验收"可以了"）：十二轮装机实验全部定案。键盘/IME 最终机制：
+  规划页激活期间 WebUILayer.SetKeyboardEnabled(true)（英文裸键通道+捕获游戏热键）+
+  UnityEngine.Input.imeCompositionMode=On（官方界面白名单同款 IME 解锁——Vuplex 在 On 下把
+  组合结果直投浏览器），页关双还原；输入框聚焦由 page.js 显式 focus()（Vuplex 转发点击不带
+  原生聚焦）。走过的弯路（均为装机实证淘汰）：IWebView.SetFocused 事件驱动（il2cpp 泛型委托
+  ConvertDelegate 原生指针不匹配）、ExecuteJavaScript 回调读回（此构建不触发）、inputString
+  转运（IME On 后与直投双份）、IsPageActive 曾疑未命中（实为会话日志覆盖误判）。
+  CDP 取证脚本（tests/_cdp_*.js）入库：9222 白盒通道（ViewportProbe DevTools.Enabled）装机排障利器。
