@@ -286,3 +286,9 @@
   回调健壮性：值剥 JSON 引号、2s 超时解卡、首值/超时各打一次点。Input.inputString 兜底保留
   （官方通道 0.6s 无真按键到达才自动启用）。CDP 实证链：真实点击→focusin@ppSearch→
   activeElement=ppSearch 全通；此前"无反应"根因＝回调值带引号解析失败+占位符永久卡死（静默死点）。
+- 2026-10-24 装机六轮（键盘门定稿）：ExecuteJavaScript 回调在此构建不触发（超时打点实锤）——
+  读回通道整体弃用，键盘门改纯 C# 官方调用：IsPageActive(RogueSelect) 为真期间
+  WebUILayer.SetKeyboardEnabled(true)、页面关闭交还（uiKey 三候选兜底 RogueSelect/UI_RogueSelect/
+  WebUI_RogueSelect）。输入框聚焦仍由 page.js 显式 focus()（点击不带原生聚焦已实证）。
+  Input.inputString 兜底转发删除（回调死后无仲裁信号，且纯 C# 门不再需要）。
+  规划页期间游戏侧热键（H 等）将随键盘移交而失效——属预期代价，实机确认。

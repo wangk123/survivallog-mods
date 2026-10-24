@@ -63,21 +63,8 @@ internal sealed class PlanTicker : MonoBehaviour
     private float _focusCheck;
     private void Update()
     {
-        // 兜底键盘转发：每帧收集 Input.inputString（仅 forwardMode 时 CollectKey 生效）
-        try
-        {
-            var s = UnityEngine.Input.inputString;
-            if (!string.IsNullOrEmpty(s)) foreach (var c in s) Injector.CollectKey(c);
-        }
-        catch { }
-
         _focusCheck += Time.deltaTime;
-        if (_focusCheck >= 0.3f)
-        {
-            _focusCheck = 0;
-            Injector.FocusTick();
-            Injector.FlushKeys(Injector.PeekWebView());
-        }
+        if (_focusCheck >= 0.3f) { _focusCheck = 0; Injector.FocusTick(); }
         _check += Time.deltaTime;
         if (_check < 2f) return;
         _check = 0;
