@@ -52,14 +52,32 @@ internal static class BagSections
         (1023,   18, 14, ";; SUV后备箱+门口塑料袋（原生 12x10｜大档）"),
     };
 
+    /// <summary>预设 v3（作者 2026-10-25 二次定档：冰箱族整体上移——双门冰箱升中、冰柜/轿车后备箱升大、大容量冰柜/SUV+门口袋升特大；档位值沿用 v2）。</summary>
+    internal static readonly (int id, int w, int h, string note)[] PresetV3 =
+    {
+        (110002, 14, 10, ";; 小型置物架（原生 6x8｜小档）"),
+        (110001, 16, 12, ";; 中型置物架（原生 8x10｜中档）"),
+        (110000, 18, 14, ";; 大型置物架（原生 12x10｜大档）"),
+        (110008, 20, 16, ";; 超大型置物架（原生 15x12｜特大档）"),
+        (110009, 20, 16, ";; 材料架（原生 20x12｜特大档）"),
+        (1004,   16, 12, ";; 双门冰箱（原生 8x7｜中档）"),
+        (115000, 14, 10, ";; 双开门冰箱（原生 8x7｜小档）"),
+        (115001, 18, 14, ";; 冰柜（原生 8x10｜大档）"),
+        (115005, 20, 16, ";; 大容量冰柜（原生 12x10｜特大档）"),
+        (1021,   14, 10, ";; 自行车车筐（原生 5x4｜小档）"),
+        (1022,   18, 14, ";; 小汽车后备箱（原生 10x8｜大档）"),
+        (1023,   20, 16, ";; SUV后备箱+门口塑料袋（原生 12x10｜特大档）"),
+    };
+
     /// <summary>当前预设版本。调默认值时 bump 并在 PresetHistory 追加新版本行。</summary>
-    internal const int CurrentPreset = 2;
+    internal const int CurrentPreset = 3;
 
     /// <summary>预设史（版本→12 包默认值）。迁移语义：文件条目等于旧版本默认 → 自动改写为新版本默认；玩家改过的（不等于任何旧默认）原样保留。</summary>
     internal static readonly Dictionary<int, (int id, int w, int h, string note)[]> PresetHistory = new()
     {
         { 1, PresetV1 },
         { 2, PresetV2 },
+        { 3, PresetV3 },
     };
 
     private static string _path;
@@ -99,7 +117,7 @@ internal static class BagSections
         catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 默认节写入失败（不影响其余功能）: " + e.Message); }
     }
 
-    /// <summary>预设迁移：Preset 键 &lt; 当前版本时，把等于旧默认的文件条目改写为新默认（cfg 首跑固化坑的对策）。v2=2026-10-25 作者实测定稿（小14x10/中16x12/大18x14/特大20x16）。</summary>
+    /// <summary>预设迁移：Preset 键 &lt; 当前版本时，把等于旧默认的文件条目改写为新默认（cfg 首跑固化坑的对策）。v2=2026-10-25 作者实测定稿（小14x10/中16x12/大18x14/特大20x16）；v3=同日二次定档（冰箱族整体上移一档，档位值沿用 v2）。</summary>
     private static void MigratePreset()
     {
         try
