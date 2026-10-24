@@ -227,7 +227,7 @@
 
 | # | 风险 | 实证/缓解 |
 |---|---|---|
-| 1 | 主菜单阶段 `canvasWebViewPrefab.WebView` 可达性（强证据间接，无 mod 实注过主菜单） | ViewportProbe + CDP 一轮实证；降级：主菜单不显示入口、进游戏后开放 |
+| 1 | 主菜单阶段 `canvasWebViewPrefab.WebView` 可达性（**2026-10-24 已实证 GO**，`tools/_probe_menu_cdp.js` 两轮全 PASS） | 实证：CDP 9222 → Root Orchestrator → `#iframe-container` → MainUI iframe（pathname 命中、contentDocument 直通）→ `#app .container .menu` 在场（6 项：continue/newGame/pureEndless/loadGame/settings/exit），注入 `<span id="__mc_probe">` → 验证 → 移除全过、零残留；降级（主菜单不显示入口）不触发，回归可复跑该脚本 |
 | 2 | 反射桥 API 细节（BasePlugin.Config 可见性、Chainloader 枚举） | 10 行探针首日验证（ConfigurationManager 同款手法） |
 | 3 | **游戏内官方系统菜单锚点**（v2 新增）：ESC 菜单是否 WebUI 渲染、列表项 DOM 是否稳定可寄生 | 从 `tools/webui_src` 快照定位；无稳定锚点则降级右上角小按钮 |
 | 4 | 主菜单阶段 SetKeyboardEnabled/IME 行为未验证 | 实施时随 #1 一并验证；机制同一套 |
