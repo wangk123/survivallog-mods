@@ -17,6 +17,7 @@
 10. **UI 修复必须先实机/浏览器实测再报"修好"**；同题两轮不过换道，不 promises "最后一次"。
 11. **改 mod 必须同步该 mod 的 `DESIGN.md`**（每份末尾有迭代维护清单）；**改挂钩点（Harmony 目标/表字段/字节签名）必须同步 `tools/gamekb/moddeps.json`**。
 12. **实证优先**：不猜先查（反汇编/读源码/运行时探针），方案确认后再动手，最小侵入。
+13. **外部工具装卸可能拆注入链**（2026-10-24 xmod 卸载实锤拆了 winhttp/dotnet/BepInEx core，见 docs/03 环境事故节）：任何 xmod/修改器/loader 安装或卸载后、以及"mod 全部失效"时，先验三件套——根目录 `winhttp.dll`+`doorstop_config.ini`、`dotnet\` 有货、`BepInEx\core` 有 dll；被拆即重跑套件安装器（勿 /SILENT）。
 
 ## 二、环境与路径（本机开发环境）
 
