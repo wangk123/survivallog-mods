@@ -162,3 +162,41 @@ internal static class SizeEngine
         catch { }
     }
 }
+
+/// <summary>读档诊断：DiagOnOpen=true 时列出全部容器 BagConfigId；载具三包实例初始化 always-on 打点（每包每次会话一行）。</summary>
+internal static class BagInitDiag
+{
+    private static readonly System.Collections.Generic.HashSet<int> Seen = new();
+    private static readonly System.Collections.Generic.HashSet<int> Watched = new();
+    private static readonly System.Collections.Generic.HashSet<int> VehicleWatch = new() { 1021, 1022, 1023 };
+
+    [HarmonyLib.HarmonyPatch(typeof(GameCore.HotUpdate.Battle.Logic.BagComponent), "OnInit")]
+    [HarmonyLib.HarmonyPostfix]
+    private static void Postfix(GameCore.HotUpdate.Battle.Logic.BagComponent __instance, int bagConfigId)
+    {
+        try
+        {
+            if (VehicleWatch.Contains(bagConfigId) && Watched.Add(bagConfigId))
+                CabinetSizePlugin.Log.LogInfo(
+                    $"[CabinetSize][载具] 包 {bagConfigId}（{SizeEngine.BagName(bagConfigId)}）实例初始化，扩容已生效");
+        }
+        catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize][载具] 诊断读取失败: " + e.Message); }
+
+        if (CabinetSizePlugin.DiagOnOpen == null || !CabinetSizePlugin.DiagOnOpen.Value) return;
+        try
+        {
+            if (!Seen.Add(bagConfigId)) return;
+            int w = 0, h = 0;
+            var cm = BagTable.Cm();
+            var dict = cm == null ? null : BagTable.BagDict(cm);
+            if (dict != null && dict.TryGetValue(bagConfigId, out var bag) && bag != null)
+            {
+                var sz = bag.Size;
+                if (sz != null && sz.Count >= 2) { w = sz[0]; h = sz[1]; }
+            }
+            CabinetSizePlugin.Log.LogInfo(
+                $"[CabinetSize][诊断] 容器初始化 bagConfigId={bagConfigId}（{SizeEngine.BagName(bagConfigId)}，当前 {w}x{h}，初始包={__instance.GetInitialBagConfigId()}）");
+        }
+        catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize][诊断] OnInit 读取失败: " + e.Message); }
+    }
+}

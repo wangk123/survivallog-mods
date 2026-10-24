@@ -87,7 +87,16 @@ public sealed class CabinetSizePlugin : BasePlugin
 
         BindConfig();
         BagSections.Init(Config.ConfigFilePath); // 本机 BepInEx.Core 6.0.0.0 的属性名是 ConfigFilePath（brief 误写 ConfigPath，已实证反射）
-        // Task 3/4：改写引擎 + Ticker
+        try
+        {
+            var harmony = new HarmonyLib.Harmony(Guid);
+            harmony.PatchAll(typeof(BagInitDiag));
+            Log.LogInfo("[CabinetSize] 诊断补丁已挂（读档时列出全部容器的 BagConfigId）");
+        }
+        catch (Exception e)
+        {
+            Log.LogWarning("[CabinetSize] 诊断补丁挂载失败（不影响改写功能）: " + e.Message);
+        }
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<SizeTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<SizeTicker>();
