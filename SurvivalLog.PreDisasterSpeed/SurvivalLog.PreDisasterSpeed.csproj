@@ -59,6 +59,10 @@
       <HintPath>E:\SteamLibrary\steamapps\common\Survival Log\BepInEx\core\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>E:/SteamLibrary/steamapps/common/Survival Log/BepInEx/interop/UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>

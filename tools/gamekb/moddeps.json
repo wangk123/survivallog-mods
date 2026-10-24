@@ -321,6 +321,11 @@
         "type": "GameCore.HotUpdate.ReduxUI.WebUIVm",
         "method": "HandleCallback",
         "params": 2
+      },
+      {
+        "type": "GameCore.HotUpdate.Battle.Logic.GameTimeManager",
+        "method": "ChangeGameSpeed",
+        "params": 1
       }
     ],
     "configFields": [

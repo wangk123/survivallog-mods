@@ -34,10 +34,11 @@ internal static class SpeedLink
     }
 
     /// <summary>读灾前章节倍率：_Config_Chapter_Dict 中 WorldStateType==1 的行（当前版本 ID=1，
-    /// SpeedUp1=2/SpeedUp2=32）。读不到返回 false 并保持官方基线 2/32。</summary>
+    /// SpeedUp1=2/SpeedUp2=32）。TrueThreeX 开启时 s2 按校正后口径返回 3（与 TrueThreeGearPatch
+    /// 实际生效倍率一致，保证 JS 高亮映射命中）。读不到时按同口径回退默认。</summary>
     internal static bool TryGetChapterSpeeds(out int s1, out int s2)
     {
-        s1 = 2; s2 = 32;
+        s1 = 2; s2 = PreDisasterSpeedPlugin.TrueThreeX.Value ? 3 : 32;
         try
         {
             if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.IsInstanceCreated) return false;
@@ -50,7 +51,7 @@ internal static class SpeedLink
                 if ((int)pair.Value.WorldStateType == 1)
                 {
                     s1 = pair.Value.SpeedUp1;
-                    s2 = pair.Value.SpeedUp2;
+                    s2 = PreDisasterSpeedPlugin.TrueThreeX.Value ? 3 : pair.Value.SpeedUp2;
                     return true;
                 }
             }
@@ -70,6 +71,9 @@ internal static class SpeedLink
     private static bool _coreUi0Visible;
     private static bool _warnBridge;
     private static readonly Regex SpeedRegex = new Regex("\"speed\"\\s*:\\s*([0-4])", RegexOptions.Compiled);
+
+    /// <summary>CoreUI0（灾前 HUD）当前可见——快捷键门控用。</summary>
+    internal static bool CoreUi0Visible { get { return _coreUi0Visible; } }
 
     /// <summary>官方中继链终点观察者：CoreUI0 页 JS 点击 → Root 无条件转发 vuplex 协议(3) →
     /// WebUILayer.OnMessageFromJS typeId=3 分支 → **WebUIVm.HandleCallback(messageType, jsonData) 虚方法**
@@ -110,5 +114,46 @@ internal static class SpeedLink
             PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] CoreUI0 消失（灾变过渡）——档位自动归 1x");
         }
         _coreUi0Visible = visible;
+    }
+
+    /// <summary>真三倍校正（装机四轮作者定案）：手动三键在灾前按真实 ×3 生效，睡眠跳夜保持官方 ×32。
+    /// 机制：ChangeGameSpeed(speed=3) 读 GameTimeManager.ChapterSpeedUp2（灾前=32，睡眠临时加速共用同字段——
+    /// 改表/改字段都会把睡觉跳夜拖慢十倍，故不可持久改）。prefix 在"灾前+三档+TrueThreeX"时临时把字段
+    /// 换成 3，postfix 立即还原原值；窗口外字段恒为官方值，睡眠路径（ExecuteTempSpeedUp）不受影响。
+    /// 本补丁由 Plugin.Load 手动挂载（失败仅回落官方 ×32，不拖累 mod 其余功能）。</summary>
+    internal static class TrueThreeGearPatch
+    {
+        private static bool _swapped;
+        private static int _orig;
+        private static bool _warned;
+
+        private static void Prefix(GameCore.HotUpdate.Battle.Logic.GameTimeManager __instance, ref int speed, ref int ___ChapterSpeedUp2)
+        {
+            _swapped = false;
+            try
+            {
+                if (speed != 3 || !PreDisasterSpeedPlugin.TrueThreeX.Value) return;
+                if ((int)__instance.WorldStateType != 1) return;   // 仅灾前章节
+                if (___ChapterSpeedUp2 == 3) return;
+                _orig = ___ChapterSpeedUp2;
+                ___ChapterSpeedUp2 = 3;
+                _swapped = true;
+            }
+            catch (Exception e) { Warn(e); }
+        }
+
+        private static void Postfix(ref int ___ChapterSpeedUp2)
+        {
+            if (!_swapped) return;
+            try { ___ChapterSpeedUp2 = _orig; _swapped = false; }
+            catch (Exception e) { Warn(e); }
+        }
+
+        private static void Warn(Exception e)
+        {
+            if (_warned) return;
+            _warned = true;
+            PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 三倍校正异常（后续静默，三键按官方值）: " + e.Message);
+        }
     }
 }

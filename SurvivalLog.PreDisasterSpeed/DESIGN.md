@@ -18,7 +18,7 @@
 
 | 部件 | 文件 | 职责 |
 |---|---|---|
-| 入口 | PreDisasterSpeedPlugin.cs | cfg（Enabled/Verbose）+ Harmony PatchAll + 2s PdsTicker + WelcomeTip |
+| 入口 | PreDisasterSpeedPlugin.cs | cfg（Enabled/TrueThreeX/Hotkeys/Verbose）+ Harmony PatchAll（桥）+ 三倍补丁手动挂载 + 2s PdsTicker（含快捷键轮询）+ WelcomeTip |
 | 注入 | Injector.cs | WebView 获取（ReduxUISystem→WebUILayer→canvasWebViewPrefab）；page.js 幂等 eval 进 CoreUI0；payload（章节倍率）签名变化才推；安装回执喂自愈 |
 | 桥+落地 | SpeedLink.cs | **Harmony prefix 观察者挂 WebUILayer.OnPageMessage**（不拦截不修改），识别 3/CoreUI0/PDS_SPEED → 调官方 Ac_CoreUI1_SpeedChange.SendAction；CoreUI0 消失且档位≠1 自动归 1x |
 | UI | page.js（EmbeddedResource） | 五键条挂 **.action-row 尾部（官方位：左下横排，兜底 .bottom-left→.top-center）**；点击 postMessage 契约；官方 TimeScaleMsg 高亮映射；慢速本地态 |
@@ -34,6 +34,7 @@
 ## 4. 依赖（moddeps.json "PreDisasterSpeed" 条目；harmony 槽位第一项为真补丁、第二项为存在性核对）
 
 - **GameCore.HotUpdate.ReduxUI.WebUIVm.HandleCallback(string,string)（Harmony prefix，真挂钩点；typeId=3 唯一分发点，StackLimit999 同挂点在役）**
+- **GameCore.HotUpdate.Battle.Logic.GameTimeManager.ChangeGameSpeed(int)（Harmony prefix+postfix，真三倍校正，手动挂载失败即回落）**
 - GameCore.HotUpdate.ReduxUI.Ac_CoreUI1_SpeedChange.SendAction(int)（落地入口，存在性核对）
 - _Config_Chapter_Dict / Config_Chapter.{WorldStateType,TimeScale,SpeedUp1,SpeedUp2}
 - WebUI_CoreUI0 页（.action-row/.bottom-left DOM、TimeScaleMsg/PauseMsg 通道）
@@ -41,7 +42,7 @@
 
 ## 5. 已知边界
 
-- 灾前"三倍"=×32（官方表值）；嫌猛的备选项=内存表临时编辑 SpeedUp2（未实施）。
+- 灾前"三倍"官方表值=×32（ChapterSpeedUp2 与睡眠跳夜共用字段，改表/持久改字段都会把睡觉拖慢十倍，禁改）。装机四轮起 TrueThreeX=true：prefix 在"灾前+三档"时临时把字段换成 3、postfix 立即还原——手动三键真×3，睡眠保持官方×32。快捷键：~ / 1 / 2 / 3 / 4（Unity 侧轮询，仅 CoreUI0 可见期间；网页输入框聚焦时仍会触发，灾前无文本输入框未构成实际问题）。
 - 手动档会取消睡眠临时加速（官方 CancelTempSpeedUp 行为）。
 - LastSpeed 只记 mod 侧设置；官方侧改档（灾后官方条）不回写——自愈只在 CoreUI0 消失瞬间比对。
 - 桥=Harmony prefix 观察者挂 WebUILayer.OnPageMessage（装机二轮定案）。首轮 MessageEmitted 事件订阅
@@ -62,3 +63,5 @@
 - 2026-10-24 装机二轮（作者实测两问题）：①点击无效——MessageEmitted 订阅实机编组失败，桥改 Harmony prefix 观察者挂 WebUILayer.OnPageMessage（page.js 点击契约不变）；②位置——五键条从 .top-center 尾部挪到官方位 .action-row 尾部（左下横排，对齐 CoreUI1 .action-panel 布局；兜底链 .action-row→.bottom-left→.top-center）。
 
 - 2026-10-24 装机三轮：点击仍无效——反汇编 OnMessageFromJS 证 typeId=3 走 WebUIVm 虚方法分发，WebUILayer.OnPageMessage 零调用方（死方法，上轮挂空靶）；换挂 WebUIVm.HandleCallback（无重写唯一实现）；桥收到/SetSpeed 改无条件打点（装机期排查）。
+
+- 2026-10-24 装机四轮：点击变速全链打通（作者实测通过）；新增①快捷键 ~ / 1 / 2 / 3 / 4（Unity Input 轮询，仅灾前，键位同官方）；②真三倍校正 TrueThreeX（默认开）——反汇编证实 ExecuteTempSpeedUp（睡眠）无条件共用 ChapterSpeedUp2，故不可改表/持久改字段，改用 prefix/postfix 换档瞬间临时换字段法。
