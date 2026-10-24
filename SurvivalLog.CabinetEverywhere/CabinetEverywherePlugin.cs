@@ -27,6 +27,11 @@ public enum ScenarioView { Food, Material, Browser }
 /// 2. 筛选/场景视图：按界面 cfg（[Scenario] View_*）固定收窄页签视野（食物/材料），或 Browser
 ///    模式自绘下拉按官方标签筛选；A/D 步进自动跳过被藏柜子（JS 侧扣发+伪造，DESIGN.md 附录）。
 ///
+/// General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=白名单注入对称移除
+/// （CraftSourceInjector.RemoveAll 按 _added 集合逐条 Remove）并全线停写停注入
+/// （Ticker/页签注入/筛选/修剪/袋刷新合并均停）；已打开界面重开后收敛（原生重建页签）。
+/// 下次启动不加载（不创建 Ticker、不装合并补丁，零日志零改写）。
+///
 /// 实证依据见 DESIGN.md（2026-10-10 全程反汇编 + 附录 A/C 取证史）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
@@ -38,6 +43,9 @@ public sealed class CabinetEverywherePlugin : BasePlugin
 
     internal static ManualLogSource Log;
 
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=对称移除白名单注入并停写停注入；
+    // 下次启动不加载（不创建 Ticker、不装合并补丁，零日志零改写）。
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<bool> EnableCraftSource;
     internal static ConfigEntry<bool> EnableCooking;
     internal static ConfigEntry<bool> EnableRatCage;
@@ -60,6 +68,10 @@ public sealed class CabinetEverywherePlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true,
+            "总开关：false=对称移除白名单注入并停写停注入；下次启动不加载。");
+        Enabled.SettingChanged += (object s0, System.EventArgs e0) => { Rerun = true; };
         EnableCraftSource = Config.Bind("Access", "EnableCraftSource", true,
             "白名单注入：工作台/无人机交易/无人机站/粉碎机/温室 的柜子页签与自动取料。");
         EnableCooking = Config.Bind("Access", "EnableCooking", true, "烹饪界面注入柜子页签。");
@@ -117,6 +129,10 @@ public sealed class CabinetEverywherePlugin : BasePlugin
         ViewDroneHub.SettingChanged += reload;
         DumpFurniture.SettingChanged += (object s, System.EventArgs e) => { CabinetCatalog.DumpRequested = true; };
 
+        // General.Enabled=false：不启 Ticker/不装合并补丁，零日志零改写
+        //（白名单本会话从未注入，无需移除；运行中关闭由 AccessTicker 首行门处理）
+        if (!Enabled.Value) return;
+
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<AccessTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<AccessTicker>();
         if (DumpFurniture.Value) CabinetCatalog.DumpRequested = true; // cfg 启动即 true 也生效（进档后 dump 一次）
@@ -156,6 +172,15 @@ internal sealed class AccessTicker : MonoBehaviour
 
     private void Tick(float dt)
     {
+        // General.Enabled 总开关：false=白名单注入对称移除（_added 逐条 Remove，幂等：移除后
+        // _added 空则静默空操作）并全线停写停注入；已打开界面重开后收敛（原生重建页签）。
+        // Load 阶段 false 时 Ticker 不会创建，本分支覆盖运行中关闭（ModCenter 写 cfg 热生效）。
+        if (CabinetEverywherePlugin.Enabled != null && !CabinetEverywherePlugin.Enabled.Value)
+        {
+            CraftSourceInjector.RemoveAll();
+            return;
+        }
+
         _slowCheck += dt;
         var slowDue = CabinetEverywherePlugin.Rerun || _slowCheck >= 5f;
 
@@ -174,9 +199,12 @@ internal sealed class AccessTicker : MonoBehaviour
                                                     string.Join("\n  ", CabinetCatalog.DescribeAll()));
             }
 
-            // 2) 白名单注入（工作台/无人机交易/无人机站/粉碎机/温室）
+            // 2) 白名单注入（工作台/无人机交易/无人机站/粉碎机/温室）；关=对称移除本会话
+            //    注入（CraftSourceInjector.RemoveAll，幂等——含"运行中由开转关"的收敛路径）
             if (CabinetEverywherePlugin.EnableCraftSource.Value)
                 CraftSourceInjector.Ensure(cfgIds);
+            else
+                CraftSourceInjector.RemoveAll();
 
             // 3) 统一容器扫描（5s 只扫一遍，原直达/筛选两个 5s 扫描合一）：单遍产出
             //    AllContainers（全容器+标签，筛选用）+ HomeInstances（柜子子集，直达注入用）

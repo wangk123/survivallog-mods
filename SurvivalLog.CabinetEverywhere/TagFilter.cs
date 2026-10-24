@@ -32,6 +32,11 @@ internal static class TagFilter
 
     internal static void Tick()
     {
+        // General.Enabled 停用门（2026-10-24）：false=不再注入筛选 JS/不再喂标签数据（=不藏 UI）；
+        // 已打开界面的存量注入随界面重开由原生重建清除，无需主动刷。
+        if (CabinetEverywherePlugin.Enabled != null && !CabinetEverywherePlugin.Enabled.Value)
+            return;
+
         // 容器计数日志（原 ContainerScan.Refresh 的首报，随扫描合一迁到消费侧）
         if (!_containerLogged && CabinetCatalog.AllContainers.Count > 0)
         {

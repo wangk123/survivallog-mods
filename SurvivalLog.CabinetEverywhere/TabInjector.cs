@@ -30,6 +30,11 @@ internal static class TabInjector
 
     internal static void PollAll()
     {
+        // General.Enabled 停用门（2026-10-24）：false=不再注入柜子页签；已打开界面重开后
+        // 原生重建页签自然收敛（Tabs 数组由界面重推，无需主动摘除）。
+        if (CabinetEverywherePlugin.Enabled != null && !CabinetEverywherePlugin.Enabled.Value)
+            return;
+
         try
         {
             if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.IsInstanceCreated)

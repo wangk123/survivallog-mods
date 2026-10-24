@@ -183,7 +183,7 @@
 |---|---|
 | `CabinetEverywherePlugin.cs` | 入口：配置定义（Access/Filter/Scenario/Debug 四区）、AccessTicker（慢通道 5s：名单重扫+白名单+统一扫描+筛选；快通道 0.5s：页签注入轮询+工作台修剪轮询） |
 | `CabinetCatalog.cs` | 统一容器扫描：单遍产出 AllContainers（筛选）+ HomeInstances（直达）+ 包镜像补全 + DumpFurniture 诊断 |
-| `CraftSourceInjector.cs` | 白名单注入（幂等 Add + 日志自证） |
+| `CraftSourceInjector.cs` | 白名单注入（幂等 Add + 日志自证）；**对称移除 RemoveAll**（2026-10-24：按 `_added` 集合逐条 Remove 后清空，禁用路径与 EnableCraftSource=false 路径都调；状态迁移写 `BepInEx\CE_gate_trace.txt` 自证） |
 | `ToolTablePruner.cs` | 工作台 CabinetTabs 修剪：扫描=所见（2026-10-19/20 制作卡顿治理，见 2.7） |
 | `TabInjector.cs` | 烹饪/老鼠笼/酿酒/颜料桶 页签注入（会话防重、缺则补挂、Repush 重推；Repush 供 Pruner 共用） |
 | `TagFilter.cs` | WebView 注入通道：幂等引导 + 标签数据 JSON v3 + scenario 段 + 同源探针 |
@@ -236,7 +236,8 @@ max 65ms；每件完成 TryCreateItem 230~263ms。级联构成（G4/G14）：单
 
 | 分区.键 | 默认 | 说明 |
 |---|---|---|
-| Access.EnableCraftSource | true | 工作台/无人机交易/站/粉碎机/温室 的页签+自动取料 |
+| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=白名单注入对称移除（RemoveAll）并全线停写停注入（Ticker 首行门：页签注入/筛选/修剪/袋刷新合并全停，合并 prefix 放行官方刷新）；已开界面重开后收敛（原生重建页签）。下次启动不加载（不创建 Ticker、不装合并补丁，零日志零改写） |
+| Access.EnableCraftSource | true | 工作台/无人机交易/站/粉碎机/温室 的页签+自动取料；false=对称移除本会话注入 |
 | Access.EnableCooking / EnableRatCage / EnableBrew / EnableDye | true | 烹饪/老鼠笼/酿酒桶/颜料桶 页签注入 |
 | Access.IncludeFurnitureIds | 空 | 追加家具 ConfigId（强制加入） |
 | Access.ExcludeFurnitureIds | 313,80033,80164,1024-1028,42033,66196,330/384/389/9126 | 排除家具（自制工具台+载具系+染料桶+材料堆：后两者=功能容器/角色专属，与纸箱共用包只能按家具排除） |
@@ -313,6 +314,17 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
   - **触发器/弹层十轮排障（fix-wave-2..9，2026-10-17）**：症状链与各轮根因已沉淀进
     §2.5 引语（跳变=无k调用整表重写、首帧闪小=未渲染回退body zoom、offsetTop 行内坐标
     误判、包裹器 static 失锚隐身等），终态方案与回归测试见 §2.5；双缩放空间硬知识 §2.5.1。
+- 2026-10-24（ModCenter 启停门，T11）：
+  - **General.Enabled 总开关**：Load 早退（全部 Bind 后、Ticker/合并补丁创建前——停用=
+    零 GameObject 零补丁零日志）+ AccessTicker.Tick 首行门（运行中关闭：对称移除白名单后
+    全线停写停注入）+ RefreshCoalescer.SendPrefix 首行门（放行官方刷新）+ TagFilter.Tick /
+    TabInjector.PollAll 首行门（不再注入筛选 JS/柜子页签）。
+  - **白名单对称移除补丁**：CraftSourceInjector 新增 `RemoveAll()`——`_added` 集合逐条从
+    `CraftSourceFurnitureIds` Remove 后清空（官方原有 70006 不在集合内永不误删；移除失败
+    残留者保留下轮重试）；禁用路径与 `EnableCraftSource=false` 路径共用（此前关 EnableCraftSource
+    停在已注入态直到重启）。已打开界面重开后收敛（原生重建页签，无需主动刷）。
+  - **CE_gate_trace.txt 自证**（BepInEx 根目录）：Ensure 实际新增 / RemoveAll 移除前后集合
+    计数落文件（仅状态迁移时写，低频；BepInEx 日志强杀不落盘故走文件自证）。
 
 ## 7. 防盗署名气泡（2026-10-14，套件统一）
 

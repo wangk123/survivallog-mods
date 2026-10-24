@@ -10,8 +10,10 @@
   燃烧瓶强化、老主顾互通）；家具位类规划黑名单排除；**已购不清退**——还原只影响后续抽取。
 - **花瓶配方互通**（2026-10-24）：花瓶包裹配方 325 等级化解锁，制作等级 1 全角色可学；
   P2 已获者不受影响。
-- 纯内存表编辑、零 Harmony、幂等。藤蔓/花种/防御配方有 cfg 开关（关=还原官方值）；
-  生存规划互通/花瓶配方无开关（mod 在即生效，删 dll 即回官方）；已购规划不清退（还原只影响后续抽取）。
+- 纯内存表编辑、零 Harmony、幂等。**全部功能有 cfg 开关（关=还原官方值）**：藤蔓/花种/防御配方
+  各自独立开关；生存规划互通（Plan.ClearPool）/花瓶配方（Plan.VaseRecipe，2026-10-24 起有开关）；
+  General.Enabled 总开关（ModCenter 启停位）false=全功能还原官方并停写。
+  已购规划不清退（还原只影响后续抽取）。
 
 ## 2. 机制实证（2026-10-21 反汇编，dump=tools/il2cppdumper/ 根目录当日产物）
 
@@ -93,15 +95,18 @@
 
 | 项 | 默认 | 说明 |
 |---|---|---|
+| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=全功能目标态切"还原官方"（复用各 Apply 现役还原路径：Params3 回原白名单/DefenseLv 回分列/Talent 回白名单/花瓶回官方等级）；下次启动不加载（不创建 Ticker，零日志零改写） |
 | UnlockVine | true | 清空藤蔓角色白名单 |
 | SkipDefenseGate | false | 清零藤蔓种子防御等级门槛 |
 | UnlockFlowerSeeds | false | 观赏花种子同样全角色 |
 | ShareDefenseRecipes | true | DefenseLv P1~P4 并集互通 |
+| Plan.ClearPool | true | 解锁角色专属生存规划（46 项功能类，清 PlayerSelectId）；false=还原官方白名单（家具位黑名单始终不动；已购不清退） |
+| Plan.VaseRecipe | true | 解锁花瓶配方（325 craft/show→1/1）；false=还原官方等级（仅大学生剧情事件发放） |
 | ListOnReady | true | 首轮列原始白名单与各行并集 |
 | Verbose | false | 每轮明细 |
 
-注：生存规划互通 / 花瓶配方互通两项新功能**无 cfg 开关**（作者定案默认生效，删 dll 即还原官方；
-生存规划已购不清退，还原只影响后续抽取）。
+注：生存规划互通 / 花瓶配方互通原为无开关设计，2026-10-24（ModCenter T11）起各有独立开关
+（Plan.ClearPool / Plan.VaseRecipe，默认 true=行为不变）；总停用走 General.Enabled。
 
 cfg 文件名 `com.local.survivallog.roleunlock.cfg`（Guid `com.local.survivallog.roleunlock`）。
 
@@ -149,3 +154,14 @@ cfg 文件名 `com.local.survivallog.roleunlock.cfg`（Guid `com.local.survivall
   - 家具位黑名单关键词（`SlotTalentKeywords`，匹配 Name_Local / Dec_Local，命中即跳过不清）：
     `位·`、`扩建`、`腾出一处`、`置物位`——宽匹配设计对游戏更新新增的家具位规划自动免疫。
   - 花瓶 325 原值快照于进程内首读（`_origVaseCraft`/`_origVaseShow`），同表重载后下一轮自动补写；不改 434/435。
+- **2026-10-24（ModCenter T11）：General.Enabled 总开关 + Plan.ClearPool / Plan.VaseRecipe 两开关**。
+  - **General.Enabled**：Load 早退（全部 Bind 后、Ticker 创建前——停用=零 GameObject 零日志零改写）
+    + RoleTicker 运行中关闭复用现役还原路径（`on && X.Value` 传参：false 时各 Apply 按首读快照
+    回写官方值，allow-list `want = enabled ? "" : orig` 同款模式，幂等轮询防表重载）。
+  - **Plan.ClearPool=false 还原语义**：ApplyTalents 目标态由"清空"切"还原快照原白名单"——
+    空白名单行若在本会话快照表（OrigTalentRoles）内则走还原补回（`cur.Count==0 && !known` 才跳过，
+    区分"本就全角色"与"自己清空的"）；家具位黑名单行永不入快照表，46/77 基线口径不变。
+    已购规划为存档侧数据不受表还原影响（只影响后续抽取）。
+  - **Plan.VaseRecipe=false 还原语义**：ApplyVaseRecipe 目标态切回 `_origVaseCraft/_origVaseShow`
+    首读快照（本版 0/0：craft_level=0 纯 P2 剧情发放）。
+  - 两开关默认 true（升级用户行为不变）；cfg 键首跑自动生成，SettingChanged 触发 Rerun 热重写。

@@ -13,7 +13,8 @@ namespace SurvivalLog.CabinetEverywhere;
 /// 合并阀的本质区别：不在计算层跳过、不脱离派发上下文）。
 /// 每件完成 = RA_Result 内部重算 1 次（不碰）+ 合并后袋刷新 1 次 = 最多 2 次/件。
 /// 显示滞后仅一帧（16~33ms）；点配方/制作/收产物走原路径零影响。
-/// 无开关（默认行为，v1.3.8 起随套件发布）。
+/// 随 General.Enabled 总开关（2026-10-24）：false 时 prefix 放行官方刷新（禁用即回到
+/// 官方逐次派发；Load 阶段禁用则补丁不装），其余行为默认开启随套件发布。
 /// </summary>
 internal static class RefreshCoalescer
 {
@@ -48,6 +49,10 @@ internal static class RefreshCoalescer
 
     private static bool SendPrefix()
     {
+        // General.Enabled 停用门（2026-10-24）：false=放行官方刷新（不合并不吞帧；
+        // _pending 恒 false，Flush 同步空转）。Load 阶段禁用时补丁根本不装。
+        if (CabinetEverywherePlugin.Enabled == null || !CabinetEverywherePlugin.Enabled.Value)
+            return true;
         if (_flushing)
             return true; // 补派中直通，防无限延迟自环
         _pending = true;
