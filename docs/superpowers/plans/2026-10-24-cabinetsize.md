@@ -136,9 +136,11 @@ public sealed class CabinetSizePlugin : BasePlugin
         Log = base.Log;
 
         // 双开防御：前任 CabinetExpand 在场则自禁（两 mod 同写 Config_Bag.Size 必互相污染）
+        // 注：本机 BepInEx IL2CPP-BE 构型无静态 Chainloader.PluginInfos（Task 1 实施实证，
+        // 先例 ModCenterPlugin.cs:186-188），用 IL2CPPChainloader.Instance.Plugins 判定
         try
         {
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("com.local.survivallog.cabinetexpand"))
+            if (BepInEx.Unity.IL2CPP.IL2CPPChainloader.Instance?.Plugins?.ContainsKey("com.local.survivallog.cabinetexpand") == true)
             {
                 Log.LogWarning("[CabinetSize] 检测到旧 mod CabinetExpand 仍在运行：两 mod 同写 Config_Bag.Size 会互相污染，"
                                + "本 mod 已自禁。请删除 BepInEx\\plugins\\SurvivalLog.CabinetExpand.dll 与其 cfg 后重启游戏。");
