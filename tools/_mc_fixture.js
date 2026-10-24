@@ -9,6 +9,9 @@
 //        - layout: overlay/panel/head/foot/toast, side (9 suite + self lock + tp hint)
 //        - page-by-page assertions for all 9 mods (groups/items/controls vs Meta)
 //        - PlanPick Cost range min=100/max=300 (debt D: AcceptableValueRange reflection)
+//        - Fix R1 (review P2/F1): synthetic no-range numeric item (min/max absent)
+//          renders number box ONLY (no fabricated 0..100 slider); out-of-range 500
+//          shows uncapped and MC_SET sends 500 uncapped
 //        - interactions through REAL DOM events:
 //            slider (RobotSpeed moveMult) incl. 100ms throttle burst shape
 //            bool (RoleUnlock flower seeds), select (UiFit.Mode), reload-badge toast
@@ -744,6 +747,9 @@ async function menuMode() {
       groups: [{ title: 'S', items: [
         { k: 'S.Msg', l: 'Msg', t: 'str', v: 'hello', b: 'cfg' },
         { k: 'S.N', l: 'N', t: 'int', v: 7, min: 0, max: 10, st: 1, b: 'cfg' },
+        // Fix R1 (P2): NO min/max/st — the third-party "numeric without
+        // AcceptableValueRange" shape; v=500 sits outside any fabricated 0..100
+        { k: 'S.Free', l: 'Free', t: 'int', v: 500, b: 'cfg' },
       ] }] }]);
     await page.evaluate((s) => { window.__mcRender(s); return true; }, fakeSnap);
     await sleep(60);
@@ -765,6 +771,61 @@ async function menuMode() {
     }, MAIN_HTML);
     F.tpStrCtl = strCtl;
     V.tpStrRender = !!(strCtl && strCtl.text === 'hello' && strCtl.num === '7');
+
+    // Fix R1 (review P2/F1): no-range numeric item (S.Free, index 2) must render a
+    // number box ONLY — no fabricated 0..100 slider — and the out-of-range value 500
+    // must display uncapped (no min/max attrs), then be SENT uncapped on input.
+    const noRangeCtl = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"][data-g="0"][data-i="2"]');
+            const ctl = n ? n.closest('.__mc-ctl') : null;
+            return (n && ctl) ? {
+              ranges: ctl.querySelectorAll('input[type=range]').length,
+              nums: ctl.querySelectorAll('input[type=number]').length,
+              value: n.value, min: n.min, max: n.max,
+            } : null;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    F.tpNoRangeCtl = noRangeCtl;
+    V.tpNoRangeRender = !!(noRangeCtl && noRangeCtl.ranges === 0 && noRangeCtl.nums === 1
+      && noRangeCtl.value === '500' && noRangeCtl.min === '' && noRangeCtl.max === '');
+    const mkF = await sentMark();
+    await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"][data-g="0"][data-i="2"]');
+            if (n) {
+              n.value = '500';
+              n.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            return true;
+          }
+        } catch (e) {}
+      }
+      return false;
+    }, MAIN_HTML);
+    let sentFree = null;
+    const dlF = Date.now() + 8000;
+    for (;;) {
+      sentFree = (await sentSince(mkF)).find((s) => s && s.type === 'MC_SET' && s.key === 'S.Free') || null;
+      if (sentFree) break;
+      if (Date.now() > dlF) break;
+      await sleep(500);
+    }
+    F.tpNoRangeSent = sentFree;
+    V.tpNoRangeSendUncapped = !!(sentFree && sentFree.guid === fakeGuid
+      && sentFree.section === 'S' && sentFree.value === 500);
+
     const mk3 = await sentMark();
     await page.evaluate((tail) => {
       const fs = document.querySelectorAll('#iframe-container iframe');
@@ -818,6 +879,7 @@ async function menuMode() {
     V.tpSyntheticCleanedUp = fakeGone === true;
   } else {
     V.tpStrRender = V.tpStrMsgShape = V.tpSyntheticCleanedUp = false;
+    V.tpNoRangeRender = V.tpNoRangeSendUncapped = false;
   }
 
   // ---- interaction 1: slider RobotSpeed moveMult 2 -> 3.5 (real input event) ----
@@ -1337,6 +1399,7 @@ async function menuMode() {
     layout: F.layout, planpickCost: F.planpickCost,
     tpList: F.tpList, tpStruct: F.tpStruct, tpRows: F.tpRows, tpPage: F.tpPage,
     tpBool: F.tpBool, tpToggle: F.tpToggle, tpStrCtl: F.tpStrCtl, tpStrSent: F.tpStrSent,
+    tpNoRangeCtl: F.tpNoRangeCtl, tpNoRangeSent: F.tpNoRangeSent,
     pages: F.pages ? Object.keys(F.pages).reduce((acc, k) => {
       const p = F.pages[k];
       acc[k] = p ? { title: p.title, grps: p.grps, totalItems: p.totalItems, selOpts: p.selOpts, notes: p.notes, firstRange: p.firstRange, ovrNew: p.ovrNew, ovrRows: p.ovrRows, placeholder: p.placeholder } : null;
@@ -1374,6 +1437,8 @@ async function menuMode() {
     ['14 tp toggle: [Disabled] marker persisted then restored', V.tpToggleMarkerPersisted && V.tpToggleMarkerRestored],
     ['14 str control renders text box (synthetic snapshot)', V.tpStrRender],
     ['14 str change commits MC_SET (string value)', V.tpStrMsgShape],
+    ['F1 no-range numeric: number box only, 500 uncapped (no slider)', V.tpNoRangeRender],
+    ['F1 no-range numeric: MC_SET sends 500 uncapped', V.tpNoRangeSendUncapped],
     ['14 synthetic snapshot cleaned up by fresh render', V.tpSyntheticCleanedUp],
     ...EXPECT.map((e) => ['1  page ' + e.name, V['page:' + e.name]]),
     ['D  PlanPick Cost min=100/max=300 reflected (snapshot+DOM)', V.planpickReflectedRange

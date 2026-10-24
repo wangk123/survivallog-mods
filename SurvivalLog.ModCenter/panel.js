@@ -280,12 +280,21 @@
     if (it.t === 'str') { // 任务 14：无选项 string 项（Tier 0 第三方）→ 文本框，change 提交
       return '<input type="text" value="' + esc(it.v) + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">';
     }
+    /* Fix Round 1（评审 P2）：数值项 min/max 双全才出 滑条+数值框；无范围（tp 无
+     * AcceptableValueRange 的 int/float）不再兜底捏造 0..100 滑条——界外真值（如 500）
+     * 会被滑条钳到 100 显示、一拖即把 500 静默改成 ≤100。无范围/半范围=纯数值框
+     * （指南 §二"数值无范围→数值框"），且 min/max 属性仅按实际存在的一端设置，
+     * 界外值照实显示；钳制语义不变（clampItem 只按数据侧 min/max 钳）。 */
     var step = (it.st != null) ? it.st : 0.1;
-    var mn = (it.min != null) ? it.min : 0, mx = (it.max != null) ? it.max : 100;
-    return '<input type="range" min="' + mn + '" max="' + mx + '" step="' + step + '" value="' + fmt(it.v)
-      + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">'
-      + '<input type="number" min="' + mn + '" max="' + mx + '" step="' + step + '" value="' + fmt(it.v)
+    var hasMin = typeof it.min === 'number', hasMax = typeof it.max === 'number';
+    var num = '<input type="number"'
+      + (hasMin ? ' min="' + it.min + '"' : '')
+      + (hasMax ? ' max="' + it.max + '"' : '')
+      + ' step="' + step + '" value="' + fmt(it.v)
       + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">';
+    if (!hasMin || !hasMax) return num;
+    return '<input type="range" min="' + it.min + '" max="' + it.max + '" step="' + step + '" value="' + fmt(it.v)
+      + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">' + num;
   }
 
   function itemHtml(m, it, gi, ii) {
