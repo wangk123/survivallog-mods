@@ -95,8 +95,8 @@ internal static class Meta
         },
         new MetaMod
         {
-            Guid = "com.local.survivallog.cabinetexpand",
-            Name = "柜子扩容", En = "CabinetExpand",
+            Guid = "com.local.survivallog.cabinetsize",
+            Name = "柜子容量", En = "CabinetSize",
             Desc = "普通柜 / 冰箱 / 载具三档各自一个倍率：自动计算宽与高（超上限自动封顶）。",
             Groups =
             {

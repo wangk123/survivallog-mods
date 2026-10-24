@@ -44,7 +44,7 @@ const POLL_MS = 1500;
 
 // ---- Chinese literals (\u-escaped) ----
 const Z = {
-  bp: '\u80cc\u5305\u6269\u5bb9', cb: '\u67dc\u5b50\u6269\u5bb9', fc: '\u4fdd\u9c9c\u589e\u5f3a',
+  bp: '\u80cc\u5305\u6269\u5bb9', cb: '\u67dc\u5b50\u5bb9\u91cf', fc: '\u4fdd\u9c9c\u589e\u5f3a',
   qa: '\u52a8\u4f5c\u52a0\u901f', ce: '\u66f4\u597d\u7684\u50a8\u7269\u67dc', ru: '\u89d2\u8272\u89e3\u9501',
   rs: '\u673a\u5668\u4eba\u63d0\u901f', pp: '\u81ea\u9009\u751f\u5b58\u89c4\u5212', pd: '\u707e\u524d\u52a0\u901f',
   gExpand: '\u6269\u5bb9', gUiFit: '\u89c6\u53e3\u81ea\u9002\u5e94', gChill: '\u4fdd\u9c9c',
@@ -543,11 +543,11 @@ async function menuMode() {
   const LINKED = [
     { name: Z.bp, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg',
       k: 'Expand.WidthMult + HeightMult', g: 0, i: 0, keys: ['WidthMult', 'HeightMult'] },
-    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg',
       k: 'Expand.WidthMult + HeightMult', g: 0, i: 0, keys: ['WidthMult', 'HeightMult'] },
-    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg',
       k: 'Expand.FridgeWidthMult + FridgeHeightMult', g: 0, i: 1, keys: ['FridgeWidthMult', 'FridgeHeightMult'] },
-    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg',
+    { name: Z.cb, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg',
       k: 'Expand.VehicleWidthMult + VehicleHeightMult', g: 0, i: 2, keys: ['VehicleWidthMult', 'VehicleHeightMult'] },
   ];
   const readPair = (file, keys) => keys.map((k) => stripNonCodeLines(readCfgSection(file, 'Expand', k)));
@@ -623,10 +623,10 @@ async function menuMode() {
   V.boolOkReceipt = !!(ev3 && ev3.badge === 'now');
 
   // ---- interaction 4: select (UiFit.Mode -> 'Zoom') ----
-  // NOTE: the DEPLOYED CabinetExpand.dll (Oct 20 build, author's live install) does not
-  // bind UiFit.Mode yet (repo source does; author's WIP) — so the write is REJECTED by
-  // the bridge by design (MC_SET_FAIL) until the entry exists. Assert BOTH the message
-  // shape and the designed failure path (error toast + no cfg write).
+  // NOTE: the DEPLOYED dll behind this page (registry GUID now com.local.survivallog.
+  // cabinetsize, successor of CabinetExpand) does not bind UiFit.Mode — so the write is
+  // REJECTED by the bridge by design (MC_SET_FAIL) until the entry exists. Assert BOTH
+  // the message shape and the designed failure path (error toast + no cfg write).
   await clickRow(guidOf[Z.cb]);
   await sleep(60);
   const setSelect = (val) => page.evaluate(({ tail, val }) => {
@@ -645,7 +645,7 @@ async function menuMode() {
     }
     return false;
   }, { tail: MAIN_HTML, val });
-  const uifitModeBefore = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg', 'UiFit', 'Mode'));
+  const uifitModeBefore = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg', 'UiFit', 'Mode'));
   const m4 = await sentMark();
   await setSelect('Zoom');
   const ev4 = await waitEventAny(['MC_SET_OK', 'MC_SET_FAIL']);
@@ -666,7 +666,7 @@ async function menuMode() {
   }, MAIN_HTML);
   await setSelect('Scroll');
   await sleep(300);
-  const uifitModeAfter = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg', 'UiFit', 'Mode'));
+  const uifitModeAfter = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg', 'UiFit', 'Mode'));
   F.selSet = { ev4, sent4, toast4, uifitModeBefore, uifitModeAfter };
   V.selMsgShape = !!(sent4 && sent4.section === 'UiFit' && sent4.key === 'UiFit.Mode' && sent4.value === 'Zoom');
   if (uifitModeBefore == null) {
@@ -953,7 +953,7 @@ async function menuMode() {
   const linkedFinalPairs = LINKED.map((L) => ({ k: L.k, pair: readPair(L.file, L.keys) }));
   F.final = {
     rs: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.robotspeed.cfg', Z.secRs, Z.moveKey)),
-    uifitMode: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetexpand.cfg', 'UiFit', 'Mode')),
+    uifitMode: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.cabinetsize.cfg', 'UiFit', 'Mode')),
     flower: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.roleunlock.cfg', 'Vine', 'UnlockFlowerSeeds')),
     burden: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'BurdenMult')),
     ovr: stripNonCodeLines(readCfgSection(QA_CFG, '\u5176\u4ed6', 'Overrides')),
