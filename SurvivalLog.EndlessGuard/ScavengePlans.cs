@@ -47,8 +47,6 @@ internal static class ScavengePlans
     internal static List<BasketRow> Baskets = new();     // 功能4b：篮子扩池（ApplyContent 一次追加）
     internal static List<DemoteRow> Demotions = new();   // 功能4b：官方封印货降档（原值校验后写 toLevel）
     private static bool _loaded;
-    private static bool _injected;
-    private static bool _contentDone;                    // 功能4b：篮子只追加一次（幂等防护之一）
     private static readonly Dictionary<long, int> OrigGates = new();   // poolId*100000+itemId -> 首读原门槛（幂等防护之二）
     internal static int InjectedCount;   // 自证
 
@@ -58,8 +56,15 @@ internal static class ScavengePlans
         if (!_loaded) { LoadJson(); if (!_loaded) return; }
         var cm = BagTable.Cm();
         if (cm == null) return;                 // 表未就绪，下轮再试
-        if (!_injected && Inject(cm)) { _injected = true; }
-        if (_injected && !_contentDone) ApplyContent();   // rgDict 未就绪/中途异常 → 下轮重试（Task5 字典判空重试同款；三重幂等防护兜底，_contentDone 落定即止）
+        // 复查代替闩锁（2026-10-25 作者实测定案）：配置表加载完成会重建 _Config_*_Dict，启动早期的
+        // 注入/落表会被整体冲掉（实测：注入 11/11 打在加载完成前，PlanPick 目录只有原版 465 项）。
+        // 每轮校验首行/首篮是否还在，被冲掉即重放；Inject/ApplyContent 内部逐行 ContainsKey/IndexOf 幂等。
+        var tDict = cm._Config_Talent_Dict;
+        if (tDict == null || !tDict.ContainsKey(Plans[0].TalentId)) Inject(cm);
+        var rgDict = cm._Config_RandomGroup_Dict;
+        if (rgDict != null && rgDict.TryGetValue(Baskets[0].PoolId, out var sentinelPool)
+            && sentinelPool != null && IndexOf(sentinelPool.IdList, Baskets[0].Items[0].ItemId) < 0)
+            ApplyContent();
         AppendRegistry();                       // 注册表可能被 EnsureRegistry 重载覆盖：每轮补（Contains 幂等，开销可忽略）
     }
 
@@ -229,14 +234,15 @@ internal static class ScavengePlans
     }
 
     // ---- 功能4b 内容层落表（DESIGN §2.5.3）：篮子扩池 + 官方封印货降档。只改进程内存表，零存档写入 ----
-    // 幂等三重防护：_contentDone 篮子一次追加 / OrigGates 降档记首读原值按原值推导 / IndexOf 池内去重。
+    // 幂等三重防护（2026-10-25 闩锁改复查后全为可重入设计）：IndexOf 池内去重 / OrigGates 降档记首读原值按原值推导 /
+    // 门槛已是目标值则跳写。表被游戏重建冲掉时 Tick 复查哨兵项自动重放（见 Tick 注释）。
     internal static void ApplyContent()
     {
         try
         {
             var cm = BagTable.Cm();
             var rgDict = cm?._Config_RandomGroup_Dict;
-            if (rgDict == null) return;                 // 表字典未就绪：_contentDone 不落定，Tick 下轮重试
+            if (rgDict == null) return;                 // 表字典未就绪：下轮 Tick 复查重试
 
             // 降档：记进程内首读原值，永远按 原值=fromLevel 的声明校验后写 toLevel（RoleUnlock 幂等模式）
             int demoted = 0;   // 实写计数（终审建议修3：Demotions.Count 声明数在表漂移跳过时会误导取证）
@@ -251,25 +257,23 @@ internal static class ScavengePlans
                 if (g.DiscoverLvList[idx] != d.ToLevel) { g.DiscoverLvList[idx] = d.ToLevel; demoted++; }
             }
 
-            // 篮子：一次追加（_contentDone 防重复；池追加后 IdList/CountList/DiscoverLvList 三表同步）
-            if (!_contentDone)
+            // 篮子：逐项去重追加（池追加后 IdList/CountList/DiscoverLvList 三表同步）
+            int added = 0;
+            foreach (var b in Baskets)
             {
-                int added = 0;
-                foreach (var b in Baskets)
+                if (!rgDict.TryGetValue(b.PoolId, out var g)) { EndlessGuardPlugin.Trace("content：缺池 " + b.PoolId); continue; }
+                foreach (var it in b.Items)
                 {
-                    if (!rgDict.TryGetValue(b.PoolId, out var g)) { EndlessGuardPlugin.Trace("content：缺池 " + b.PoolId); continue; }
-                    foreach (var it in b.Items)
-                    {
-                        if (IndexOf(g.IdList, it.ItemId) >= 0) continue;   // 去重（check 脚本已离线保证）
-                        g.IdList.Add(it.ItemId);
-                        g.CountList.Add(it.Copies);
-                        g.DiscoverLvList.Add(b.Level);
-                        added++;
-                    }
+                    if (IndexOf(g.IdList, it.ItemId) >= 0) continue;   // 去重（check 脚本已离线保证）
+                    g.IdList.Add(it.ItemId);
+                    g.CountList.Add(it.Copies);
+                    g.DiscoverLvList.Add(b.Level);
+                    added++;
                 }
-                _contentDone = true;
-                EndlessGuardPlugin.Trace("content：篮子追加 " + added + " 项 + 降档 " + demoted + " 项已对齐");
             }
+            // 稳态静默：仅在本次实际改动时输出（每 2s 复查重入，防 trace 刷屏）
+            if (added > 0 || demoted > 0)
+                EndlessGuardPlugin.Trace("content：篮子追加 " + added + " 项 + 降档 " + demoted + " 项已对齐");
         }
         catch (Exception e) { EndlessGuardPlugin.Trace("content: " + e.Message); }
     }

@@ -69,6 +69,42 @@ internal static class FallRestorer
                     }
                 }
 
+                // ①b 计数器补漏（2026-10-25 作者实测定案）：UI"已沦陷（第N天）"的显示与封锁读的不止名单——
+                // fall_tier 计数器是名单之外的第二份沦陷账（名单可能已被历史恢复清空而计数器残留）。
+                // 扫全部地图点：非营地且（计数器>0 或 仍在名单）一律恢复（清零计数器 + 移出名单）。
+                try
+                {
+                    // interop 的 GetAll_Config_MapPoint() 返回 IEnumerable 但枚举器缺 MoveNext（il2cpp 限制），
+                    // 改走字典迭代（PlanCatalog foreach 同款已验证模式）
+                    var cm = SurvivalLog.ModShared.BagTable.Cm();
+                    var mpDict = cm?._Config_MapPoint_Dict;
+                    if (mpDict != null)
+                    {
+                        foreach (var kv in mpDict)
+                        {
+                            var mp = kv.Value;
+                            if (mp == null) continue;
+                            var id = mp.ID;
+                            if (restored.Contains(id)) continue;
+                            bool camp = true;   // fail-closed 同上
+                            try { camp = EndlessManager.IsCampMapPoint(id); } catch { }
+                            if (camp) continue;
+                            int tier = 0;
+                            try { tier = GameCounter.GetCounter("endless.fall_tier_" + id); } catch { }
+                            bool inList = false;
+                            if (list != null)
+                                for (int j = list.Count - 1; j >= 0; j--)
+                                    if (list[j] == id) { list.RemoveAt(j); inList = true; break; }
+                            if (tier > 0 || inList)
+                            {
+                                GameCounter.SetCounter("endless.fall_tier_" + id, 0);
+                                restored.Add(id);
+                            }
+                        }
+                    }
+                }
+                catch (System.Exception e) { EndlessGuardPlugin.Trace("restore 计数器扫描: " + e.Message); }
+
                 // ③剥全局交易封印tag：挂了就剥（该tag只由官方"全交易点沦陷"时写入；FallBlocker已拦新增；幂等）
                 if (tm != null && tm.HasTag("EndlessAllTradePointsFallen"))
                 {
