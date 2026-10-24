@@ -297,3 +297,8 @@
   双路互斥自仲裁：IME 挂浏览器原生窗口→组合直接进页（Unity inputString 无组合→转运闲置）；
   IME 挂 Unity 窗口→组合进 inputString→非 ASCII 转运兜底（OfferImeChars/__ppIme 追加式）。
   H 键在规划页期间不触发（键盘已移交）＝预期行为。
+- 2026-10-24 装机八轮（键盘/IME 定稿尝试）：弃 IsPageActive 门（uiKey 三候选从未命中，反汇编证实
+  键=vm.UIKey 字面量但追读成本高且不可靠）——改 Vuplex 官方 IME 模式：订阅 WebView
+  FocusedInputFieldChanged（Text/IFrame=聚焦→SetFocused(true) 原生焦点→Chromium 自接 IME；
+  None→false）。英文裸键由 Vuplex 输入框聚焦自动转发（已实证）。inputString 非 ASCII 转运保留兜底。
+  判读行："已订阅 FocusedInputFieldChanged"（启动后 WebView 就绪即出）+ "输入框聚焦 → SetFocused(true)"。

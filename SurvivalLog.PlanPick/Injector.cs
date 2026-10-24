@@ -97,60 +97,63 @@ internal static class Injector
         PlanPickPlugin.Log.LogWarning("[PlanPick] " + what + ": " + e.Message);
     }
 
-    // ==== 键盘门（2026-10-24 装机六轮定案：回调读回通道在此构建不触发，弃）====
-    // 纯 C# 官方通道：规划页(RogueSelect)激活期间 WebUILayer.SetKeyboardEnabled(true)——工作台
-    // 配方搜索同款开关（0x2D5A1A0 实证=写 CanvasWebViewPrefab 0x60 键盘转发字段）；页面关闭即交还。
-    // 页面内输入框聚焦由 page.js 显式 focus() 负责（Vuplex 转发点击不带原生聚焦，已实证）。
-    private static bool _kbHanded;
-    private static bool _logHanded, _logReturned;
+    // ==== 键盘/IME（2026-10-24 装机八轮定稿：Vuplex 官方 IME 模式）====
+    // 订阅 WebView.FocusedInputFieldChanged（Vuplex 自己报页面输入框聚焦/失焦）→
+    // 聚焦=SetFocused(true) 给浏览器原生焦点（Chromium 自接 IME——官方工作台中文同款）；
+    // 失焦=SetFocused(false)。英文裸键转发由 Vuplex 在输入框聚焦时自动完成（六/七轮实证），
+    // 不再依赖 IsPageActive/uiKey（从未命中，已删）。Unity inputString 非 ASCII 转运保留兜底
+    //（原生 IME 生效时 inputString 无组合字，转运自动闲置；两路互斥不双投）。
+    private static Vuplex.WebView.IWebView _subWeb;
+    private static bool _logFocusOn, _logFocusOff;
 
-    /// <summary>键盘门快通道（PlanTicker 每 0.3s 调；payload 巡检仍走 2s 的 Tick）。</summary>
-    internal static void FocusTick()
+    internal static void EnsureFocusSubscription()
     {
-        var layer = GetLayer();
-        if (layer == null) { if (_kbHanded) { _kbHanded = false; try { } catch { } } return; }
-        bool active;
+        var web = PeekWebView();
+        if (web == null || ReferenceEquals(web, _subWeb)) return;
         try
         {
-            active = SafePageActive(layer, "RogueSelect") || SafePageActive(layer, "UI_RogueSelect") || SafePageActive(layer, "WebUI_RogueSelect");
+            var handler = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<
+                Il2CppSystem.EventHandler<Vuplex.WebView.FocusedInputFieldChangedEventArgs>>(
+                new System.EventHandler<Vuplex.WebView.FocusedInputFieldChangedEventArgs>(OnFocusedInputField));
+            web.add_FocusedInputFieldChanged(handler);
+            _subWeb = web;
+            PlanPickPlugin.Log.LogInfo("[PlanPick] 已订阅 FocusedInputFieldChanged（Vuplex 官方 IME 模式）");
         }
-        catch (Exception e) { WarnOnce(ref _warnedInstall, "键盘门 IsPageActive 异常", e); return; }
-        FlushIme(layer, active);   // IME 转运随键盘门同频冲刷（pageActive 时才投）
-
-        if (active && !_kbHanded)
+        catch (Exception e)
         {
-            _kbHanded = true;
-            var web = layer.canvasWebViewPrefab?.WebView;
-            try
-            {
-                layer.SetKeyboardEnabled(true);
-                // 官方模式补全：SetFocused 给浏览器原生焦点 → Chromium 自接 IME（官方工作台中文输入同款；
-                // SetKeyboardEnabled 只转发裸键=英文only）。IME 挂浏览器窗口时 Unity inputString 收不到
-                // 组合字 → IME 转运自动闲置；挂 Unity 窗口时原生路无组合 → 转运兜底。两路天然互斥不双投。
-                web?.SetFocused(true);
-            }
-            catch (Exception e) { _kbHanded = false; PlanPickPlugin.Log.LogWarning("[PlanPick] 键盘门开启异常: " + e.Message); return; }
-            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页激活，键盘交给网页（SetKeyboardEnabled + SetFocused，官方通道）"); }
-        }
-        else if (!active && _kbHanded)
-        {
-            _kbHanded = false;
-            var web = layer.canvasWebViewPrefab?.WebView;
-            try { layer.SetKeyboardEnabled(false); web?.SetFocused(false); }
-            catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] 键盘门关闭异常: " + e.Message); }
-            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏（SetKeyboardEnabled + SetFocused false）"); }
+            WarnOnce(ref _warnedInstall, "FocusedInputFieldChanged 订阅异常", e);
         }
     }
 
-    private static bool SafePageActive(GameCore.HotUpdate.ReduxUI.WebUILayer layer, string key)
+    private static void OnFocusedInputField(object sender, Vuplex.WebView.FocusedInputFieldChangedEventArgs e)
     {
-        try { return layer.IsPageActive(key); } catch { return false; }
+        try
+        {
+            var t = e == null ? Vuplex.WebView.FocusedInputFieldType.None : e.Type;
+            if (t != Vuplex.WebView.FocusedInputFieldType.None)
+            {
+                _subWeb?.SetFocused(true);
+                if (!_logFocusOn) { _logFocusOn = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 输入框聚焦 → SetFocused(true)（原生焦点，IME 通道）"); }
+            }
+            else
+            {
+                _subWeb?.SetFocused(false);
+                if (!_logFocusOff) { _logFocusOff = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 输入框失焦 → SetFocused(false)"); }
+            }
+        }
+        catch (Exception ex) { PlanPickPlugin.Log.LogWarning("[PlanPick] 焦点事件处理异常: " + ex.Message); }
     }
 
-    // ==== 中文 IME 转运（2026-10-24 装机七轮）====
-    // 此版 Vuplex 无 IME API：离屏网页拿不到输入法组合（官方工作台搜索同为英文only）。
-    // Unity 主窗口接 IME——组合完成的汉字/全角标点会进 Input.inputString。仅转发非 ASCII
-    // 字符（英文走网页直通道，避免双投）；page 侧 __ppIme 仅在输入框聚焦时追加。
+    /// <summary>0.3s 快通道：IME 转运冲刷 + 订阅保活（WebView 重建后重挂）。</summary>
+    internal static void FocusTick()
+    {
+        EnsureFocusSubscription();
+        var layer = GetLayer();
+        if (layer == null) return;
+        FlushIme(layer);
+    }
+
+    // ==== 中文 IME 转运兜底（与原生 IME 互斥：原生生效时 inputString 无组合字，转运自动闲置）====
     private static readonly object _imeLock = new();
     private static string _imeBuf = string.Empty;
     private static bool _logImeFirst;
@@ -165,11 +168,11 @@ internal static class Injector
         }
     }
 
-    private static void FlushIme(GameCore.HotUpdate.ReduxUI.WebUILayer layer, bool pageActive)
+    private static void FlushIme(GameCore.HotUpdate.ReduxUI.WebUILayer layer)
     {
         string s;
         lock (_imeLock) { s = _imeBuf; _imeBuf = string.Empty; }
-        if (string.IsNullOrEmpty(s) || !pageActive) return;
+        if (string.IsNullOrEmpty(s)) return;
         var web = layer?.canvasWebViewPrefab?.WebView;
         if (web == null) return;
         var js =
