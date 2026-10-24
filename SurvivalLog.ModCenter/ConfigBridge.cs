@@ -15,8 +15,8 @@ namespace SurvivalLog.ModCenter;
 /// 配置桥（任务 6）：面板的数据引擎。API 面为任务 4 实证定案（DESIGN §4，逐字消费）：
 /// IL2CPPChainloader.Instance.Plugins 枚举 → BasePlugin.Config 直取 → cfg[ConfigDefinition]
 /// 非泛型取 entry（SettingType 判型 + BoxedValue 读写，写同样触发 ClampValue+SettingChanged 链）。
-/// 职责：快照（BuildSnapshot + BuildTp 第三方通用页·任务 14）/ 写（TrySet——套件走 Meta 登记
-/// 键+联动 writeKeys 等值，第三方走通用路由）/ 启停（SetModEnabled——套件=任务 13 直写各 mod
+/// 职责：快照（BuildSnapshot + BuildTp 第三方页·任务 14 Tier 0 通用 / 任务 15 ThirdParty
+/// 清单合并定制）/ 写（TrySet——套件走 Meta 登记键+联动 writeKeys 等值，第三方走通用路由）/ 启停（SetModEnabled——套件=任务 13 直写各 mod
 /// 自己的 General.Enabled；第三方=任务 14 回用 T6 时代本插件 cfg [Disabled] 名单标记（重启级，
 /// 任务 16 起换 dll .disabled 真禁用））/ 消息分发（MC_OPEN→__mcRender 快照；MC_SET→TrySet→
 /// __mcEvent MC_SET_OK；MC_TOGGLE_MOD→回新快照）/ Save 防抖（首写 SaveOnConfigSet=false，
@@ -172,8 +172,9 @@ internal static class ConfigBridge
         return ii;
     }
 
-    /// <summary>范围/白名单反射合入（AcceptableValueRange/List 是 closed generic，走 GetType 反射）。</summary>
-    private static void ApplyRange(ItemInfo ii, ConfigEntryBase e)
+    /// <summary>范围/白名单反射合入（AcceptableValueRange/List 是 closed generic，走 GetType 反射；
+    /// 任务 15 起 ThirdParty（Tier 1 清单页）共用——清单 min/max 覆盖在调用方合入后追加）。</summary>
+    internal static void ApplyRange(ItemInfo ii, ConfigEntryBase e)
     {
         var av = e.Description != null ? e.Description.AcceptableValues : null;
         if (av != null)
@@ -228,7 +229,7 @@ internal static class ConfigBridge
     private static double? ToD(object o) =>
         o == null ? (double?)null : System.Convert.ToDouble(o, CultureInfo.InvariantCulture);
 
-    private static string TypeName(Type t)
+    internal static string TypeName(Type t)
     {
         if (t == typeof(float) || t == typeof(double)) return "float";
         if (t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte)
@@ -290,6 +291,13 @@ internal static class ConfigBridge
         return false;
     }
 
+    /// <summary>
+    /// 逐插件构建第三方页：先按 Tier 0 通用页（枚举 cfg entry → 节名分组/键名标签/徽标 cfg/
+    /// Description→note/AcceptableValueRange 反射，任务 14）；随后交任务 15 清单合并层
+    /// <see cref="ThirdParty.Apply"/>——插件程序集内嵌 modcenter.json（mcSpec 1）有效时
+    /// display/summary/groups/label/badge/min-max-step/order 全量覆盖为中文定制页
+    /// （清单没列的键不出现；清单键不在 cfg → 该项隐藏），无效时保持 Tier 0 形态。
+    /// </summary>
     private static ModInfo BuildTpMod(BepInEx.PluginInfo info)
     {
         var md = info.Metadata;
@@ -303,6 +311,8 @@ internal static class ConfigBridge
         };
         ConfigFile cfg = null;
         try { if (info.Instance is BasePlugin bp) cfg = bp.Config; } catch { }
+
+        if (ThirdParty.Apply(info, mi, cfg)) return mi; // Tier 1 清单定制页（任务 15；groups 已重组）
         var defs = new List<ConfigDefinition>();
         if (cfg != null) { try { defs.AddRange(cfg.Keys); } catch { } } // Keys=现役 API（ConfigDefinitions 已过时）
 
@@ -435,7 +445,7 @@ internal static class ConfigBridge
         return c;
     }
 
-    private static ConfigEntryBase Entry(ConfigFile cfg, string section, string key)
+    internal static ConfigEntryBase Entry(ConfigFile cfg, string section, string key)
     {
         try { return cfg[new ConfigDefinition(section, key)]; }
         catch { return null; }
@@ -580,9 +590,10 @@ internal static class ConfigBridge
         var it = mm != null ? FindItem(mm, section, key) : null;
         var raw = el.TryGetProperty("value", out var v) ? RawOf(v) : null;
         var ok = TrySet(guid, section, key, raw);
-        // 任务 14：第三方无登记项——回执 k=展示键（面板 key 发整串 k 已含节前缀，勿重复拼接）、徽标一律 cfg
+        // 任务 14：第三方无登记项——回执 k=展示键（面板 key 发整串 k 已含节前缀，勿重复拼接）、
+        // 徽标一律 cfg；任务 15：Tier 1 清单项回执徽标取清单声明（归一面板词汇，缺省 cfg）
         var k = it != null ? it.K : DisplayK(section, key);
-        var badge = it != null ? it.Badge : "cfg";
+        var badge = it != null ? it.Badge : (ThirdParty.BadgeOf(guid, DisplayK(section, key)) ?? "cfg");
         if (ok)
             PushEvent("{\"type\":\"MC_SET_OK\",\"k\":" + JsonW.Str(k) + ",\"badge\":" + JsonW.Str(badge) + "}");
         else

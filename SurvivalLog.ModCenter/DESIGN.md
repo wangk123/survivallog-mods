@@ -4,8 +4,8 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 14 Tier 0 第三方通用页完成**（BuildTp/
-> TrySetTp/SetTpEnabled 标记名单，见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 15 Tier 1 声明式清单完成**（ThirdParty
+> 清单发现/容错/合并见 §6.9；任务 14 Tier 0 第三方通用页见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
 > 复用见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe`
 > 默认关）。
@@ -435,8 +435,66 @@ Project Cook/Stats UI，全 bool entry）。`tools/_mc_fixture.js` menu 模式�
   孤儿后随其中止）——以 `ModCenter_loaded.txt` 时间戳为新一轮就绪判据重跑即过；
   第 1 轮 1 FAIL 即上文 `DisplayK` 重复拼前缀实坑，修复后全绿。
 
+## 6.9 Tier 1 声明式清单（任务 15，2026-10-24）
+
+接入协议单源：`docs/modcenter-integration-guide.md` §三（字段表即行为规范）。
+
+### 6.9.1 机制（`ThirdParty.cs` 清单发现与合并层，叠在 §6.8 Tier 0 之上）
+
+- **发现**：`BuildTpMod` 先按 Tier 0 构建，再交 `ThirdParty.Apply`——插件实例
+  `GetType().Assembly.GetManifestResourceNames()` 匹配 `modcenter.json`（精确名或
+  `*.modcenter.json` 后缀均认：指南 csproj 片段不带 LogicalName 时资源实名是
+  `根命名空间.modcenter.json`）；同一程序集多份清单**取第一个**（数组序），其余忽略记日志。
+  清单逐插件解析一次入缓存（会话不变）。
+- **校验容错（指南"绝不报错"承诺）**：JSON 解析失败 / `mcSpec` 缺失或不认识（≠1）/
+  `groups` 整段缺失 → **整单忽略降级 Tier 0**；清单键在实际 cfg 不存在 → 该项隐藏
+  （容忍版本差异，计入日志）；组缺 title/项缺 key 跳过该组/该项；display/summary 缺项
+  逐字段回落 Tier 0 值。`id` 与 GUID 不一致只记日志不拒（清单内嵌于该 dll 即归属该插件）。
+- **合并渲染**：display/summary 覆盖显示名/简介（`en` 恒为插件名，短名路由不变）；
+  groups **全量重组**——Tier 0"cfg 节名分组/键名即标签"被清单替代，**清单没列的键
+  不出现**；组/项按 `order` 权重排序（小者在前，缺省 0，LINQ 稳定排序保清单序）；
+  项的 label/note（优先于 entry Description）/min-max-step 按清单覆盖 Tier 0 推断值
+  （范围覆盖**优先于** AcceptableValueRange 反射，缺省回落反射——指南字段表）；
+  类型/当前值/选项仍来自 entry 反射；步进与"无范围 string→str"兜底同 Tier 0。
+  整组项全隐藏 → 空组不渲染。
+- **徽标归一**：指南 §六词汇 `now/reload/cold/缺省 cfg` → 面板契约
+  `now/reload/reboot/cfg`（Payload.ItemInfo.B 口径，cold→reboot）；未知值诚实落 `cfg`。
+  `MC_SET_OK` 回执 badge 经 `ThirdParty.BadgeOf` 取清单徽标（Tier 0/未列项回退 cfg）；
+  查表 `Badges`（展示键→归一徽标）在 `Apply` 渲染每项时填充——首测漏填致回执恒 cfg，已修。
+- **softDisable**：清单声明暂存（`SoftDisableOf`），任务 16 启停两层语义消费；快照
+  `ModInfo` 增量字段 `tier`（Tier 1 输出 1，Tier 0 省略）供面板/fixture 判别。
+- **写路由零改动**：Tier 1 项展示键仍 `节.键`，面板发整串 k，`TrySetTp` 剥前缀兜底
+  既有链直用；注意 manifest min/max 只覆盖**显示**范围，实际写入仍走对方 entry 的
+  ClampValue（如清单 0.5-2.0 覆盖显示、entry AcceptableValueRange 0.8-1.2 仍钳写入——
+  BepInEx 语义如实保留，面板滑条在两者交集外拖动会被对方 cfg 钳回）。
+- **panel.js 零改动**：分组/标签/徽标渲染 T7 已备，清单页全部由快照数据驱动。
+
+### 6.9.2 实测记录（2026-10-24/25 主菜单，靶 = 2 个一次性假第三方 dll）
+
+靶工程 `.superpowers/sdd/2026-10-24-modcenter/t15-target/`（ViewportProbe 插件壳副本，
+**验后删除不发布**）：`Tier1Demo.dll`（GUID tier1.demo，内嵌 mcSpec 1 清单：中文
+display/summary/softDisable=true/两组带 order + 中文 label/badge(now/reload/cold)/
+min-max-step 覆盖 + 幽灵键 UI:Ghost 故意不 Bind + 未列键 UI:Secret 故意 Bind）与
+`Tier0FallbackDemo.dll`（GUID tier0.fallback，两份 mcSpec 99 清单：精确名 LogicalName +
+后缀名重复资源）。`tools/_mc_fixture.js` menu 模式新增 7 项 t15 断言（无靶机器 SKIP，
+不计失败；T14 tpStruct 组自动跳过 tier=1 页）。关键事实见 task-15-report：
+tier=1 标记/display"Tier1 示例"/summary 覆盖；分组 order（显示1<性能2，清单序反排）；
+幽灵键与未列键双隐藏；Scale 清单范围 0.5-2.0/step 0.05 覆盖反射 0.8-1.2 + badge
+cold→reboot 文案；RefreshMs 无 AcceptableValueRange 纯清单范围 100-5000/step 100/badge
+now；滑条写路由（MC_SET 整展示键 → 回执 badge=reboot → 对方 cfg 落盘 1.1 → 还原 1）；
+mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射范围 0.8-1.2）。
+
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 15：Tier 1 声明式清单。新增 `ThirdParty.cs`（清单发现=程序集内嵌资源
+  精确名/后缀名匹配、重复取第一个；解析容错=mcSpec 不识别/解析失败/缺 groups 整单降级
+  Tier 0、键不在 cfg 项隐藏、逐字段回落；合并=display/summary/groups/label/note/badge/
+  min-max-step/order 覆盖、cold→reboot 徽标归一、softDisable 暂存 `SoftDisableOf` 供 T16）；
+  `ConfigBridge.cs` 三处：`Entry/ApplyRange/TypeName` 收 internal 供共用、`BuildTpMod` 接
+  `ThirdParty.Apply`（false 保持 Tier 0 形态）、`HandleSet` tp 回执 badge 走
+  `ThirdParty.BadgeOf`；`Payload.cs` `ModInfo` 增 `tier?` 字段（Tier 1=1）；panel.js 零改动。
+  `tools/_mc_fixture.js` 增 7 项 t15 断言（净机 SKIP 语义）+ tpStruct 组跳过 tier=1 页。
+  实测见 §6.9.2。
 - 2026-10-24 任务 14：Tier 0 第三方通用页。`ConfigBridge.cs` 增 `BuildTp`（枚举插件→豁免→
   通用页：section 分组沿用对方 cfg 节名/键名即标签/徽标一律 cfg/Description→note/
   ApplyRange 反射合入抽公用/无范围 string→str 文本框/步进兜底）、`FindTp`+`TrySetTp`

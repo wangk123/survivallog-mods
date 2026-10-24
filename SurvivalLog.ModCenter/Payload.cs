@@ -7,7 +7,8 @@ namespace SurvivalLog.ModCenter;
 /// <summary>
 /// 面板数据契约（任务 6 定稿，任务 7 UI 逐字消费，签名不得偏差）：
 /// Snapshot = {self:{ver}, mods:[ModInfo], tp:[ModInfo]}（tp 第三方通用页，任务 14 填，本任务空数组占位）；
-/// ModInfo = {guid,name,en,desc,enabled,groups:[{title,items:[Item]}]}，ovr 类 mod（动作加速）另挂 ovr:[{id,ms}]；
+/// ModInfo = {guid,name,en,desc,enabled,tier?,groups:[{title,items:[Item]}]}，ovr 类 mod（动作加速）另挂 ovr:[{id,ms}]
+/// （tier? 仅第三方 Tier 1 清单定制页输出 1，任务 15；省略 = Tier 0）；
 /// Item = {k,l,t,v,min?,max?,st?,b,note?,opts?}——与原型 v4 MODS 数组同名同义
 /// （docs/superpowers/specs/2026-10-24-modcenter-prototype.html）。
 /// 序列化手写 StringBuilder（AOT 零反射；套件 JSON 纪律同 EndlessGuard「零外部依赖」，
@@ -51,6 +52,7 @@ public sealed class ModInfo
     public string En;    // 内部名（原型 id 的对应物，兼容短名路由）
     public string Desc;  // 一句话功能简介
     public bool Enabled; // 启停状态（任务 6 = ModCenter cfg [Disabled] 名单取反；任务 13 接各 mod General.Enabled）
+    public int? Tier;    // 第三方接入档（任务 15）：null/省略 = Tier 0 通用页；1 = 清单定制页（fixture/面板判别）
     public List<GroupInfo> Groups = new();
     public List<OvrInfo> Ovr; // 仅动作加速挂（其他.Overrides 解析结果）；null 不输出该字段
 
@@ -60,8 +62,9 @@ public sealed class ModInfo
           .Append(",\"name\":").Append(JsonW.Str(Name))
           .Append(",\"en\":").Append(JsonW.Str(En))
           .Append(",\"desc\":").Append(JsonW.Str(Desc))
-          .Append(",\"enabled\":").Append(Enabled ? "true" : "false")
-          .Append(",\"groups\":[");
+          .Append(",\"enabled\":").Append(Enabled ? "true" : "false");
+        if (Tier != null) sb.Append(",\"tier\":").Append(Tier.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        sb.Append(",\"groups\":[");
         for (var i = 0; i < Groups.Count; i++)
         {
             if (i > 0) sb.Append(',');

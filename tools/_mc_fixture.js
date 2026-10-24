@@ -503,6 +503,12 @@ async function menuMode() {
   const tpStruct = [];
   let tpStructOk = TP.length > 0;
   for (const m of TP) {
+    if (m.tier === 1) {
+      // Task 15: Tier 1 manifest page — groups/labels are manifest-authored by design
+      // (cfg-section groups / key-name labels do NOT hold); asserted by its own group below.
+      tpStruct.push({ guid: m.guid, tier1: 'skipped (manifest page, own assertion group)' });
+      continue;
+    }
     const secs = parseCfgSections(tpCfgOf(m.guid));
     const rec = { guid: m.guid, cfgExists: !!secs };
     if (!secs) { rec.err = 'cfg missing'; tpStructOk = false; tpStruct.push(rec); continue; }
@@ -1328,6 +1334,142 @@ async function menuMode() {
   V.ovrDelMsg = !!(sentDelSet && sentDelSet.value === '');
   V.ovrDelSnapshot = JSON.stringify(ovrSnap2) === JSON.stringify([]);
 
+  // =========================================================================
+  // Task 15: Tier 1 declarative manifest (modcenter.json) assertion group.
+  // Ground truth = target plugin's embedded manifest + its own cfg on disk.
+  // Driver deploys two throwaway dlls for this round (deleted afterwards):
+  //   tier1.demo     Tier1Demo.dll        mcSpec 1 manifest (namespaced resource
+  //                                        Tier1Demo.modcenter.json — suffix path)
+  //   tier0.fallback Tier0FallbackDemo.dll mcSpec 99 x2 (exact-name + dup) -> Tier 0
+  // SKIP semantics: without the targets (net machine / post-cleanup) these
+  // verdicts print SKIP and do not affect the result (T14 tpPresent keeps the
+  // "some third-party present" gate on this machine via the ivmakk mods).
+  // =========================================================================
+  const T1_GUID = 'tier1.demo';
+  const T0_GUID = 'tier0.fallback';
+  const T1_NAME = 'Tier1 \u793a\u4f8b'; // Tier1 示例（manifest display 覆盖）
+  const t1 = TP.find((m) => m.guid === T1_GUID) || null;
+  const t0f = TP.find((m) => m.guid === T0_GUID) || null;
+  const t1Exp = {
+    summary: 'Tier1 \u58f0\u660e\u5f0f\u6e05\u5355\u9a8c\u8bc1\u9776\uff08\u5185\u5d4c modcenter.json\uff09\uff1a\u4e2d\u6587\u5b9a\u5236\u9875/\u5206\u7ec4\u6392\u5e8f/\u5fbd\u6807/\u8303\u56f4\u8986\u76d6/\u9690\u85cf\u952e\u6f14\u793a\u3002',
+    groups: ['\u663e\u793a', '\u6027\u80fd'], // order 1 < 2（清单里"性能"列在前——order 覆盖清单序）
+    groupCounts: [4, 1], // Ghost 隐藏 + Secret 未列不出现（显示组 5 项 - 1 幽灵 = 4）
+    orderLabels: ['\u9762\u677f\u7f29\u653e', '\u9762\u677f\u5e38\u663e', '\u6392\u5e8f\u7532', '\u6392\u5e8f\u4e59'], // null=0 稳定序 + orderA(1)<orderB(5)
+    scaleNote: '\u6e05\u5355\u8303\u56f4 0.5-2.0 \u8986\u76d6 cfg \u53cd\u5c04\u8303\u56f4 0.8-1.2',
+    rebootTxt: '\ud83d\udd04 \u91cd\u542f\u540e', // guide badge cold -> panel BADGE.reboot.t（panel.js 徽标词汇，非 toast 文案）
+  };
+  F.t15 = { t1Found: !!t1, t0Found: !!t0f, t1: null, t1Dom: null, t1Write: null, t0Snap: null };
+  if (t1) {
+    // -- snapshot layer: identity / groups / items / range+badge overrides --
+    const flat = t1.groups.map((g) => ({ t: g.title, items: g.items.map((it) => ({
+      k: it.k, l: it.l, t: it.t, v: it.v, b: it.b, min: it.min, max: it.max, st: it.st, note: it.note || null,
+    })) }));
+    F.t15.t1 = { name: t1.name, en: t1.en, desc: t1.desc, tier: t1.tier, groups: flat };
+    V.t15Identity = t1.tier === 1 && t1.name === T1_NAME && t1.en === 'Tier1Demo' && t1.desc === t1Exp.summary;
+    const allItems = flat.reduce((a, g) => a.concat(g.items), []);
+    V.t15Groups = JSON.stringify(flat.map((g) => g.t)) === JSON.stringify(t1Exp.groups)
+      && JSON.stringify(flat.map((g) => g.items.length)) === JSON.stringify(t1Exp.groupCounts);
+    V.t15Items = JSON.stringify(flat[0].items.map((it) => it.l)) === JSON.stringify(t1Exp.orderLabels)
+      && !allItems.some((it) => it.k.indexOf('Ghost') !== -1 || it.k.indexOf('Secret') !== -1);
+    const sc = flat[0].items[0];   // UI.Scale：清单 0.5-2.0/step .05/badge cold->reboot 覆盖反射 0.8-1.2
+    const rf = flat[1].items[0];   // Perf.RefreshMs：无 AcceptableValueRange，范围纯来自清单
+    const at = flat[0].items[1];   // UI.AlwaysOnTop：bool + badge reload
+    V.t15Ranges = sc.k === 'UI.Scale' && sc.t === 'float' && sc.min === 0.5 && sc.max === 2 && sc.st === 0.05
+      && sc.b === 'reboot' && sc.note === t1Exp.scaleNote
+      && rf.k === 'Perf.RefreshMs' && rf.t === 'int' && rf.min === 100 && rf.max === 5000 && rf.st === 100 && rf.b === 'now'
+      && at.k === 'UI.AlwaysOnTop' && at.t === 'bool' && at.b === 'reload';
+
+    // -- DOM layer: 中文定制页渲染（页题/分组序/中文标签/徽标文案/滑条范围属性/note）--
+    await clickRow(T1_GUID);
+    await sleep(80);
+    const t1Dom = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const grps = Array.from(d.querySelectorAll('#__mc_cfg .__mc-grp')).map((g) => ({
+              t: g.querySelector('h3') ? g.querySelector('h3').textContent : null,
+              items: Array.from(g.querySelectorAll('.__mc-item')).map((it) => ({
+                l: (it.querySelector('.__mc-lb') || {}).textContent || null,
+                badge: (it.querySelector('.__mc-badge') || {}).textContent || null,
+                note: it.querySelector('.__mc-note') ? it.querySelector('.__mc-note').textContent : null,
+                range: it.querySelector('input[type=range]')
+                  ? { min: it.querySelector('input[type=range]').min, max: it.querySelector('input[type=range]').max, step: it.querySelector('input[type=range]').step }
+                  : null,
+              })),
+            }));
+            return {
+              title: (d.querySelector('#__mc_cfg .__mc-mod-title h2') || {}).textContent || null,
+              en: (d.querySelector('#__mc_cfg .__mc-mod-title .__mc-en') || {}).textContent || null,
+              grps,
+            };
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    F.t15.t1Dom = t1Dom;
+    V.t15Dom = !!(t1Dom && t1Dom.title === T1_NAME && t1Dom.en === 'Tier1Demo'
+      && JSON.stringify(t1Dom.grps.map((g) => g.t)) === JSON.stringify(t1Exp.groups)
+      && t1Dom.grps[0].items[0].l === t1Exp.orderLabels[0]
+      && t1Dom.grps[0].items[0].badge === t1Exp.rebootTxt // cold 归一为 reboot 徽标文案
+      && t1Dom.grps[0].items[0].range && t1Dom.grps[0].items[0].range.min === '0.5'
+      && t1Dom.grps[0].items[0].range.max === '2' && t1Dom.grps[0].items[0].range.step === '0.05'
+      && t1Dom.grps[0].items[0].note === t1Exp.scaleNote
+      && JSON.stringify(t1Dom.grps[0].items.map((it) => it.l)) === JSON.stringify(t1Exp.orderLabels));
+    try { await page.screenshot({ path: SHOT_DIR + '/task-15-shot-tier1.png' }); } catch (e) {}
+
+    // -- write layer: 清单项滑条写路由（guid 路由/整展示键/回执 badge=清单徽标/盘上落盘/还原）--
+    const t1Cfg = tpCfgOf(T1_GUID);
+    const t1Disk = () => stripNonCodeLines(readCfgSection(t1Cfg, 'UI', 'Scale'));
+    const before = t1Disk();
+    const mk9 = await sentMark();
+    await setRange(0, 0, 1.1); // UI.Scale（清单滑条 0.5-2.0；entry ClampValue 0.8-1.2 内）
+    const ev9 = await waitEvent('MC_SET_OK', 12000);
+    const sent9 = firstOf(await sentSince(mk9), 'MC_SET');
+    let after9 = null;
+    const dl9 = Date.now() + 12000;
+    for (;;) {
+      after9 = t1Disk();
+      if (after9 === '1.1') break;
+      if (Date.now() > dl9) break;
+      await sleep(600);
+    }
+    F.t15.t1Write = { before, sent: sent9, ev: ev9, after: after9, back: null };
+    V.t15Write = !!(sent9 && sent9.guid === T1_GUID && sent9.section === 'UI' && sent9.key === 'UI.Scale'
+      && sent9.value === 1.1 && ev9 && ev9.k === 'UI.Scale' && ev9.badge === 'reboot' && after9 === '1.1');
+    await setRange(0, 0, 1); // 还原
+    await waitEvent('MC_SET_OK', 12000);
+    let back9 = null;
+    const dl9b = Date.now() + 12000;
+    for (;;) {
+      back9 = t1Disk();
+      if (back9 === before) break;
+      if (Date.now() > dl9b) break;
+      await sleep(600);
+    }
+    F.t15.t1Write.back = back9;
+    V.t15Write = V.t15Write && back9 === before;
+  }
+
+  // -- Tier 0 fallback (mcSpec 99 x2, duplicate resources): whole manifest ignored --
+  if (t0f) {
+    const secs = parseCfgSections(tpCfgOf(T0_GUID));
+    const items = t0f.groups.reduce((a, g) => a.concat(g.items), []);
+    const diskSecs = secs ? secs.map((s) => s.sec) : [];
+    F.t15.t0Snap = { name: t0f.name, tier: t0f.tier, diskSecs,
+      groups: t0f.groups.map((g) => ({ t: g.title, n: g.items.length })),
+      items: items.map((it) => ({ k: it.k, l: it.l, t: it.t, b: it.b, min: it.min, max: it.max, st: it.st })),
+      badges: items.map((it) => it.b).filter((b, i, arr) => arr.indexOf(b) === i) };
+    V.t15Fallback = t0f.tier === undefined && t0f.name === 'Tier0FallbackDemo'
+      && t0f.groups.length === diskSecs.length && diskSecs.every((s) => t0f.groups.some((g) => g.title === s))
+      && t0f.groups.every((g) => g.items.every((it) => it.k === g.title + '.' + it.l && it.b === 'cfg'))
+      && items.some((it) => it.k === 'UI.Secret') // 清单 99 被忽略：未列键照常全量显示（Tier 0 语义）
+      && (function () { const sc = items.find((it) => it.k === 'UI.Scale'); return sc && sc.min === 0.8 && sc.max === 1.2 && sc.st === 0.1; })()
+      && !items.some((it) => it.k.indexOf('Ghost') !== -1); // 清单幽灵组/幽灵项未混入
+  }
+
   // ---- close via X ----
   const m8 = await sentMark();
   await page.evaluate((tail) => {
@@ -1400,6 +1542,7 @@ async function menuMode() {
     tpList: F.tpList, tpStruct: F.tpStruct, tpRows: F.tpRows, tpPage: F.tpPage,
     tpBool: F.tpBool, tpToggle: F.tpToggle, tpStrCtl: F.tpStrCtl, tpStrSent: F.tpStrSent,
     tpNoRangeCtl: F.tpNoRangeCtl, tpNoRangeSent: F.tpNoRangeSent,
+    t15: F.t15,
     pages: F.pages ? Object.keys(F.pages).reduce((acc, k) => {
       const p = F.pages[k];
       acc[k] = p ? { title: p.title, grps: p.grps, totalItems: p.totalItems, selOpts: p.selOpts, notes: p.notes, firstRange: p.firstRange, ovrNew: p.ovrNew, ovrRows: p.ovrRows, placeholder: p.placeholder } : null;
@@ -1440,6 +1583,22 @@ async function menuMode() {
     ['F1 no-range numeric: number box only, 500 uncapped (no slider)', V.tpNoRangeRender],
     ['F1 no-range numeric: MC_SET sends 500 uncapped', V.tpNoRangeSendUncapped],
     ['14 synthetic snapshot cleaned up by fresh render', V.tpSyntheticCleanedUp],
+    // Task 15: SKIP (null) when the throwaway target dlls are absent — verdict printer
+    // treats null as SKIP (no pass/fail), so net machines keep RESULT: ALL PASS.
+    ...(t1 ? [
+      ['15 t1 tier=1 mark + display/summary override', V.t15Identity],
+      ['15 t1 groups: manifest titles + order weights (显示<性能)', V.t15Groups],
+      ['15 t1 items: 中文 labels/order/ghost+secret hidden', V.t15Items],
+      ['15 t1 range/badge overrides (0.5-2.0 beat 0.8-1.2; cold->reboot)', V.t15Ranges],
+      ['15 t1 DOM render (定制页/徽标文案/滑条属性/note)', V.t15Dom],
+      ['15 t1 slider write: MC_SET + receipt badge reboot + persist/restore', V.t15Write],
+    ] : [
+      ['15 t1 identity', null], ['15 t1 groups', null], ['15 t1 items', null],
+      ['15 t1 ranges', null], ['15 t1 dom', null], ['15 t1 write', null],
+    ]),
+    ...(t0f
+      ? [['15 t0 fallback (mcSpec99 x2): tier0 page, Secret shown, reflected range', V.t15Fallback]]
+      : [['15 t0 fallback', null]]),
     ...EXPECT.map((e) => ['1  page ' + e.name, V['page:' + e.name]]),
     ['D  PlanPick Cost min=100/max=300 reflected (snapshot+DOM)', V.planpickReflectedRange
       && (F.pages && F.pages[Z.pp] && F.pages[Z.pp].firstRange ? F.pages[Z.pp].firstRange.min === '100' && F.pages[Z.pp].firstRange.max === '300' : false)],
@@ -1470,6 +1629,7 @@ async function menuMode() {
   ];
   let allPass = true;
   for (const [name, ok] of checks) {
+    if (ok === null) { console.log('SKIP  ' + name + '  (t15 target dlls not deployed)'); continue; } // T15 净机语义
     console.log((ok ? 'PASS' : 'FAIL') + '  ' + name);
     if (!ok) allPass = false;
   }
