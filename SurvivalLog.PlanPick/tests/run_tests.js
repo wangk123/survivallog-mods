@@ -266,10 +266,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.evaluate(() => window.__fixtureSet({ points: 150 }));
     await sleep(350);
 
-    // N) 搜索"扩建"有结果
+    // N) 搜索"扩建"有结果 + 计数联动（2026-10-24 作者反馈：tab/chips 数量要关联搜索、0 计数隐藏）
+    const cntBefore = parseInt(await page.locator('.pp-tab[data-tab="all"] .cnt').innerText());
     await page.locator('#ppSearch').fill('扩建');
     await sleep(250);
     ok((await page.locator('.pp-card').count()) > 0, '搜索"扩建"有结果');
+    const cntSearched = parseInt(await page.locator('.pp-tab[data-tab="all"] .cnt').innerText());
+    ok(cntSearched < cntBefore && cntSearched > 0, '搜索联动 tab 计数: ' + cntBefore + ' -> ' + cntSearched);
+    const zeroChips = await page.evaluate(() => [...document.querySelectorAll('.pp-sub .cnt')].filter(e => parseInt(e.textContent) === 0).length);
+    eq(zeroChips, 0, '搜索后无 0 计数二级 chip');
+    const attrCnt = parseInt(await page.locator('.pp-tab[data-tab="attribute"] .cnt').innerText());
+    ok(attrCnt >= 0 && attrCnt < 93, '分类 tab 计数随搜索下降: attribute=' + attrCnt);
     await page.locator('#ppSearch').fill('');
     await sleep(150);
 

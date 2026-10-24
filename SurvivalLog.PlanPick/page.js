@@ -347,18 +347,31 @@ function install() {
 
 /* ---------- 渲染（与 prototype v5 逐项一致） ---------- */
 const byState = p => S.stateF === 'all' || stateOf(p) === S.stateF;   // 状态筛选联动一二级计数
+const bySearch = p => {                                                // 搜索词同样联动计数（2026-10-24 作者反馈）
+    if (!S.search) return true;
+    const q = S.search.toLowerCase();
+    return p.name.toLowerCase().includes(q) || (p.desc || '').toLowerCase().includes(q) || String(p.id).includes(q);
+};
+const cntOf = key => key === 'all'
+    ? S.plans.filter(p => byState(p) && bySearch(p)).length
+    : S.plans.filter(p => p.cat === key && byState(p) && bySearch(p)).length;
+// 打字期间只原位改 tab 数字（不重建 DOM——重建会打断输入框焦点/IME 组合）
+function updateTabCounts() {
+    document.querySelectorAll('#ppTabs .pp-tab').forEach(b => {
+        const el = b.querySelector('.cnt');
+        if (el) el.textContent = cntOf(b.dataset.tab);
+    });
+}
 function renderTabs() {
     const cats = [{ key: 'all', name: '全部' }].concat(S.categories);
     $('ppTabs').innerHTML = cats.map(c => {
-        const cnt = c.key === 'all'
-            ? S.plans.filter(byState).length
-            : S.plans.filter(p => p.cat === c.key && byState(p)).length;
+        const cnt = cntOf(c.key);
         return '<button class="pp-tab' + (S.tab === c.key ? ' active' : '') + '" data-tab="' + c.key + '">' + c.name + '<span class="cnt">' + cnt + '</span></button>';
     }).join('') +
     '<input class="pp-search" id="ppSearch" placeholder="搜索名称 / 描述 / ID…" value="' + esc(S.search) + '">';
     $('ppTabs').querySelectorAll('.pp-tab').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; S.sub = null; S.subExpand = false; renderTabs(); renderSubBar(); renderList(true); });
     const si = $('ppSearch');
-    si.oninput = () => { S.search = si.value.trim(); renderList(true); };
+    si.oninput = () => { S.search = si.value.trim(); updateTabCounts(); renderSubBar(); renderList(true); };
     // Vuplex 转发的点击只派发 click/mousedown、不带浏览器原生聚焦（2026-10-24 观察日志实证：
     // 真实点击搜索框连 focusin 都没有）——点击时显式 focus()，C# 焦点桥才能看见并 SetFocused 交接键盘
     ['mousedown', 'click'].forEach(ev => si.addEventListener(ev, function () { this.focus(); }));
@@ -391,7 +404,8 @@ function renderTabs() {
 function renderSubBar() {
     let list = S.plans;
     if (S.tab !== 'all') list = list.filter(p => p.cat === S.tab);
-    if (S.stateF !== 'all') list = list.filter(byState);   // 联动：chips 计数只统计当前状态
+    if (S.stateF !== 'all') list = list.filter(byState);   // 联动：chips 计数统计当前状态
+    list = list.filter(bySearch);                            // 联动：+ 搜索词（0 计数系列随之隐藏）
     const cnt = new Map();
     let solo = 0, total = 0;
     list.forEach(p => { total++; if (p.sub === null) solo++; else cnt.set(p.sub, (cnt.get(p.sub) || 0) + 1); });
