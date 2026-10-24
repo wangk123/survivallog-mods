@@ -54,11 +54,20 @@ public sealed class PlanPickPlugin : BasePlugin
     }
 }
 
-/// <summary>2s 巡检：WebView 就绪→注入 page.js→推数据（详见 Injector）。</summary>
+/// <summary>巡检双频：2s 全量（注入+payload 推送）；0.3s 焦点桥（输入框聚焦→SetFocused 交接键盘）。</summary>
 internal sealed class PlanTicker : MonoBehaviour
 {
     public PlanTicker(IntPtr ptr) : base(ptr) { }
     public PlanTicker() { }
     private float _check;
-    private void Update() { _check += Time.deltaTime; if (_check < 2f) return; _check = 0; Injector.Tick(); }
+    private float _focusCheck;
+    private void Update()
+    {
+        _focusCheck += Time.deltaTime;
+        if (_focusCheck >= 0.3f) { _focusCheck = 0; Injector.FocusTick(); }
+        _check += Time.deltaTime;
+        if (_check < 2f) return;
+        _check = 0;
+        Injector.Tick();
+    }
 }

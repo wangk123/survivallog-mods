@@ -270,3 +270,9 @@
   在先例里全部是 WebUI_*（WebUI_ToolTable/Cooking/Brew/Dye），原生 UI_* 不在注册表 →
   天数/今日候选/点数全部改读 State_Web_RogueSelect（其本身 CachedSurvivalPlanIds/Day/OwnPoints
   三件齐全，正是页面消费的状态），State_UI 依赖撤除。
+- 2026-10-24 装机三轮（CDP 白盒定案）：键盘从不进 WebView（鼠标经 Vuplex 转发、键盘留 Unity）——
+  搜索框打字无反应、H=游戏 UI 显隐热键照触发（首次"崩溃"实为该隐藏态，非真崩）。
+  修复=焦点交接桥：0.3s 轮询 RogueSelect iframe activeElement，输入框聚焦→IWebView.SetFocused(true)
+  （旧 Focus/Blur 已废弃）、失焦→SetFocused(false)；il2cpp 回调走 DelegateSupport.ConvertDelegate 缓存。
+  page.js 补 ESC 语义（输入框内 ESC 先退输入再关页）。原生 SetFocused 运行时行为待装机验证
+  （含搜狗 IME 组合输入是否可用——若 IME 不行英文/数字仍可用，另行评估）。

@@ -97,6 +97,82 @@ internal static class Injector
         PlanPickPlugin.Log.LogWarning("[PlanPick] " + what + ": " + e.Message);
     }
 
+    // ==== 键盘焦点交接桥（2026-10-24 装机三轮定案）====
+    // 该游戏键盘不进 WebView（鼠标经 Vuplex 转发、键盘留在 Unity——实测搜索框打字无反应、
+    // H 等游戏热键照触发）。IWebView.SetFocused(bool)（旧 Focus()/Blur() 已废弃）可把键盘
+    // 交给网页。本桥以 0.3s 高频轮询 RogueSelect iframe 的 activeElement：是我们弹层里的
+    // 输入框则 SetFocused(true)，失焦则 SetFocused(false) 交还——官方页行为零改动，
+    // 键盘只在"点进自选搜索框"期间进网页。
+    private static bool _kbHanded;          // 当前是否已 SetFocused(true)
+    private static bool _logHanded, _logReturned;
+    private static string _pendingFocusCheck;   // 上轮结果（ExecuteJavaScript 回调异步写）
+
+    /// <summary>焦点桥快通道（PlanTicker 每 0.3s 调；payload 巡检仍走 2s 的 Tick）。</summary>
+    internal static void FocusTick()
+    {
+        var web = GetWebView();
+        if (web == null) { if (_kbHanded) TryReturnKeyboard(web); return; }
+        if (_pendingFocusCheck != null) return;   // 上轮回调未回，跳过本轮（防堆积）
+
+        _pendingFocusCheck = "w";                 // 占位：回调前非 null
+        try
+        {
+            if (_focusCb == null)
+                _focusCb = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<string>>(new System.Action<string>(OnFocusProbeResult));
+            web.ExecuteJavaScript(
+                "(function(){var f=document.getElementById('RogueSelect');if(!f||f.style.display==='none')return 0;" +
+                "var d=f.contentDocument;if(!d)return 0;var i=d.activeElement;" +
+                "return i&&(i.tagName==='INPUT'||i.tagName==='TEXTAREA')?1:0;})()",
+                _focusCb);
+        }
+        catch (Exception e)
+        {
+            _pendingFocusCheck = null;
+            WarnOnce(ref _warnedInstall, "焦点桥轮询异常", e);
+        }
+
+        // 回调通常已同步/极快返回；处理结果（下一轮兜底再处理一次）
+        ApplyFocusResult(web);
+    }
+
+    /// <summary>ExecuteJavaScript 回调（il2cpp 委托，DelegateSupport 转换后缓存复用）：落焦点探针结果。</summary>
+    private static Il2CppSystem.Action<string> _focusCb;
+    private static void OnFocusProbeResult(string r)
+    {
+        try
+        {
+            var focusedNow = string.Equals(r, "1", StringComparison.Ordinal) || string.Equals(r, "true", StringComparison.OrdinalIgnoreCase);
+            _pendingFocusCheck = focusedNow ? "1" : "0";
+        }
+        catch { _pendingFocusCheck = null; }
+    }
+
+    private static void ApplyFocusResult(Vuplex.WebView.IWebView web)
+    {
+        var r = _pendingFocusCheck;
+        if (r == null) return;
+        _pendingFocusCheck = null;
+        if (r == "1" && !_kbHanded)
+        {
+            _kbHanded = true;
+            try { web.SetFocused(true); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(true) 异常: " + e.Message); return; }
+            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交给网页输入（SetFocused true）"); }
+        }
+        else if (r != "1" && _kbHanded)
+        {
+            _kbHanded = false;
+            try { web.SetFocused(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(false) 异常: " + e.Message); }
+            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交还游戏（SetFocused false）"); }
+        }
+    }
+
+    private static void TryReturnKeyboard(Vuplex.WebView.IWebView web)
+    {
+        _kbHanded = false;
+        _pendingFocusCheck = null;
+        try { web?.SetFocused(false); } catch { }
+    }
+
     /// <summary>ViewportProbe 同款取 Root WebView 路径（ReduxUISystem → WebUILayer → canvasWebViewPrefab）。</summary>
     private static Vuplex.WebView.IWebView GetWebView()
     {

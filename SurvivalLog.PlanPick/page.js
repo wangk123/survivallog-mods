@@ -527,6 +527,12 @@ function wireGlobal() {
     $('ppClose').onclick = () => $('ppOverlay').classList.remove('open');
     $('ppOverlay').onclick = e => { if (e.target === $('ppOverlay')) $('ppOverlay').classList.remove('open'); };
     document.addEventListener('click', e => { if (!e.target.closest('.pp-card')) $('ppWhy').classList.remove('open'); }, true);
+    // 焦点桥生效后键盘会进网页：输入框内按 ESC 先退输入（拦下官方页的 ESC=关页监听），再按才关页
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        var el = document.activeElement;
+        if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) { el.blur(); e.stopImmediatePropagation(); }
+    }, true);
 }
 
 /* ---------- 数据同步 ---------- */
