@@ -13,14 +13,14 @@ namespace SurvivalLog.CabinetBurden;
 
 /// <summary>
 /// 柜子负重解放（独立 mod）。
-/// 储物家具（橱柜/床头柜/储物柜/置物架/冰箱/箱子等）负重上限 ×BurdenMult（默认 ×1000，
-/// 等于实际解除"格子没满却放不进"的限制）。
+/// 储物家具（橱柜/床头柜/储物柜/置物架/冰箱/箱子等）原生带负重的包直接清零 = 官方"无负重"语义
+/// （2026-10-24 定案：去倍数方案，等同冰箱/置物架的原生待遇）。
 ///
-/// 机制（2026-10-11 反汇编实证，见 DESIGN.md）：
+/// 机制（2026-10-11 反汇编实证 + 2026-10-24 零值分支实证，见 DESIGN.md）：
 /// Config_Furniture 无负重字段；家具负重唯一来源 = Config_Bag.Burden，
 /// BagComponent.OnInit 时快照；放入总闸 ItemManager.TryAddItemToBag → CanAddWeight
-/// 用 GetMaxBurden = Round((Burden+ExtraBurden)×(1+天赋比例)+固定加成) 判定。
-/// 天赋/增益项按 ownerId 查 AE 管线，家具恒为 0 → 改基础值即完全主导。
+/// 首步即"GetMaxBurden() <= 0 → return true"（≤0 恒可放入，冰箱/置物架原生走此分支）；
+/// 柜子界面负重条与家具详情"负重上限"行均 v-if="max > 0"，零值时整行不渲染。
 /// 快照语义：改表后需重新读档才对已存在容器生效（新放家具立即生效）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
@@ -33,7 +33,7 @@ public sealed class CabinetBurdenPlugin : BasePlugin
 
     internal static ManualLogSource Log;
 
-    internal static ConfigEntry<int> BurdenMult;
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<string> IncludeBagIds;
     internal static ConfigEntry<string> ExcludeBagIds;
     internal static ConfigEntry<bool> ListOnReady;
@@ -43,8 +43,8 @@ public sealed class CabinetBurdenPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
-        BurdenMult = Config.Bind("Burden", "BurdenMult", 1000,
-            "储物家具负重上限倍数。1000=实际解除限制；1=还原原生；0 或负数=停用改写（改回 1 后重进游戏还原）。");
+        Enabled = Config.Bind("Burden", "Enabled", true,
+            "true=储物包负重清零（官方无负重语义，等同冰箱/置物架，柜子界面负重条整行隐藏）；false=停用并写回原生值。切换后需重进存档才对已存在容器生效。");
         IncludeBagIds = Config.Bind("Burden", "IncludeBagIds", "",
             "追加的 BagId（逗号分隔）。默认不含：工作台抽屉 5010/5012/5013（扩容 mod 曾明确撤销）、购物车 3、轿车 4；要解放就加数字。");
         ExcludeBagIds = Config.Bind("Burden", "ExcludeBagIds", "3,4",
@@ -54,7 +54,7 @@ public sealed class CabinetBurdenPlugin : BasePlugin
         Verbose = Config.Bind("Debug", "Verbose", false, "每轮输出明细。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
-        BurdenMult.SettingChanged += reload;
+        Enabled.SettingChanged += reload;
         IncludeBagIds.SettingChanged += reload;
         ExcludeBagIds.SettingChanged += reload;
 
@@ -63,14 +63,16 @@ public sealed class CabinetBurdenPlugin : BasePlugin
         var go = new GameObject("CabinetBurden.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<BurdenTicker>();
-        Log.LogInfo($"[CabinetBurden] loaded：储物家具负重 ×{BurdenMult.Value}（默认排除购物车 3、轿车 4）");
+        Log.LogInfo("[CabinetBurden] loaded：储物家具负重 → 无限制（Burden 清零；默认排除购物车 3、轿车 4）");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 }
 
 /// <summary>
-/// 名单发现 + 负重改写（幂等：进程内首读值记为原值，重复执行永远按 原值×倍数）。
-/// 故意不复用 BagTable.RewriteBurden：需要"全量列名单"日志与 0/1 停用语义，且不动共享源
+/// 名单发现 + 负重清零/还原（幂等：进程内首读值&gt;0 记为原值；生效=写 0，停用=写回原值）。
+/// 原值记录先于一切跳过判断——否则写 0 后下一轮会被"raw&lt;=0 跳过"吞掉，还原路径失效
+/// （旧倍数版即为此结构，改清零方案时必须重构，2026-10-24）。
+/// 故意不复用 BagTable.RewriteBurden：需要"全量列名单"日志与 Enabled 停用语义，且不动共享源
 /// （ModShared 改动需同步 4 份扩容文档，此处零侵入）。
 /// </summary>
 internal static class BurdenRewriter
@@ -104,18 +106,16 @@ internal static class BurdenRewriter
     }
 
     /// <summary>
-    /// 对名单内 Config_Bag 改写 Burden。返回 (managed, changed, lines)；
+    /// 对名单内 Config_Bag 清零/还原 Burden。返回 (managed, changed, lines)；
     /// managed=-1 表示未就绪。listAll=true 时逐条输出（首跑核对名单用）。
     /// </summary>
-    internal static (int, int, List<string>) Rewrite(HashSet<int> targets, int mult, bool verbose, bool listAll)
+    internal static (int, int, List<string>) Rewrite(HashSet<int> targets, bool enabled, bool verbose, bool listAll)
     {
         var lines = new List<string>();
         var cm = BagTable.Cm();
         var dict = BagTable.BagDict(cm);
         if (dict == null || dict.Count == 0) return (-1, 0, lines);
 
-        // 防溢出上限：GetMaxBurden 内 (Burden+Extra)×(1+比例) 走 float 后取整回 int
-        const int cap = 500_000_000;
         int managed = 0, changed = 0;
         foreach (var pair in dict)
         {
@@ -124,21 +124,30 @@ internal static class BurdenRewriter
             if (bag == null) continue;
 
             int raw = 0;
-            try { raw = bag.Burden; } catch { }
-            if (raw <= 0) continue; // 无负重语义的包不动
+            try { raw = bag.Burden; } catch { continue; }
+
+            // 只接管原生带负重的包；Burden=0 的包（冰箱/置物架等）原生即无限制，无需接管。
+            // 首读值>0 才入册；入册后即使当前被写成 0 也永远按原值还原。
+            if (!Orig.ContainsKey(pair.Key))
+            {
+                if (raw <= 0) continue;
+                Orig[pair.Key] = raw;
+            }
 
             managed++;
-            Orig.TryAdd(pair.Key, raw);
-            int want = (int)Math.Min((long)Orig[pair.Key] * mult, cap);
-
+            int want = enabled ? 0 : Orig[pair.Key];
             if (raw != want)
             {
                 bag.Burden = want;
                 changed++;
-                lines.Add($"BAG {pair.Key}({BagTable.Name(bag)}) 负重 {Orig[pair.Key]} -> {want}");
+                lines.Add(want == 0
+                    ? $"BAG {pair.Key}({BagTable.Name(bag)}) 负重 {Orig[pair.Key]} -> 0（无限制）"
+                    : $"BAG {pair.Key}({BagTable.Name(bag)}) 负重 还原为原生 {want}");
             }
             else if (verbose || listAll)
-                lines.Add($"BAG {pair.Key}({BagTable.Name(bag)}) 负重 {raw}（原 {Orig[pair.Key]}，×{mult}）");
+                lines.Add(want == 0
+                    ? $"BAG {pair.Key}({BagTable.Name(bag)}) 负重 0（无限制，原 {Orig[pair.Key]}）"
+                    : $"BAG {pair.Key}({BagTable.Name(bag)}) 负重 {raw}（原生）");
         }
         return (managed, changed, lines);
     }
@@ -160,25 +169,12 @@ internal sealed class BurdenTicker : MonoBehaviour
         if (!due) return;
         _check = 0f;
 
-        var mult = CabinetBurdenPlugin.BurdenMult.Value;
         var targets = BurdenRewriter.DiscoverTargets();
         if (targets == null) { CabinetBurdenPlugin.Rerun = true; return; } // 配置表未就绪
 
-        if (mult <= 0)
-        {
-            // 停用：不写表。改回正数后自动恢复改写
-            CabinetBurdenPlugin.Rerun = false;
-            if (!_announced)
-            {
-                _announced = true;
-                CabinetBurdenPlugin.Log.LogInfo("[CabinetBurden] BurdenMult<=0，已停用改写。");
-            }
-            return;
-        }
-
         var listAll = CabinetBurdenPlugin.ListOnReady.Value && !_announced;
         var (managed, changed, lines) = BurdenRewriter.Rewrite(
-            targets, mult, CabinetBurdenPlugin.Verbose.Value, listAll);
+            targets, CabinetBurdenPlugin.Enabled.Value, CabinetBurdenPlugin.Verbose.Value, listAll);
         if (managed < 0) { CabinetBurdenPlugin.Rerun = true; return; }
         CabinetBurdenPlugin.Rerun = false;
 
@@ -188,8 +184,12 @@ internal sealed class BurdenTicker : MonoBehaviour
         if (!_announced && managed > 0)
         {
             _announced = true;
-            CabinetBurdenPlugin.Log.LogInfo(
-                $"[CabinetBurden] 生效：{managed} 个储物包负重 ×{mult}（家具名单自动发现；Burden=0 的包（冰箱/置物架/工具柜等）原生无负重语义，自动跳过。默认排除购物车 3、轿车 4）。");
+            if (CabinetBurdenPlugin.Enabled.Value)
+                CabinetBurdenPlugin.Log.LogInfo(
+                    $"[CabinetBurden] 生效：{managed} 个储物包负重清零 → 无限制（家具名单自动发现；Burden=0 的包（冰箱/置物架等）原生无负重语义，自动跳过。默认排除购物车 3、轿车 4）。柜子界面负重条将整行隐藏（与冰箱一致），需重进存档一次对已存在容器生效。");
+            else
+                CabinetBurdenPlugin.Log.LogInfo(
+                    $"[CabinetBurden] 已停用：{managed} 个储物包负重保持/还原原生值（重进存档生效）。");
         }
     }
 }
