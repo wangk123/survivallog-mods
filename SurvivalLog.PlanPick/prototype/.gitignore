@@ -1,0 +1,4 @@
+# 原型再生产物：数据由 gen_data.js 重新生成，截图由 _shot.js 重新产出
+plan_data.json
+_shot_*.png
+_serve.log
