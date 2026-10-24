@@ -153,6 +153,11 @@ public sealed class CabinetSizePlugin : BasePlugin
                 _vehListed = true;
                 CabinetSizePlugin.Log.LogInfo("[CabinetSize] 载具组补录（Config_Vehicle 全档后备箱+门口塑料袋 1023）："
                     + string.Join("、", vehNotes));
+                if (CabinetSizePlugin.ListOnReady.Value)
+                {
+                    var full = SizeEngine.RewriteManaged(ids, true); // 全部已在目标值 → 纯"已是"快照，含载具三包，零写入副作用
+                    SizeEngine.WriteTrace("载具组补录：" + string.Join("、", vehNotes) + "\r\n\r\n" + string.Join("\r\n", full));
+                }
             }
         }
 

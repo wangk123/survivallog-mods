@@ -31,7 +31,7 @@
   - BepInEx 绑定键（`[全局]`/`[档位]`/诊断键）：SettingChanged → 立即重算；
   - `[Bag.*]` 节：mod 自监听 cfg 文件（每轮 mtime stat，变更即重解析自己的节）——玩家/作者用记事本改条目、加新包**即时生效无需重启**。BepInEx 对未知节按 orphan 原样保留回写，两套读写互不干扰；12 包默认条目由 mod 首跑时写入文件（实现注意：与 BepInEx Save 的并发以"只在检测到文件缺节时追加一次"收窄）。
 - **双开防御**：启动时检测 `com.local.survivallog.cabinetexpand` 在 `Chainloader.PluginInfos` → 日志警告并自禁（两 mod 同写 `Config_Bag.Size` 是旧拆名单根因，必须挡）。
-- **诊断**（继承）：`BagComponent.OnInit` postfix（DiagOnOpen 门控，读档列全部容器 BagConfigId，排查"某柜不生效"）；ListOnReady 首轮自证；受管载具包实例初始化打点（门口袋落地自证）。
+- **诊断**（继承）：`BagComponent.OnInit` postfix（DiagOnOpen 门控，读档列全部容器 BagConfigId，排查"某柜不生效"）；ListOnReady 首轮自证，载具表就绪轮再重写一次全量 trace（"已是"快照，耐久证据含车表 1021/1022——首轮快照时车表未就绪会缺这两行）；受管载具包实例初始化打点（门口袋落地自证）。
 
 ## 3. 代码结构
 
