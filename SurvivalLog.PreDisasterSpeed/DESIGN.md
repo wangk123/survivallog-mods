@@ -53,3 +53,7 @@
 - 改 page.js 行为 → 先改 tests 夹具断言再改实现（红灯→绿灯）。
 - 游戏更新后：node tools/gamekb/modcompat_check.js gamekb/<版本> 看本 mod 红灯项。
 - 发版：作者定号后在 publish.ps1 $suiteMods 登记（本 mod 未发版前不动发版脚本）。
+
+## 7. 迭代记录
+
+- 2026-10-24 终审 I-1 修复：安装回执 v==2（新装页）时重置 payload 签名门强制下一 tick 重推——修菜单期签名门被烧掉、`__PdsBoot` 永不送达的隐患（当时表值恰=默认值无症状）；夹具 C 组 boot 换非默认 {s1:3,s2:33} 钉死"高亮由 payload 驱动"。
