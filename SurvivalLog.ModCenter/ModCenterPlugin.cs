@@ -15,7 +15,8 @@ namespace SurvivalLog.ModCenter;
 /// MOD 管理中心（宿主插件）：主菜单/ESC 菜单入口 + WebUI 面板 + 套件各 mod 开关桥。
 /// 三层架构与迭代史见 DESIGN.md；菜单锚点单源见本目录 ANCHORS.md（T1，改挂钩点须同步）。
 /// 任务 3：宿主入口 + Ticker 心跳 + 日志门/自证通道；任务 4：反射桥探针（BridgeProbe，cfg
-/// Debug.Probe 门控，结论固化 DESIGN.md「反射桥 API 实证记录」）；注入与面板逻辑自任务 5/7 起填充。
+/// Debug.Probe 门控，结论固化 DESIGN.md「反射桥 API 实证记录」）；任务 5：注入骨架（WebBridge
+/// 通道 + MenuEntryInjector 双锚点入口 + panel.js 空壳面板 + outbox 轮询，完整面板任务 7）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class ModCenterPlugin : BasePlugin
@@ -51,7 +52,7 @@ public sealed class ModCenterPlugin : BasePlugin
         go.AddComponent<ModCenterTicker>();
 
         Log("loaded");
-        Trace($"loaded v{Version}（骨架 + 探针；注入逻辑待任务 5+）");
+        Trace($"loaded v{Version}（注入骨架：菜单入口+空壳面板+outbox；完整面板待任务 7）");
         SurvivalLog.ModShared.WelcomeTip.Install(Logger);
     }
 
@@ -76,8 +77,8 @@ public sealed class ModCenterPlugin : BasePlugin
 }
 
 /// <summary>
-/// 宿主心跳：每 2s（unscaled，主菜单/暂停均照走）。任务 5 起填：
-/// 主菜单/ESC 菜单注入巡检 + 面板 outbox 轮询（__mcOutbox/__mcDrain，计划既定契约）。
+/// 宿主心跳：每 2s（unscaled，主菜单/暂停均照走）。任务 5 起接入注入巡检（WebBridge.GetWebView
+/// → MenuEntryInjector.Tick：入口+面板幂等安装 + 面板 outbox 轮询）。
 /// 另挂任务 4 反射桥探针泵（ProbePump，Debug.Probe 门控）。
 /// </summary>
 internal sealed class ModCenterTicker : MonoBehaviour
@@ -98,7 +99,18 @@ internal sealed class ModCenterTicker : MonoBehaviour
         _acc += Time.unscaledDeltaTime;
         if (_acc < 2f) return;
         _acc = 0f;
-        // Task 5 起填：注入巡检 + outbox 轮询
+
+        // 任务 5：注入巡检（入口+面板幂等自愈）+ outbox 轮询；WebView 未就绪（主菜单前/重建中）静默跳过本轮
+        try
+        {
+            var web = WebBridge.GetWebView();
+            if (web != null)
+                MenuEntryInjector.Tick(web);
+        }
+        catch (Exception e)
+        {
+            ModCenterPlugin.Log("warn 注入心跳异常: " + e.Message);
+        }
     }
 
     /// <summary>探针泵：全部阶段都在本 Update（Unity 主线程）执行，与 RobotSpeed Ticker 同线程上下文。</summary>
