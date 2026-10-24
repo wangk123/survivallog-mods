@@ -341,5 +341,19 @@
       }
     ],
     "nativeSigs": []
+  },
+  "ModCenter": {
+    "harmony": [],
+    "configFields": [
+      {
+        "accessor": "_Config_RobotAttribute_Dict",
+        "rowType": "Config_RobotAttribute",
+        "fields": [
+          "MoveSpeed",
+          "Comment"
+        ]
+      }
+    ],
+    "nativeSigs": []
   }
 }
