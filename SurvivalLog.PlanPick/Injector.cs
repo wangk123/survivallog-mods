@@ -100,10 +100,10 @@ internal static class Injector
     // ==== 键盘门（SetKeyboardEnabled——装机实证英文通道的唯一开关）+ 中文 IME 转运 ====
     // 英文/裸键：规划页激活期间 WebUILayer.SetKeyboardEnabled(true)（S1 实证：开=英文通且 H 不触发；
     // 删=全灭——S3 实证）。中文：官方机制=Unity inputString 转运（S3 实证：官方工作台打中文时
-    // inputString 出组合字）——OfferImeChars 收非 ASCII+退格，FlushIme 无条件冲刷（页面侧守卫）。
+    // inputString 出组合字）→ imeCompositionMode=On 解锁后 Vuplex 直投浏览器（十一轮实证），转运退役。
     private static bool _kbHanded;
     private static UnityEngine.IMECompositionMode _prevIme = UnityEngine.IMECompositionMode.Auto;
-    private static bool _logHanded, _logReturned, _warnedNoKey;
+    private static bool _logHanded, _logReturned;
 
     /// <summary>0.3s 快通道：键盘门 + IME 转运冲刷。</summary>
     internal static void FocusTick()
@@ -137,7 +137,6 @@ internal static class Injector
             catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(false) 异常: " + e.Message); }
             if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏（IME 还原）"); }
         }
-        FlushIme(layer);
     }
 
     private static bool SafePageActive(GameCore.HotUpdate.ReduxUI.WebUILayer layer, string key)
@@ -147,37 +146,15 @@ internal static class Injector
 
     // ==== 中文 IME 转运兜底（与原生 IME 互斥：原生生效时 inputString 无组合字，转运自动闲置）====
     private static readonly object _imeLock = new();
-    private static string _imeBuf = string.Empty;
-    private static bool _logImeFirst;
+    // 转运退役（十一轮）：字段已删
 
     internal static void OfferImeChars(string s)
     {
-        if (string.IsNullOrEmpty(s)) return;
-        lock (_imeLock)
-        {
-            foreach (var c in s)
-                if (c == '\b' || (c >= 32 && c != 127)) _imeBuf += c;   // IME On 后 inputString 是唯一文本通道：退格+全部可打印（含 ASCII/汉字/全角）
-        }
+        // 2026-10-24 装机十一轮：IME On 后 Vuplex 直接把组合结果投给浏览器（实测中文即时上屏），
+        // 转运再投即双份（先即时一份、后 0.3s 转运一份；退格双删同理）——转运整体退役，仅留空壳。
+        // PlanTicker 仍调用此口，保持调用链不变。
     }
 
-    private static void FlushIme(GameCore.HotUpdate.ReduxUI.WebUILayer layer)
-    {
-        string s;
-        lock (_imeLock) { s = _imeBuf; _imeBuf = string.Empty; }
-        if (string.IsNullOrEmpty(s)) return;
-        var web = layer?.canvasWebViewPrefab?.WebView;
-        if (web == null) return;
-        var js =
-            "(function(){var f=document.getElementById('RogueSelect');if(!f||!f.contentWindow)return 0;" +
-            "var w=f.contentWindow;if(!w.__ppIme)return 0;" +
-            "w.__ppIme(\"" + PlanState.JsEscapePublic(s) + "\");return 1;})()";
-        try
-        {
-            web.ExecuteJavaScript(js, null);
-            if (!_logImeFirst) { _logImeFirst = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 中文 IME 转运首投: " + s); }
-        }
-        catch (Exception e) { WarnOnce(ref _warnedInstall, "IME 转运异常", e); }
-    }
 
     /// <summary>ViewportProbe 同款取 Root WebView 路径（ReduxUISystem → WebUILayer → canvasWebViewPrefab）。</summary>
     internal static Vuplex.WebView.IWebView PeekWebView() => GetWebView();
