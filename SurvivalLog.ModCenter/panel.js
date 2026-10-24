@@ -18,7 +18,8 @@
  * Item={k,l,t,v,min?,max?,st?,b,note?,opts?}。发消息 push __mcOutbox：
  * MC_SET{guid,section,key,value}（section/key 从展示键 k 按首个 '.' 拆分——C# Match
  * 接受真实节名+主键/组合展示键/任一实写键）/ MC_TOGGLE_MOD{guid,enabled} / MC_OPEN{host}
- * / MC_CLOSE{host?}。ovr 清单序列化（"id:ms,id:ms" 整串写 其他.Overrides）由本文件承担。
+ * / MC_CLOSE{host?,why?}（why='host-doc-gone' 为任务 8 孤儿看门狗补发）。ovr 清单序列化
+ * （"id:ms,id:ms" 整串写 其他.Overrides）由本文件承担。
  *
  * 全部元素 id/class 与样式 __mc 前缀且选择器锚定 #__mc_overlay（零泄漏）；不碰官方
  * tabs 数组与页面数据（CabinetEverywhere C6 决策同款）。
@@ -602,4 +603,19 @@
   /* Root 文档自身的 ESC（焦点在 Root 时兜底；host doc 的 ESC 由 MenuEntryInjector wireKey 转发；
    * OutSetting 场景 ESC 会被 Unity 截走——✕/点遮罩是保底关闭路径（T5 结论），ESC 仅增强 */
   document.addEventListener('keydown', function (e) { window.__mcEsc(e); });
+
+  /* ---- 面板孤儿看门狗（任务 8）：本脚本活在 Root 上下文，宿主 iframe 消亡不影响本定时器。
+   * 宿主文档被游戏重建/导航（如暂停菜单被 Unity 侧 ESC 收起）时面板 DOM 随之消亡，但 iframe
+   * 内外都发不出 MC_CLOSE——由 Root 侧每 1s 检查：面板开着的根突然失连 ⇒ 补发 MC_CLOSE
+   * （C# 键盘门双还原 + 脏 cfg 落盘收口，FocusTick.cs 消费；层整体消亡另有 C# 侧兜底）。 */
+  setInterval(function () {
+    if (!S.root) return;
+    var alive = false;
+    try { alive = S.root.isConnected; } catch (e) {}
+    if (alive) return;
+    S.root = null; S.side = S.cfg = S.sub = S.toastEl = null;
+    for (var id in TH) if (TH[id] && TH[id].timer != null) clearTimeout(TH[id].timer);
+    TH = Object.create(null);
+    window.__mcOutbox.push({ type: 'MC_CLOSE', why: 'host-doc-gone' });
+  }, 1000);
 })();

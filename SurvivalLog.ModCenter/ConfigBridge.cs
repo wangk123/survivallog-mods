@@ -329,9 +329,11 @@ internal static class ConfigBridge
                     switch (type)
                     {
                         case "MC_OPEN":
+                            FocusTick.NotifyOpen(); // 任务 8：面板开⇒键盘门交给网页（FocusTick 0.3s 沿触发）
                             PushRender(BuildSnapshot().ToJson());
                             break;
-                        case "MC_CLOSE": // 面板关闭：立即落盘全部脏 cfg（防抖收口）
+                        case "MC_CLOSE": // 面板关闭：键盘门双还原（任务 8）+ 立即落盘全部脏 cfg（防抖收口）
+                            FocusTick.NotifyClose();
                             FlushDirty();
                             break;
                         case "MC_SET":

@@ -17,7 +17,8 @@ namespace SurvivalLog.ModCenter;
 /// 任务 3：宿主入口 + Ticker 心跳 + 日志门/自证通道；任务 4：反射桥探针（BridgeProbe，cfg
 /// Debug.Probe 门控，结论固化 DESIGN.md「反射桥 API 实证记录」）；任务 5：注入骨架（WebBridge
 /// 通道 + MenuEntryInjector 双锚点入口 + panel.js 面板壳 + outbox 轮询）；任务 6：配置桥
-/// （Meta 九表 + ConfigBridge 快照/写/消息协议/Save 防抖，面板 UI 任务 7 移植）。
+/// （Meta 九表 + ConfigBridge 快照/写/消息协议/Save 防抖，面板 UI 任务 7 移植）；任务 8：
+/// 键盘门复用（FocusTick——面板开 SetKeyboardEnabled+IME On，关双还原，MC_OPEN/MC_CLOSE 驱动）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class ModCenterPlugin : BasePlugin
@@ -45,6 +46,8 @@ public sealed class ModCenterPlugin : BasePlugin
             "反射桥 API 诊断探针（默认关，仅供开发验证）。true 时启动 30 秒后对 RobotSpeed『机器人提速/移速倍率』\n" +
             "执行一轮：枚举插件 → 取 ConfigFile → 读原值 → 写 3 → 等 5 秒验内存表热重写（真原值 2.4×3=7.2）→ 写回原值并落盘。\n" +
             "证据追加到 BepInEx/ModCenter_probe.txt。玩家长开无意义，验完请改回 false。");
+
+        FocusTick.Reset(); // 任务 8：清上一轮键盘门自证文件（每轮运行从空文件开始）
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<ModCenterTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<ModCenterTicker>();
@@ -88,6 +91,7 @@ internal sealed class ModCenterTicker : MonoBehaviour
     public ModCenterTicker() { }
 
     private float _acc;
+    private float _kbAcc; // 任务 8：键盘门巡检节拍（0.3s，unscaled——暂停菜单打开也要照走）
 
     // 探针状态机：-1 未启用/已结束；0 等 30s（A 枚举+读+写）；1 等 5s（B 验表+写回）；2 等 3s（C 终验+Save）
     private int _probePhase;
@@ -99,6 +103,16 @@ internal sealed class ModCenterTicker : MonoBehaviour
 
         // 任务 6：配置桥泵（面板消息分发 + Save 防抖计时）——每帧、主线程（cfg 读写线程纪律，DESIGN §4.2）
         ConfigBridge.Pump(Time.unscaledDeltaTime);
+
+        // 任务 8：键盘门巡检（PlanPick FocusTick 同款 0.3s 快通道；MC_OPEN/MC_CLOSE 消息沿
+        // 由 Pump 置位，本口只做沿触发交接/还原——SetKeyboardEnabled + IME，异常只 Warn）
+        _kbAcc += Time.unscaledDeltaTime;
+        if (_kbAcc >= 0.3f)
+        {
+            _kbAcc = 0f;
+            try { FocusTick.Tick(); }
+            catch (Exception e) { ModCenterPlugin.Log("warn 键盘门巡检异常: " + e.Message); }
+        }
 
         _acc += Time.unscaledDeltaTime;
         if (_acc < 2f) return;

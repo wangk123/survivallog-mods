@@ -4,9 +4,9 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 7 面板 UI 完成**（panel.js 原型 v4 完整移植：
-> 左列/配置页/四类控件/覆盖清单/toast/徽标图例 + 协议回传；主菜单 41/41 断言 + 游戏内
-> OutSetting 实机断言 4/4，见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 8 键盘门复用完成**（FocusTick：面板开
+> SetKeyboardEnabled(true)+IME On、关双还原，MC_OPEN/MC_CLOSE 消息驱动 + panel.js 孤儿
+> 看门狗，见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe` 默认关）。
 
 ## 1. 功能定位
@@ -22,9 +22,9 @@
 
 | 层 | 代码 | 职责 |
 |---|---|---|
-| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（cfg `[Disabled]` 名单）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
+| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（cfg `[Disabled]` 名单）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
 | 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
-| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；键盘上报任务 8 |
+| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；任务 8 起 `MC_OPEN`/`MC_CLOSE` 兼作键盘门信号 + Root 侧孤儿看门狗（§6.6） |
 
 panel.js 作为内嵌资源随 dll 分发，不落盘、不改游戏资源文件（同 CabinetEverywhere
 tagfilter.page.js 模式）。
@@ -201,10 +201,10 @@ entry.Value = 3f;
 
 | 入（type） | 字段 | 行为 |
 |---|---|---|
-| MC_OPEN | host | 推全量快照：`window.__mcRender(snapshot)` |
+| MC_OPEN | host | 键盘门开（任务 8：`FocusTick.NotifyOpen`）→ 推全量快照：`window.__mcRender(snapshot)` |
 | MC_SET | guid, section, key, value | `TrySet` → 成功回 `__mcEvent({type:'MC_SET_OK',k,badge})`（k=Meta 展示键，badge=Item.b）；失败回 `{type:'MC_SET_FAIL',k,err}` |
 | MC_TOGGLE_MOD | guid, enabled | `SetModEnabled` → 推新快照（`__mcRender`） |
-| MC_CLOSE | — | 立即落盘全部脏 cfg（防抖收口） |
+| MC_CLOSE | why? | 键盘门双还原（任务 8：`FocusTick.NotifyClose`）→ 立即落盘全部脏 cfg（防抖收口）。`why='host-doc-gone'` 为 panel.js 孤儿看门狗补发（§6.6） |
 | MC_EVIDENCE | tag | 验证辅助（只读）：写 `BepInEx/ModCenter_evidence.txt`（RobotSpeed 移速倍率 entry 值 + Config_RobotAttribute 表快照，表读复用 BridgeProbe.Table）；正常玩家不触发 |
 
 - **逐条 try（任务 7 落地，原 §6.2 旧债收口）**：HandleOutbox 的批内循环每条消息独立
@@ -295,8 +295,55 @@ ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta �
 - 生命周期红线遵守：steam:// 启动；期间作者两次短暂上号（18:42-18:48 干扰首轮运行、按红线
   未杀未等自然退出后重跑）；验证后 taskkill + sleep 3 + tasklist 原始输出确认死透。
 
+## 6.6 键盘门复用（任务 8，2026-10-24）
+
+### 6.6.1 机制（照抄 PlanPick Injector.cs:100-140 十二轮定案）
+
+- **开**（`_panelOpen` 上升沿）：`WebUILayer.SetKeyboardEnabled(true)`（裸键/英文进浏览器的
+  唯一开关，PlanPick S1/S3 实证）+ 记录进入前 `Input.imeCompositionMode` 后设 `On`
+  （中文 IME 组合由 Vuplex 直投浏览器，PlanPick 十一轮实证）。面板打开期间覆盖 ID 数字框、
+  滑条配对数值框等可实机键入，且游戏热键不触发（键全量进 WebView）。
+- **关**（下降沿）：`SetKeyboardEnabled(false)` + `imeCompositionMode` 精确还原进入前值。
+- **门控判据与 PlanPick 的差异**：PlanPick 是官方页 `IsPageActive` 三候选（uiKey 列表）；
+  本面板不是官方页——门控 = 面板开合状态，由 `MC_OPEN`/`MC_CLOSE` 消息驱动
+  （`ConfigBridge.HandleOutbox` 主线程 Pump 调 `FocusTick.NotifyOpen/NotifyClose` 置位，
+  与 `FocusTick.Tick` 同在 Ticker 主线程，无竞态）。`Tick` 由 Ticker 每 0.3s（unscaled，
+  暂停菜单打开也要照走——OutSetting 场景 timescale 不可依赖）驱动，沿触发、异常只 Warn。
+- **对 PlanPick 的两处有意加固**（非照抄部分，代码注释标注）：
+  1. `_imeSaved` 会话标记：层短暂丢失后重交接时不把当前值（已还原的原值）误记为"进入前值"，
+     保证"还原精确回到进入前状态"闭环（PlanPick 未区分，重交接场景会把 On 记成原值）。
+  2. 层丢失收尾（`layer == null` 且已交出）：PlanPick 只复位标志；本面板状态由 JS 消息驱动，
+     层没了 ⇒ WebView/JS 也没了 ⇒ 面板必已消亡且永远等不到 MC_CLOSE——就地还原 IME 静态
+     （Unity 侧，层死不影响）并复位开合状态，防键盘门漏开（键盘门标志随层销毁，新层默认门关）。
+- **panel.js 孤儿看门狗**（Root 侧 1s interval，宿主 iframe 消亡不影响 Root 定时器）：面板开
+  着的根突然 `!isConnected`（如暂停菜单被 Unity 侧 ESC 收起、页面被游戏重建）⇒ 补发
+  `MC_CLOSE{why:'host-doc-gone'}`（键盘门还原 + 脏 cfg 落盘收口）。✕/点遮罩仍是保底关闭
+  路径（T5 结论：OutSetting 的 ESC 被 Unity 截走，ESC 仅增强）。
+- **自证（硬规则 9）**：每次沿写一行 `<BepInEx 根>/ModCenter_kb.txt`（Load 时清空）：
+  `OPEN kb=on ime Auto->On`（kb 读回自 `get_IsKeyboardEnabled`）/ `CLOSE kb=off ime->Auto`
+  （还原值）/ `ORPHAN(layer-lost) ime->X kb-dies-with-layer`。CDP 合成键不受 Vuplex 门控，
+  不能作门开证据——自证文件是装机断言的唯一权威。
+
+### 6.6.2 实测记录（2026-10-24，主菜单阶段，不碰存档）
+
+`tools/_mc_kb_cdp.js`（连法照抄 `_mc_fixture.js`）：入口点击开面板 → 轮询 ModCenter_kb.txt
+断言 OPEN 行（kb=on、ime 进入前值→On）→ ✕ 关闭 → 断言 CLOSE 行（kb=off、还原值逐字等于
+本轮记录的进入前值）→ 往返三轮共 6 行、无 ORPHAN 行；outbox spy 断言 ≥3 MC_OPEN +
+≥3 MC_CLOSE 被 C# 取走；第 1 轮附带实机打字探针（面板开 → 动作加速页 → CDP focus
+`#__mc_ovr_new` → `tools/_mc_kb_type.ps1` AppActivate+SendKeys '8012' → 回读 input.value
+——实机物理键穿 Vuplex 门进浏览器，探针失败只 WARN 不判负）。证据全文存
+`.superpowers/sdd/2026-10-24-modcenter/task-8-report.md`。
+
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 8：键盘门复用。新增 `FocusTick.cs`（面板开 `SetKeyboardEnabled(true)` +
+  IME On、关双还原；门控 = MC_OPEN/MC_CLOSE 消息而非 IsPageActive——面板非官方页；
+  `_imeSaved` 会话标记 + 层丢失就地还原 IME 两处对 PlanPick 的加固；沿写自证
+  `BepInEx/ModCenter_kb.txt`，Load 清空）；`ModCenterPlugin.cs` Ticker 增 0.3s（unscaled）
+  FocusTick 泵 + Load 清自证；`ConfigBridge.cs` MC_OPEN/MC_CLOSE 分别置开合；`panel.js`
+  Root 侧 1s 孤儿看门狗（面板根失连补发 `MC_CLOSE{why:'host-doc-gone'}`）；csproj 增
+  `UnityEngine.InputLegacyModule` 引用（`UnityEngine.Input` 所在模块，PlanPick 同款）。
+  验证工具 `tools/_mc_kb_cdp.js` + `tools/_mc_kb_type.ps1`。实测见 §6.6.2 / task-8-report。
 - 2026-10-24 任务 7 Fix Round 1（评审 NO-GO 三项）：①C1——`sendSet` 改发完整展示键 `k` 原串
   （初版剥前缀的联动 key 在桥 Match 三候选全不命中，背包/柜子 4 联动滑条写必败；
   §6.5.1 路由段重写），fixture 补 4 条联动端到端断言（消息形态→OK 回执→两键同值落盘→还原）；
