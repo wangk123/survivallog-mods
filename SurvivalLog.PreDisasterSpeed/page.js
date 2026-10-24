@@ -55,12 +55,14 @@
     };
 
     function mount() {
-        var host = document.querySelector('.top-center');
+        // 官方位=CoreUI1 左下 .action-panel 横排尾部；CoreUI0 对应 .bottom-left 的 .action-row（装机二轮作者定案）。
+        // 兜底链：.action-row → .bottom-left → .top-center（保证任何模式下都能出现）。
+        var host = document.querySelector('.action-row') || document.querySelector('.bottom-left') || document.querySelector('.top-center');
         if (!host) return false;
         if (document.getElementById('pdsSpeed')) return true;
         var css = document.createElement('style');
         css.textContent = ''
-            + '#pdsSpeed{position:relative;display:flex;gap:4px;background-color:rgba(30,30,30,0.85);padding:2px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);width:fit-content;}'
+            + '#pdsSpeed{position:relative;display:flex;gap:4px;background-color:rgba(30,30,30,0.85);padding:2px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);width:fit-content;margin-left:8px;align-self:center;}'
             + '#pdsSpeed .speed-btn{position:relative;width:30px;height:30px;background:transparent;border:1px solid transparent;border-radius:4px;color:rgba(255,255,255,0.6);cursor:pointer;transition:all .2s;padding:0;display:flex;align-items:center;justify-content:center;line-height:1;}'
             + '#pdsSpeed .speed-btn:hover{background-color:rgba(255,255,255,0.1);color:#fff;}'
             + '#pdsSpeed .speed-btn.active{background-color:rgba(255,193,7,0.15);color:#FFC107;border-color:rgba(255,193,7,0.3);font-weight:bold;box-shadow:inset 0 0 4px rgba(255,193,7,0.2);}'

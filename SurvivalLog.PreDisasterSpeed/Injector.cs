@@ -7,7 +7,7 @@ namespace SurvivalLog.PreDisasterSpeed;
 /// <summary>Root 巡检注入器（每 2s，幂等，PlanPick 同款骨架）：
 /// 1) page.js 装进 CoreUI0 iframe（__PdsInstalled 守卫，iframe 重建自愈重装）；
 /// 2) 回执经 ExecuteJavaScript callback 读安装脚本返回值（0=不在/隐藏 >0=在）喂自愈；
-/// 3) 章节倍率 payload 签名变化才推（防每 2s 重渲染）；4) 保活 MessageEmitted 桥。</summary>
+/// 3) 章节倍率 payload 签名变化才推（防每 2s 重渲染）。点击回程走 Harmony prefix 桥（SpeedLink）。</summary>
 internal static class Injector
 {
     private const string ResourceName = "SurvivalLog.PreDisasterSpeed.page.js";
@@ -60,8 +60,7 @@ internal static class Injector
             }
         }
 
-        // 3) 保活事件桥（实例变更自动重挂，见 SpeedLink.EnsureBridge）
-        SpeedLink.EnsureBridge(web);
+        // 3) 桥已改 Harmony prefix（WebUILayer.OnPageMessage 观察者，见 SpeedLink.PageMessagePatch），无需此处保活
 
         if (!_announced)
         {

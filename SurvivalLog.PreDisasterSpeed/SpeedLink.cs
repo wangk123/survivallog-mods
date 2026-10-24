@@ -65,55 +65,34 @@ internal static class SpeedLink
         }
     }
 
-    // ---------- 桥接 + 自愈（Task 5） ----------
+    // ---------- 桥接 + 自愈（装机二轮改 Harmony prefix，见 DESIGN §7） ----------
 
-    private static Vuplex.WebView.IWebView _bridged;
     private static bool _coreUi0Visible;
     private static bool _warnBridge;
     private static readonly Regex SpeedRegex = new Regex("\"speed\"\\s*:\\s*([0-4])", RegexOptions.Compiled);
 
-    /// <summary>订阅 Vuplex MessageEmitted（与官方 WebUILayer.OnMessageFromJS 并行收，多播互不干扰）。
-    /// WebView 实例变更时对新实例重挂；旧实例随页面销毁，无需退订。</summary>
-    internal static void EnsureBridge(Vuplex.WebView.IWebView web)
+    /// <summary>官方中继链终点观察者：CoreUI0 页 JS 点击 → Root 无条件转发 vuplex 协议(3) →
+    /// WebUILayer.OnPageMessage(source, type, json)。此前走 MessageEmitted 事件订阅，
+    /// interop 委托编组实机报"Parameter type mismatched native type pointers"（装机一轮实锤），
+    /// 改 Harmony prefix 观察者（不拦截不修改原方法，套件最成熟模式，零编组）。</summary>
+    [HarmonyLib.HarmonyPatch(typeof(GameCore.HotUpdate.ReduxUI.WebUILayer), "OnPageMessage")]
+    internal static class PageMessagePatch
     {
-        if (ReferenceEquals(_bridged, web)) return;
-        try
+        private static void Prefix(string source, string messageType, string jsonData)
         {
-            // interop 无事件元数据（add_/remove_ 访问器）且 Il2Cpp 委托非 CLR 委托：
-            // 经 add_MessageEmitted + DelegateSupport.ConvertDelegate 编组（CabinetEverywhere 同款），订阅机制与处理器不变。
-            web.add_MessageEmitted(DelegateSupport.ConvertDelegate<Il2CppSystem.EventHandler<Vuplex.WebView.EventArgs<string>>>(
-                new EventHandler<Vuplex.WebView.EventArgs<string>>(OnMessageEmitted)));
-            _bridged = web;
-            PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] MessageEmitted 桥已挂");
-        }
-        catch (Exception e)
-        {
-            if (_warnBridge) return;
-            _warnBridge = true;
-            PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 订阅 MessageEmitted 异常: " + e.Message);
-        }
-    }
-
-    /// <summary>官方协议 `typeId\x1EpageId\x1EeventType\x1Ejson`（Root.html 中继，DESIGN §3.5）。
-    /// 只认 3/CoreUI0/PDS_SPEED，其余消息原样放过不碰。</summary>
-    private static void OnMessageEmitted(object sender, Vuplex.WebView.EventArgs<string> e)
-    {
-        try
-        {
-            var msg = e.Value;
-            if (string.IsNullOrEmpty(msg)) return;
-            var p = msg.Split('\x1E');
-            if (p.Length < 4 || p[0] != "3" || p[1] != "CoreUI0" || p[2] != "PDS_SPEED") return;
-            var m = SpeedRegex.Match(p[3]);
-            if (!m.Success) return;
-            SetSpeed(int.Parse(m.Groups[1].Value));
-        }
-        catch
-        {
-            // v1.3.2 红线：静默出口必须可观测——桥内异常打点（只记一次，防刷屏）
-            if (_warnBridge) return;
-            _warnBridge = true;
-            PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 桥内解析异常（后续静默）");
+            try
+            {
+                if (messageType != "PDS_SPEED" || source != "CoreUI0") return;
+                var m = SpeedRegex.Match(jsonData ?? "");
+                if (m.Success) SpeedLink.SetSpeed(int.Parse(m.Groups[1].Value));
+            }
+            catch
+            {
+                // v1.3.2 红线：静默出口必须可观测——补丁内异常打点（只记一次，防刷屏）
+                if (_warnBridge) return;
+                _warnBridge = true;
+                PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 桥补丁解析异常（后续静默）");
+            }
         }
     }
 

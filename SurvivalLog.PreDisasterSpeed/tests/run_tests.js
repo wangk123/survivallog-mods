@@ -49,8 +49,8 @@ const activeSpeed = () => {
 
     // A) 注入与结构
     ok(await page.locator('#pdsSpeed').count() === 1, '五键条已挂载且唯一');
-    ok(await page.evaluate(() => document.querySelector('#pdsSpeed').parentElement.classList.contains('top-center')),
-        '挂在 .top-center 内');
+    ok(await page.evaluate(() => document.querySelector('#pdsSpeed').parentElement.classList.contains('action-row')),
+        '挂在官方位 .action-row 内（左下横排，装机二轮定案）');
     const gears = await page.$$eval('#pdsSpeed .speed-btn', els => els.map(e => +(e.className.match(/pds-gear-(\d)/) || [0, -1])[1]));
     assert.deepStrictEqual(gears, [4, 1, 2, 3, 0], '五键顺序 慢速/原速/二倍/三倍/暂停'); PASSED++; console.log('  ok - 五键顺序');
 

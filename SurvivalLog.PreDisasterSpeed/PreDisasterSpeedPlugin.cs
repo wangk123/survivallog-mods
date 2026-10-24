@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace SurvivalLog.PreDisasterSpeed;
 
-/// <summary>灾前加速：官方五键倍速条覆盖到灾前（CoreUI0）。零 Harmony/零表改动，设计见 DESIGN.md。</summary>
+/// <summary>灾前加速：官方五键倍速条覆盖到灾前（CoreUI0）。零表改动；桥=Harmony prefix 观察者，设计见 DESIGN.md。</summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class PreDisasterSpeedPlugin : BasePlugin
 {
@@ -25,20 +25,23 @@ public sealed class PreDisasterSpeedPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
-        Enabled = Config.Bind("General", "Enabled", true, "灾前加速条总开关（关闭=不注入不订阅；对已在档对局下次启动生效）。");
+        Enabled = Config.Bind("General", "Enabled", true, "灾前加速条总开关（关闭=不注入不挂钩；对已在档对局下次启动生效）。");
         Verbose = Config.Bind("Debug", "Verbose", false, "注入/桥接明细日志。");
+
+        var harmony = new HarmonyLib.Harmony(Guid);
+        harmony.PatchAll();
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<PdsTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<PdsTicker>();
         var go = new GameObject("PreDisasterSpeed.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<PdsTicker>();
-        Log.LogInfo("[PdsSpeed] loaded（Enabled=" + Enabled.Value + "）");
+        Log.LogInfo("[PdsSpeed] loaded（Enabled=" + Enabled.Value + "，桥=OnPageMessage prefix）");
         WelcomeTip.Install(Log);
     }
 }
 
-/// <summary>2s 巡检：WebView 就绪→注入 page.js→推倍率 payload→保活事件桥（详见 Injector/SpeedLink）。</summary>
+/// <summary>2s 巡检：WebView 就绪→注入 page.js→推倍率 payload（点击回程走 Harmony prefix 桥，详见 Injector/SpeedLink）。</summary>
 internal sealed class PdsTicker : MonoBehaviour
 {
     public PdsTicker(IntPtr ptr) : base(ptr) { }

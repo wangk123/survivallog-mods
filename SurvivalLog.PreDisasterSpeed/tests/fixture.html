@@ -10,6 +10,10 @@
     .timer-box { display: flex; gap: 6px; align-items: center; background: #222;
                  padding: 4px 12px; border-radius: 6px; color: #fff; }
     .progress-container { width: 220px; height: 6px; background: #333; border-radius: 3px; }
+    .bottom-left { position: absolute; bottom: 30px; left: 30px; display: flex; flex-direction: column; gap: 8px; }
+    .vertical-tools { display: flex; flex-direction: column; gap: 6px; }
+    .action-row { display: flex; gap: 8px; align-items: center; }
+    .action-row .stub-btn { width: 50px; height: 45px; background: #444; border-radius: 6px; }
 </style>
 </head>
 <body>
@@ -17,6 +21,12 @@
     <div class="top-center" data-interactive>
         <div class="timer-box"><span>倒计时 12:34</span></div>
         <div class="progress-container"><div class="progress-bar"></div></div>
+    </div>
+    <div class="bottom-left">
+        <div class="vertical-tools"></div>
+        <div class="action-row">
+            <button class="stub-btn">完成准备</button>
+        </div>
     </div>
 </div>
 <script>
