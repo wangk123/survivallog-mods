@@ -103,23 +103,38 @@ internal static class Injector
     // 交给网页。本桥以 0.3s 高频轮询 RogueSelect iframe 的 activeElement：是我们弹层里的
     // 输入框则 SetFocused(true)，失焦则 SetFocused(false) 交还——官方页行为零改动，
     // 键盘只在"点进自选搜索框"期间进网页。
-    private static bool _kbHanded;          // 当前是否已 SetFocused(true)
+    private static bool _kbHanded;          // 当前是否已把键盘交给网页（SetKeyboardEnabled true）
+    private static DateTime _pendingSince;  // 本轮探针发出时刻（回调超时解卡用）
     private static bool _logHanded, _logReturned;
     private static string _pendingFocusCheck;   // 上轮结果（ExecuteJavaScript 回调异步写）
 
-    /// <summary>焦点桥快通道（PlanTicker 每 0.3s 调；payload 巡检仍走 2s 的 Tick）。</summary>
+    /// <summary>焦点桥快通道（PlanTicker 每 0.3s 调；payload 巡检仍走 2s 的 Tick）。
+    /// 键盘通道照抄官方：WebUILayer.SetKeyboardEnabled(bool)（工作台配方搜索同款，
+    /// 内部写 CanvasWebViewPrefab 偏移 0x60 的键盘转发开关）——输入框聚焦开、失焦关，
+    /// 仅动自己开的开关。</summary>
     internal static void FocusTick()
     {
-        var web = GetWebView();
-        if (web == null) { if (_kbHanded) TryReturnKeyboard(web); return; }
-        if (_pendingFocusCheck != null) return;   // 上轮回调未回，跳过本轮（防堆积）
+        var layer = GetLayer();
+        var web = layer?.canvasWebViewPrefab?.WebView;
+        if (web == null) { if (_kbHanded) TryReturnKeyboard(layer); return; }
+        if (_pendingFocusCheck != null)
+        {
+            // 回调超时解卡（>2s 视为该轮探针丢失，丢弃重发；持续丢只打一次）
+            if ((DateTime.UtcNow - _pendingSince).TotalSeconds > 2)
+            {
+                _pendingFocusCheck = null;
+                WarnOnce(ref _warnedInstall, "焦点探针回调超时", new Exception("callback not returned within 2s"));
+            }
+            else return;
+        }
 
         _pendingFocusCheck = "w";                 // 占位：回调前非 null
+        _pendingSince = DateTime.UtcNow;
         try
         {
             if (_focusCb == null)
                 _focusCb = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<string>>(new System.Action<string>(OnFocusProbeResult));
-            // 两位探针：bit0=输入框聚焦；bit1=聚焦后已收到真键盘事件（SetFocused 生效自证）。
+            // 两位探针：bit0=输入框聚焦；bit1=聚焦后已收到真键盘事件（键盘通道生效自证）。
             // 真键盘不可达时 C# 侧启用 Input.inputString 兜底转发（PlanTicker 每帧收集）。
             web.ExecuteJavaScript(
                 "(function(){var f=document.getElementById('RogueSelect');if(!f||f.style.display==='none')return 0;" +
@@ -135,18 +150,25 @@ internal static class Injector
         }
 
         // 回调通常已同步/极快返回；处理结果（下一轮兜底再处理一次）
-        ApplyFocusResult(web);
+        ApplyFocusResult(layer, web);
     }
 
-    /// <summary>ExecuteJavaScript 回调（il2cpp 委托，DelegateSupport 转换后缓存复用）：落焦点探针结果（"0".."3"）。</summary>
+    /// <summary>ExecuteJavaScript 回调（il2cpp 委托，DelegateSupport 转换后缓存复用）：落焦点探针结果（"0".."3"）。
+    /// 回调值可能是 JSON 序列化形态（数字带引号）——剥引号后解析；解析失败打点防静默。</summary>
     private static Il2CppSystem.Action<string> _focusCb;
+    private static bool _logFirstCb;
     private static void OnFocusProbeResult(string r)
     {
-        try { _pendingFocusCheck = string.IsNullOrWhiteSpace(r) ? null : r.Trim(); }
+        try
+        {
+            if (!_logFirstCb) { _logFirstCb = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 焦点探针回调首值: <" + (r ?? "null") + ">"); }
+            _pendingFocusCheck = (r ?? "").Trim().Trim('"');
+            _pendingSince = DateTime.UtcNow;
+        }
         catch { _pendingFocusCheck = null; }
     }
 
-    private static void ApplyFocusResult(Vuplex.WebView.IWebView web)
+    private static void ApplyFocusResult(GameCore.HotUpdate.ReduxUI.WebUILayer layer, Vuplex.WebView.IWebView web)
     {
         var r = _pendingFocusCheck;
         if (r == null) return;
@@ -160,25 +182,26 @@ internal static class Injector
         {
             _kbHanded = true;
             _handCycles = 0; _forwardMode = false;
-            try { web.SetFocused(true); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(true) 异常: " + e.Message); return; }
-            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交给网页输入（SetFocused true）"); }
+            try { layer.SetKeyboardEnabled(true); }
+            catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(true) 异常: " + e.Message); return; }
+            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交给网页输入（SetKeyboardEnabled true，官方通道）"); }
         }
         else if (focused && _kbHanded)
         {
             _handCycles++;
-            // 交接 2 个周期（≈0.6s）后仍无真按键到达 → SetFocused 在此构建不送达键盘 → 启用兜底转发
+            // 交接 2 个周期（≈0.6s）后仍无真按键到达 → 官方键盘通道在此场景不送达 → 启用兜底转发
             if (!_forwardMode && _handCycles >= 2 && !realKeys)
             {
                 _forwardMode = true;
                 _fwdBuf = string.Empty;
-                PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused 未送达按键，启用 Input.inputString 兜底转发（英文/数字直投；游戏侧热键可能同时触发，观察回报）");
+                PlanPickPlugin.Log.LogWarning("[PlanPick] 官方键盘通道未送达按键，启用 Input.inputString 兜底转发");
             }
         }
         else if (!focused && _kbHanded)
         {
             _kbHanded = false; _forwardMode = false; _handCycles = 0;
-            try { web.SetFocused(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(false) 异常: " + e.Message); }
-            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交还游戏（SetFocused false）"); }
+            try { layer.SetKeyboardEnabled(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(false) 异常: " + e.Message); }
+            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交还游戏（SetKeyboardEnabled false）"); }
         }
     }
 
@@ -210,15 +233,24 @@ internal static class Injector
         try { web.ExecuteJavaScript(js, null); } catch { }
     }
 
-    private static void TryReturnKeyboard(Vuplex.WebView.IWebView web)
+    private static void TryReturnKeyboard(GameCore.HotUpdate.ReduxUI.WebUILayer layer)
     {
         _kbHanded = false;
         _pendingFocusCheck = null;
-        try { web?.SetFocused(false); } catch { }
+        try { layer?.SetKeyboardEnabled(false); } catch { }
     }
 
     /// <summary>ViewportProbe 同款取 Root WebView 路径（ReduxUISystem → WebUILayer → canvasWebViewPrefab）。</summary>
     internal static Vuplex.WebView.IWebView PeekWebView() => GetWebView();
+    private static GameCore.HotUpdate.ReduxUI.WebUILayer GetLayer()
+    {
+        try
+        {
+            if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.IsInstanceCreated) return null;
+            return GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance?.GetWebUILayer();
+        }
+        catch { return null; }
+    }
     private static Vuplex.WebView.IWebView GetWebView()
     {
         try

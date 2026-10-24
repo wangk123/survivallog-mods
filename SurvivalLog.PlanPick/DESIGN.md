@@ -280,3 +280,9 @@
   page.js 点击显式 focus()；探针升两位（聚焦:真按键到达），SetFocused 交接后 2 周期无真按键
   → 自动启用 Input.inputString 兜底转发（每帧收集、0.3s 批投 __ppType 整值覆盖，仅输入框聚焦时）。
   新增引用 UnityEngine.InputLegacyModule。已知取舍：兜底模式下游戏侧热键（H）可能仍触发——待实测回报。
+- 2026-10-24 装机五轮（照抄官方定案）：键盘通道弃 IWebView.SetFocused，改用游戏自家的
+  WebUILayer.SetKeyboardEnabled(bool)（工作台配方搜索同款官方通道；反汇编 0x2D5A1A0 实证＝
+  写 CanvasWebViewPrefab 偏移 0x60 的键盘转发开关）。输入框聚焦→开、失焦→关（只关自己开的）。
+  回调健壮性：值剥 JSON 引号、2s 超时解卡、首值/超时各打一次点。Input.inputString 兜底保留
+  （官方通道 0.6s 无真按键到达才自动启用）。CDP 实证链：真实点击→focusin@ppSearch→
+  activeElement=ppSearch 全通；此前"无反应"根因＝回调值带引号解析失败+占位符永久卡死（静默死点）。
