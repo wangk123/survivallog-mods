@@ -290,7 +290,7 @@ const MODS = [
   ],
   ovr:[{id:9075, ms:1000}],   /* 动作覆盖清单（动态） */
 },
-{ id:'cabineteverywhere', name:'柜子直达+筛选', en:'CabinetEverywhere', enabled:true,
+{ id:'cabineteverywhere', name:'更好的储物柜', en:'CabinetEverywhere', enabled:true,
   desc:'全容器作为制作/烹饪/酿造等取料源直达；柜子页签标签筛选与场景固定视图。仅支持启用/停用。',
   groups:[]},
 { id:'roleunlock', name:'角色解锁', en:'RoleUnlock', enabled:true,
@@ -420,11 +420,7 @@ function renderCfg(){
     cfg.innerHTML = `
       <div class="mod-title"><h2>${SELF.name}</h2><span class="en">${SELF.en}</span></div>
       <div class="mod-desc">管理面板自身插件。提供本界面、配置桥（读写各 mod cfg）与元数据表。<br>
-      防呆设计：面板内不可停用自身——停用后你将没有入口恢复，需手编 cfg 文件。</div>
-      <div class="mod-switch">
-        <span class="mini-sw big-sw on"></span>
-        <div><div class="lbl">启用（锁定）</div><div class="hint">开关置灰防呆；如需彻底移除请走安装器卸载组件。</div></div>
-      </div>`;
+      防呆设计：面板内不可停用自身——停用后你将没有入口恢复，需手编 cfg 文件；如需彻底移除请走安装器卸载组件。</div>`;
     return;
   }
   const m = curMod();
@@ -432,19 +428,10 @@ function renderCfg(){
   let h = `
     <div class="mod-title"><h2>${m.name}</h2><span class="en">${m.en}</span></div>
     <div class="mod-desc">${m.desc}</div>
-    <div class="mod-switch">
-      <span class="mini-sw big-sw ${m.enabled?'on':''}" data-act="toggle" data-i="${cur}"></span>
-      <div>
-        <div class="lbl">${m.enabled?'已启用':'已停用'}</div>
-        <div class="hint">${tp
-          ? '停用 = 下次启动不再加载该 mod（重启级：退出时禁用其 dll）；重新启用即恢复。'
-          : '停用 = 行为立即停止（还原原值）+ 下次启动不再加载；重新启用即恢复全部配置。'}</div>
-      </div>
-    </div>
     <div class="stop-banner ${m.enabled?'':'show'}">
       ${tp
         ? '⛔ 已标记停用：本次会话该 mod 仍在运行，<b>下次启动后</b>不再加载。'
-        : '⛔ 该 mod 当前已停用。此处修改仍会写入 cfg 保存，但需<b>重新启用后</b>才会生效。'}
+        : '⛔ 该 mod 当前已停用。此处修改仍会写入 cfg 保存，但需<b>重新启用后</b>才会生效（左列开关）。'}
     </div>`;
   m.groups.forEach((g,gi)=>{
     h += `<div class="grp"><h3>${g.sec}</h3>${
