@@ -375,6 +375,13 @@ function renderTabs() {
         el.value = s;                    // C# 侧每帧整值覆盖（持焦点期间输入框只归键盘管）
         el.dispatchEvent(new Event('input', { bubbles: true }));
     };
+    // 中文 IME 转运入口：Vuplex 无 IME，汉字经 Unity inputString 转投（仅聚焦时追加，非整值覆盖）
+    window.__ppIme = function (s) {
+        var el = document.activeElement;
+        if (!el || el.id !== 'ppSearch') return;
+        el.value += s;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    };
 }
 
 function renderSubBar() {

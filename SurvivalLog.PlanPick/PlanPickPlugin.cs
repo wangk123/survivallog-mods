@@ -63,6 +63,14 @@ internal sealed class PlanTicker : MonoBehaviour
     private float _focusCheck;
     private void Update()
     {
+        // IME 转运：Unity 主窗口接输入法，组合完成的汉字进 inputString（每帧收集非 ASCII）
+        try
+        {
+            var s = UnityEngine.Input.inputString;
+            if (!string.IsNullOrEmpty(s)) Injector.OfferImeChars(s);
+        }
+        catch { }
+
         _focusCheck += Time.deltaTime;
         if (_focusCheck >= 0.3f) { _focusCheck = 0; Injector.FocusTick(); }
         _check += Time.deltaTime;

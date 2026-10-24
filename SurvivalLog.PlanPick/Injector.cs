@@ -115,25 +115,73 @@ internal static class Injector
             active = SafePageActive(layer, "RogueSelect") || SafePageActive(layer, "UI_RogueSelect") || SafePageActive(layer, "WebUI_RogueSelect");
         }
         catch (Exception e) { WarnOnce(ref _warnedInstall, "键盘门 IsPageActive 异常", e); return; }
+        FlushIme(layer, active);   // IME 转运随键盘门同频冲刷（pageActive 时才投）
 
         if (active && !_kbHanded)
         {
             _kbHanded = true;
-            try { layer.SetKeyboardEnabled(true); }
-            catch (Exception e) { _kbHanded = false; PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(true) 异常: " + e.Message); return; }
-            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页激活，键盘交给网页（SetKeyboardEnabled true，官方通道）"); }
+            var web = layer.canvasWebViewPrefab?.WebView;
+            try
+            {
+                layer.SetKeyboardEnabled(true);
+                // 官方模式补全：SetFocused 给浏览器原生焦点 → Chromium 自接 IME（官方工作台中文输入同款；
+                // SetKeyboardEnabled 只转发裸键=英文only）。IME 挂浏览器窗口时 Unity inputString 收不到
+                // 组合字 → IME 转运自动闲置；挂 Unity 窗口时原生路无组合 → 转运兜底。两路天然互斥不双投。
+                web?.SetFocused(true);
+            }
+            catch (Exception e) { _kbHanded = false; PlanPickPlugin.Log.LogWarning("[PlanPick] 键盘门开启异常: " + e.Message); return; }
+            if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页激活，键盘交给网页（SetKeyboardEnabled + SetFocused，官方通道）"); }
         }
         else if (!active && _kbHanded)
         {
             _kbHanded = false;
-            try { layer.SetKeyboardEnabled(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetKeyboardEnabled(false) 异常: " + e.Message); }
-            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏（SetKeyboardEnabled false）"); }
+            var web = layer.canvasWebViewPrefab?.WebView;
+            try { layer.SetKeyboardEnabled(false); web?.SetFocused(false); }
+            catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] 键盘门关闭异常: " + e.Message); }
+            if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 规划页关闭，键盘交还游戏（SetKeyboardEnabled + SetFocused false）"); }
         }
     }
 
     private static bool SafePageActive(GameCore.HotUpdate.ReduxUI.WebUILayer layer, string key)
     {
         try { return layer.IsPageActive(key); } catch { return false; }
+    }
+
+    // ==== 中文 IME 转运（2026-10-24 装机七轮）====
+    // 此版 Vuplex 无 IME API：离屏网页拿不到输入法组合（官方工作台搜索同为英文only）。
+    // Unity 主窗口接 IME——组合完成的汉字/全角标点会进 Input.inputString。仅转发非 ASCII
+    // 字符（英文走网页直通道，避免双投）；page 侧 __ppIme 仅在输入框聚焦时追加。
+    private static readonly object _imeLock = new();
+    private static string _imeBuf = string.Empty;
+    private static bool _logImeFirst;
+
+    internal static void OfferImeChars(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return;
+        lock (_imeLock)
+        {
+            foreach (var c in s)
+                if (c >= 128 && c != '\u3000') _imeBuf += c;   // 汉字/全角符号；全角空格过滤
+        }
+    }
+
+    private static void FlushIme(GameCore.HotUpdate.ReduxUI.WebUILayer layer, bool pageActive)
+    {
+        string s;
+        lock (_imeLock) { s = _imeBuf; _imeBuf = string.Empty; }
+        if (string.IsNullOrEmpty(s) || !pageActive) return;
+        var web = layer?.canvasWebViewPrefab?.WebView;
+        if (web == null) return;
+        var js =
+            "(function(){var f=document.getElementById('RogueSelect');if(!f||!f.contentWindow)return 0;" +
+            "var w=f.contentWindow;if(!w.__ppIme)return 0;" +
+            "w.__ppIme(\"" + PlanState.JsEscapePublic(s) + "\");return 1;})()";
+        try
+        {
+            web.ExecuteJavaScript(js, null);
+            if (!_logImeFirst) { _logImeFirst = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 中文 IME 转运首投: " + s); }
+        }
+        catch (Exception e) { WarnOnce(ref _warnedInstall, "IME 转运异常", e); }
     }
 
     /// <summary>ViewportProbe 同款取 Root WebView 路径（ReduxUISystem → WebUILayer → canvasWebViewPrefab）。</summary>

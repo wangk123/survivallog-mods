@@ -292,3 +292,8 @@
   WebUI_RogueSelect）。输入框聚焦仍由 page.js 显式 focus()（点击不带原生聚焦已实证）。
   Input.inputString 兜底转发删除（回调死后无仲裁信号，且纯 C# 门不再需要）。
   规划页期间游戏侧热键（H 等）将随键盘移交而失效——属预期代价，实机确认。
+- 2026-10-24 装机七轮（中文 IME，作者实证官方工作台可输中文→引擎有完整通道）：键盘门补
+  SetFocused(true)（原生焦点→Chromium 自接 IME，官方模式；SetKeyboardEnabled 仅转发裸键=英文only）。
+  双路互斥自仲裁：IME 挂浏览器原生窗口→组合直接进页（Unity inputString 无组合→转运闲置）；
+  IME 挂 Unity 窗口→组合进 inputString→非 ASCII 转运兜底（OfferImeChars/__ppIme 追加式）。
+  H 键在规划页期间不触发（键盘已移交）＝预期行为。
