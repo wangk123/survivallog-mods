@@ -22,7 +22,7 @@
 
 | 层 | 代码 | 职责 |
 |---|---|---|
-| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（cfg `[Disabled]` 名单）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
+| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（任务 13 直写各 mod `General.Enabled`）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
 | 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
 | 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；任务 8 起 `MC_OPEN`/`MC_CLOSE` 兼作键盘门信号 + Root 侧孤儿看门狗（§6.6） |
 
@@ -205,7 +205,7 @@ entry.Value = 3f;
 | MC_SET | guid, section, key, value | `TrySet` → 成功回 `__mcEvent({type:'MC_SET_OK',k,badge})`（k=Meta 展示键，badge=Item.b）；失败回 `{type:'MC_SET_FAIL',k,err}` |
 | MC_TOGGLE_MOD | guid, enabled | `SetModEnabled` → 推新快照（`__mcRender`） |
 | MC_CLOSE | why? | 键盘门双还原（任务 8：`FocusTick.NotifyClose`）→ 立即落盘全部脏 cfg（防抖收口）。`why='host-doc-gone'` 为 panel.js 孤儿看门狗补发（§6.6） |
-| MC_EVIDENCE | tag | 验证辅助（只读）：写 `BepInEx/ModCenter_evidence.txt`（RobotSpeed 移速倍率 entry 值 + Config_RobotAttribute 表快照，表读复用 BridgeProbe.Table）；正常玩家不触发 |
+| MC_EVIDENCE | tag | 验证辅助（只读）：写 `BepInEx/ModCenter_evidence.txt` 一行**多表断言快照**（任务 13 扩）：RobotSpeed 移速倍率 entry + Config_RobotAttribute.MoveSpeed 全行 + 判别动作行 During（9075/9098/9099/9100/9130/9131/1611/1615/1915）+ 判别包行 Size/Burden（背包 1/8/11、货舱 1061/1063、柜子 110001/110009、冰箱 1004/115000/3002、载具 1023）+ 冰箱家具 ColdRate 统计（受管 16 行中已压低行数@最小值）+ Talent 受限行数与花瓶 325 等级 + 储物柜白名单集合计数。toggle 前后各拍一轮对照（表/trace/cfg 三源之一）；正常玩家不触发 |
 
 - **逐条 try（任务 7 落地，原 §6.2 旧债收口）**：HandleOutbox 的批内循环每条消息独立
   try/catch——单条异常只弃该条（warn 日志），不弃同批后续（面板滑条连发+关闭常同批到达）。
@@ -217,10 +217,16 @@ entry.Value = 3f;
 - **只写 Meta 声明过的键**：未登记的 section/key 一律拒绝（spec §2.2 暴露原则的写侧执行）。
 - 值转换按 entry.SettingType：float/double/int/long/short/byte 系/bool/string/enum（enum 名大小写不敏感）。
 
-### 6.3 启停与 Save 防抖
+### 6.3 启停（任务 13 实装）与 Save 防抖
 
-- `SetModEnabled(guid, enabled)`：任务 6 落**本插件 cfg `[Disabled]<guid>` 名单**（true=停用）；
-  快照 `enabled = 插件在链上 && !名单`。任务 13 起改写各 mod `General.Enabled`（名单届时退役）。
+- `SetModEnabled(guid, enabled)`：**直写目标 mod 自己的 `General.Enabled`**（节/键按
+  `MetaMod.EnabledSection/EnabledKey`，默认 General:Enabled，与 T9-T12 九 mod Bind 一致；
+  全套件无键名差异，字段留作个别 mod 例外位）。写入经 §4.1 同款事件链触发该 mod 现役
+  `SettingChanged→Rerun`：热关闭=其 Ticker 首行 gate 按原值缓存还原并停写（≤其轮询周期），
+  重开=重新落笔。Save 走统一防抖（MarkDirty 该 mod cfg）。**旧的本插件 cfg `[Disabled]`
+  名单机制已移除**（避免双轨；快照真值源=各 mod entry 本身，旧 cfg 里残留的 `[Disabled]` 节
+  无人再读，行为惰性）。dll 不在链上 / entry 不存在（旧版 dll）→ 拒写并 Log。
+- 快照 `enabled = 插件在链上 && entry 值`（entry 缺失按 Bind 默认 true 兜底）。
 - 防抖（DESIGN §4.3-2 落地）：首写某 ConfigFile 前 `SaveOnConfigSet=false`（记住原值）→ 标脏；
   **3s 节流**（首写起算，连写不重置——长拖动按 3s 批落盘）到点 / MC_CLOSE 时 `Save()` 全部脏文件
   并**恢复各自原 SaveOnConfigSet**。进程被强杀最多丢 3s 内的未落盘写（面板改值路径可接受）。
@@ -334,8 +340,51 @@ ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta �
 ——实机物理键穿 Vuplex 门进浏览器，探针失败只 WARN 不判负）。证据全文存
 `.superpowers/sdd/2026-10-24-modcenter/task-8-report.md`。
 
+## 6.7 启停热还原断言（任务 13，2026-10-24，主菜单阶段）
+
+工具 `tools/_mc_fixture.js toggle`（MC_TOGGLE_MOD 真实面板开关驱动 + `MC_EVIDENCE`
+多表快照 + trace/cfg 双源；面板活性自愈——宿主页丢失自动重开面板，被接管则中止）。
+**实测 42/42 PASS（2 项 SKIP：CabinetExpand 系——并行任务已把 Meta 的柜子扩容位换成
+CabinetSize（c899f20 系列），面板无该页，热还原断言待套件组成定稿后补）**。断言面
+（T9-T12 累积欠账收口）：
+
+1. **三件套热还原 ×2 轮**（T9）：RS 面板关 → ≤5s MoveSpeed 4.8→2.4（×3 行）、
+   9098/9099/9100/9131→300/300/60/300、货舱 1061/1063→4x2/4x3（9130 保持 60=QA 接管）；
+   重开逐值回 4.8/150/8x2；BP（bag1 8x7/9600、bag11 9x11）与 QA（9075→3600 等）同过。
+2. **BP ExcludeIds 继承性语义**（T9 评审 A）：ExcludeIds=8 预置（cfg 预设+重启，面板无
+   此键）——bag8 全程停官方 9x8（"排除即停管"）；"先排除已扩容行再热关留残值"场景经
+   面板不可达（ExcludeIds 不在 Meta，MC_SET 被拒实证——桥只写登记键）。
+3. **9130 双 mod 同关**（T9 评审 B）：**QA/RS 各加共管让位守卫**（还原时"当前值>本缓存
+   ⇒不回写"；QA 自愈分支改"只升不降"——此前 QA 会把 RS 还原的 300 压回其污染缓存 150）。
+   实测：QA 单关（RS 开）9130=450（QA 按污染缓存还原，RS 让位守卫保持自家目标）；双关
+   **B 序（QA 先关、RS 后关）终值=900 官方确定**（RS 干净缓存最后还原）；**A 序（RS 先关
+   +6.5s 间隔保证 QA 轮询命中）终值=450**——QA 仍启用期间按己方目标重写 60、其还原再落
+   污染缓存 450，**关序决定终值**（彻底收敛需跨 mod 原值共享注册表，超出最小修复范围，
+   如实记录）；两序恢复全 60。
+4. **FridgeChill**（T10）：热关 → cold 16 行全回 0.2 + 还原日志行；重开回 16/16@0.1；
+   **KeepMult 2→1 热迁移**（FC 仍启用）→ 早退区也回写 cold 全 0.2、cfg=1 落盘；回 2 复写。
+   CabinetExpand RestoreAllSizes 运行中路径随套件组成变化 SKIP（见上）。
+5. **CabinetEverywhere**（T11）：热关 → 白名单集合 710→1（evidence 活计数）+ CE_gate_trace
+   `RemoveAll` 移除前后计数行；重开重注入 710。RoleUnlock General 热关 → Talent 123 /
+   花瓶 0/0 回官方 + RU_gate_trace 还原行；两开关（ClearPool/VaseRecipe）面板热切换
+   123/0-0 ⇄ 77/1-1 双向 + cfg 落盘。
+6. **PlanPick/PDS**：cfg 直写（false→true 落盘核对）+ 快照回推 + 行置灰/停用横幅
+   （注入 UI 级留 T17 存档轮）。
+
+过程实录（第 1 轮 23:12-23:19）：跑到一半被作者接管会话（面板 DOM 消亡后 fixture 盲等
+超时，FC/CEW/RU/PP 段全"未达桥"；23:18:50 作者点继续 → WebView 关闭 → fixture 中止）；
+第 2 轮修 fixture（活性自愈 + FC 滑块实参 bug + QA 守卫收窄）后全绿。证据全文：
+`.superpowers/sdd/2026-10-24-modcenter/task-13-report.md` 与 task-13-ev-*.txt。
+
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 13：启停接线升级。`ConfigBridge.SetModEnabled` 从本插件 cfg `[Disabled]`
+  名单改为**直写各 mod 自己的 `General.Enabled`**（`Meta.cs` 新增 `MetaMod.EnabledSection/
+  EnabledKey`，默认 General:Enabled，全套件无例外）；写入触发目标 mod 现役 SettingChanged→
+  Rerun 热还原/重应用链；快照 enabled 真值源改为各 mod entry；名单机制整体移除（`Marker()`
+  删除，旧 cfg 残留 `[Disabled]` 节惰性无人读）。`MC_EVIDENCE` 扩为多表断言快照（§6.2）。
+  `tools/_mc_fixture.js` 新增 `toggle` 模式（任务 13 热还原全断言，供 T17 回归），menu 模式
+  toggle 持久化断言改 PDS 自身 cfg。实测见 §6.7。
 - 2026-10-24 任务 8：键盘门复用。新增 `FocusTick.cs`（面板开 `SetKeyboardEnabled(true)` +
   IME On、关双还原；门控 = MC_OPEN/MC_CLOSE 消息而非 IsPageActive——面板非官方页；
   `_imeSaved` 会话标记 + 层丢失就地还原 IME 两处对 PlanPick 的加固；沿写自证

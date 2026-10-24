@@ -356,7 +356,8 @@ internal sealed class RobotTicker : MonoBehaviour
     /// General.Enabled=false 还原：把已改写的表值按原值缓存全部回写官方原值
     /// （机型属性五字段 / 机器人动作行 / 货舱行宽高）。返回 false=配置表尚未就绪（下轮重试）。
     /// 边界：已加载机器人的内部快照字段（0x84/0x88 等）不回滚——模块重算或下次读档自然回
-    /// 官方值，与"删 dll 即还原"同边界；9130 等与 QuickAction 共用行按各自缓存独立管理。
+    /// 官方值，与"删 dll 即还原"同边界；9130 等与 QuickAction 共用行按各自缓存独立管理，
+    /// 双 mod 同关时还原让位（当前值 > 本缓存 ⇒ 对方已用更大真原值还原，不回写）终值确定。
     /// </summary>
     private static bool RestoreAll(List<string> lines)
     {
@@ -419,6 +420,10 @@ internal sealed class RobotTicker : MonoBehaviour
                 {
                     if (kv.Value <= 0f) continue;
                     if (!adict.TryGetValue(kv.Key, out var a) || a == null) continue;
+                    // 9130 共管还原让位（2026-10-24，ModCenter 任务 13）：当前值 > 本缓存"原值" ⇒
+                    // 共管方（QuickAction）已用更大的真原值还原过——两 mod 均只减不增，首见最大值
+                    // 才是官方原值；本缓存可能记到对方更低的中间值。此时不回写，双 mod 同关终值确定。
+                    if (a.During > kv.Value + 1e-6f) continue;
                     if (Math.Abs(a.During - kv.Value) > 1e-6f)
                     { a.During = kv.Value; n++; lines.Add($"ACTION {kv.Key}({Name(a)}) During -> {kv.Value:0.#}（还原）"); }
                 }

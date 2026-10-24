@@ -15,10 +15,11 @@ namespace SurvivalLog.ModCenter;
 /// 配置桥（任务 6）：面板的数据引擎。API 面为任务 4 实证定案（DESIGN §4，逐字消费）：
 /// IL2CPPChainloader.Instance.Plugins 枚举 → BasePlugin.Config 直取 → cfg[ConfigDefinition]
 /// 非泛型取 entry（SettingType 判型 + BoxedValue 读写，写同样触发 ClampValue+SettingChanged 链）。
-/// 职责：快照（BuildSnapshot）/ 写（TrySet，联动 writeKeys 等值）/ 启停（SetModEnabled，
-/// 任务 6 落本插件 cfg [Disabled] 名单，任务 13 接各 mod General.Enabled）/ 消息分发
-/// （MC_OPEN→__mcRender 快照；MC_SET→TrySet→__mcEvent MC_SET_OK；MC_TOGGLE_MOD→回新快照）
-/// / Save 防抖（首写 SaveOnConfigSet=false，3s 节流 + MC_CLOSE 立即落盘后恢复原值）。
+/// 职责：快照（BuildSnapshot）/ 写（TrySet，联动 writeKeys 等值）/ 启停（SetModEnabled——任务 13
+/// 起直写各 mod 自己的 General.Enabled，触发其现役 SettingChanged→Rerun 还原/应用链；旧的
+/// 本插件 cfg [Disabled] 名单机制已移除）/ 消息分发（MC_OPEN→__mcRender 快照；MC_SET→TrySet→
+/// __mcEvent MC_SET_OK；MC_TOGGLE_MOD→回新快照）/ Save 防抖（首写 SaveOnConfigSet=false，
+/// 3s 节流 + MC_CLOSE 立即落盘后恢复原值）。
 /// 线程纪律：全部 cfg 读写与分发都在 Ticker 主线程（Pump）；outbox 回调线程只入队。
 /// </summary>
 internal static class ConfigBridge
@@ -49,8 +50,9 @@ internal static class ConfigBridge
             var mi = new ModInfo
             {
                 Guid = mm.Guid, Name = mm.Name, En = mm.En, Desc = mm.Desc,
-                // 插件不在链上（dll 级缺失）视为停用；在场则以 [Disabled] 名单取反
-                Enabled = cfg != null && !(Marker(mm.Guid)?.Value ?? true)
+                // 插件不在链上（dll 级缺失）视为停用；在场以该 mod 自己的 General.Enabled 为准
+                // （任务 13 真值源；entry 缺失=旧版 dll，按 Bind 默认 true 兜底）
+                Enabled = cfg != null && ReadModEnabled(mm, cfg, out _)
             };
             foreach (var mg in mm.Groups)
             {
@@ -93,17 +95,39 @@ internal static class ConfigBridge
         return true;
     }
 
-    /// <summary>启停：任务 6 落本插件 cfg [Disabled]&lt;guid&gt; 名单（true=停用）；任务 13 起改写各 mod General.Enabled。</summary>
+    /// <summary>
+    /// 启停（任务 13 实装）：直写目标 mod 自己的 <c>General.Enabled</c>（节/键按
+    /// MetaMod.EnabledSection/EnabledKey，默认 General:Enabled）。写入即触发该 mod 现役
+    /// SettingChanged→Rerun 链（各 mod Ticker 首行 gate 消费：热关闭=按原值缓存还原并停写，
+    /// 重开=重新落笔），Save 走统一防抖。旧的本插件 cfg [Disabled] 名单机制已移除（避免双轨，
+    /// 快照真值源=各 mod entry 本身）。
+    /// </summary>
     internal static void SetModEnabled(string guidOrName, bool enabled)
     {
         var mm = Resolve(guidOrName);
         if (mm == null) { Log("toggle 拒绝：未知插件 " + guidOrName); return; }
-        var mk = Marker(mm.Guid);
-        var self = ModCenterPlugin.Instance;
-        if (self == null) return;
-        MarkDirty(self.Config);
-        mk.Value = !enabled;
-        Log($"toggle {mm.En} → {(enabled ? "启用" : "停用")}（名单标记 {mm.Guid}={!enabled}）");
+        var cfg = CfgOf(mm.Guid);
+        if (cfg == null) { Log("toggle 拒绝：" + mm.En + " 不在链上（dll 缺失？）"); return; }
+        var en = Entry(cfg, mm.EnabledSection, mm.EnabledKey);
+        if (en == null)
+        { Log($"toggle 拒绝：{mm.En} 无 {mm.EnabledSection}.{mm.EnabledKey} entry（旧版 dll？）"); return; }
+        if (!ConvertValue(enabled ? "true" : "false", en.SettingType, out var val))
+        { Log($"toggle 拒绝：{mm.En} {mm.EnabledSection}.{mm.EnabledKey} 非 bool（{en.SettingType.Name}）"); return; }
+        MarkDirty(cfg); // 先关自动落盘再写（统一防抖，同 TrySet）
+        en.BoxedValue = val; // 同值写被 BepInEx 短路（不发 SettingChanged，§4.3-1）；值变化即触发目标 mod Rerun
+        Log($"toggle {mm.En} → {(enabled ? "启用" : "停用")}（直写 {mm.Guid} {mm.EnabledSection}.{mm.EnabledKey}）");
+    }
+
+    /// <summary>读某 mod 的启停 entry（true/false）；entry 缺失=旧版 dll，按 Bind 默认 true 兜底。</summary>
+    private static bool ReadModEnabled(MetaMod mm, ConfigFile cfg, out ConfigEntryBase entry)
+    {
+        entry = Entry(cfg, mm.EnabledSection, mm.EnabledKey);
+        if (entry == null) return true;
+        try
+        {
+            return Convert.ToBoolean(entry.BoxedValue, CultureInfo.InvariantCulture);
+        }
+        catch { return true; }
     }
 
     // ============ 快照细节 ============
@@ -285,15 +309,6 @@ internal static class ConfigBridge
         catch { return false; }
     }
 
-    /// <summary>启停名单 entry（懒 Bind，幂等；写在本插件 cfg [Disabled] 节，key=插件 GUID）。</summary>
-    private static ConfigEntry<bool> Marker(string guid)
-    {
-        var self = ModCenterPlugin.Instance;
-        if (self == null) return null;
-        return self.Config.Bind("Disabled", guid, false,
-            "ModCenter 停用名单（true=面板已停用该 mod）。任务 13 起改写各 mod General.Enabled，此前仅面板状态源。");
-    }
-
     // ============ 消息泵（主线程，Ticker 每帧调） ============
 
     internal static void EnqueueOutboxJson(string json) => Inbox.Enqueue(json);
@@ -430,19 +445,160 @@ internal static class ConfigBridge
 
     // ============ 验证辅助（只读；装机断言用，正常玩家不触发） ============
 
-    /// <summary>写证据文件（RobotSpeed 移速倍率 entry 值 + Config_RobotAttribute 内存表快照，表读复用 BridgeProbe）。</summary>
+    // 断言锚点行（任务 13 热还原断言口径，与各 mod DESIGN 判别字段同源）：
+    // 动作：9075 上厕所(QA) / 9098,9099,9100,9130,9131 机器人动作(RS；9130 与 QA 共管)
+    //       / 1611 正在种植(QA BT) / 1615 浇水(QA) / 1915 空调吹风(QA)
+    private static readonly int[] EvActionIds = { 9075, 9098, 9099, 9100, 9130, 9131, 1611, 1615, 1915 };
+    // 包行：1/8/11 背包(BP) / 1061,1063 货舱(RS) / 110001,110009 柜子+材料架(CE尺寸)
+    //       / 1004,115000 冰箱包(CE尺寸) / 3002,1023 冰箱包+门口袋(FC+CE载具)
+    private static readonly int[] EvBagIds = { 1, 8, 11, 1061, 1063, 110001, 110009, 1004, 115000, 3002, 1023 };
+    // FridgeChill 受管包（其 DefaultBagIds 同源；ColdRate 在 Config_Furniture 上按 BagId 过滤）
+    private static readonly int[] EvFridgeBags = { 1004, 115000, 115001, 115005, 3002 };
+
+    /// <summary>
+    /// 写证据文件（任务 13 扩为多表断言快照，全部只读）：RobotSpeed 移速倍率 entry 值 +
+    /// Config_RobotAttribute.MoveSpeed 全行 + 判别动作行 During + 判别包行 Size/Burden +
+    /// 冰箱家具 ColdRate 统计（受管 16 行中已被压低行数/最小值）+ Talent 受限行数与花瓶 325
+    /// 等级 + 储物柜白名单集合计数。装机断言在 toggle 前后各拍一轮对照（表/trace/cfg 三源之一）。
+    /// </summary>
     private static void WriteEvidence(string tag)
     {
         try
         {
             var cfg = CfgOf("com.local.survivallog.robotspeed");
             var e = cfg != null ? Entry(cfg, "机器人提速", "移速倍率") : null;
-            var line = $"[{DateTime.Now:HH:mm:ss.fff}] tag={tag} entry={(e != null ? System.Convert.ToDouble(e.BoxedValue, CultureInfo.InvariantCulture).ToString("0.###", CultureInfo.InvariantCulture) : "?")}"
-                + " table=" + BridgeProbe.Table();
-            System.IO.File.AppendAllText(EvidencePath, line + "\n");
-            Log("evidence: " + line);
+            var sb = new StringBuilder();
+            sb.Append($"[{DateTime.Now:HH:mm:ss.fff}] tag={tag}")
+              .Append(" rs=" + (e != null ? System.Convert.ToDouble(e.BoxedValue, CultureInfo.InvariantCulture).ToString("0.###", CultureInfo.InvariantCulture) : "?"))
+              .Append(" ms=" + BridgeProbe.Table())
+              .Append(" acts=" + EvActions())
+              .Append(" bags=" + EvBags())
+              .Append(" cold=" + EvCold())
+              .Append(" talent=" + EvTalent())
+              .Append(" ce=" + EvCeWhitelist());
+            System.IO.File.AppendAllText(EvidencePath, sb + "\n");
+            Log("evidence: " + sb);
         }
         catch (Exception ex) { Log("warn evidence 失败: " + ex.Message); }
+    }
+
+    private static GameCore.HotUpdate.ConfigManager EvCm()
+    {
+        if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.IsInstanceCreated)
+            return null;
+        return GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.Instance;
+    }
+
+    private static string EvActions()
+    {
+        try
+        {
+            var d = EvCm()?._Config_Action_Dict;
+            if (d == null || d.Count == 0) return "未就绪";
+            var sb = new StringBuilder();
+            foreach (var id in EvActionIds)
+            {
+                sb.Append(id).Append('=');
+                try { sb.Append(d.TryGetValue(id, out var a) && a != null ? a.During.ToString("0.#", CultureInfo.InvariantCulture) : "-").Append(' '); }
+                catch { sb.Append("? "); }
+            }
+            return sb.ToString().Trim();
+        }
+        catch (Exception e) { return "异常:" + e.Message; }
+    }
+
+    private static string EvBags()
+    {
+        try
+        {
+            var d = EvCm()?._Config_Bag_Dict;
+            if (d == null || d.Count == 0) return "未就绪";
+            var sb = new StringBuilder();
+            foreach (var id in EvBagIds)
+            {
+                sb.Append(id).Append('=');
+                try
+                {
+                    if (!d.TryGetValue(id, out var b) || b == null) { sb.Append("- "); continue; }
+                    var s = b.Size;
+                    sb.Append(s != null && s.Count >= 2 ? s[0] + "x" + s[1] : "?").Append('/');
+                    sb.Append(b.Burden).Append(' ');
+                }
+                catch { sb.Append("? "); }
+            }
+            return sb.ToString().Trim();
+        }
+        catch (Exception e) { return "异常:" + e.Message; }
+    }
+
+    /// <summary>冰箱家具 ColdRate 统计：受管行数中已低于原生 0.2 的行数与最小值（FC 生效=16/16@0.1，还原=0/16@0.2）。</summary>
+    private static string EvCold()
+    {
+        try
+        {
+            var d = EvCm()?._Config_Furniture_Dict;
+            if (d == null || d.Count == 0) return "未就绪";
+            int total = 0, chilled = 0;
+            float min = float.MaxValue;
+            var bags = new HashSet<int>(EvFridgeBags);
+            foreach (var kv in d)
+            {
+                var f = kv.Value;
+                if (f == null) continue;
+                try
+                {
+                    if (f.ColdRate <= 0f || !bags.Contains(f.BagId)) continue;
+                    total++;
+                    if (f.ColdRate < 0.199f) chilled++;
+                    if (f.ColdRate < min) min = f.ColdRate;
+                }
+                catch { }
+            }
+            return total == 0 ? "0" : $"{chilled}/{total}@{min.ToString("0.###", CultureInfo.InvariantCulture)}";
+        }
+        catch (Exception e) { return "异常:" + e.Message; }
+    }
+
+    /// <summary>Talent 受限行数（PlayerSelectId 非空=官方 123；ClearPool 生效=77）+ 花瓶 325 craft/show 等级。</summary>
+    private static string EvTalent()
+    {
+        try
+        {
+            var cm = EvCm();
+            if (cm == null) return "未就绪";
+            var td = cm._Config_Talent_Dict;
+            int restricted = -1;
+            if (td != null && td.Count > 0)
+            {
+                restricted = 0;
+                foreach (var kv in td)
+                {
+                    var r = kv.Value;
+                    if (r == null) continue;
+                    try { var p = r.PlayerSelectId; if (p != null && p.Count > 0) restricted++; }
+                    catch { }
+                }
+            }
+            var pd = cm._Config_ProductionList_Dict;
+            string vase = "?";
+            if (pd != null && pd.TryGetValue(325, out var v) && v != null)
+            {
+                try { vase = v.craft_level + "/" + v.show_level; } catch { }
+            }
+            return $"restricted={restricted} vase={vase}";
+        }
+        catch (Exception e) { return "异常:" + e.Message; }
+    }
+
+    /// <summary>储物柜白名单集合计数（官方 1；CabinetEverywhere 注入后 710）。</summary>
+    private static string EvCeWhitelist()
+    {
+        try
+        {
+            var set = GameCore.HotUpdate.ToolCabinetConfig.CraftSourceFurnitureIds;
+            return set != null ? set.Count.ToString(CultureInfo.InvariantCulture) : "null";
+        }
+        catch (Exception e) { return "异常:" + e.Message; }
     }
 
     private static void Log(string msg) => ModCenterPlugin.Log(msg);

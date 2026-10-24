@@ -11,6 +11,11 @@ internal sealed class MetaMod
     public string Desc;  // 一句话简介
     public List<MetaGroup> Groups = new();
     public MetaItem OvrHost; // ovr 清单宿主项（动作加速 其他.Overrides；不进 groups items，可写）
+
+    // 启停键（任务 13）：该 mod 总开关在【其自己 cfg】里的真实节/键——SetModEnabled 直写
+    // 此 entry（默认 General:Enabled，与 T9-T12 九 mod 的 Bind 一致；个别 mod 键名不同时覆盖）。
+    public string EnabledSection = "General";
+    public string EnabledKey = "Enabled";
 }
 
 internal sealed class MetaGroup

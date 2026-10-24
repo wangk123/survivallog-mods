@@ -12,7 +12,8 @@
 //        - interactions through REAL DOM events:
 //            slider (RobotSpeed moveMult) incl. 100ms throttle burst shape
 //            bool (RoleUnlock flower seeds), select (UiFit.Mode), reload-badge toast
-//            side toggle (PreDisasterSpeed off/on, banner + [Disabled] persistence)
+//            side toggle (PreDisasterSpeed off/on, banner + own-cfg General.Enabled
+//              persistence — task 13 direct-write semantics)
 //            ovr round-trip: add #8012 -> drag 250 -> fresh snapshot -> delete -> ''
 //              (serialized string asserted in outbox AND in quickaction cfg on disk)
 //        - close via X button, MC_CLOSE in sent log
@@ -32,6 +33,7 @@ const MAIN_HTML = '/UI/MainUI/MainUI.html';
 const OUT_HTML = '/UI/OutSetting/OutSetting.html';
 const GAME_ROOT = 'E:/SteamLibrary/steamapps/common/Survival Log';
 const MC_CFG = GAME_ROOT + '/BepInEx/config/com.local.survivallog.modcenter.cfg';
+const PD_CFG = GAME_ROOT + '/BepInEx/config/com.local.survivallog.predisasterspeed.cfg';
 const QA_CFG = GAME_ROOT + '/BepInEx/config/com.local.survivallog.quickaction.cfg';
 const PD_GUID = 'com.local.survivallog.predisasterspeed';
 const RS_GUID = 'com.local.survivallog.robotspeed';
@@ -755,16 +757,17 @@ async function menuMode() {
   V.toggleMsgShape = !!(sent6t && sent6t.guid === PD_GUID && sent6t.enabled === false);
   V.toggleSnapshotBack = tgSnap === false;
   V.toggleRowOffBanner = !!offRow && !!(pdPage && pdPage.stopBannerShown);
-  // wait [Disabled] persisted on disk (3s debounce + drain margin)
+  // task 13: toggle now writes the TARGET mod's own cfg General.Enabled (the old
+  // ModCenter [Disabled] list is gone). Wait it persisted on disk (3s debounce + drain).
   let pdLine = null;
   const pdDl = Date.now() + 9000;
   for (;;) {
-    pdLine = readCfgSection(MC_CFG, 'Disabled', PD_GUID);
-    if (pdLine && pdLine.indexOf('true') !== -1) break;
+    pdLine = readCfgSection(PD_CFG, 'General', 'Enabled');
+    if (pdLine && pdLine.indexOf('false') !== -1) break;
     if (Date.now() > pdDl) break;
     await sleep(500);
   }
-  V.togglePersisted = !!(pdLine && pdLine.indexOf('true') !== -1);
+  V.togglePersisted = !!(pdLine && pdLine.indexOf('false') !== -1);
   F.pdLine = pdLine;
   await clickToggle(PD_GUID); // restore on
   await sleep(2500);
@@ -957,7 +960,7 @@ async function menuMode() {
     flower: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.roleunlock.cfg', 'Vine', 'UnlockFlowerSeeds')),
     burden: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'BurdenMult')),
     ovr: stripNonCodeLines(readCfgSection(QA_CFG, '\u5176\u4ed6', 'Overrides')),
-    pdDisabled: readCfgSection(MC_CFG, 'Disabled', PD_GUID),
+    pdEnabled: stripNonCodeLines(readCfgSection(PD_CFG, 'General', 'Enabled')),
     linkedPairs: linkedFinalPairs,
   };
   V.linkedRestored = F.linked.every((e, i) => !e.pairEqual
@@ -967,6 +970,7 @@ async function menuMode() {
     && F.final.uifitMode === (F.selSet ? F.selSet.uifitModeBefore : F.final.uifitMode)
     && F.final.flower === (F.ruBefore || 'false')
     && F.final.burden === String(F.burdenBefore)
+    && F.final.pdEnabled === 'true'
     && (F.final.ovr === '' || F.final.ovr === null);
 
   try { await page.screenshot({ path: SHOT_DIR + '/task-7-shot-panel.png' }); } catch (e) {}
@@ -1019,7 +1023,7 @@ async function menuMode() {
     ['2  side toggle msg shape', V.toggleMsgShape],
     ['2  side toggle snapshot push-back', V.toggleSnapshotBack],
     ['2  side toggle row off + stop banner', V.toggleRowOffBanner],
-    ['2  side toggle [Disabled] persisted', V.togglePersisted],
+    ['2  side toggle own-cfg General.Enabled=false persisted', V.togglePersisted],
     ['2  ovr add -> "8012:1000" MC_SET', V.ovrAddMsg],
     ['2  ovr drag -> "8012:250" + ck text', V.ovrDragMsg && V.ovrCkText],
     ['2  ovr round-trip via fresh snapshot', V.ovrRoundTripSnapshot && V.ovrPanelResync],
@@ -1268,9 +1272,634 @@ async function outsettingMode() {
   process.exit(allPass ? 0 : 1);
 }
 
+// ==========================================================================
+//  MODE: toggle  (Task 13: hot-restore assertion suite, main menu)
+//  Driver contract (bash):
+//    - game launched via steam:// with ALL mod cfgs Enabled=true and the freshly
+//      built ModCenter/QuickAction/RobotSpeed (+CabinetExpand for the round) dlls;
+//    - BepInEx/ModCenter_evidence.txt deleted before launch (fresh evidence log);
+//    - BackpackExpand cfg ExcludeIds preset (driver choice) for the inherited
+//      semantics assertion; restored by the driver after the round.
+//  Every assertion reads up to THREE sources: in-memory tables (via MC_EVIDENCE
+//  multi-table snapshot lines in ModCenter_evidence.txt), trace files written
+//  at state transitions (CE_gate_trace.txt / RU_gate_trace.txt), cfg on disk.
+// ==========================================================================
+async function toggleMode() {
+  const t0 = Date.now();
+  const log = (m) => console.log('[' + Math.round((Date.now() - t0) / 1000) + 's] ' + m);
+  const { browser, page } = await connect(t0, log);
+
+  const BP_GUID = 'com.local.survivallog.backpackexpand';
+  const CAB_GUID = 'com.local.survivallog.cabinetexpand'; // 柜子扩容
+  const FC_GUID = 'com.local.survivallog.fridgechill';
+  const CEW_GUID = 'com.local.survivallog.cabineteverywhere';
+  const RU_GUID = 'com.local.survivallog.roleunlock';
+  const PP_GUID = 'com.local.survivallog.planpick';
+  const CFG = (g) => GAME_ROOT + '/BepInEx/config/' + g + '.cfg';
+  const EV_FILE = GAME_ROOT + '/BepInEx/ModCenter_evidence.txt';
+  const TRACE_CE = GAME_ROOT + '/BepInEx/CE_gate_trace.txt';
+  const TRACE_RU = GAME_ROOT + '/BepInEx/RU_gate_trace.txt';
+  const GAME_LOG = GAME_ROOT + '/BepInEx/LogOutput.log';
+
+  // wait for MainUI + entry + panel bootstrap
+  const ready = async () => {
+    try {
+      return await page.evaluate((tail) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try {
+            const d = fs[i].contentDocument;
+            if (d && d.location.pathname.indexOf(tail) !== -1)
+              return !!(d.getElementById('__mc_entry') && window.__mcDrain && window.__mcRender);
+          } catch (e) {}
+        }
+        return false;
+      }, MAIN_HTML);
+    } catch (e) { return false; }
+  };
+  const dl0 = Date.now() + 150000;
+  for (;;) {
+    if (await ready()) break;
+    if (Date.now() > dl0) { log('FAIL: entry/panel bootstrap not ready'); process.exit(2); }
+    await sleep(POLL_MS);
+  }
+  log('bootstrap ready');
+
+  // open panel via entry click
+  await page.evaluate((tail) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let i = 0; i < fs.length; i++) {
+      try {
+        const d = fs[i].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const e = d.getElementById('__mc_entry'); if (e) e.click();
+        }
+      } catch (e2) {}
+    }
+  }, MAIN_HTML);
+  const dlR = Date.now() + 15000;
+  for (;;) {
+    const ok = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1)
+            return !!(window.__mcLastSnapshot && d.getElementById('__mc_overlay'));
+        } catch (e) {}
+      }
+      return false;
+    }, MAIN_HTML);
+    if (ok) break;
+    if (Date.now() > dlR) { log('FAIL: panel/snapshot not ready'); process.exit(2); }
+    await sleep(500);
+  }
+  log('panel open + snapshot');
+
+  // ---- helpers ----
+  const pushMsg = (obj) => page.evaluate((o) => { window.__mcOutbox.push(o); return true; }, obj);
+  const readEvLine = (tag) => {
+    try {
+      const t = FS.readFileSync(EV_FILE, 'utf8');
+      const lines = t.split('\n').filter((l) => l.indexOf('tag=' + tag + ' ') !== -1);
+      return lines.length ? lines[lines.length - 1] : null; // LAST match (state may transition)
+    } catch (e) { return null; }
+  };
+  // evidence round trip: push MC_EVIDENCE(tag) once -> C# appends one multi-table line
+  // (outbox drain is 2s cadence; retry the push only if nothing landed after 5s)
+  const ev = async (tag, budgetMs) => {
+    const dl = Date.now() + (budgetMs || 12000);
+    let pushedAt = 0;
+    for (;;) {
+      const l = readEvLine(tag);
+      if (l) return l;
+      if (Date.now() - pushedAt > 5000) { await pushMsg({ type: 'MC_EVIDENCE', tag: tag }); pushedAt = Date.now(); }
+      if (Date.now() > dl) return 'TIMEOUT';
+      await sleep(400);
+    }
+  };
+  const act = (line, id) => {
+    const m = String(line).match(new RegExp('(?:^|\\s|acts=)' + id + '=([^\\s]+)'));
+    return m ? m[1] : null;
+  };
+  const bag = (line, id) => {
+    const m = String(line).match(new RegExp('(?:^|\\s|bags=)' + id + '=(\\S+)'));
+    return m ? m[1] : null;
+  };
+  const cold = (line) => { const m = String(line).match(/cold=([^\s]+)/); return m ? m[1] : null; };
+  const talent = (line) => { const m = String(line).match(/talent=restricted=(\d+) vase=(\S+)/); return m ? { r: +m[1], vase: m[2] } : null; };
+  const ceCount = (line) => { const m = String(line).match(/(?:^|\s)ce=([^\s]+)/); return m ? m[1] : null; };
+  const moveSpeeds = (line) => { const ms = String(line).match(/ms=([^\r\n]+?)\s+acts=/); return ms ? (ms[1].match(/MoveSpeed=([\d.]+)/g) || []).join(',') : null; };
+
+  const clickToggle = (guid) => page.evaluate(({ tail, guid }) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let k = 0; k < fs.length; k++) {
+      try {
+        const d = fs[k].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const b = d.querySelector('#__mc_side [data-act="toggle"][data-guid="' + guid + '"]');
+          if (b) { b.click(); return true; }
+        }
+      } catch (e) {}
+    }
+    return false;
+  }, { tail: MAIN_HTML, guid });
+
+  // toggle + wait for C# push-back (new __mcRender with expected enabled value);
+  // re-opens the panel if it was destroyed (author menu navigation)
+  const toggleAndWait = async (guid, wantEnabled) => {
+    if (!(await ensurePanel())) throw new Error('panel/host gone (session taken over)');
+    const seq0 = await page.evaluate(() => window.__mcSnapSeq || 0);
+    const clicked = await clickToggle(guid);
+    const dl = Date.now() + 15000;
+    for (;;) {
+      const r = await page.evaluate((guid) => {
+        const s = window.__mcLastSnapshot;
+        const m = s && s.mods && s.mods.find((x) => x.guid === guid);
+        return { enabled: m ? m.enabled : undefined, seq: window.__mcSnapSeq || 0 };
+      }, guid);
+      if (r.enabled === wantEnabled && r.seq > seq0) return { clicked, pushed: true };
+      if (Date.now() > dl) return { clicked, pushed: false, got: r.enabled };
+      await sleep(400);
+    }
+  };
+  // row/page visual state for a mod (clicks its row first)
+  const rowState = async (guid) => {
+    await page.evaluate(({ tail, guid }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            if (row) row.click();
+          }
+        } catch (e) {}
+      }
+    }, { tail: MAIN_HTML, guid });
+    await sleep(80);
+    return page.evaluate(({ tail, guid }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            const banner = d.querySelector('#__mc_stop') || d.querySelector('.__mc-stop-banner');
+            return {
+              off: row ? row.classList.contains('__mc-off') : null,
+              banner: banner ? banner.classList.contains('__mc-show') : null,
+            };
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, { tail: MAIN_HTML, guid });
+  };
+  const waitCfgKey = async (guid, section, key, want, budgetMs) => {
+    const dl = Date.now() + (budgetMs || 12000);
+    for (;;) {
+      const v = stripNonCodeLines(readCfgSection(CFG(guid), section, key));
+      if (v === want) return v;
+      if (Date.now() > dl) return v;
+      await sleep(600);
+    }
+  };
+  const readTraceText = (p) => { try { return FS.readFileSync(p, 'utf8'); } catch (e) { return null; } };
+  const logHas = async (needle, budgetMs) => {
+    const dl = Date.now() + (budgetMs || 15000);
+    for (;;) {
+      try { if (FS.readFileSync(GAME_LOG, 'utf8').indexOf(needle) !== -1) return true; } catch (e) {}
+      if (Date.now() > dl) return false;
+      await sleep(700);
+    }
+  };
+  // poll evidence until predicate passes or budget out; returns last line
+  // poll evidence until predicate passes or budget out; re-pushes the request at
+  // most every 2s (drain cadence) so each retry appends ONE fresh-state line
+  const evWait = async (tag, pred, budgetMs) => {
+    const dl = Date.now() + (budgetMs || 12000);
+    let last = null;
+    let lastPush = 0;
+    for (;;) {
+      if (Date.now() - lastPush >= 2000) { await pushMsg({ type: 'MC_EVIDENCE', tag: tag }); lastPush = Date.now(); }
+      await sleep(600);
+      last = readEvLine(tag);
+      if (last && pred(last)) return { ok: true, line: last };
+      if (Date.now() > dl) return { ok: false, line: last };
+    }
+  };
+
+  const V = {}; const F = {};
+  const CK = [];
+  const ck = (name, ok) => { CK.push([name, !!ok]); log((ok ? 'PASS ' : 'FAIL ') + name); };
+  const ckSkip = (name, why) => { CK.push([name + '  [SKIP: ' + why + ']', true]); log('SKIP  ' + name + ' (' + why + ')'); };
+
+  // suite composition probe: the parallel CabinetSize task replaced CabinetExpand
+  // in Meta (commit c899f20 series). Cabinet hot-restore assertions only run when
+  // the deployed Meta actually exposes cabinetexpand.
+  const snapGuids = await page.evaluate(() => (window.__mcLastSnapshot ? window.__mcLastSnapshot.mods.map((m) => m.guid) : []));
+  const HAS_CAB = snapGuids.indexOf('com.local.survivallog.cabinetexpand') !== -1;
+  F.hasCab = HAS_CAB; F.snapGuids = snapGuids;
+
+  // ---- liveness guard (T13 round-1 lesson): the author can take over the session
+  // mid-round (panel DOM destroyed by menu navigation / world load). Every toggle
+  // helper below re-opens the panel if the overlay is gone; if the host page is
+  // gone entirely (world load), abort loudly instead of blindly polling timeouts.
+  const panelAlive = async () => {
+    try {
+      return await page.evaluate((tail) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try {
+            const d = fs[i].contentDocument;
+            if (d && d.location.pathname.indexOf(tail) !== -1) return !!d.getElementById('__mc_overlay');
+          } catch (e) {}
+        }
+        return false;
+      }, MAIN_HTML);
+    } catch (e) { return false; }
+  };
+  const ensurePanel = async () => {
+    if (await panelAlive()) return true;
+    // host gone entirely? (world load / exit)
+    let host = false;
+    try {
+      host = await page.evaluate((tail) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try { const d = fs[i].contentDocument; if (d && d.location.pathname.indexOf(tail) !== -1) return true; } catch (e) {}
+        }
+        return false;
+      }, MAIN_HTML);
+    } catch (e) { host = false; }
+    if (!host) return false; // session taken over: abort
+    // re-open via entry click and wait for overlay
+    await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) { const e = d.getElementById('__mc_entry'); if (e) e.click(); }
+        } catch (e2) {}
+      }
+    }, MAIN_HTML);
+    const dl = Date.now() + 10000;
+    for (;;) {
+      if (await panelAlive()) return true;
+      if (Date.now() > dl) return false;
+      await sleep(500);
+    }
+  };;
+
+  // ---- 0) baseline all-on discriminators ----
+  const e0 = await evWait('t0-base', (l) => cold(l) !== null && cold(l) !== '未就绪' && talent(l) !== null, 20000);
+  F.e0 = e0.line;
+  ck('0 baseline: ms=4.8 x3 (RS x2 on)', moveSpeeds(e0.line) === 'MoveSpeed=4.8,MoveSpeed=4.8,MoveSpeed=4.8');
+  ck('0 baseline: acts 9075=60 9098=150 9100=36 9130=60 9131=150 1611=60 1615=60 1915=60',
+    act(e0.line, 9075) === '60' && act(e0.line, 9098) === '150' && act(e0.line, 9100) === '36'
+    && act(e0.line, 9130) === '60' && act(e0.line, 9131) === '150' && act(e0.line, 1611) === '60'
+    && act(e0.line, 1615) === '60' && act(e0.line, 1915) === '60');
+  F.baseBags = { b1: bag(e0.line, 1), b8: bag(e0.line, 8), b11: bag(e0.line, 11), c1061: bag(e0.line, 1061), c1063: bag(e0.line, 1063), cab: bag(e0.line, 110001), rack: bag(e0.line, 110009), fridge: bag(e0.line, 1004), fr2: bag(e0.line, 3002), veh: bag(e0.line, 1023) };
+  ck('0 baseline: bags 1=12x11/48000 11=14x17 1061=8x2 1063=8x3',
+    String(bag(e0.line, 1)).indexOf('12x11/48000') === 0
+    && String(bag(e0.line, 11)).indexOf('14x17') === 0
+    && String(bag(e0.line, 1061)).indexOf('8x2') === 0 && String(bag(e0.line, 1063)).indexOf('8x3') === 0);
+  if (HAS_CAB) {
+    ck('0 baseline: cabinet rows 110001=12x15 110009=23x18 1004=12x11 3002=9x8 1023=18x15 (CabinetExpand x1.5)',
+      String(bag(e0.line, 110001)).indexOf('12x15') === 0 && String(bag(e0.line, 110009)).indexOf('23x18') === 0
+      && String(bag(e0.line, 1004)).indexOf('12x11') === 0 && String(bag(e0.line, 3002)).indexOf('9x8') === 0
+      && String(bag(e0.line, 1023)).indexOf('18x15') === 0);
+  } else {
+    ckSkip('0 baseline + hot-restore: cabinet rows (CabinetExpand)', 'deployed Meta replaced by CabinetSize (parallel task); CabinetExpand not in panel');
+  }
+  ck('0 baseline: cold=16/16@0.1 (FC x2 on)', cold(e0.line) === '16/16@0.1');
+  ck('0 baseline: talent restricted=77 vase=1/1 (RU on)', talent(e0.line) && talent(e0.line).r === 77 && talent(e0.line).vase === '1/1');
+  ck('0 baseline: ce whitelist=710 (CEW on)', ceCount(e0.line) === '710');
+
+  // ---- 1) RobotSpeed toggle x2 rounds: <=5s table back to official, re-enable re-applies ----
+  for (let round = 1; round <= 2; round++) {
+    const off = await toggleAndWait(RS_GUID, false);
+    const cfgOff = await waitCfgKey(RS_GUID, 'General', 'Enabled', 'false');
+    const vis = await rowState(RS_GUID);
+    const e1 = await evWait('rs-off-' + round, (l) => moveSpeeds(l) === 'MoveSpeed=2.4,MoveSpeed=2.4,MoveSpeed=2.4', 10000);
+    F['rsOff' + round] = { off, cfgOff, vis, line: e1.line };
+    ck('RS r' + round + ' off: snapshot push + cfg=false + row off + banner', off.pushed && cfgOff === 'false' && vis.off === true && vis.banner === true);
+    ck('RS r' + round + ' off: <=~5s MoveSpeed 4.8->2.4 (x3)', moveSpeeds(e1.line) === 'MoveSpeed=2.4,MoveSpeed=2.4,MoveSpeed=2.4');
+    ck('RS r' + round + ' off: acts 9098/9099/9100/9131 -> 300/300/60/300; 1061/1063 -> 4x2/4x3; 9130 stays 60 (QA on)',
+      act(e1.line, 9098) === '300' && act(e1.line, 9099) === '300' && act(e1.line, 9100) === '60'
+      && act(e1.line, 9131) === '300' && String(bag(e1.line, 1061)).indexOf('4x2') === 0
+      && String(bag(e1.line, 1063)).indexOf('4x3') === 0 && act(e1.line, 9130) === '60');
+    const on = await toggleAndWait(RS_GUID, true);
+    const cfgOn = await waitCfgKey(RS_GUID, 'General', 'Enabled', 'true');
+    const e2 = await evWait('rs-on-' + round, (l) => moveSpeeds(l) === 'MoveSpeed=4.8,MoveSpeed=4.8,MoveSpeed=4.8', 10000);
+    F['rsOn' + round] = { on, cfgOn, line: e2.line };
+    ck('RS r' + round + ' on: re-applied 4.8 x3 + 9098=150 + 9130=60 + cargo 8x2',
+      on.pushed && cfgOn === 'true' && moveSpeeds(e2.line) === 'MoveSpeed=4.8,MoveSpeed=4.8,MoveSpeed=4.8'
+      && act(e2.line, 9098) === '150' && act(e2.line, 9130) === '60' && String(bag(e2.line, 1061)).indexOf('8x2') === 0);
+  }
+
+  // ---- 2) BackpackExpand toggle: restore x1 mult (bag1 8x7/9600, bag11 9x11); bag 8 excluded stays 9x8 ----
+  {
+    const off = await toggleAndWait(BP_GUID, false);
+    const cfgOff = await waitCfgKey(BP_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('bp-off', (l) => String(bag(l, 1)).indexOf('8x7/9600') === 0, 10000);
+    F.bpOff = { off, cfgOff, line: e1.line };
+    ck('BP off: bag1 -> 8x7/9600 bag11 -> 9x11 (x1 restore)', String(bag(e1.line, 1)).indexOf('8x7/9600') === 0 && String(bag(e1.line, 11)).indexOf('9x11') === 0);
+    ck('BP off (ExcludeIds=8 inherited semantics): bag8 stays OFFICIAL 9x8 both before and after (row never managed this session)',
+      String(bag(e1.line, 8)) === '9x8/0' || String(bag(e1.line, 8)).indexOf('9x8') === 0);
+    const on = await toggleAndWait(BP_GUID, true);
+    const e2 = await evWait('bp-on', (l) => String(bag(l, 1)).indexOf('12x11/48000') === 0, 10000);
+    F.bpOn = { on, line: e2.line };
+    ck('BP on: bag1 -> 12x11/48000 bag11 -> 14x17; bag8 STILL 9x8 (excluded)',
+      String(bag(e2.line, 1)).indexOf('12x11/48000') === 0 && String(bag(e2.line, 8)).indexOf('9x8') === 0);
+    // write-side guard: ExcludeIds not in Meta -> MC_SET_FAIL (bridge only writes declared keys)
+    await page.evaluate((guid) => {
+      window.__mcOutbox.push({ type: 'MC_SET', guid: guid, section: 'Expand', key: 'ExcludeIds', value: '1' });
+      window.__mcLastEvent = null;
+      return true;
+    }, BP_GUID);
+    let rej = null;
+    const dlRej = Date.now() + 12000;
+    for (;;) {
+      rej = await page.evaluate(() => window.__mcLastEvent || null);
+      if (rej && rej.type === 'MC_SET_FAIL') break;
+      if (Date.now() > dlRej) break;
+      await sleep(400);
+    }
+    F.bpExcludeReject = rej;
+    ck('BP ExcludeIds NOT exposed: MC_SET rejected (residual-modified-value scenario unreachable via panel)',
+      !!(rej && rej.type === 'MC_SET_FAIL' && rej.k === 'Expand.ExcludeIds'));
+  }
+
+  // ---- 3) QuickAction toggle (RS on): restore official; 9130 -> 450 (RS re-manages its own) ----
+  {
+    const off = await toggleAndWait(QA_GUID, false);
+    const cfgOff = await waitCfgKey(QA_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('qa-off', (l) => act(l, 9075) === '3600', 10000);
+    F.qaOff = { off, cfgOff, line: e1.line };
+    ck('QA off: 9075->3600 1611->900 1615->300 1915->1200', act(e1.line, 9075) === '3600' && act(e1.line, 1611) === '900' && act(e1.line, 1615) === '300' && act(e1.line, 1915) === '1200');
+    ck('QA off with RS on: 9130=450 (QA restores polluted cache, RS yield-guard keeps its own target)',
+      act(e1.line, 9130) === '450');
+    const on = await toggleAndWait(QA_GUID, true);
+    const e2 = await evWait('qa-on', (l) => act(l, 9075) === '60', 10000);
+    F.qaOn = { on, line: e2.line };
+    ck('QA on: 9075->60 9130->60 again', act(e2.line, 9075) === '60' && act(e2.line, 9130) === '60');
+  }
+
+  // ---- 4) 9130 double-off determinism ----
+  // Order B (QA off first, RS off last) is the DETERMINISTIC-900 case: RS's clean
+  // cache restores last; QA's restore yield-guard (cur 450 < 900) lets it stand.
+  // Order A with a forced >=6s gap (QA's 5s apply cycle guaranteed to run between
+  // the toggles) is the recorded polluted-cache final: QA re-applies its managed
+  // 9130=60 after RS's 900 restore, then its own restore writes its cached 450.
+  // Full convergence needs a cross-mod original registry (out of minimal-fix scope).
+  {
+    // order A (forced gap -> deterministic polluted final 450)
+    const a1 = await toggleAndWait(RS_GUID, false);
+    await sleep(6500); // let QA's active 5s cycle re-manage 9130 after RS's restore
+    const a2 = await toggleAndWait(QA_GUID, false);
+    const eA = await evWait('dbl-off-a', (l) => act(l, 9098) === '300' && act(l, 9075) === '3600' && (act(l, 9130) === '450' || act(l, 9130) === '900'), 12000);
+    F.dblA = { a1, a2, line: eA.line };
+    ck('9130 double-off (RS then QA, gap 6.5s): robot acts restored 300; final = QA cached view (450 recorded, 900 if cycle missed)',
+      act(eA.line, 9098) === '300' && (act(eA.line, 9130) === '450' || act(eA.line, 9130) === '900'));
+    const r1 = await toggleAndWait(QA_GUID, true);
+    const r2 = await toggleAndWait(RS_GUID, true);
+    const eBack = await evWait('dbl-back-a', (l) => act(l, 9130) === '60', 12000);
+    ck('9130 double-off recover: both on -> 60 again', r1.pushed && r2.pushed && act(eBack.line, 9130) === '60');
+    // order B (deterministic official 900: RS restores last with clean cache)
+    const b1 = await toggleAndWait(QA_GUID, false);
+    const b2 = await toggleAndWait(RS_GUID, false);
+    const eB = await evWait('dbl-off-b', (l) => act(l, 9130) === '900' && act(l, 9075) === '3600' && act(l, 9098) === '300', 12000);
+    F.dblB = { b1, b2, line: eB.line };
+    ck('9130 double-off (QA then RS): final = 900 official, order-independent', act(eB.line, 9130) === '900');
+    const s1 = await toggleAndWait(RS_GUID, true);
+    const s2 = await toggleAndWait(QA_GUID, true);
+    const eB2 = await evWait('dbl-back-b', (l) => act(l, 9130) === '60', 12000);
+    ck('9130 order-B recover: both on -> 60', s1.pushed && s2.pushed && act(eB2.line, 9130) === '60');
+  }
+
+  // ---- 5) CabinetExpand toggle: RestoreAllSizes runtime path (uncapped: rack 20x12) ----
+  if (HAS_CAB) {
+    const off = await toggleAndWait(CAB_GUID, false);
+    const cfgOff = await waitCfgKey(CAB_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('cab-off', (l) => String(bag(l, 110001)).indexOf('8x10') === 0, 10000);
+    F.cabOff = { off, cfgOff, line: e1.line };
+    ck('CAB off: 110001->8x10 1004->8x7 3002->6x5 1023->12x10 (RestoreAllSizes runtime)',
+      String(bag(e1.line, 110001)).indexOf('8x10') === 0 && String(bag(e1.line, 1004)).indexOf('8x7') === 0
+      && String(bag(e1.line, 3002)).indexOf('6x5') === 0 && String(bag(e1.line, 1023)).indexOf('12x10') === 0);
+    ck('CAB off: rack 110009 -> 20x12 native (restore NOT capped by MaxCols)', String(bag(e1.line, 110009)).indexOf('20x12') === 0);
+    const on = await toggleAndWait(CAB_GUID, true);
+    const e2 = await evWait('cab-on', (l) => String(bag(l, 110009)).indexOf('23x18') === 0, 10000);
+    F.cabOn = { on, line: e2.line };
+    ck('CAB on: sizes re-applied (110001=12x15 rack=23x18)', String(bag(e2.line, 110001)).indexOf('12x15') === 0 && String(bag(e2.line, 110009)).indexOf('23x18') === 0);
+  } else {
+    ckSkip('CAB hot off/on (RestoreAllSizes runtime, uncapped rack 20x12)', 'CabinetExpand not in deployed Meta (CabinetSize parallel task)');
+  }
+
+  // ---- 6) FridgeChill toggle + KeepMult 2->1 hot migration ----
+  {
+    const off = await toggleAndWait(FC_GUID, false);
+    const cfgOff = await waitCfgKey(FC_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('fc-off', (l) => cold(l) === '0/16@0.2', 10000);
+    const logLine = await logHas('General.Enabled=false\uff1a\u5df2\u8fd8\u539f\u5b98\u65b9\u539f\u503c\u5e76\u505c\u5199', 8000);
+    F.fcOff = { off, cfgOff, line: e1.line };
+    ck('FC off: cold -> 0/16@0.2 + restore log line', cold(e1.line) === '0/16@0.2' && logLine);
+    const on = await toggleAndWait(FC_GUID, true);
+    const e2 = await evWait('fc-on', (l) => cold(l) === '16/16@0.1', 10000);
+    ck('FC on: cold -> 16/16@0.1', cold(e2.line) === '16/16@0.1');
+    // KeepMult 2 -> 1 via panel slider (FC still enabled): early-exit region ALSO restores
+    if (!(await ensurePanel())) throw new Error('panel/host gone (session taken over) at FC KeepMult');
+    await page.evaluate((guid) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            if (row) row.click();
+          }
+        } catch (e) {}
+      }
+      return true;
+    }, FC_GUID);
+    await sleep(80);
+    await page.evaluate(({ tail }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let k = 0; k < fs.length; k++) {
+        try {
+          const d = fs[k].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const el = d.querySelector('#__mc_cfg input[type=range][data-act="set"][data-g="0"][data-i="0"]');
+            if (!el) return false;
+            el.value = '1';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            return true;
+          }
+        } catch (e) {}
+      }
+      return false;
+    }, { tail: MAIN_HTML });
+    const e3 = await evWait('fc-km1', (l) => cold(l) === '0/16@0.2', 12000);
+    F.fcKm1 = { line: e3.line, cfgKm: await waitCfgKey(FC_GUID, 'Chill', 'KeepMult', '1') };
+    ck('FC KeepMult 2->1 (still enabled): early-exit region restores cold -> 0/16@0.2 + cfg=1', cold(e3.line) === '0/16@0.2' && F.fcKm1.cfgKm === '1');
+    // back to 2
+    await page.evaluate(({ tail }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let k = 0; k < fs.length; k++) {
+        try {
+          const d = fs[k].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const el = d.querySelector('#__mc_cfg input[type=range][data-act="set"][data-g="0"][data-i="0"]');
+            if (!el) return false;
+            el.value = '2';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            return true;
+          }
+        } catch (e) {}
+      }
+      return false;
+    }, { tail: MAIN_HTML });
+    const e4 = await evWait('fc-km2', (l) => cold(l) === '16/16@0.1', 12000);
+    ck('FC KeepMult back 2: cold -> 16/16@0.1', cold(e4.line) === '16/16@0.1');
+  }
+
+  // ---- 7) CabinetEverywhere toggle: whitelist symmetric RemoveAll (trace + live count) ----
+  {
+    const traceBefore = readTraceText(TRACE_CE);
+    const off = await toggleAndWait(CEW_GUID, false);
+    const cfgOff = await waitCfgKey(CEW_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('cew-off', (l) => ceCount(l) === '1', 10000);
+    const traceAfter = readTraceText(TRACE_CE);
+    F.cewOff = { off, cfgOff, line: e1.line, traceAdded: traceBefore !== null ? String(traceAfter || '').slice(String(traceBefore).length) : traceAfter };
+    const added = F.cewOff.traceAdded || '';
+    ck('CEW off: whitelist 710 -> 1 (live count) + RemoveAll trace (before=710 after=1)',
+      ceCount(e1.line) === '1' && added.indexOf('RemoveAll') !== -1 && added.indexOf('710') !== -1 && added.indexOf('1') !== -1);
+    const on = await toggleAndWait(CEW_GUID, true);
+    const e2 = await evWait('cew-on', (l) => ceCount(l) === '710', 12000);
+    ck('CEW on: whitelist re-injected 710', ceCount(e2.line) === '710');
+  }
+
+  // ---- 8) RoleUnlock toggle + two Plan switches ----
+  {
+    const off = await toggleAndWait(RU_GUID, false);
+    const cfgOff = await waitCfgKey(RU_GUID, 'General', 'Enabled', 'false');
+    const e1 = await evWait('ru-off', (l) => talent(l) && talent(l).r === 123 && talent(l).vase === '0/0', 15000);
+    const traceRu = readTraceText(TRACE_RU) || '';
+    F.ruOff = { off, cfgOff, line: e1.line, traceTail: traceRu.slice(-600) };
+    ck('RU off: talent restricted 123 + vase 0/0 (all-off restore)', talent(e1.line) && talent(e1.line).r === 123 && talent(e1.line).vase === '0/0');
+    ck('RU off: RU_gate_trace restore lines present', traceRu.indexOf('\u8fd8\u539f\u5b98\u65b9\u767d\u540d\u5355') !== -1);
+    const on = await toggleAndWait(RU_GUID, true);
+    const e2 = await evWait('ru-on', (l) => talent(l) && talent(l).r === 77 && talent(l).vase === '1/1', 15000);
+    ck('RU on: 77 + 1/1 back', talent(e2.line) && talent(e2.line).r === 77 && talent(e2.line).vase === '1/1');
+
+    // Plan.ClearPool switch via panel bool (group 1 item 1)
+    if (!(await ensurePanel())) throw new Error('panel/host gone (session taken over) at RU switches');
+    const clickRuBool = (g, i) => page.evaluate(({ tail, g, i }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let k = 0; k < fs.length; k++) {
+        try {
+          const d = fs[k].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const b = d.querySelector('#__mc_cfg .__mc-mini-sw.__mc-big[data-act="set"][data-g="' + g + '"][data-i="' + i + '"]');
+            if (b) { b.click(); return true; }
+          }
+        } catch (e) {}
+      }
+      return false;
+    }, { tail: MAIN_HTML, g, i });
+    const ruRow = await page.evaluate(({ tail, guid }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            if (row) row.click();
+          }
+        } catch (e) {}
+      }
+      return true;
+    }, { tail: MAIN_HTML, guid: RU_GUID });
+    await sleep(80);
+    await clickRuBool(1, 1); // Plan.ClearPool -> false
+    const eCp = await evWait('ru-cp-off', (l) => talent(l) && talent(l).r === 123, 15000);
+    const cpCfg = await waitCfgKey(RU_GUID, 'Plan', 'ClearPool', 'false');
+    F.ruCp = { line: eCp.line, cpCfg };
+    ck('RU Plan.ClearPool=false via panel: restricted 77->123 + cfg persisted', talent(eCp.line) && talent(eCp.line).r === 123 && cpCfg === 'false');
+    await clickRuBool(1, 1); // back on
+    const eCp2 = await evWait('ru-cp-on', (l) => talent(l) && talent(l).r === 77, 15000);
+    ck('RU Plan.ClearPool=true: 77 back', talent(eCp2.line) && talent(eCp2.line).r === 77);
+    await clickRuBool(1, 2); // Plan.VaseRecipe -> false
+    const eVr = await evWait('ru-vr-off', (l) => talent(l) && talent(l).vase === '0/0', 15000);
+    const vrCfg = await waitCfgKey(RU_GUID, 'Plan', 'VaseRecipe', 'false');
+    F.ruVr = { line: eVr.line, vrCfg };
+    ck('RU Plan.VaseRecipe=false via panel: vase 0/0 + cfg persisted', talent(eVr.line) && talent(eVr.line).vase === '0/0' && vrCfg === 'false');
+    await clickRuBool(1, 2); // back on
+    const eVr2 = await evWait('ru-vr-on', (l) => talent(l) && talent(l).vase === '1/1', 15000);
+    ck('RU Plan.VaseRecipe=true: 1/1 back', talent(eVr2.line) && talent(eVr2.line).vase === '1/1');
+  }
+
+  // ---- 9) PlanPick + PDS: cfg-level toggles (UI-level -> T17 with save backup) ----
+  for (const [guid, tag, name] of [[PP_GUID, 'pp', 'PlanPick'], [PD_GUID, 'pd', 'PDS']]) {
+    const off = await toggleAndWait(guid, false);
+    const cfgOff = await waitCfgKey(guid, 'General', 'Enabled', 'false');
+    const vis = await rowState(guid);
+    const on = await toggleAndWait(guid, true);
+    const cfgOn = await waitCfgKey(guid, 'General', 'Enabled', 'true');
+    F[tag] = { off, cfgOff, vis, on, cfgOn };
+    ck(name + ' toggle: own-cfg General.Enabled false->true + row/banner visual',
+      off.pushed && cfgOff === 'false' && vis.off === true && vis.banner === true
+      && on.pushed && cfgOn === 'true');
+  }
+
+  // ---- 10) close panel (flush) + final all-on evidence + all cfgs enabled ----
+  await page.evaluate((tail) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let i = 0; i < fs.length; i++) {
+      try {
+        const d = fs[i].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const x = d.querySelector('#__mc_panel .__mc-close');
+          if (x) x.click();
+        }
+      } catch (e) {}
+    }
+  }, MAIN_HTML);
+  await sleep(4500); // flush debounce + drain
+  const ef = await ev('t-final', 12000);
+  F.efinal = ef;
+  const allGuids = [BP_GUID, FC_GUID, QA_GUID, CEW_GUID, RU_GUID, RS_GUID, PP_GUID, PD_GUID]
+    .concat(HAS_CAB ? [CAB_GUID] : []);
+  const cfgFinal = {};
+  let allEnabled = true;
+  for (const g of allGuids) {
+    const v = stripNonCodeLines(readCfgSection(CFG(g), 'General', 'Enabled'));
+    cfgFinal[g] = v;
+    if (v !== 'true') allEnabled = false;
+  }
+  F.cfgFinal = cfgFinal;
+  ck('final: all 9 suite cfgs General.Enabled=true on disk', allEnabled);
+  ck('final evidence: full-suite applied state (ms 4.8, cold 16/16@0.1, talent 77, vase 1/1, ce 710, 9075=60)',
+    moveSpeeds(ef) === 'MoveSpeed=4.8,MoveSpeed=4.8,MoveSpeed=4.8' && cold(ef) === '16/16@0.1'
+    && talent(ef) && talent(ef).r === 77 && talent(ef).vase === '1/1' && ceCount(ef) === '710' && act(ef, 9075) === '60');
+
+  try { await page.screenshot({ path: SHOT_DIR + '/task-13-shot-toggle.png' }); } catch (e) {}
+  await browser.close();
+
+  console.log('---- facts (toggle) ----');
+  console.log(JSON.stringify(F, null, 1));
+  console.log('---- verdicts (toggle) ----');
+  let allPass = true;
+  for (const [n, ok] of CK) { console.log((ok ? 'PASS' : 'FAIL') + '  ' + n); if (!ok) allPass = false; }
+  log(allPass ? 'RESULT: ALL PASS' : 'RESULT: FAIL (see above)');
+  process.exit(allPass ? 0 : 1);
+}
+
 (async () => {
   if (MODE === 'loadgame') return loadGameMode();
   if (MODE === 'outsetting') return outsettingMode();
+  if (MODE === 'toggle') return toggleMode();
   return menuMode();
 })().catch((e) => {
   console.error('ERROR: ' + (e && e.stack || e));

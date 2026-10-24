@@ -319,7 +319,9 @@ internal sealed class QuickTicker : MonoBehaviour
     /// General.Enabled=false 还原：把 OrigDuring 缓存过的动作行 During 全部回写原值并停写
     /// （复用现役"0=恢复原值"路径的原值缓存）。返回 false=动作表未就绪（下轮重试）。
     /// 9130 等与 RobotSpeed 共用行各自独立缓存：本 mod 还原后若 RobotSpeed 仍启用，
-    /// 其 Ticker 会按自己的原值缓存继续管理，互不打架（让位守卫同理）。
+    /// 其 Ticker 会按自己的原值缓存继续管理，互不打架（让位守卫同理）；双 mod 同关时
+    /// 还原让位（当前值 > 本缓存 ⇒ 对方已用更大真原值还原，不回写）消除同帧双还原竞态
+    /// ——终值由关序决定（RobotSpeed 后关=900 官方；本 mod 后关=本缓存视角），DESIGN §3。
     /// </summary>
     private static bool RestoreAll()
     {
@@ -336,6 +338,11 @@ internal sealed class QuickTicker : MonoBehaviour
             try
             {
                 if (!dict.TryGetValue(kv.Key, out var a) || a == null) continue;
+                // 9130 共管还原让位（2026-10-24，ModCenter 任务 13）：当前值 > 本缓存"原值" ⇒
+                // 共管方（RobotSpeed）已用更大的真原值还原过——两 mod 均只减不增，首见最大值
+                // 才是官方原值；本缓存可能记到对方中间值（如 RS ÷2 的 450）。此时不回写，
+                // 双 mod 同关终值确定为官方原值（此前按各自缓存先后回写、终值不定，DESIGN §3 记载）。
+                if (a.During > kv.Value + 1e-6f) continue;
                 if (Math.Abs(a.During - kv.Value) > 1e-6f) { a.During = kv.Value; n++; }
             }
             catch { }
@@ -529,13 +536,21 @@ internal sealed class QuickTicker : MonoBehaviour
                 OrigDuring.TryAdd(kv.Key, cur);
                 float orig = OrigDuring[kv.Key];
 
+                // 共管让位（2026-10-24，ModCenter 任务 13，apply 面）：当前值 > 本缓存"原值" ⇒
+                // 共管方（RobotSpeed 9098/9099/9100/9131）或表重载已抬到更大真原值——本缓存是其
+                // ÷N 后的中间值（原值污染）。下面各守卫分支的"自愈回写 orig"只升不降（cur<orig
+                // 才回写），避免把对方已还原的真原值压低成打架（实测：RS 热关闭还原 300 后本 mod
+                // 5s 自愈曾把它压回 150）；与 RestoreAll 的还原让位守卫对称。仅约束自愈分支——
+                // Overrides 与分类的正常写不在此列（用户显式目标值语义不变，9130 等共管行按
+                // 只减不增照常竞速，让位守卫决定谁快听谁）。
+
                 // 表外结算收益守卫：效果表看不见收益但收益∝时长、结算在 Effect 表之外
                 // （见 OutsideGainIds 实证注释）。优先级同周期守卫，高于 Overrides——
                 // 与周期守卫同理：玩家显式点名也不放行收益∝耗时的动作。
                 if (OutsideGainIds.Contains(kv.Key))
                 {
                     sInterval++;
-                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    if (cur < orig - 1e-6f) { a.During = orig; restored++; } // 自愈只升不降（共管让位：cur>orig=对方已还原更大真原值）
                     continue;
                 }
 
@@ -548,7 +563,7 @@ internal sealed class QuickTicker : MonoBehaviour
                 if (!fixedGain && ecid != 0 && positiveEffects.Contains(ecid))
                 {
                     sInterval++;
-                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    if (cur < orig - 1e-6f) { a.During = orig; restored++; } // 自愈只升不降（共管让位：cur>orig=对方已还原更大真原值）
                     continue;
                 }
                 if (!fixedGain && ecid != 0 && drainEffects.Contains(ecid))
@@ -561,7 +576,7 @@ internal sealed class QuickTicker : MonoBehaviour
                     if (!(dtype == 8 && (referenced.Contains(kv.Key) || BtInteractIds.Contains(kv.Key))))
                     {
                         sInterval++;
-                        if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                        if (cur < orig - 1e-6f) { a.During = orig; restored++; } // 自愈只升不降（共管让位：cur>orig=对方已还原更大真原值）
                         continue;
                     }
                 }
@@ -593,7 +608,7 @@ internal sealed class QuickTicker : MonoBehaviour
                 if (cat == 0)
                 {
                     if (atype == 8) sUnref++; else sBanned++;
-                    if (Math.Abs(cur - orig) > 1e-6f) { a.During = orig; restored++; }
+                    if (cur < orig - 1e-6f) { a.During = orig; restored++; } // 自愈只升不降（共管让位：cur>orig=对方已还原更大真原值）
                     continue;
                 }
 

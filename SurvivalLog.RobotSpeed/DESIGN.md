@@ -128,12 +128,22 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
   2026-10-17 已加**让位守卫**：当前值 ≤ 目标值时不再写回（谁更快听谁的），刷屏随打架一并消失。
   另注：QuickAction 首扫慢于本项目 0.5 秒快扫，其 OrigDuring[9130] 记到的是本项目 ÷2 后的 450
   （原值污染，仅影响其"恢复原值"目标回到 450 而非官方 900，无实际危害）。
+  **还原让位（2026-10-24，ModCenter 任务 13）**：RestoreAll 对"当前值 > 本缓存原值"的动作行
+  不回写（只减不增世界里首见最大值=官方原值，本缓存亦可能记到对方更低的中间值）——与
+  QuickAction 同款守卫对称，双 mod 同关终值确定为官方 900（修复前按各自缓存先后回写、终值不定）。
 - 模块越多每趟耗电越高（官方设定），本 mod 的耗电÷2 默认恰好对冲。
 - 游戏大更新若改字段名/表结构，Ticker 的 try-catch 会逐项降级并在 LogOutput 留 WARN，
   不会硬崩；RobotSpeedTrace.txt（BepInEx 根目录）留有首次生效的改写明细自证。
 
 ## 6. 验证记录
 
+- 2026-10-24 ModCenter 任务 13：面板 MC_TOGGLE_MOD 直写 General.Enabled 触发运行中 RestoreAll
+  热还原实证（主菜单，`tools/_mc_fixture.js toggle`，两轮全绿）：关 → ≤5s MoveSpeed 4.8→2.4
+  （×3 行）、9098/9099/9100/9131→300/300/60/300、货舱 1061/1063→4x2/4x3（9130 保持 60=QA
+  接管）；重开逐值回 4.8/150/8x2（×2 轮）。9130 双 mod 同关终值=关序决定：QA 先关 + 本项目
+  后关 = 900 官方确定（还原让位守卫生效，见 §5）；本项目先关 + QA 后关 = 450（QA 污染缓存
+  最后落笔；其 apply 自愈已改只升不降不再压本项目还原值，但共管行竞速语义未变）。
+  证据全文 .superpowers/sdd/2026-10-24-modcenter/task-13-report.md。
 - 2026-10-24 20:33–20:44 ModCenter 任务 9（General.Enabled 启停门）四轮主菜单实测（ConfigDumpProbe
   全表 dump + trace 自证，未读档未碰存档）：全 on（MoveSpeed 4.8/WSR 0/动作÷2/货舱 8x2）→
   全 off（全部回官方基线：MoveSpeed 2.4、WSR 2/3/0、9098=300、货舱 4x2，三 mod 零 trace 零日志）→
