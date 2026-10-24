@@ -1,0 +1,52 @@
+{
+  "plans": [
+    {"name":"超市拾遗·六","talentId":31606,"condId":48201,"day":100,"prereq":31605,"cost":30,"mapId":1004,"level":6},
+    {"name":"医院踏勘·三","talentId":31623,"condId":48202,"day":120,"prereq":31622,"cost":32,"mapId":1005,"level":3},
+    {"name":"学校摸排·三","talentId":31633,"condId":48203,"day":140,"prereq":31632,"cost":32,"mapId":1002,"level":3},
+    {"name":"超市拾遗·七","talentId":31607,"condId":48204,"day":160,"prereq":31606,"cost":38,"mapId":1004,"level":7},
+    {"name":"医院踏勘·四","talentId":31624,"condId":48205,"day":180,"prereq":31623,"cost":44,"mapId":1005,"level":4},
+    {"name":"学校摸排·四","talentId":31634,"condId":48206,"day":200,"prereq":31633,"cost":44,"mapId":1002,"level":4},
+    {"name":"超市拾遗·八","talentId":31608,"condId":48207,"day":220,"prereq":31607,"cost":46,"mapId":1004,"level":8},
+    {"name":"医院踏勘·五","talentId":31625,"condId":48208,"day":240,"prereq":31624,"cost":56,"mapId":1005,"level":5},
+    {"name":"学校摸排·五","talentId":31635,"condId":48209,"day":260,"prereq":31634,"cost":56,"mapId":1002,"level":5},
+    {"name":"超市拾遗·九","talentId":31609,"condId":48210,"day":280,"prereq":31608,"cost":54,"mapId":1004,"level":9},
+    {"name":"超市拾遗·十","talentId":31610,"condId":48211,"day":300,"prereq":31609,"cost":62,"mapId":1004,"level":10}
+  ],
+  "baskets": [
+    {"mapId":1004,"level":6,"poolId":8006,"items":[{"name":"精制碘盐","copies":2,"itemId":2150},{"name":"白砂糖","copies":2,"itemId":2153},{"name":"黑胡椒粒","copies":2,"itemId":2154},{"name":"面包","copies":2,"itemId":2502},{"name":"意面","copies":2,"itemId":2501},{"name":"饼干","copies":2,"itemId":1},{"name":"糖","copies":2,"itemId":3}]},
+    {"mapId":1004,"level":7,"poolId":8006,"items":[{"name":"德式大肉肠","copies":2,"itemId":2326},{"name":"速食味噌汤","copies":2,"itemId":2155},{"name":"咖啡","copies":1,"itemId":7},{"name":"草莓","copies":2,"itemId":2533},{"name":"西瓜","copies":2,"itemId":2539}]},
+    {"mapId":1004,"level":8,"poolId":8006,"items":[{"name":"金枪鱼鱼段","copies":2,"itemId":2325},{"name":"小猫鱼","copies":2,"itemId":2901},{"name":"水果运输箱","copies":1,"itemId":12002}]},
+    {"mapId":1004,"level":9,"poolId":8006,"items":[{"name":"半扇猪肋排","copies":1,"itemId":2319},{"name":"完整牛里脊","copies":1,"itemId":2321},{"name":"零食大礼包","copies":1,"itemId":12001}]},
+    {"mapId":1004,"level":10,"poolId":8006,"items":[{"name":"整只全羊","copies":1,"itemId":2322},{"name":"巨型火鸡","copies":1,"itemId":2324},{"name":"完整猪后腿","copies":1,"itemId":2318}]},
+    {"mapId":1005,"level":3,"poolId":8024,"items":[{"name":"维生素","copies":2,"itemId":6},{"name":"康复新液","copies":2,"itemId":2413},{"name":"家庭急救手册","copies":1,"itemId":3022}]},
+    {"mapId":1005,"level":4,"poolId":8024,"items":[{"name":"治疗药","copies":2,"itemId":8},{"name":"强效消毒喷雾","copies":2,"itemId":2165},{"name":"叮当罐子","copies":1,"itemId":20340},{"name":"荧光棒","copies":2,"itemId":26011}]},
+    {"mapId":1005,"level":5,"poolId":8024,"items":[{"name":"吗啡注射液","copies":1,"itemId":2916},{"name":"整箱功能饮料","copies":1,"itemId":11004},{"name":"高浓度消毒喷雾","copies":2,"itemId":2166},{"name":"照明弹","copies":1,"itemId":26017}]},
+    {"mapId":1002,"level":3,"poolId":8014,"items":[{"name":"草莓","copies":2,"itemId":2533},{"name":"西瓜","copies":2,"itemId":2539},{"name":"卷烟","copies":2,"itemId":20215}]},
+    {"mapId":1002,"level":4,"poolId":8014,"items":[{"name":"白玉菇种子","copies":2,"itemId":15007},{"name":"甜菜种子","copies":2,"itemId":15017},{"name":"韭菜种子","copies":2,"itemId":15018}]},
+    {"mapId":1002,"level":5,"poolId":8014,"items":[{"name":"松茸","copies":2,"itemId":2519},{"name":"灵芝","copies":2,"itemId":2520}]}
+  ],
+  "demotions": [
+    {"poolId":8009,"itemId":20310,"fromLevel":12,"toLevel":6,"note":"万能加固件·纸箱"},
+    {"poolId":8010,"itemId":20320,"fromLevel":13,"toLevel":8,"note":"开锁器·货车"},
+    {"poolId":8009,"itemId":20330,"fromLevel":14,"toLevel":9,"note":"撬棍·纸箱"},
+    {"poolId":8010,"itemId":20330,"fromLevel":15,"toLevel":10,"note":"撬棍·货车"},
+    {"poolId":8024,"itemId":11008,"fromLevel":6,"toLevel":3,"note":"幸存者的应急药品·药品柜"},
+    {"poolId":8026,"itemId":2404,"fromLevel":7,"toLevel":5,"note":"兴奋剂·实验器皿"},
+    {"poolId":8018,"itemId":15013,"fromLevel":6,"toLevel":4,"note":"松茸种子·实验室"},
+    {"poolId":8018,"itemId":15014,"fromLevel":8,"toLevel":5,"note":"灵芝种子·实验室"},
+    {"poolId":8017,"itemId":2308,"fromLevel":8,"toLevel":5,"note":"冷冻整只火鸡·食堂"}
+  ],
+  "nativeUnlocks": [
+    {"poolId":8006,"itemId":2145,"level":7},
+    {"poolId":8006,"itemId":2163,"level":7},
+    {"poolId":8006,"itemId":2121,"level":9},
+    {"poolId":8010,"itemId":20310,"level":10},
+    {"poolId":8025,"itemId":20320,"level":4},
+    {"poolId":8014,"itemId":9032,"level":3},
+    {"poolId":8014,"itemId":2121,"level":5},
+    {"poolId":8017,"itemId":2151,"level":3},
+    {"poolId":8017,"itemId":2201,"level":5},
+    {"poolId":8018,"itemId":20330,"level":5},
+    {"poolId":8023,"itemId":9030,"level":4}
+  ]
+}
