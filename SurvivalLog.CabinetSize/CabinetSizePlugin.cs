@@ -103,6 +103,52 @@ public sealed class CabinetSizePlugin : BasePlugin
     {
         public SizeTicker(IntPtr ptr) : base(ptr) { }
         public SizeTicker() { }
-        public void Update() { /* Task 3 填充 */ }
+        public void Update()
+        {
+            _check += Time.deltaTime;
+            var due = CabinetSizePlugin.Rerun || _check >= 5f;
+            if (!due) return;
+            _check = 0f;
+
+            if (BagSections.Poll()) CabinetSizePlugin.Rerun = true; // 玩家改 cfg 文件：变更立即落地
+
+            var vehNotes = new List<string>();
+            bool vehReady;
+            var ids = SizeEngine.DiscoverManaged(vehNotes, out vehReady);
+            if (ids == null) { CabinetSizePlugin.Rerun = true; return; }
+
+            var listAll = CabinetSizePlugin.ListOnReady.Value && !_announced;
+            var lines = SizeEngine.RewriteManaged(ids, listAll);
+            CabinetSizePlugin.Rerun = false;
+
+            if (lines.Count > 0)
+                foreach (var l in lines) CabinetSizePlugin.Log.LogInfo("[CabinetSize] " + l);
+
+            if (!_announced)
+            {
+                _announced = true;
+                var summary = $"生效：{ids.Count} 个受管包（cfg 显式 {BagSections.Entries.Count} 条；"
+                            + $"档位 小{CabinetSizePlugin.SmallW.Value}x{CabinetSizePlugin.SmallH.Value}"
+                            + $"/中{CabinetSizePlugin.MediumW.Value}x{CabinetSizePlugin.MediumH.Value}"
+                            + $"/大{CabinetSizePlugin.LargeW.Value}x{CabinetSizePlugin.LargeH.Value}"
+                            + $"/特大{CabinetSizePlugin.XLargeW.Value}x{CabinetSizePlugin.XLargeH.Value}；"
+                            + $"上限 {CabinetSizePlugin.MaxWidth.Value}x{CabinetSizePlugin.MaxHeight.Value}）；"
+                            + "名单=家具发现+黑名单+载具，新增柜子自动按档跟上。";
+                CabinetSizePlugin.Log.LogInfo("[CabinetSize] " + summary);
+                if (listAll) SizeEngine.WriteTrace(summary + "\r\n\r\n" + string.Join("\r\n", lines));
+            }
+
+            // 车表随对局世界加载（主菜单未就绪）：就绪首轮补录后备箱名单（1023 种子恒生效）
+            if (vehReady && !_vehListed)
+            {
+                _vehListed = true;
+                CabinetSizePlugin.Log.LogInfo("[CabinetSize] 载具组补录（Config_Vehicle 全档后备箱+门口塑料袋 1023）："
+                    + string.Join("、", vehNotes));
+            }
+        }
+
+        private float _check;
+        private bool _announced;
+        private bool _vehListed;
     }
 }
