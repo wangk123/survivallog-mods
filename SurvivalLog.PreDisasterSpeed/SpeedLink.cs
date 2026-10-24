@@ -24,6 +24,7 @@ internal static class SpeedLink
             LastSpeed = speed;
             // 无条件打点（装机期排查用；点击频率低不刷屏）——若此行出现但无变速，嫌疑转向 SendAction 灾前空转
             PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] SetSpeed(" + speed + ") 已发 SendAction");
+            Injector.PushGear(speed);   // 官方 TimeScaleMsg 灾前不保证推送，C# 直推高亮（装机五轮）
         }
         catch (Exception e)
         {

@@ -83,6 +83,20 @@ const activeSpeed = () => {
     await sleep(80);
     assert.strictEqual(await page.evaluate(activeSpeed), 1, '官方 scale=1 同步后慢速高亮被重算'); PASSED++;
 
+    // D2) C# 档位直推通道（装机五轮：热键路径高亮源）
+    await page.evaluate(() => window.__fixtureTimeScale(0.3));   // 先乱到一个全灭态
+    await sleep(80);
+    assert.strictEqual(await page.evaluate(activeSpeed), -1, '直推前置：临时时标全灭'); PASSED++;
+    await page.evaluate(() => window.__PdsGear(2));
+    await sleep(50);
+    assert.strictEqual(await page.evaluate(activeSpeed), 2, '__PdsGear(2) 直推高亮'); PASSED++;
+    await page.evaluate(() => window.__PdsGear(0));
+    await sleep(50);
+    assert.strictEqual(await page.evaluate(activeSpeed), 0, '__PdsGear(0) 直推暂停高亮'); PASSED++;
+    await page.evaluate(() => window.__PdsGear(9));               // 越界忽略
+    await sleep(50);
+    assert.strictEqual(await page.evaluate(activeSpeed), 0, '__PdsGear 越界忽略不变'); PASSED++;
+
     // E) 幂等：重跑 page.js 不重复挂条
     const src = fs.readFileSync(path.join(ROOT, 'page.js'), 'utf8');
     await page.evaluate(s => window.eval(s), src);

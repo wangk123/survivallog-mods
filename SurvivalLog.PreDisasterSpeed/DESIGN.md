@@ -65,3 +65,5 @@
 - 2026-10-24 装机三轮：点击仍无效——反汇编 OnMessageFromJS 证 typeId=3 走 WebUIVm 虚方法分发，WebUILayer.OnPageMessage 零调用方（死方法，上轮挂空靶）；换挂 WebUIVm.HandleCallback（无重写唯一实现）；桥收到/SetSpeed 改无条件打点（装机期排查）。
 
 - 2026-10-24 装机四轮：点击变速全链打通（作者实测通过）；新增①快捷键 ~ / 1 / 2 / 3 / 4（Unity Input 轮询，仅灾前，键位同官方）；②真三倍校正 TrueThreeX（默认开）——反汇编证实 ExecuteTempSpeedUp（睡眠）无条件共用 ChapterSpeedUp2，故不可改表/持久改字段，改用 prefix/postfix 换档瞬间临时换字段法。
+
+- 2026-10-24 装机五轮：①热键变档按钮不高亮——官方 TimeScaleMsg 灾前手动变速不保证推送（点击路径靠本地态掩盖），SetSpeed 成功后 C# 经 Injector.PushGear 直推 __PdsGear(N) 权威高亮（夹具 14→18 断言）；②作者疑问澄清：慢速档=官方空闲慢速语义（3 秒空闲→0.3 倍，动作即恢复），非缺陷。

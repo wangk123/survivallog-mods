@@ -69,6 +69,20 @@ internal static class Injector
         }
     }
 
+    /// <summary>档位直推（装机五轮）：SetSpeed 成功后把当前档推给 page.js 高亮——
+    /// 官方 TimeScaleMsg 在灾前手动变速时不保证推送，热键路径无本地态会露馅。CoreUI0 不在则静默空转。</summary>
+    internal static void PushGear(int speed)
+    {
+        var web = GetWebView();
+        if (web == null) return;
+        var push =
+            "(function(){var f=document.getElementById('CoreUI0');" +
+            "if(!f||!f.contentWindow)return;var w=f.contentWindow;" +
+            "if(w.__PdsGear)w.__PdsGear(" + speed + ");})()";
+        try { web.ExecuteJavaScript(push, null); }
+        catch (Exception e) { WarnOnce(ref _warnPush, "档位直推异常", e); }
+    }
+
     private static bool LoadPageJs()
     {
         try

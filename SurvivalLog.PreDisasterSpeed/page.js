@@ -54,6 +54,12 @@
         if (p && typeof p.s1 === 'number' && typeof p.s2 === 'number') payload = p;
     };
 
+    // C# 档位直推（装机五轮）：点击/快捷键变档后由 C# 主动回推高亮——
+    // 官方 TimeScaleMsg 在灾前手动变速时不保证推送，本地态之外补权威源。
+    window.__PdsGear = function (n) {
+        if (n >= 0 && n <= 4) setActive(n);
+    };
+
     function mount() {
         // 官方位=CoreUI1 左下 .action-panel 横排尾部；CoreUI0 对应 .bottom-left 的 .action-row（装机二轮作者定案）。
         // 兜底链：.action-row → .bottom-left → .top-center（保证任何模式下都能出现）。
