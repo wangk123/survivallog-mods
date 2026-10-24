@@ -33,7 +33,7 @@
 
 ## 4. 依赖（moddeps.json "PreDisasterSpeed" 条目；harmony 槽位第一项为真补丁、第二项为存在性核对）
 
-- **GameCore.HotUpdate.ReduxUI.WebUILayer.OnPageMessage(string,string,string)（Harmony prefix，真挂钩点）**
+- **GameCore.HotUpdate.ReduxUI.WebUIVm.HandleCallback(string,string)（Harmony prefix，真挂钩点；typeId=3 唯一分发点，StackLimit999 同挂点在役）**
 - GameCore.HotUpdate.ReduxUI.Ac_CoreUI1_SpeedChange.SendAction(int)（落地入口，存在性核对）
 - _Config_Chapter_Dict / Config_Chapter.{WorldStateType,TimeScale,SpeedUp1,SpeedUp2}
 - WebUI_CoreUI0 页（.action-row/.bottom-left DOM、TimeScaleMsg/PauseMsg 通道）
@@ -60,3 +60,5 @@
 
 - 2026-10-24 终审 I-1 修复：安装回执 v==2（新装页）时重置 payload 签名门强制下一 tick 重推——修菜单期签名门被烧掉、`__PdsBoot` 永不送达的隐患（当时表值恰=默认值无症状）；夹具 C 组 boot 换非默认 {s1:3,s2:33} 钉死"高亮由 payload 驱动"。
 - 2026-10-24 装机二轮（作者实测两问题）：①点击无效——MessageEmitted 订阅实机编组失败，桥改 Harmony prefix 观察者挂 WebUILayer.OnPageMessage（page.js 点击契约不变）；②位置——五键条从 .top-center 尾部挪到官方位 .action-row 尾部（左下横排，对齐 CoreUI1 .action-panel 布局；兜底链 .action-row→.bottom-left→.top-center）。
+
+- 2026-10-24 装机三轮：点击仍无效——反汇编 OnMessageFromJS 证 typeId=3 走 WebUIVm 虚方法分发，WebUILayer.OnPageMessage 零调用方（死方法，上轮挂空靶）；换挂 WebUIVm.HandleCallback（无重写唯一实现）；桥收到/SetSpeed 改无条件打点（装机期排查）。

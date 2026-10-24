@@ -14,11 +14,11 @@
 - [ ] 倒计时走完→灾变过渡：HUD 切灾后（CoreUI1），档位自动回 1x（日志有"档位自动归 1x"），灾后官方倍速条可正常用
 - [ ] 全程无异常刷屏；重进对局五键条回来（幂等重装）
 
-## 桥自证（装机二轮起桥=Harmony prefix 挂 WebUILayer.OnPageMessage）
+## 桥自证（装机三轮起桥=Harmony prefix 挂 WebUIVm.HandleCallback）
 - [ ] 点任一速度键立即生效（倒计时/动作变速）；开 Verbose 后日志出现 `[PdsSpeed] SetSpeed(N)`
 - [ ] 注入回执正常：日志无 `[PdsSpeed] 注入异常` 一次性警告
 - [ ] 灾变过渡日志出现 `CoreUI0 消失（灾变过渡）——档位自动归 1x`（若灾前最后档位≠1）
-- [ ] 若点键无效：查日志有无 Harmony 补丁异常（OnPageMessage prefix 加载失败），及 loaded 行是否带 "桥=OnPageMessage prefix"
+- [ ] 若点键无效：看日志有无 `桥收到 speed=N`——无此行=点击没到桥（查注入/Harmony 加载）；有此行有 `SetSpeed 已发` 但无变速=SendAction 灾前空转（下一嫌疑，报作者）
 
 ## 开关
 - [ ] cfg Enabled=false 重启：五键条不出现，游戏行为无任何差异

@@ -22,8 +22,8 @@ internal static class SpeedLink
         {
             GameCore.HotUpdate.ReduxUI.Ac_CoreUI1_SpeedChange.SendAction(speed);
             LastSpeed = speed;
-            if (PreDisasterSpeedPlugin.Verbose.Value)
-                PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] SetSpeed(" + speed + ")");
+            // 无条件打点（装机期排查用；点击频率低不刷屏）——若此行出现但无变速，嫌疑转向 SendAction 灾前空转
+            PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] SetSpeed(" + speed + ") 已发 SendAction");
         }
         catch (Exception e)
         {
@@ -72,19 +72,22 @@ internal static class SpeedLink
     private static readonly Regex SpeedRegex = new Regex("\"speed\"\\s*:\\s*([0-4])", RegexOptions.Compiled);
 
     /// <summary>官方中继链终点观察者：CoreUI0 页 JS 点击 → Root 无条件转发 vuplex 协议(3) →
-    /// WebUILayer.OnPageMessage(source, type, json)。此前走 MessageEmitted 事件订阅，
-    /// interop 委托编组实机报"Parameter type mismatched native type pointers"（装机一轮实锤），
-    /// 改 Harmony prefix 观察者（不拦截不修改原方法，套件最成熟模式，零编组）。</summary>
-    [HarmonyLib.HarmonyPatch(typeof(GameCore.HotUpdate.ReduxUI.WebUILayer), "OnPageMessage")]
+    /// WebUILayer.OnMessageFromJS typeId=3 分支 → **WebUIVm.HandleCallback(messageType, jsonData) 虚方法**
+    /// （全 VM 无重写，唯一分发点；StackLimit999 同挂点生产在役）。
+    /// 装机二轮曾挂 WebUILayer.OnPageMessage——反汇编证实零调用方（死方法），装机三轮实锤后换靶。
+    /// prefix 纯观察：不拦截不修改原方法，未绑定事件在原方法体内被官方丢弃，与我们无关。</summary>
+    [HarmonyLib.HarmonyPatch(typeof(GameCore.HotUpdate.ReduxUI.WebUIVm), "HandleCallback")]
     internal static class PageMessagePatch
     {
-        private static void Prefix(string source, string messageType, string jsonData)
+        private static void Prefix(string messageType, string jsonData)
         {
             try
             {
-                if (messageType != "PDS_SPEED" || source != "CoreUI0") return;
+                if (messageType != "PDS_SPEED") return;
                 var m = SpeedRegex.Match(jsonData ?? "");
-                if (m.Success) SpeedLink.SetSpeed(int.Parse(m.Groups[1].Value));
+                if (!m.Success) return;
+                PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] 桥收到 speed=" + m.Groups[1].Value);
+                SpeedLink.SetSpeed(int.Parse(m.Groups[1].Value));
             }
             catch
             {

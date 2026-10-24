@@ -318,9 +318,9 @@
         "params": 1
       },
       {
-        "type": "GameCore.HotUpdate.ReduxUI.WebUILayer",
-        "method": "OnPageMessage",
-        "params": 3
+        "type": "GameCore.HotUpdate.ReduxUI.WebUIVm",
+        "method": "HandleCallback",
+        "params": 2
       }
     ],
     "configFields": [
