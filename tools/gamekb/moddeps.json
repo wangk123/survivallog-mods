@@ -355,5 +355,71 @@
       }
     ],
     "nativeSigs": []
+  },
+  "EndlessGuard": {
+    "harmony": [
+      {
+        "type": "GameCore.HotUpdate.Battle.Logic.EndlessManager",
+        "method": "FallMapPoint",
+        "params": 7
+      },
+      {
+        "type": "GameCore.HotUpdate.Battle.Logic.EndlessManager",
+        "method": "Initialize",
+        "params": 2
+      },
+      {
+        "type": "GameCore.HotUpdate.Battle.Logic.DifficultyTools",
+        "method": "RollExploreLootCopies",
+        "params": 1
+      }
+    ],
+    "configFields": [
+      {
+        "accessor": "_Config_Talent_Dict",
+        "rowType": "Config_Talent",
+        "fields": [
+          "Type",
+          "Available",
+          "ShowType",
+          "Icon",
+          "WebIcon",
+          "LvUpCost",
+          "ConditionSetId",
+          "PlayerSelectId",
+          "Name_Local",
+          "Dec_Local",
+          "IsReget"
+        ]
+      },
+      {
+        "accessor": "_Config_ConditionSet_Dict",
+        "rowType": "Config_ConditionSet",
+        "fields": [
+          "Source",
+          "TalentNeed",
+          "SurvivalToDay"
+        ]
+      },
+      {
+        "accessor": "_Config_RandomGroup_Dict",
+        "rowType": "Config_RandomGroup",
+        "fields": [
+          "IdList",
+          "CountList",
+          "DiscoverLvList"
+        ]
+      }
+    ],
+    "nativeSigs": [],
+    "apis": [
+      "ExploreDiscoveryTools.GetInsightCards",
+      "ExploreDiscoveryTools.GetDiscoveryLv",
+      "EndlessManager.IsCampMapPoint",
+      "GameCounter.SetCounter",
+      "TagManager.GetTagKeys/RemoveTags/HasTag",
+      "ReduxUI.State_Data_Talent.SurvivalPlanningIds",
+      "BattleLogicWorld._ExploreManager.MapConfigId"
+    ]
   }
 }

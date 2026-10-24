@@ -15,8 +15,9 @@ internal static class LootRichnessPatch
 {
     private static readonly System.Random Rng = new();
 
+    // 参数类型数组钉死（Task 8 收官裁决）。interop mdump 实测（tools/_t8.txt）：Int32(Boolean)，静态方法
     private static MethodBase TargetMethod() =>
-        AccessTools.Method(typeof(DifficultyTools), "RollExploreLootCopies");
+        AccessTools.Method(typeof(DifficultyTools), "RollExploreLootCopies", new[] { typeof(bool) });
 
     private static void Postfix(ref int __result)
     {

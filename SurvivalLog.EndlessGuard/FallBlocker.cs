@@ -13,8 +13,18 @@ internal static class FallBlocker
 {
     internal static int BlockedCount;
 
+    // 参数类型数组钉死（Task 8 收官裁决：防重载/签名漂移下静默 miss）。签名以 interop mdump 实测为准
+    //（tools/_t8.txt，2026-10-23_26157732 的 HotUpdate.dll）：Boolean(GameSaveData, TagManager, int, int, string&, bool, bool)
     private static MethodBase TargetMethod() =>
-        AccessTools.Method(typeof(GameCore.HotUpdate.Battle.Logic.EndlessManager), "FallMapPoint");
+        AccessTools.Method(typeof(GameCore.HotUpdate.Battle.Logic.EndlessManager), "FallMapPoint",
+            new[]
+            {
+                typeof(GameCore.HotUpdate.GameSaveData),
+                typeof(GameCore.HotUpdate.Battle.Logic.TagManager),
+                typeof(int), typeof(int),
+                typeof(string).MakeByRefType(),
+                typeof(bool), typeof(bool)
+            });
 
     private static bool Prefix()
     {

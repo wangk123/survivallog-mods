@@ -14,8 +14,10 @@ namespace SurvivalLog.EndlessGuard;
 [HarmonyPatch]
 internal static class FallRestorer
 {
+    // 参数类型数组钉死（Task 8 收官裁决）。interop mdump 实测（tools/_t8.txt）：Void(GameSaveData, GameMode)
     private static MethodBase TargetMethod() =>
-        AccessTools.Method(typeof(EndlessManager), "Initialize");
+        AccessTools.Method(typeof(EndlessManager), "Initialize",
+            new[] { typeof(GameCore.HotUpdate.GameSaveData), typeof(GameCore.HotUpdate.GameMode) });
 
     private static void Postfix(EndlessManager __instance, GameCore.HotUpdate.GameSaveData __0)
     {
