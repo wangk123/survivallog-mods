@@ -95,6 +95,7 @@ internal static class PlanState
         var showLocked = PlanPickPlugin.ShowLocked.Value; var showUnpooled = PlanPickPlugin.ShowUnpooled.Value;
 
         var sb = new StringBuilder(64 * 1024);
+        var roleCache = new Dictionary<int, List<int>>();   // 本次 payload 构建内的表现值缓存
         sb.Append("{\"plans\":[");
         int n = 0, shown = 0;
         foreach (var p in PlanCatalog.Plans)
@@ -112,8 +113,13 @@ internal static class PlanState
                         var preName = PlanCatalog.Plans.Find(x => x.Id == pre)?.Name ?? ("#" + pre);
                         reasons.Add("需先激活「" + preName + "」");
                     }
-                if (p.RoleIds.Count > 0 && !p.RoleIds.Contains(role))
-                    reasons.Add("仅限「" + JoinRoleNames(p.RoleIds, roleNames) + "」的专属规划");
+                // 角色锁：读运行时表现值（非目录快照）——RoleUnlock 等互通类 mod 清了内存表
+                // PlayerSelectId（空=不限，与官方 IsRoleAllowed 同语义）即自动放行；
+                // 只装本 mod 时表现值=官方原值，照锁。读失败按目录原值（fail-closed）。
+                var liveRoles = LiveRoleIds(cm, p.Id, roleCache);
+                var roleIds = liveRoles ?? p.RoleIds;
+                if (roleIds.Count > 0 && !roleIds.Contains(role))
+                    reasons.Add("仅限「" + JoinRoleNames(roleIds, roleNames) + "」的专属规划");
                 if (p.SpecialDesc.Count > 0)
                 {
                     if (csm != null)
@@ -159,6 +165,25 @@ internal static class PlanState
         json = sb.ToString();
         logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，倍率 x" + multStr + "）");
         return shown > 0;
+    }
+
+    /// <summary>读某规划运行时 PlayerSelectId 表现值（互通类 mod 可能已清空；空列表=不限）。null=读取失败，调用方回退目录原值。</summary>
+    private static List<int> LiveRoleIds(GameCore.HotUpdate.ConfigManager cm, int planId, Dictionary<int, List<int>> cache)
+    {
+        if (cache.TryGetValue(planId, out var hit)) return hit;
+        List<int> result = null;
+        try
+        {
+            var ps = cm.Get_Config_Talent(planId)?.PlayerSelectId;
+            if (ps != null)
+            {
+                result = new List<int>();
+                for (int i = 0; i < ps.Count; i++) result.Add(ps[i]);
+            }
+        }
+        catch { result = null; }
+        cache[planId] = result;
+        return result;
     }
 
     private static string JoinRoleNames(List<int> ids, Dictionary<int, string> names)

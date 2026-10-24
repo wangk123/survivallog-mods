@@ -90,6 +90,14 @@
 4. **解锁判定复用官方**：`ConditionSetManager.CheckConditionSet`（public 实例，0x2833A30 链上同款）；
    模式拦截复刻 `IsValidTalentId` 语义（Available / DemoTwo / Endless / 纯无尽）。
 5. **存档零写入**：所有购买经官方 `SaveGame`；mod 自身无落盘状态（cfg 除外）。
+6. **与 RoleUnlock（角色互通）联动（2026-10-24 作者定稿，零耦合实现）**：角色锁判定读
+   **运行时表现值**（每次推 payload 时现读 `cm.Get_Config_Talent(id).PlayerSelectId`，
+   非 PlanCatalog 目录快照；读失败回退目录原值 fail-closed）。RoleUnlock 的"生存规划互通"
+   清内存表功能类 46 张的白名单（空=不限，与官方 `IsRoleAllowed` 同语义）→ 同装时本 mod
+   自动放行这 46 张可选（家具位 77 张 RoleUnlock 按作者定案不清，本 mod 照锁——范围自动
+   跟随 RoleUnlock 的表现状）；只装本 mod 时表现值=官方原值，专属照锁。无跨 mod API、
+   无加载顺序依赖（判定时点晚于任一 mod 的表编辑）、任一卸载自动还原。
+   "专"徽章仍按表原始数据展示（标识官方本为专属内容，不因互通隐藏）。
 
 ### 3.1 payload 契约（`__PlanPickBoot` 单参 JSON，C# 全算 / JS 零推导）
 
@@ -246,3 +254,7 @@
   3. PlanCatalog 构建异常封顶——BuildLog 与上一条相同不再追加（每 2s 重试防无限增长）；
   4. §3 字段名勘误（本条上方）；moddeps 补 ConditionSet.BuffNeed/HistoryCount、
     删未读的 RandomGroup.GroupType。
+- 2026-10-24 RoleUnlock 联动（作者定稿）：角色锁判定改读运行时表现值（每轮推 payload 现读
+  PlayerSelectId，读失败回退目录原值）——同装 RoleUnlock（互通清功能类 46 张白名单）即自动放行，
+  家具位 77 张仍锁（范围跟随 RoleUnlock 表现状）；只装本 mod 照锁；零跨 mod API、无加载顺序依赖。
+  VERIFY.md 增 ⑫ 联动验证项。
