@@ -36,8 +36,9 @@ internal static class Injector
         // 走 DelegateSupport.ConvertDelegate 编组（Task 4 报告 §3 预授权的降级写法，回调体不变）。
         try
         {
+            // 新装页（回执 v==2）未收过 payload：重置签名门，下一 tick 对其强制重推（终审 I-1）
             web.ExecuteJavaScript(install, DelegateSupport.ConvertDelegate<Il2CppSystem.Action<string>>(
-                new Action<string>(s => { int v; if (int.TryParse(s, out v)) SpeedLink.OnCoreUi0State(v); })));
+                new Action<string>(s => { int v; if (int.TryParse(s, out v)) { SpeedLink.OnCoreUi0State(v); if (v == 2) _payloadSig = ""; } })));
         }
         catch (Exception e) { WarnOnce(ref _warnInstall, "注入异常", e); }
 

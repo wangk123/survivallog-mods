@@ -65,8 +65,8 @@ const activeSpeed = () => {
     sent = await page.evaluate(() => window.__sent.slice(-2));
     assert.deepStrictEqual(sent.map(m => m.data.speed), [0, 4], '暂停/慢速上报 0/4'); PASSED++; console.log('  ok - 暂停/慢速上报');
 
-    // C) 官方时标回显映射（payload s1=2/s2=32）
-    const cases = [[1, 1], [2, 2], [32, 3], [0.0001, 0], [0.3, -1]];
+    // C) 官方时标回显映射（payload s1=3/s2=33；夹具故意用非默认值，验证高亮由 payload 驱动而非内置默认 2/32）
+    const cases = [[1, 1], [3, 2], [33, 3], [0.0001, 0], [0.3, -1]];
     for (const [ts, gear] of cases) {
         await page.evaluate(v => window.__fixtureTimeScale(v), ts);
         await sleep(80);
