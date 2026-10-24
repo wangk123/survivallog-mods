@@ -150,9 +150,9 @@ internal static class BagSections
         try
         {
             if (!File.Exists(_path) || File.GetLastWriteTime(_path) == _lastMtime) return false;
+            int prev = _lastHash;
             Reload();
-            if (Hash() != _lastHash) { _lastHash = Hash(); return true; }
-            return false;
+            return _lastHash != prev;
         }
         catch { return false; }
     }
