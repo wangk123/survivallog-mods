@@ -97,8 +97,7 @@ internal static class PlanState
         var roleNames = new Dictionary<int, string>();
         try { foreach (var kv in cm._Config_PlayerSelect_Dict) roleNames[kv.Key] = kv.Value.Name_Local ?? ("角色" + kv.Key); } catch { }
 
-        var mult = PlanPickPlugin.Multiplier;
-        var multStr = mult.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture); // 小数点逗号区域仍输出 JSON 合法数字
+        var percent = PlanPickPlugin.MultiplierPercent;   // 整数百分比 100~300，payload 直传整数
         var showLocked = PlanPickPlugin.ShowLocked.Value; var showUnpooled = PlanPickPlugin.ShowUnpooled.Value;
 
         var sb = new StringBuilder(64 * 1024);
@@ -164,13 +163,13 @@ internal static class PlanState
             var ids = new List<int>(_today); ids.Sort();
             for (int i = 0; i < ids.Count; i++) { if (i > 0) sb.Append(','); sb.Append(ids[i]); }
         }
-        sb.Append("],\"points\":").Append(points).Append(",\"mult\":").Append(multStr)
+        sb.Append("],\"points\":").Append(points).Append(",\"mult\":").Append(percent)
           .Append(",\"day\":").Append(_day).Append(",\"role\":").Append(role)
           .Append(",\"roleNames\":{");
         int rn = 0; foreach (var kv in roleNames) { if (rn++ > 0) sb.Append(','); sb.Append(kv.Key).Append(":\"").Append(JsEscapePublic(kv.Value)).Append('"'); }
         sb.Append("}}");
         json = sb.ToString();
-        logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，倍率 x" + multStr + "）");
+        logs.Add("规划 " + shown + "/" + n + " 项（今日候选 " + (_today == null ? 0 : _today.Count) + "，第 " + _day + " 天，点数 " + points + "，加成 " + percent + "%）");
         return shown > 0;
     }
 

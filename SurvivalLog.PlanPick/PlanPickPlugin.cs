@@ -19,7 +19,7 @@ public sealed class PlanPickPlugin : BasePlugin
     public const string Version = "1.3.8";
 
     internal static new ManualLogSource Log;
-    internal static ConfigEntry<float> CostMultiplier;   // 自选倍率（1=原价；<1 按 1 处理）
+    internal static ConfigEntry<int> CostMultiplierPercent;   // 自选倍率百分比：100~300 整数，默认 200；100=原值
     internal static ConfigEntry<bool> ShowLocked;        // 未解锁项展示（置灰+原因）
     internal static ConfigEntry<bool> ShowUnpooled;      // 不入池规划（图纸/无人机）展示
     internal static ConfigEntry<bool> ListOnReady;       // 首轮列统计
@@ -28,8 +28,9 @@ public sealed class PlanPickPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
-        CostMultiplier = Config.Bind("Cost", "CostMultiplier", 2f,
-            "自选规划（不在今日候选名单）的生存点消耗倍率。默认 2=翻倍；1=原价（无加价）。今日候选内购买始终原价。");
+        CostMultiplierPercent = Config.Bind("Cost", "CostMultiplierPercent", 200,
+            new ConfigDescription("自选规划（不在今日候选名单）的生存点消耗百分比加成。整数 100~300：100=原值，200=翻倍（默认），300=三倍。不支持小数；实收=原价×百分比/100 四舍五入取整。今日候选内购买始终原价。",
+                new AcceptableValueRange<int>(100, 300)));
         ShowLocked = Config.Bind("List", "ShowLocked", true, "列表展示未解锁规划（置灰+点击弹原因）。");
         ShowUnpooled = Config.Bind("List", "ShowUnpooled", true, "列表展示从不进入抽取池的规划（机器人图纸/拾荒无人机）。");
         ListOnReady = Config.Bind("Debug", "ListOnReady", true, "首次数据就绪时在日志列统计（分类计数/今日候选）。");
@@ -43,14 +44,20 @@ public sealed class PlanPickPlugin : BasePlugin
         var go = new GameObject("PlanPick.Ticker");
         Object.DontDestroyOnLoad(go);
         go.AddComponent<PlanTicker>();
-        Log.LogInfo("[PlanPick] loaded：自选规划入口待注入（倍率 x" + CostMultiplier.Value + "）");
+        Log.LogInfo("[PlanPick] loaded：自选规划入口待注入（自选加成 " + MultiplierPercent + "%）");
         WelcomeTip.Install(Log);
     }
 
-    /// <summary>倍率统一出口：NaN/非法→1（Math.Max(1f,NaN)=NaN，(int)Round(NaN) 会毒化表行）；夹取 [1,100]。</summary>
-    internal static float Multiplier
+    /// <summary>倍率百分比统一出口：整数 100~300（AcceptableValueRange 在读入时夹取，此处再钳防手改）。</summary>
+    internal static int MultiplierPercent
     {
-        get { var m = CostMultiplier.Value; if (float.IsNaN(m) || m < 1f) m = 1f; if (m > 100f) m = 100f; return m; }
+        get
+        {
+            var p = CostMultiplierPercent.Value;
+            if (p < 100) p = 100;
+            if (p > 300) p = 300;
+            return p;
+        }
     }
 }
 

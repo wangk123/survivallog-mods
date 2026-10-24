@@ -26,16 +26,17 @@ internal static class CostPatch
         _boostedId = 0;
         try
         {
-            var mult = PlanPickPlugin.Multiplier;
-            if (mult <= 1f) return;                       // 无倍率零干预
-            if (PlanState.IsTodayCandidate(talentId)) return;   // 今日候选：官方原价路径
+            var percent = PlanPickPlugin.MultiplierPercent;          // 整数百分比 100~300（作者定稿口径）
+            if (percent <= 100) return;                              // 100=原值零干预
+            if (PlanState.IsTodayCandidate(talentId)) return;        // 今日候选：官方原价路径
             var cm = SurvivalLog.ModShared.BagTable.Cm();
             var cfg = cm?.Get_Config_Talent(talentId);
             if (cfg == null) return;
             _origCost = cfg.LvUpCost;
-            cfg.LvUpCost = (int)Math.Round(_origCost * mult);
+            // 实收=原价×百分比/100 四舍五入取整（Floor(x+0.5)=半值向上，与 page.js Math.round 双端一致）
+            cfg.LvUpCost = (int)Math.Floor(_origCost * percent / 100.0 + 0.5);
             _boostedId = talentId;
-            PlanPickPlugin.Log.LogInfo("[PlanPick][Cost] 自选 " + talentId + " 原价 " + _origCost + " -> " + cfg.LvUpCost);
+            PlanPickPlugin.Log.LogInfo("[PlanPick][Cost] 自选 " + talentId + " 原价 " + _origCost + " -> " + cfg.LvUpCost + "（" + percent + "%）");
         }
         catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick][Cost] prefix 异常: " + e.Message); }
     }

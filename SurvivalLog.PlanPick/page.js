@@ -25,9 +25,8 @@ const S = {
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* 自选价：今日候选原价，否则 原价 × 倍率 四舍五入取整（payload.mult，C# cfg）——与 C# 实扣
-   (int)Math.Round(orig*mult) 对齐，小数倍率下展示/乐观扣点即实际扣费值 */
-function payCost(p) { return p.today ? p.cost : Math.round(p.cost * S.mult); }
+/* 自选价：今日候选原价，否则 原价×百分比/100 四舍五入取整（payload.mult=整数百分比，C# cfg）。与 C# 实扣 Floor(orig*percent/100+0.5) 双端一致 */
+function payCost(p) { return p.today ? p.cost : Math.round(p.cost * S.mult / 100); }
 
 /* 展示态：payload.state 优先（bought/locked）；ok 但点数不足 → poor（唯一 JS 侧显示逻辑） */
 function stateOf(p) {
@@ -305,7 +304,7 @@ const OVERLAY_HTML = `
     <div class="pp-confirm-box">
         <h3 id="cfName"></h3>
         <div class="row"><span>原价</span><span class="v" id="cfBase">--</span></div>
-        <div class="row"><span>自选价（×<span id="cfMult">2</span>）</span><span class="v pay" id="cfPay">--</span></div>
+        <div class="row"><span>自选价（加成 <span id="cfMult">2</span>）</span><span class="v pay" id="cfPay">--</span></div>
         <div class="row after"><span>购买后剩余</span><span class="v" id="cfAfter">--</span></div>
         <div class="btns">
             <button class="ghost-btn" id="cfCancel">取 消</button>
@@ -479,7 +478,7 @@ function cardHtml(p) {
     const price = payCost(p);
     const costHtml = p.today
         ? '<span class="num">' + p.cost + '</span><span style="color:#9fe8a4;font-size:11px;margin-left:6px">今日候选·原价</span>'
-        : '<span class="cost-base">' + p.cost + '</span><span class="num cost-x2">×' + S.mult + ' = ' + price + '</span>';
+        : '<span class="cost-base">' + p.cost + '</span><span class="num cost-x2">×' + S.mult + '% = ' + price + '</span>';
     const badges =
         (p.today ? '<span class="pp-tag today">今日·原价</span>' : '') +
         (p.unlockDay === null ? '<span class="pp-tag unpooled">不入池</span>' : '') +
@@ -523,7 +522,7 @@ function onCard(id, el) {
     confirmTarget = p;
     $('cfName').textContent = p.name;
     $('cfBase').textContent = p.cost + ' 点';
-    $('cfMult').textContent = S.mult;
+    $('cfMult').textContent = S.mult + '%';
     $('cfPay').textContent = payCost(p) + ' 点';
     $('cfAfter').textContent = S.points + ' → ' + (S.points - payCost(p)) + ' 点';
     $('ppConfirm').classList.add('open');
@@ -580,10 +579,10 @@ function wireGlobal() {
 function syncAll() {
     const o = $('ppOverlay'); if (!o) return;
     $('ppPoints').textContent = S.points;
-    $('ppMultHint').textContent = '自选消耗 ×' + S.mult;
+    $('ppMultHint').textContent = '自选加成 ' + S.mult + '%';
     $('ppTitleSub').textContent = '全 ' + S.plans.length + ' 项 · 未解锁项点击查看原因';
     const sub = document.querySelector('#ppEntry .sub');
-    if (sub) sub.textContent = '×' + S.mult;
+    if (sub) sub.textContent = S.mult + '%';
     if (o.classList.contains('open')) { renderTabs(); renderSubBar(); renderList(false); }
 }
 
@@ -595,7 +594,8 @@ window.__PlanPickBoot = function (payload) {
     S.byId = {};
     S.plans.forEach(p => { S.byId[p.id] = p; });
     S.points = payload.points | 0;
-    S.mult = Math.max(1, +payload.mult || 1);
+    var m0 = Math.round(+payload.mult || 200);
+    S.mult = Math.min(300, Math.max(100, m0));   // 整数百分比 100~300（payload.mult，C# cfg 同源）
     S.day = payload.day | 0;
     S.role = payload.role | 0;
     S.roleNames = payload.roleNames || {};

@@ -28,7 +28,7 @@ const roleName = ids => ids.map(i => ROLE_NAMES[i] || ('角色' + i)).join(' / '
 function buildGolden(q) {
   const day = +q.day || 20, role = +q.role || 0;
   const points = q.points !== undefined ? +q.points : 150;
-  const mult = +q.mult || 2;
+  const mult = Math.round(+q.mult || 200);   // 整数百分比（与 C# CostMultiplierPercent 同构）
   const todayIds = PD.todaySample;                     // [30011, 30661, 31442]（今日候选样例）
   const plans = PD.plans.map(p => {
     const reasons = [];
@@ -102,7 +102,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     });
     eq(frInfo.first, 'ppEntry', '入口按钮是 .footer-right 第一个子元素');
     ok(frInfo.secondIsLeave, '入口按钮插在"离开"按钮之前');
-    ok(/自选规划/.test(frInfo.entryText) && /×2/.test(frInfo.entryText), '入口文案=自选规划×2: ' + frInfo.entryText);
+    ok(/自选规划/.test(frInfo.entryText) && /200%/.test(frInfo.entryText), '入口文案=自选规划200%: ' + frInfo.entryText);
 
     // B) 幂等安装：单弹层/单确认/官方区零接触
     eq(await page.locator('.pp-overlay').count(), 1, '恰好一个 .pp-overlay');
@@ -116,7 +116,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.click('.pp-entry-btn');
     await sleep(300);
     eq(await page.locator('#ppPoints').innerText(), '150', '初始剩余生存点 150');
-    ok((await page.locator('#ppMultHint').innerText()).includes('×2'), '倍率提示 ×2');
+    ok((await page.locator('#ppMultHint').innerText()).includes('200%'), '加成提示 200%');
     eq(await page.locator('.pp-tab').count(), 5, 'tab = 全部+4 分类');
     ok((await page.locator('.pp-tab[data-tab="all"]').innerText()).includes('465'), '全部 tab 计数 465');
     eq(await page.locator('.pp-sub').count(), 0, '全部 tab 无二级 chips');
@@ -203,7 +203,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     eq(await page.locator('.pp-confirm-box .row').count(), 3, '确认弹窗三行（原价/自选价/剩余）');
     const base = parseInt(await page.locator('#cfBase').innerText());
     const pay = parseInt(await page.locator('#cfPay').innerText());
-    eq(pay, base * 2, '非今日卡 pay = base × 2 (' + base + ' -> ' + pay + ')');
+    eq(pay, Math.round(base * 200 / 100), '非今日卡 pay = base×200% 取整 (' + base + ' -> ' + pay + ')');
     await page.click('#cfCancel');
     await sleep(150);
     await page.locator('.pp-card:not(.locked):not(.bought):not(.tooexpensive):has(.pp-tag.today)').first().click();

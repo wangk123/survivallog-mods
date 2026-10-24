@@ -329,3 +329,7 @@
   ConvertDelegate 原生指针不匹配）、ExecuteJavaScript 回调读回（此构建不触发）、inputString
   转运（IME On 后与直投双份）、IsPageActive 曾疑未命中（实为会话日志覆盖误判）。
   CDP 取证脚本（tests/_cdp_*.js）入库：9222 白盒通道（ViewportProbe DevTools.Enabled）装机排障利器。
+- 2026-10-24 倍率改整数百分比（作者定稿口径）：CostMultiplier(float ×N) → CostMultiplierPercent
+  (int 100~300，AcceptableValueRange 夹取，默认 200；100=原值零干预)。实收=原价×百分比/100
+  四舍五入取整——C# 用 Floor(x+0.5)（半值向上）与 page.js Math.round 双端一致；payload.mult
+  直传整数百分比，页面显示 ×200% 形态。旧 cfg 键 CostMultiplier 成为孤儿行（无害，新键生效）。
