@@ -176,7 +176,7 @@
     <button data-ctx="menu" class="on">模拟：主菜单（读档前）</button>
     <button data-ctx="game">模拟：游戏内（读档后）</button>
   </div>
-  <span>套件 mod 精简定制页 + 第三方 mod 通用识别页（示例）。</span>
+  <span>套件 mod 精简定制页 + 第三方 mod 三档接入（Tier 0 通用 / Tier 1 声明式示例）。</span>
   <span class="tip">2026-10-24 v3 · 配套 spec：2026-10-24-modcenter-design.md</span>
 </div>
 
@@ -338,15 +338,27 @@ const MODS = [
   groups:[]},
 ];
 
-/* 第三方 mod（通用识别，示例数据；真实版自动反射枚举其 cfg 渲染） */
+/* 第三方 mod（Tier 0 通用识别 / Tier 1 声明式，示例数据；真实版自动反射枚举） */
 const TP = [
-{ id:'statsui-demo', name:'StatsUI（示例）', en:'第三方 mod', enabled:true,
-  desc:'通用识别：自动读取该 mod cfg 的键 / 类型 / 描述 / 范围渲染；配置改动即时写入，生效时机取决于该 mod 是否监听配置变更。',
+{ id:'statsui-demo', name:'StatsUI（通用识别）', en:'第三方 · Tier 0', enabled:true,
+  desc:'零对接自动识别：反射读取该 mod cfg 的键 / 类型 / 描述 / 范围渲染；改动即时写入，生效时机取决于该 mod 是否监听配置变更。',
   groups:[
-    {sec:'配置（自动读取自该 mod 的 cfg）', tp:true, items:[
+    {sec:'配置（自动读取自该 mod 的 cfg）', items:[
       {k:'UI.AlwaysOnTop', l:'面板常显', t:'bool', v:true, b:'cfg'},
       {k:'UI.Scale', l:'面板缩放', t:'float', v:1.0, min:0.5, max:2, st:0.1, b:'cfg'},
       {k:'Perf.RefreshMs', l:'刷新间隔（毫秒）', t:'int', v:500, min:100, max:5000, st:100, b:'cfg'},
+    ]},
+  ]},
+{ id:'bettertrade-demo', name:'BetterTrade（声明式）', en:'第三方 · Tier 1', enabled:true,
+  desc:'声明式接入示例：该 mod 内嵌 modcenter.json 清单（显示名 / 分组 / 中文标签 / 徽标），ModCenter 渲染准套件级页面。对接细节见《第三方接入指南》。',
+  groups:[
+    {sec:'显示（清单定义）', items:[
+      {k:'UI.Compact', l:'紧凑模式', t:'bool', v:false, b:'now'},
+      {k:'UI.RefreshMs', l:'刷新间隔（毫秒）', t:'int', v:300, min:100, max:2000, st:100, b:'now'},
+    ]},
+    {sec:'交易（清单定义）', items:[
+      {k:'Trade.BonusMult', l:'交易加成倍率', t:'float', v:1.2, min:1, max:3, st:0.1, b:'reload',
+       note:'既有报价读档后体现'},
     ]},
   ]},
 ];
@@ -370,7 +382,7 @@ function renderSide(){
       <span class="st" style="background:var(--accent)"></span><span class="nm">${SELF.name}</span>
       <span class="mini-sw lock" title="防呆：面板不可停用自身"></span>
     </div>`;
-  h += `<div class="cat">第三方 MOD（通用识别）</div>`;
+  h += `<div class="cat">第三方 MOD（通用 / 声明式）</div>`;
   TP.forEach((m,i)=>{
     const gi = i - 100;
     h += `<div class="mod-row ${m.enabled?'':'off'} ${cur===gi?'sel':''}" data-i="${gi}">

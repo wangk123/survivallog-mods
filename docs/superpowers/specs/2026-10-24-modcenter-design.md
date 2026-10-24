@@ -6,7 +6,7 @@
   - ①管理范围 = **9 mod**（7 套件 + PlanPick + PreDisasterSpeed；**不含 StackLimit999**；**柜子负重 CabinetBurden 移出**——作者计划后期并入柜子扩容，v1 不纳入管理）；
   - ②停用语义 = 立即软停 + 下次启动彻底不加载（评估结论：改动量小、还原路径大半为现役代码，风险低）；
   - ③v2 反馈：配置项全面精简重梳；入口从左上角齿轮改为**官方菜单列表注入**；关闭按钮图标化；全 mod 不暴露 Debug 组；
-  - ④v3 反馈：**默认值与原 mod cfg 保持一致**（运行时从 ConfigEntry 反射读取，元数据表不手抄防漂移）；**柜子直达也仅支持启停**（与灾前加速同款）；灾前加速去掉总控组（顶部启停即全部）；**第三方 mod 通用接入标准**（反射枚举渲染通用配置页 + 重启级启停，见 §7.10）。
+  - ④v3 反馈：**默认值与原 mod cfg 保持一致**（运行时从 ConfigEntry 反射读取，元数据表不手抄防漂移）；**柜子直达也仅支持启停**（与灾前加速同款）；灾前加速去掉总控组（顶部启停即全部）；**第三方 mod 三档接入协议**（Tier 0 自动识别 / Tier 1 声明式清单 / Tier 2 深度对接，§7.10 + 独立《[第三方接入指南](../../modcenter-integration-guide.md)》）。
 
 ## 1. 背景与目标
 
@@ -202,22 +202,17 @@
 
 > 注：TrueThreeX / Hotkeys.Enabled / Debug.Verbose 等仍存在于 cfg 并生效，面板不展示（§2.2 暴露原则）。
 
-### 第三方 mod 通用接入标准（v3 定，= §7.10）
+### 第三方 mod 接入协议（= §7.10，完整版见《[第三方接入指南](../../modcenter-integration-guide.md)》）
 
-**识别与渲染（推荐反射枚举，比 cfg 文件解析更稳）**：
+三档可选接入（协议名 mcSpec 1，接口冻结）：
 
-- 枚举 Chainloader 全部插件 → 未登记进套件元数据表的进"第三方 MOD"分组；
-- 通用页直接反射读其 `ConfigFile` 全部 entry：section/key/类型/描述/AcceptableValueRange → 自动渲染对应控件（bool 开关、数值滑条、文本框），默认值同源读取；
-- 写入同样走 `ConfigEntry.Value`（触发该 mod 的 SettingChanged——监听了的立即热生效，没监听的写入 cfg 待其下次读取，面板徽标统一为"⚙ 已写入 cfg（生效视该 mod）"）；
-- 为何不解析 cfg 文件：BepInEx cfg 文本格式有转义/中文坑，且改文件不触发任何事件（必须重启）；反射方案是 ConfigurationManager 的生态标准做法，读写都走内存。
+| 档 | 对接方式 | 面板形态 | 启停 |
+|---|---|---|---|
+| Tier 0 自动识别 | 零工作：反射枚举 ConfigFile 逐 entry 渲染（类型/范围/描述自动映射控件） | 通用控件页（⚙ 徽标） | 重启级（dll 改名 .disabled） |
+| Tier 1 声明式（推荐） | mod 内嵌 `modcenter.json` 清单（显示名/分组/中文标签/徽标/范围覆盖/排序） | 准套件级页面 | 默认重启级；声明 `softDisable` + 自实现 gate 则两层 |
+| Tier 2 深度对接 | Contracts 源码单文件编入 mod（命名空间+类型名反射发现，无 dll 依赖）：`IModCenterIntegration`（OnEnabledChanged 软停回调 / QueryStates 状态回报如补丁失败置灰） | 同 Tier 1 + 运行时状态 | 软停（停用即还原）+ 重启级 |
 
-**启停（重启级）**：
-
-- 第三方 mod 无我们的 gate，无法软停——诚实降级为"重启级停用"：停用 = 游戏退出时把其 dll 重命名为 `<原名>.disabled`（BepInEx 只加载 .dll 后缀，改名即不加载）；启用 = 改回原名；
-- 运行中 dll 被系统锁定无法改名 → 挂进程退出钩子（Application.quitting）执行；强杀进程钩子不跑 → 标记残留，下次启动 ModCenter 检测到"已标记停用但 dll 未改名"时补提示；
-- 面板文案明确标注：本次会话该 mod 仍在运行，下次启动后不再加载。
-
-**边界与豁免**：探针类（ActionProbe 等）不出现在枚举里（不随套件分发时不装）；ModCenter 自身与套件 9 mod 走专属页不走通用页。
+关键承诺：只读写已声明的 cfg 键、不碰官方消息链（不挂 HandleCallback）、不装 ModCenter 时第三方 mod 行为不变、mcSpec 1 接口冻结。完整字段表/接口源码/自测清单/FAQ 见指南文档（实施阶段随发版对外公布）。
 
 ## 8. 现役 mod 改动清单
 
