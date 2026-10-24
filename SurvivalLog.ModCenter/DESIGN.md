@@ -273,7 +273,10 @@ MC_EVIDENCE 轮询读表：MoveSpeed 4.8→9.6（=2.4×4，≤5s）→ 写回 2 
   cfg 档文案就绪待 T14）；`MC_SET_FAIL` 到达时以错误样式覆盖乐观 toast。
 - **tp 空数组**：渲染"第三方 MOD"分类头 + "（暂无第三方 mod 接入）"占位行（T14 填充后自动长行）。
 
-#### 6.5.2 实机现状备忘：UiFit.Mode/Enabled 写路径
+#### 6.5.2 实机现状备忘：UiFit.Mode/Enabled 写路径（已随 T17 Meta 柜子位改稿过时，留档）
+
+> 2026-10-25 T17 注：Meta 柜子位已对齐 CabinetSize v3（无 UiFit 条目），本节写路径不再可达；
+> "entry 缺失→兜底展示+写拒绝回 MC_SET_FAIL"的设计行为本身仍有效（见 §7 任务 17 条目）。
 
 装机版 CabinetExpand.dll（作者现装，10-20 构建）尚未 Bind `UiFit.Mode`（cfg 无该键；仓库源
 ViewportFit.cs:44 已 Bind，属作者未部署的 WIP）——快照按 Meta 兜底展示，写被桥拒绝回
@@ -546,6 +549,22 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
 
 ## 7. 迭代维护清单
 
+- 2026-10-25 任务 17：Meta 柜子位对齐作者 CabinetSize v3 终表。原条目（`Expand.WidthMult/
+  FridgeWidthMult/VehicleWidthMult` 联动倍率 + `UiFit.*`）是作者 CabinetSize 倍率原型期（c899f20
+  换位时点）的形状；作者 aa20303→d02e985 演进为**档位模型**（Bind 面 = `Global.MaxWidth/
+  MaxHeight/Preset/ExcludeIds` + `Tier.Small..XLarge.Width/Height` + `Debug.*`，无 `Expand`/`UiFit`
+  节）后旧条目全部悬空——快照按 Def 兜底展示虚构值、全部写被拒（T16 run4 实证 cabinetsize cfg
+  无 Expand 节、联动对 `orig:[null,null]` 静默跳过）。修正：Meta 柜子页改 10 键（上限 2 + 四档
+  宽高 8，int 滑条，Badge now——全部键已接 SettingChanged→Rerun 热改）；`Preset`（勿手改）/
+  `ExcludeIds`（同 BP 口径不暴露）/`Debug.*` 不进面板；UiFit 组撤销（v3 用官方自适应，§6.5.2
+  随之过时）。附带语义记录：CabinetSize 尚未 Bind `General.Enabled`，面板启停该 mod 走"toggle
+  拒绝 + 快照回推自愈"路径（HandleToggle 恒回推，行视觉瞬时翻转后复位；接 gate 属作者侧后续）。
+  回归夹具定稿 `tools/mc_fixture.js`（`_mc_fixture.js` 退役删除；tp 组净机 SKIP 语义）。
+  **T17 看门狗修复（实锤产品 bug）**：孤儿看门狗旧判据 `S.root.isConnected` 在本引擎对被移除
+  iframe 的孤儿文档恒 true（与 DOM 规范不符，CDP 实测）——宿主 iframe 被移除时看门狗永不触发，
+  开面板进对局（或 ESC 收暂停菜单）键盘门漏开（enterworld 实证 kb 恒 on，人工 ESC 才还原）。
+  改判 `宿主 doc.defaultView.frameElement`（iframe 被移除或文档被导航均 null，两死法实测）
+  + `frameElement.isConnected`（Root 文档内元素，语义正常）。§6.6 孤儿看门狗机制段随之生效。
 - 2026-10-25 任务 16 Fix Round 1（评审 P2+P3）：P2 子目录 dll 禁用——分离进程 `-NewName` 改喂
   `Split-Path -Leaf`（带路径名必败→静默失败+重复残留 toast）、`AbsentDisabled` 改递归扫描且
   返回相对名**剥 `.disabled`**（原递归化时首版漏剥后缀，实机抽查抓出即修）、启用反向改名同 Leaf；

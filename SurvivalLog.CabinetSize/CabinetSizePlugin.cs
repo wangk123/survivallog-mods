@@ -49,7 +49,7 @@ public sealed class CabinetSizePlugin : BasePlugin
         ListOnReady = Config.Bind("Debug", "ListOnReady", true, "首次生效时在日志/trace 列出全部受管包与尺寸前后（核对名单用）。");
         DiagOnOpen = Config.Bind("Debug", "DiagOnOpen", false, "读档时在日志列出全部容器的 BagConfigId（排查某柜不生效，平时关防刷屏）。");
 
-        System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; }; // 显式形参类型：本机 Roslyn 对推断形参的 lambda 转换会触发 CS0656（NullableAttribute 缺失），套件内三个 mod 同款写法
+        System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; BagSections.NoteBindChange(); }; // 显式形参类型：本机 Roslyn 对推断形参的 lambda 转换会触发 CS0656（NullableAttribute 缺失），套件内三个 mod 同款写法；NoteBindChange=ApplyHotKeys 陈旧文件闸（T17 跨 mod 竞态，见 BagSections.ApplyHotKeys 注释）
         MaxWidth.SettingChanged += reload; // SettingChanged 在 ConfigEntry<T> 上（ConfigEntryBase 无事件，本机 BepInEx.Core 6.0.0.0 实证），故逐条订阅
         MaxHeight.SettingChanged += reload;
         Preset.SettingChanged += reload;

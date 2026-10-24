@@ -102,60 +102,41 @@ internal static class Meta
         {
             Guid = "com.local.survivallog.cabinetsize",
             Name = "柜子容量", En = "CabinetSize",
-            Desc = "普通柜 / 冰箱 / 载具三档各自一个倍率：自动计算宽与高（超上限自动封顶）。",
+            Desc = "普通柜/冰箱/载具按原生格数分四档定宽高（小/中/大/特大），全局上限兜底；热改即时生效。",
             Groups =
             {
                 new MetaGroup
                 {
-                    Title = "扩容",
+                    Title = "档位与上限（热改即时生效）",
                     Items =
                     {
                         new MetaItem
                         {
-                            Section = "Expand", Key = "WidthMult",
-                            WriteKeys = new[] { "WidthMult", "HeightMult" },
-                            Label = "普通柜倍率", Badge = "now", Type = "float",
-                            Def = 1.5, Min = 1, Max = 3, St = 0.1,
-                            LinkedSuffix = " · 拖动后宽高同步为新倍率"
+                            Section = "Global", Key = "MaxWidth", Label = "宽度上限",
+                            Badge = "now", Type = "int", Def = 20, Min = 0, Max = 40, St = 1,
+                            Note = "0=不封顶；默认 20=官方原生最大宽度（材料架列数）"
                         },
                         new MetaItem
                         {
-                            Section = "Expand", Key = "FridgeWidthMult",
-                            WriteKeys = new[] { "FridgeWidthMult", "FridgeHeightMult" },
-                            Label = "冰箱倍率", Badge = "now", Type = "float",
-                            Def = 1.5, Min = 1, Max = 3, St = 0.1,
-                            LinkedSuffix = " · 拖动后宽高同步为新倍率"
+                            Section = "Global", Key = "MaxHeight", Label = "高度上限",
+                            Badge = "now", Type = "int", Def = 16, Min = 0, Max = 30, St = 1,
+                            Note = "0=不封顶；默认 16=特大档高度"
                         },
-                        new MetaItem
-                        {
-                            Section = "Expand", Key = "VehicleWidthMult",
-                            WriteKeys = new[] { "VehicleWidthMult", "VehicleHeightMult" },
-                            Label = "载具倍率", Badge = "now", Type = "float",
-                            Def = 1.5, Min = 1, Max = 3, St = 0.1,
-                            LinkedSuffix = " · 拖动后宽高同步为新倍率"
-                        }
-                    }
-                },
-                new MetaGroup
-                {
-                    Title = "视口自适应",
-                    Items =
-                    {
-                        new MetaItem
-                        {
-                            Section = "UiFit", Key = "Enabled",
-                            Label = "启用视口自适应", Badge = "now", Type = "bool", Def = true
-                        },
-                        new MetaItem
-                        {
-                            Section = "UiFit", Key = "Mode",
-                            Label = "自适应模式", Badge = "now", Type = "sel", Def = "Scroll",
-                            Opts = new[] { "Scroll", "Zoom", "Off" },
-                            Note = "Scroll=滚动（默认）；Zoom=整页缩放（旧法回退）；Off=关闭"
-                        }
+                        new MetaItem { Section = "Tier.Small", Key = "Width", Label = "小档宽度", Badge = "now", Type = "int", Def = 14, Min = 4, Max = 40, St = 1, Note = "原生格数 ≤60 的柜子" },
+                        new MetaItem { Section = "Tier.Small", Key = "Height", Label = "小档高度", Badge = "now", Type = "int", Def = 10, Min = 4, Max = 30, St = 1 },
+                        new MetaItem { Section = "Tier.Medium", Key = "Width", Label = "中档宽度", Badge = "now", Type = "int", Def = 16, Min = 4, Max = 40, St = 1, Note = "原生格数 61~99" },
+                        new MetaItem { Section = "Tier.Medium", Key = "Height", Label = "中档高度", Badge = "now", Type = "int", Def = 12, Min = 4, Max = 30, St = 1 },
+                        new MetaItem { Section = "Tier.Large", Key = "Width", Label = "大档宽度", Badge = "now", Type = "int", Def = 18, Min = 4, Max = 40, St = 1, Note = "原生格数 100~149" },
+                        new MetaItem { Section = "Tier.Large", Key = "Height", Label = "大档高度", Badge = "now", Type = "int", Def = 14, Min = 4, Max = 30, St = 1 },
+                        new MetaItem { Section = "Tier.XLarge", Key = "Width", Label = "特大档宽度", Badge = "now", Type = "int", Def = 20, Min = 4, Max = 40, St = 1, Note = "原生格数 ≥150" },
+                        new MetaItem { Section = "Tier.XLarge", Key = "Height", Label = "特大档高度", Badge = "now", Type = "int", Def = 16, Min = 4, Max = 30, St = 1 }
                     }
                 }
             }
+            // T17 对账注记：作者 CabinetSize v3 终表（d02e985）Bind 面 = Global.MaxWidth/MaxHeight/Preset/
+            // ExcludeIds + Tier.Small..XLarge.Width/Height + Debug.*。此处只暴露档位与上限 10 键；
+            // Preset（勿手改）/ExcludeIds（同 BP ExcludeIds 口径不暴露）/Debug.* 不进面板。
+            // 旧倍率模型条目（Expand.*Mult + UiFit.*）已随 v3 档位模型退役——UiFit 系官方自适应接管。
         },
         new MetaMod
         {

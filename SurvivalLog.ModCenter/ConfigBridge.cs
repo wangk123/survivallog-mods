@@ -521,9 +521,14 @@ internal static class ConfigBridge
 
     private static bool Match(MetaItem it, string section, string key)
     {
+        // T17：完整展示键逐字命中 = 最强匹配，节名前置校验不再否决——面板 routeOf 对
+        // "节.键"做首点切分，点分节名（CabinetSize v3 的 Tier.Small 等）会被切成错节
+        // （"Tier.Small.Width"→section="Tier"），旧序（节守卫在 K 判之前）该类写必拒。
+        // K 全串在 mod 内唯一（含联动"节.键A + 键B"），前置放行安全；短键/ovr 分支仍走
+        // 节守卫（ovrCommit 发 key='Overrides'，只可能命中 it.Key 分支，行为不变）。
+        if (string.Equals(it.K, key, StringComparison.OrdinalIgnoreCase)) return true;
         if (!string.Equals(it.Section, section, StringComparison.OrdinalIgnoreCase)) return false;
         if (string.Equals(it.Key, key, StringComparison.OrdinalIgnoreCase)) return true;
-        if (string.Equals(it.K, key, StringComparison.OrdinalIgnoreCase)) return true; // 组合展示键
         return it.WKeys.Any(wk => string.Equals(wk, key, StringComparison.OrdinalIgnoreCase));
     }
 

@@ -669,8 +669,16 @@
    * （C# 键盘门双还原 + 脏 cfg 落盘收口，FocusTick.cs 消费；层整体消亡另有 C# 侧兜底）。 */
   setInterval(function () {
     if (!S.root) return;
+    /* T17 修复（实锤）：本引擎（Vuplex/CEF）里被移除 iframe 的孤儿文档内元素 isConnected 恒
+     * true（与 DOM 规范不符，实测 removed 后仍 true），旧判据对宿主 iframe 被移除永远判活——
+     * 看门狗不触发，键盘门漏开（enterworld 实证：开面板点继续，kb 恒 on）。改走宿主文档归属
+     * 判定：doc.defaultView.frameElement 在 iframe 被移除或文档被导航后即为 null（两死法均
+     * 实测），frameElement.isConnected（Root 文档内元素）语义正常。 */
     var alive = false;
-    try { alive = S.root.isConnected; } catch (e) {}
+    try {
+      alive = !!(S.root.isConnected && S.host && S.host.defaultView
+        && S.host.defaultView.frameElement && S.host.defaultView.frameElement.isConnected);
+    } catch (e) { alive = false; }
     if (alive) return;
     S.root = null; S.side = S.cfg = S.sub = S.toastEl = null;
     for (var id in TH) if (TH[id] && TH[id].timer != null) clearTimeout(TH[id].timer);

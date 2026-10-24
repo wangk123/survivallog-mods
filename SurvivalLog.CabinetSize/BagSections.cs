@@ -84,6 +84,15 @@ internal static class BagSections
     private static DateTime _lastMtime = DateTime.MinValue;
     private static int _lastHash;
 
+    /// <summary>绑定 entry 最近一次被进程内赋值的时间（SettingChanged 沿记录；含 ModCenter 面板写、
+    /// ApplyHotKeys 自身赋值）。ApplyHotKeys 的陈旧文件闸用：文件 mtime 早于它 = 文件内容落后于
+    /// 内存，跳过热改应用（2026-10-25 T17 实锤的跨 mod 竞态：ModCenter 防抖落盘间隙里第二条面板
+    /// 写会被本 mod 的文件监听用旧盘值覆盖回去，用户第二次调整静默丢失）。</summary>
+    private static DateTime _lastBindChangeUtc = DateTime.MinValue;
+
+    /// <summary>SettingChanged 沿调用（reload 处理器内）：记录内存侧最新赋值时刻。</summary>
+    internal static void NoteBindChange() => _lastBindChangeUtc = DateTime.UtcNow;
+
     private static readonly Regex SectionRe = new(@"^\s*\[\s*Bag\.(\d+)\s*]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex WidthRe = new(@"^\s*Width\s*=\s*""?(-?\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex HeightRe = new(@"^\s*Height\s*=\s*""?(-?\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -195,6 +204,10 @@ internal static class BagSections
         try
         {
             if (!File.Exists(_path)) return;
+            // 陈旧文件闸（T17）：文件 mtime 早于最近一次内存赋值 = 盘值落后于内存（ModCenter 面板写
+            // 防抖落盘的间隙），跳过——否则旧盘值会覆盖尚未落盘的新值（第二次调整静默丢失实锤）。
+            // 正常玩家记事本热改：mtime 晚于任何内存赋值，不受影响。
+            if (File.GetLastWriteTimeUtc(_path) < _lastBindChangeUtc) return;
             var map = new (string key, BepInEx.Configuration.ConfigEntry<int> entry)[]
             {
                 ("global|maxwidth", CabinetSizePlugin.MaxWidth),

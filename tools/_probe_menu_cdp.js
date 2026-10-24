@@ -9,7 +9,10 @@
 // Usage:  node tools/_probe_menu_cdp.js
 // Exit:   0 = all checks PASS (GO)
 //         1 = assertion FAIL (NO-GO evidence)
-//         2 = CDP unreachable / no Root page (inconclusive, env problem)
+//         2 = environmental / inconclusive (CDP unreachable, protocol error,
+//             page navigation mid-probe, ...) -- NOT NO-GO evidence (T2 review
+//             Important-1, hardened in T17: a transient transport failure must
+//             never be recorded as a NO-GO verdict)
 //
 // Connection pattern copied from tools/devtools_cdp_test.js (playwright-core
 // connectOverCDP). DOM work runs entirely inside the ROOT page context via one
@@ -20,7 +23,10 @@
 // Probe element <span id="__mc_probe"> is injected, verified, then removed
 // immediately (leave no trace). File kept ASCII-only (Chinese via \u escapes).
 
-const { chromium } = require('C:/temp/baidu_up/node_modules/playwright-core');
+// local-first playwright-core (repo tool convention, baidu_upload.js pattern)
+let chromium;
+try { ({ chromium } = require('playwright-core')); }
+catch { ({ chromium } = require('C:/temp/baidu_up/node_modules/playwright-core')); }
 
 const CDP = 'http://localhost:9222';
 const MAIN_HTML = '/UI/MainUI/MainUI.html';
@@ -102,17 +108,25 @@ async function runProbe(page) {
         (t) => t.getAttribute('data-i18n') || t.textContent.trim()
       );
 
-      // Task 5 simulation: append probe span, verify, remove immediately
+      // Task 5 simulation: append probe span, verify, remove immediately.
+      // T17 hardening (T2 review Minor-2): removal must run even if a step in
+      // between throws -> try/finally, so the span can never linger in the page.
       const before = menu.children.length;
       const span = doc.createElement('span');
       span.id = probeId;
       span.textContent = probeText;
-      menu.appendChild(span);
-      const check = doc.getElementById(probeId);
-      out.injectFound = !!check;
-      out.injectInMenu = !!check && check.parentNode === menu;
-      out.injectTextOk = !!check && check.textContent === probeText;
-      if (check && check.parentNode) check.parentNode.removeChild(check);
+      try {
+        menu.appendChild(span);
+        const check = doc.getElementById(probeId);
+        out.injectFound = !!check;
+        out.injectInMenu = !!check && check.parentNode === menu;
+        out.injectTextOk = !!check && check.textContent === probeText;
+      } finally {
+        const check = doc.getElementById(probeId);
+        if (check && check.parentNode) {
+          try { check.parentNode.removeChild(check); } catch (e2) { /* node already detached */ }
+        }
+      }
       out.removed = !doc.getElementById(probeId);
       out.menuCountRestored = menu.children.length === before;
       return out;
@@ -227,6 +241,8 @@ async function residueSweep(page) {
   log(allPass ? 'RESULT: GO (all checks pass)' : 'RESULT: NO-GO (see FAIL lines above)');
   process.exit(allPass ? 0 : 1);
 })().catch((e) => {
-  console.error('ERROR: ' + (e && e.stack || e));
-  process.exit(1);
+  // T17 hardening (T2 review Important-1): protocol errors / navigation races /
+  // transport failures are ENVIRONMENTAL (inconclusive), never NO-GO evidence.
+  console.error('ERROR (environmental, not a verdict): ' + (e && e.stack || e));
+  process.exit(2);
 });
