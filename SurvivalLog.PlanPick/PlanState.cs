@@ -19,34 +19,31 @@ internal static class PlanState
 {
     private static HashSet<int> _today;      // 今日候选（含刷新后）
     private static int _day = -1;
+    private static int _points;
 
     internal static int CurrentDay() { ReadStates(); return _day; }
     internal static bool IsTodayCandidate(int id) { ReadStates(); return _today != null && _today.Contains(id); }
 
-    /// <summary>读 Redux 状态树。任何一步失败保持旧值（下一轮重试）。
-    /// UI/Web 状态不在 reduxStoreLayer.dataTree（那里只有 Data 状态）——
-    /// 经 GetStateByUI(UI类型) 取（CabinetEverywhere ToolTablePruner/TabInjector 同款先例）：
-    /// State_UI_RogueSelect ← UI_RogueSelect；State_Web_RogueSelect ← WebUI_RogueSelect。</summary>
+    /// <summary>读 RogueSelect 的 Web 状态（页面真正消费的状态：Day/今日候选/点数全在这）。
+    /// 经 GetStateByUI(WebUI类型) 取（CabinetEverywhere ToolTablePruner/TabInjector 同款先例，
+    /// 先例键全部是 WebUI_*——原生 UI_* 不在该注册表，装机实测 GetStateByUI(UI_RogueSelect) 返回 null）。</summary>
     private static void ReadStates()
     {
         try
         {
             if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.IsInstanceCreated) return;
             var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
-            if (rus == null) return;
-
-            var ui = rus.GetStateByUI(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.UI_RogueSelect)))
-                ?.TryCast<GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect>();
-            if (ui != null)
+            var web = rus?.GetStateByUI(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.WebUI_RogueSelect)))
+                ?.TryCast<GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect>();
+            if (web == null) return;
+            _day = web.Day;
+            _points = web.OwnPoints != null ? web.OwnPoints.Value : _points;
+            var cached = web.CachedSurvivalPlanIds;             // il2cpp List<int>
+            if (cached != null)
             {
-                _day = ui.Day;
-                var cached = ui.CachedSurvivalPlanIds;     // il2cpp List<int>
-                if (cached != null)
-                {
-                    var set = new HashSet<int>();
-                    for (int i = 0; i < cached.Count; i++) set.Add(cached[i]);
-                    _today = set;
-                }
+                var set = new HashSet<int>();
+                for (int i = 0; i < cached.Count; i++) set.Add(cached[i]);
+                _today = set;
             }
         }
         catch { /* 保持旧值 */ }
@@ -69,18 +66,15 @@ internal static class PlanState
         if (cm == null) { FailOnce("ConfigManager 未就绪"); return false; }
         if (!PlanCatalog.Build(cm)) { FailOnce("目录构建失败（" + (PlanCatalog.BuildLog.Count > 0 ? PlanCatalog.BuildLog[PlanCatalog.BuildLog.Count - 1] : "表未就绪") + "）"); return false; }
         ReadStates();
-        if (_day < 0) { FailOnce("State_UI_RogueSelect 未读到（天数）——规划页未开过或 GetStateByUI 失败"); return false; }
+        if (_day < 0) { FailOnce("State_Web_RogueSelect 未读到（天数）——规划页未开过或 GetStateByUI 失败"); return false; }
 
         int role = 1; try { role = GameCore.HotUpdate.ConfigManager.GetCurrentPlayerSelectId(); } catch { }
-        int points = 0;
+        var points = _points;   // ReadStates 已从 State_Web_RogueSelect.OwnPoints 读
         HashSet<int> activated = null;
         try
         {
             var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
-            var web = rus?.GetStateByUI(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.WebUI_RogueSelect)))
-                ?.TryCast<GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect>();
-            if (web != null && web.OwnPoints != null) points = web.OwnPoints.Value;
-            var dataTree = rus?.reduxStoreLayer?.dataTree;   // Data 状态仍走 dataTree（State_Data_Item 先例）
+            var dataTree = rus?.reduxStoreLayer?.dataTree;   // Data 状态走 dataTree（State_Data_Item 先例）
             GameCore.HotUpdate.ReduxUI.BaseReduxState raw = null;
             dataTree?.TryGetValue(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out raw);
             var talent = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Data_Talent>();

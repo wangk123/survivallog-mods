@@ -171,8 +171,10 @@
   表字段 `Config_Talent.{Type,Available,LvUpCost,WebIcon,ConditionSetId,PlayerSelectId}`、
   存档字段 `SaveChildData.SurvivalPlanShownIds`、通知 15003、页面 `UI/RogueSelect`。
 - **moddeps 登记不了的运行期依赖**（modcompat 不覆盖，游戏更新 diff 时人工核对）：
-  `State_UI_RogueSelect.CachedSurvivalPlanIds / Day`（今日候选/天数）、`State_Data_Talent.SurvivalPlanningIds`
-  （已激活）、`State_Web_RogueSelect.OwnPoints`（点数 ReactiveProperty）、
+  `ReduxUISystem.GetStateByUI(WebUI_RogueSelect)` → `State_Web_RogueSelect.{CachedSurvivalPlanIds,
+  Day, OwnPoints}`（今日候选/天数/点数，2026-10-24 装机二轮定稿：**先例键全部是 WebUI_\*，
+  原生 UI_\* 不在该注册表**，State_UI_RogueSelect 取不到、依赖整个撤掉，Web 状态本身三件齐全）、
+  `State_Data_Talent.SurvivalPlanningIds`（已激活，dataTree）、
   `BattleLogicWorld._ConditionSetManager`（interop 直读内部属性，特殊条件判定）、
   `ReduxUISystem.GetWebUILayer().canvasWebViewPrefab.WebView`（注入通道）、页面 `UI/RogueSelect`
   （Root 内 iframe id='RogueSelect'）、通知 15003（官方购买链上游，本 mod 不 patch 只复用）。
@@ -264,3 +266,7 @@
   CabinetEverywhere ToolTablePruner 同款先例）；State_Data_Talent 仍走 dataTree。
   同时补 payload 失败原因一次性打点（FailOnce，同一原因只打一条——v1.3.2 判定链全打点之训，
   本次全静默即缺此）。注：天数读自 UI 状态，规划页首开后约 2s 内入口就位。
+- 2026-10-24 装机二轮修复（打点立功：日志直指"State_UI_RogueSelect 未读到"）：GetStateByUI 的键
+  在先例里全部是 WebUI_*（WebUI_ToolTable/Cooking/Brew/Dye），原生 UI_* 不在注册表 →
+  天数/今日候选/点数全部改读 State_Web_RogueSelect（其本身 CachedSurvivalPlanIds/Day/OwnPoints
+  三件齐全，正是页面消费的状态），State_UI 依赖撤除。
