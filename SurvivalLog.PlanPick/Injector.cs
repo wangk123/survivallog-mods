@@ -119,10 +119,13 @@ internal static class Injector
         {
             if (_focusCb == null)
                 _focusCb = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<string>>(new System.Action<string>(OnFocusProbeResult));
+            // 两位探针：bit0=输入框聚焦；bit1=聚焦后已收到真键盘事件（SetFocused 生效自证）。
+            // 真键盘不可达时 C# 侧启用 Input.inputString 兜底转发（PlanTicker 每帧收集）。
             web.ExecuteJavaScript(
                 "(function(){var f=document.getElementById('RogueSelect');if(!f||f.style.display==='none')return 0;" +
-                "var d=f.contentDocument;if(!d)return 0;var i=d.activeElement;" +
-                "return i&&(i.tagName==='INPUT'||i.tagName==='TEXTAREA')?1:0;})()",
+                "var d=f.contentDocument;if(!d)return 0;var i=d.activeElement;if(!i)return 0;" +
+                "var inp=(i.tagName==='INPUT'||i.tagName==='TEXTAREA')?1:0;" +
+                "return inp+(w9(d)?2:0);function w9(d){var w=d.defaultView;return w&&w.__ppRealKeys?1:0;}})()",
                 _focusCb);
         }
         catch (Exception e)
@@ -135,15 +138,11 @@ internal static class Injector
         ApplyFocusResult(web);
     }
 
-    /// <summary>ExecuteJavaScript 回调（il2cpp 委托，DelegateSupport 转换后缓存复用）：落焦点探针结果。</summary>
+    /// <summary>ExecuteJavaScript 回调（il2cpp 委托，DelegateSupport 转换后缓存复用）：落焦点探针结果（"0".."3"）。</summary>
     private static Il2CppSystem.Action<string> _focusCb;
     private static void OnFocusProbeResult(string r)
     {
-        try
-        {
-            var focusedNow = string.Equals(r, "1", StringComparison.Ordinal) || string.Equals(r, "true", StringComparison.OrdinalIgnoreCase);
-            _pendingFocusCheck = focusedNow ? "1" : "0";
-        }
+        try { _pendingFocusCheck = string.IsNullOrWhiteSpace(r) ? null : r.Trim(); }
         catch { _pendingFocusCheck = null; }
     }
 
@@ -152,18 +151,63 @@ internal static class Injector
         var r = _pendingFocusCheck;
         if (r == null) return;
         _pendingFocusCheck = null;
-        if (r == "1" && !_kbHanded)
+        int bits;
+        if (!int.TryParse(r, out bits)) return;
+        var focused = (bits & 1) != 0;
+        var realKeys = (bits & 2) != 0;
+
+        if (focused && !_kbHanded)
         {
             _kbHanded = true;
+            _handCycles = 0; _forwardMode = false;
             try { web.SetFocused(true); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(true) 异常: " + e.Message); return; }
             if (!_logHanded) { _logHanded = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交给网页输入（SetFocused true）"); }
         }
-        else if (r != "1" && _kbHanded)
+        else if (focused && _kbHanded)
         {
-            _kbHanded = false;
+            _handCycles++;
+            // 交接 2 个周期（≈0.6s）后仍无真按键到达 → SetFocused 在此构建不送达键盘 → 启用兜底转发
+            if (!_forwardMode && _handCycles >= 2 && !realKeys)
+            {
+                _forwardMode = true;
+                _fwdBuf = string.Empty;
+                PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused 未送达按键，启用 Input.inputString 兜底转发（英文/数字直投；游戏侧热键可能同时触发，观察回报）");
+            }
+        }
+        else if (!focused && _kbHanded)
+        {
+            _kbHanded = false; _forwardMode = false; _handCycles = 0;
             try { web.SetFocused(false); } catch (Exception e) { PlanPickPlugin.Log.LogWarning("[PlanPick] SetFocused(false) 异常: " + e.Message); }
             if (!_logReturned) { _logReturned = true; PlanPickPlugin.Log.LogInfo("[PlanPick] 键盘已交还游戏（SetFocused false）"); }
         }
+    }
+
+    /// <summary>兜底转发缓冲（PlanTicker 每帧收集 Input.inputString，FocusTick 一次投递）。</summary>
+    private static bool _forwardMode;
+    private static int _handCycles;
+    private static string _fwdBuf = string.Empty;
+
+    internal static void CollectKey(char c)
+    {
+        if (!_forwardMode) return;
+        if (c == '\r' || c == '\n' || c == '\0') return;   // 回车/空字符不入搜索框
+        lock (_fwdLock) _fwdBuf += c;
+    }
+    private static readonly object _fwdLock = new();
+
+    internal static void FlushKeys(Vuplex.WebView.IWebView web)
+    {
+        if (!_forwardMode) return;
+        string s;
+        lock (_fwdLock) { s = _fwdBuf; _fwdBuf = string.Empty; }
+        if (string.IsNullOrEmpty(s)) return;
+        var js =
+            "(function(){var f=document.getElementById('RogueSelect');if(!f||!f.contentWindow)return 0;" +
+            "var w=f.contentWindow;if(!w.__ppType)return 0;" +
+            "var d=f.contentDocument;if(!d||!d.activeElement||d.activeElement.id!=='ppSearch')return 0;" +
+            "var cur=d.activeElement.value;" +
+            "w.__ppType(cur+\"" + PlanState.JsEscapePublic(s) + "\");return 1;})()";
+        try { web.ExecuteJavaScript(js, null); } catch { }
     }
 
     private static void TryReturnKeyboard(Vuplex.WebView.IWebView web)
@@ -174,6 +218,7 @@ internal static class Injector
     }
 
     /// <summary>ViewportProbe 同款取 Root WebView 路径（ReduxUISystem → WebUILayer → canvasWebViewPrefab）。</summary>
+    internal static Vuplex.WebView.IWebView PeekWebView() => GetWebView();
     private static Vuplex.WebView.IWebView GetWebView()
     {
         try

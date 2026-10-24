@@ -362,6 +362,19 @@ function renderTabs() {
     // Vuplex 转发的点击只派发 click/mousedown、不带浏览器原生聚焦（2026-10-24 观察日志实证：
     // 真实点击搜索框连 focusin 都没有）——点击时显式 focus()，C# 焦点桥才能看见并 SetFocused 交接键盘
     ['mousedown', 'click'].forEach(ev => si.addEventListener(ev, function () { this.focus(); }));
+    // 焦点桥仲裁位：真键盘事件到达即置 1（C# 据此决定是否启用 Input.inputString 兜底转发）；
+    // 聚焦时清零。__ppType 为兜底转发入口（仅聚焦时生效）。
+    document.addEventListener('keydown', () => {
+        var el = document.activeElement;
+        if (el && el.id === 'ppSearch') window.__ppRealKeys = 1;
+    }, true);
+    si.addEventListener('focus', () => { window.__ppRealKeys = 0; });
+    window.__ppType = function (s) {
+        var el = document.activeElement;
+        if (!el || el.id !== 'ppSearch') return;
+        el.value = s;                    // C# 侧每帧整值覆盖（持焦点期间输入框只归键盘管）
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    };
 }
 
 function renderSubBar() {

@@ -276,3 +276,7 @@
   （旧 Focus/Blur 已废弃）、失焦→SetFocused(false)；il2cpp 回调走 DelegateSupport.ConvertDelegate 缓存。
   page.js 补 ESC 语义（输入框内 ESC 先退输入再关页）。原生 SetFocused 运行时行为待装机验证
   （含搜狗 IME 组合输入是否可用——若 IME 不行英文/数字仍可用，另行评估）。
+- 2026-10-24 装机四轮（键盘通道双路自仲裁）：转发点击不带原生聚焦（focusin 缺失实证）→
+  page.js 点击显式 focus()；探针升两位（聚焦:真按键到达），SetFocused 交接后 2 周期无真按键
+  → 自动启用 Input.inputString 兜底转发（每帧收集、0.3s 批投 __ppType 整值覆盖，仅输入框聚焦时）。
+  新增引用 UnityEngine.InputLegacyModule。已知取舍：兜底模式下游戏侧热键（H）可能仍触发——待实测回报。
