@@ -577,8 +577,10 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   B3/B4/验收清单。PreDisasterSpeed DESIGN 补 cfg 表与 ModCenter 启停位记载（既有键复用）；
   指南 §三补 BOM 勘误（清单文件存 UTF-8 无 BOM，BOM 会被容错层静默降级 Tier 0）。
   publish.ps1 `$suiteMods` 与 installer.iss 组件表加 ModCenter——两文件系作者脏文件，
-  **只改内容不代提交**（改动行清单见 task-18-report）。moddeps.json 复核无需变更（本计划无
-  新游戏侧挂钩点/表字段/字节签名；T4 登记的 Config_RobotAttribute 读依赖在役）。
+  **只改内容不代提交**（改动行清单见 task-18-report）。moddeps.json 本任务补登 T13 证据表
+  5 项漏登读依赖（`Config_Action.During` / `Config_Bag.Size,Burden` / `Config_Furniture.ColdRate,BagId` /
+  `Config_Talent.PlayerSelectId` / `Config_ProductionList.craft_level,show_level`——WriteEvidence 只读，
+  modcompat 实跑 ALL GREEN）；无新挂钩点/字节签名；T4 登记的 Config_RobotAttribute 读依赖在役不变。
 - 2026-10-25 任务 17：Meta 柜子位对齐作者 CabinetSize v3 终表。原条目（`Expand.WidthMult/
   FridgeWidthMult/VehicleWidthMult` 联动倍率 + `UiFit.*`）是作者 CabinetSize 倍率原型期（c899f20
   换位时点）的形状；作者 aa20303→d02e985 演进为**档位模型**（Bind 面 = `Global.MaxWidth/
