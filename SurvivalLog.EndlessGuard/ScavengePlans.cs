@@ -58,7 +58,7 @@ internal static class ScavengePlans
         if (!_loaded) { LoadJson(); if (!_loaded) return; }
         var cm = BagTable.Cm();
         if (cm == null) return;                 // 表未就绪，下轮再试
-        if (!_injected && Inject(cm)) { _injected = true; GuardTicker.PlansInjected = true; }
+        if (!_injected && Inject(cm)) { _injected = true; }
         if (_injected && !_contentDone) ApplyContent();   // rgDict 未就绪/中途异常 → 下轮重试（Task5 字典判空重试同款；三重幂等防护兜底，_contentDone 落定即止）
         AppendRegistry();                       // 注册表可能被 EnsureRegistry 重载覆盖：每轮补（Contains 幂等，开销可忽略）
     }
@@ -239,6 +239,7 @@ internal static class ScavengePlans
             if (rgDict == null) return;                 // 表字典未就绪：_contentDone 不落定，Tick 下轮重试
 
             // 降档：记进程内首读原值，永远按 原值=fromLevel 的声明校验后写 toLevel（RoleUnlock 幂等模式）
+            int demoted = 0;   // 实写计数（终审建议修3：Demotions.Count 声明数在表漂移跳过时会误导取证）
             foreach (var d in Demotions)
             {
                 if (!rgDict.TryGetValue(d.PoolId, out var g)) { EndlessGuardPlugin.Trace("content：缺池 " + d.PoolId); continue; }
@@ -247,7 +248,7 @@ internal static class ScavengePlans
                 var key = d.PoolId * 100000L + d.ItemId;
                 if (!OrigGates.TryGetValue(key, out var orig)) { orig = g.DiscoverLvList[idx]; OrigGates[key] = orig; }
                 if (orig != d.FromLevel) { EndlessGuardPlugin.Trace($"content：{d.Note} 原门槛 Lv{orig}≠声明 Lv{d.FromLevel}，跳过"); continue; }
-                if (g.DiscoverLvList[idx] != d.ToLevel) g.DiscoverLvList[idx] = d.ToLevel;
+                if (g.DiscoverLvList[idx] != d.ToLevel) { g.DiscoverLvList[idx] = d.ToLevel; demoted++; }
             }
 
             // 篮子：一次追加（_contentDone 防重复；池追加后 IdList/CountList/DiscoverLvList 三表同步）
@@ -267,7 +268,7 @@ internal static class ScavengePlans
                     }
                 }
                 _contentDone = true;
-                EndlessGuardPlugin.Trace("content：篮子追加 " + added + " 项 + 降档 " + Demotions.Count + " 项已对齐");
+                EndlessGuardPlugin.Trace("content：篮子追加 " + added + " 项 + 降档 " + demoted + " 项已对齐");
             }
         }
         catch (Exception e) { EndlessGuardPlugin.Trace("content: " + e.Message); }

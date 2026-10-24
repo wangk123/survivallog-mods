@@ -222,6 +222,7 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 - PlanPick 兼容四要素任一断（目录时机/ShowUnpooled 语义变更）→ 重新源码级确认；
 - 每次发版在根 CHANGELOG.md 补一节；改挂钩点必须同步 `tools/gamekb/moddeps.json`。
 - 2026-10-24 实现落地：四功能块按本设计实施，装机验证清单见 plans/2026-10-24-endless-guard.md Task 8；moddeps 已同步。
+- 2026-10-24 终审建议修4条（final-review ②）：④剥缓刑tag 移出 RestoreFallenPoints 门控（StripPendingFallTags 独立管，③剥封印留 Restore 门内=沦陷语义不变）；IsCampMapPoint 异常 fail-closed 改按营地留沦陷；ApplyContent 降档汇总 trace 改实写计数（demoted）；删 GuardTicker.PlansInjected 死符号。挂钩点未动（moddeps 无需更新）。
 
 ## 10. 防盗署名气泡（套件统一）
 

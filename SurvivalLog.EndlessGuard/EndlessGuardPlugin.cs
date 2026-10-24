@@ -59,7 +59,6 @@ public sealed class EndlessGuardPlugin : BasePlugin
 /// <summary>2s 轮询：表注入与注册表追加在 Cm() 就绪后执行（早于 PlanPick 目录构建=首次开规划页）。</summary>
 internal sealed class GuardTicker : MonoBehaviour
 {
-    internal static volatile bool PlansInjected;
     private float _acc;
     public GuardTicker(IntPtr p) : base(p) { }
     private void Update()
