@@ -45,9 +45,12 @@ spec §4.1 的降级路径仅作为 OutSetting 结构变更时的后备。
   1. 推荐：`.menu` 尾部 `appendChild`（排在「退出」之后）。`.menu-item:nth-child(1..6)` 只设
      入场延迟 `--enter-delay`（CSS 128-135），第 7+ 项落到 136 行的 `var(--enter-delay, .35s)`
      兜底，视觉无害；可选给按钮内联 `style="--enter-delay:.83s"` 对齐节奏。
-  2. 备选：`menu.insertBefore(btn, menu.querySelector('.menu-item[data-i18n="settings"]'))`
-     （落在「读取存档」与「设置」之间）。settings 项恒在、Vue 不会移动它，插在它前面安全。
-- **禁止按文案匹配**：所有文案走 i18n（`data-i18n` + LocalizationMsg 运行时替换，如 MainUI 2267 行），
+  2. 备选：`var ref = menu.querySelector('.menu-text[data-i18n="settings"]')?.closest('.menu-item'); ref && menu.insertBefore(btn, ref)`。
+     **注意**：`data-i18n` 挂在内层 `.menu-text` 上（MainUI.html:1742 实证），写成
+     `.menu-item[data-i18n="settings"]` 永不匹配。落点在「读取存档」与「设置」两个 menu-item 之间；
+     settings 项恒在、Vue 不会移动它，插在它前面安全。
+- **禁止按文案匹配**：所有文案走 i18n（`data-i18n` + LocalizationMsg 运行时替换，
+  处理器在 MainUI.html 2294 行 `'WebUI_MainUI_LocalizationMsg'`），
   跨语言环境文案会变；结构选择器与 `data-i18n` 属性才是稳定身份。
 - Vue 安全性：往 vdom 管辖容器追加"非受管节点"在本仓库已有生产先例
   （PlanPick page.js 331-343 往 `.footer-right` 首位 insertBefore，线上无回归）。菜单 v-if
@@ -55,12 +58,12 @@ spec §4.1 的降级路径仅作为 OutSetting 结构变更时的后备。
 
 ## 二、游戏内锚点：ESC 暂停菜单 = OutSetting 页（找到，不降级）
 
-源文件：`tools/webui_src/UI/OutSetting/OutSetting.html`（1417 行）。
+源文件：`tools/webui_src/UI/OutSetting/OutSetting.html`（1392 行）。
 
 - 判定依据（为什么它就是 ESC 菜单）：
   - 菜单头 `<div class="menu-header" data-i18n="menuTitle">PAUSE</div>`（866 行）；
   - 列表项含「返回游戏(869)/设置(873)/图鉴(877)/成就(880)/保存并退出(895)」——标准暂停菜单；
-  - C# 侧 `Reducer_Web_OutSetting`（gamekb il2cpp/dump.cs 194322）有
+  - C# 侧 `Reducer_Web_OutSetting`（gamekb il2cpp/dump.cs 194320）有
     `RA_Back/RA_OpenSettings/RA_Codex/RA_Achievement/RA_SaveExit/RA_RestartRound` 全套动作；
   - OutSetting.html 1351-1352 注释「ESC 由 Unity 侧处理（页面收不到按键）…设置窗口没开时
     Unity 直接关暂停菜单」——ESC 只负责开/关这页，页面本身即暂停菜单 UI；
@@ -84,8 +87,10 @@ spec §4.1 的降级路径仅作为 OutSetting 结构变更时的后备。
 
 ## 三、Root → iframe 定位手法（按页面名找 document）
 
-源文件：`gamekb/2026-10-23_26157732/webui/Root.html`（533 行；tools/webui_src 版仅差 3 处注释文字
-（diff 实测 26/86-87 行，均为注释），代码与行号一致，引用行号两版通用）。
+源文件：`gamekb/2026-10-23_26157732/webui/Root.html`（533 行）。**本文 Root.html 引用行号一律以
+gamekb 版为准**；tools/webui_src 版为 534 行，两版仅 26 / 86-87 两处注释差异（webui_src 的 86-87
+两行注释在 gamekb 版并作一行），**自第 88 行起 tools/webui_src 行号 = gamekb + 1**
+（锚点实测：`frame.id = pageId` 在 gamekb 493 行 = webui_src 494 行）。
 
 - 注入通道（照抄先例）：C# 侧 `ReduxUISystem.GetWebUILayer().canvasWebViewPrefab.WebView`
   （Vuplex `IWebView`）`ExecuteJavaScript(引导脚本)` ——脚本落在 **Root 文档**里跑。
@@ -110,11 +115,18 @@ spec §4.1 的降级路径仅作为 OutSetting 结构变更时的后备。
     try { return !!(f.contentDocument && f.contentDocument.location.pathname.endsWith(tail)); }
     catch (e) { return false; }                     // 跨域/未加载：contentDocument 抛异常
   }
-  document.querySelectorAll('#iframe-container iframe').find(f => f.id === 'MainUI' || isPageDoc(f, '/UI/MainUI/MainUI.html'))
+  // NodeList 没有 .find（会抛 TypeError）；照抄 tagfilter.page.js:889-897 的 for 遍历。
+  // 判定顺序与策略一致：pathname 优先，id 仅兜底。
+  var frames = document.querySelectorAll('#iframe-container iframe');
+  for (var i = 0; i < frames.length; i++) {
+    if (isPageDoc(frames[i], '/UI/MainUI/MainUI.html') || frames[i].id === 'MainUI') {
+      /* 命中 frames[i]，进入 hookFrame/注入流程 */
+    }
+  }
   ```
   （file:// 同源同目录，contentDocument 直通；TagFilter 探针 78-83 已实证，tagfilter.page.js
-  还带 xorigin 计数兜底。url 带 `?t=` cache-buster（Root.html GetCacheBuster 引用 + dump.cs
-  2D4FB90），故用 pathname 而非 href 全等。）
+  还带 xorigin 计数兜底。url 带 `?t=` cache-buster——时间戳由 C# 侧生成（dump.cs 252301
+  `WebUILayer.GetCacheBuster`），Root.html 仅 153 行注释提及——故用 pathname 而非 href 全等。）
 - **引导脚本骨架（照抄 tagfilter.page.js 858-900 已验证形态）**：
   - `scanFrames()`：`querySelectorAll('#iframe-container iframe')` 全量扫 + 摘除已断链项（889-898）；
   - `MutationObserver(scanFrames).observe(document.body, {childList:true, subtree:true})` 常驻
@@ -137,10 +149,10 @@ spec §4.1 的降级路径仅作为 OutSetting 结构变更时的后备。
 
 | 文件 | 关键行 |
 |---|---|
-| `tools/webui_src/UI/MainUI/MainUI.html`（= gamekb 镜像同 md5） | 72/128-136（CSS）、698/1670/2415-2417（Vue 挂载）、1677（#app）、1724/1733-1744（菜单 DOM）、796-860（render 同构） |
+| `tools/webui_src/UI/MainUI/MainUI.html`（= gamekb 镜像同 md5） | 72/128-136（CSS）、698/1670/2415-2417（Vue 挂载）、1677（#app）、1724/1733-1744（菜单 DOM；1742 data-i18n 在 .menu-text 上）、2294（i18n 处理器）、796-860（render 同构） |
 | `tools/webui_src/UI/OutSetting/OutSetting.html`（= gamekb 镜像同 md5） | 594-617（沉底 CSS）、863-897（暂停菜单 DOM）、1351-1352（ESC 归属注释）、10/458/1389（Vue 挂载） |
 | `gamekb/2026-10-23_26157732/webui/Root.html` | 54/63（iframe-container）、134-173/273-277（LOAD_PAGE）、216-218/483-523（iframe 增删/可见性）、492-496（id=pageId） |
-| `gamekb/2026-10-23_26157732/il2cpp/dump.cs` | 194322（Reducer_Web_OutSetting）、251086（WebUIVm.UIKey/Url）、301746（WebUI_MainUI）、306279（WebUI_OutSetting） |
+| `gamekb/2026-10-23_26157732/il2cpp/dump.cs` | 194320（Reducer_Web_OutSetting）、251086（WebUIVm.UIKey/Url）、252301（GetCacheBuster）、301746（WebUI_MainUI）、306279（WebUI_OutSetting） |
 | `gamekb/2026-10-23_26157732/il2cpp/stringliteral.json` | 135331/135643（页面 url）、30651/30607/100179（pageId 字面量） |
 | `SurvivalLog.CabinetEverywhere/TagFilter.cs` | 64-76（GetWebView）、47（注入）、78-83（同源探针） |
 | `SurvivalLog.CabinetEverywhere/tagfilter.page.js` | 506（iframe#BackpackUI 实测）、858-900（scanFrames/hookFrame/MutationObserver） |
