@@ -86,7 +86,9 @@
   "RoleUnlock": {
     "harmony": [],
     "configFields": [
-      { "accessor": "_Config_DefenseLv_Dict", "rowType": "Config_DefenseLv", "fields": ["unlock_recipes_P1", "unlock_recipes_P2", "unlock_recipes_P3", "unlock_recipes_P4"] }
+      { "accessor": "_Config_DefenseLv_Dict", "rowType": "Config_DefenseLv", "fields": ["unlock_recipes_P1", "unlock_recipes_P2", "unlock_recipes_P3", "unlock_recipes_P4"] },
+      { "accessor": "_Config_Talent_Dict", "rowType": "Config_Talent", "fields": ["PlayerSelectId", "Name_Local", "Dec_Local"] },
+      { "accessor": "_Config_ProductionList_Dict", "rowType": "Config_ProductionList", "fields": ["craft_level", "show_level"] }
     ],
     "nativeSigs": []
   },
