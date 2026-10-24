@@ -104,5 +104,14 @@
       { "accessor": "_Config_PlayerSelect_Dict", "rowType": "Config_PlayerSelect", "fields": ["Name_Local"] }
     ],
     "nativeSigs": []
+  },
+  "PreDisasterSpeed": {
+    "harmony": [
+      { "type": "GameCore.HotUpdate.ReduxUI.Ac_CoreUI1_SpeedChange", "method": "SendAction", "params": 1 }
+    ],
+    "configFields": [
+      { "accessor": "_Config_Chapter_Dict", "rowType": "Config_Chapter", "fields": ["WorldStateType", "TimeScale", "SpeedUp1", "SpeedUp2"] }
+    ],
+    "nativeSigs": []
   }
 }
