@@ -3,15 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ModCenter 原型 — 游戏内 Mod 管理菜单</title>
+<title>ModCenter 原型 v2 — 游戏内 Mod 管理菜单</title>
 <style>
   :root{
     --bg:#0d0f14; --frame-bg:#14171f; --panel:#171a23; --panel-2:#1d212c;
-    --line:#2a2f3d; --line-soft:#22273500;
+    --line:#2a2f3d;
     --txt:#e8e6e0; --txt-dim:#9aa0ad; --txt-faint:#6b7180;
     --accent:#e8a33d; --accent-soft:#e8a33d22;
     --ok:#4ade80; --warn:#60a5fa; --cold:#f87171; --off:#565d6d;
-    --radius:10px;
   }
   *{box-sizing:border-box; margin:0; padding:0}
   html,body{height:100%}
@@ -21,28 +20,19 @@
     display:flex; flex-direction:column; align-items:center;
     padding:14px 14px 28px; gap:10px; min-height:100vh;
   }
-  /* ===== 演示控制条（原型专用，非游戏内容）===== */
-  .demo-bar{
-    width:min(96vw,1180px); display:flex; align-items:center; gap:14px;
-    color:var(--txt-dim); font-size:13px; flex-wrap:wrap;
-  }
+  .demo-bar{width:min(96vw,1180px); display:flex; align-items:center; gap:14px; color:var(--txt-dim); font-size:13px; flex-wrap:wrap}
   .demo-bar b{color:var(--txt); font-size:14px}
   .demo-bar .seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden}
-  .demo-bar .seg button{
-    background:transparent; color:var(--txt-dim); border:0; padding:5px 14px;
-    font-size:13px; cursor:pointer; font-family:inherit;
-  }
+  .demo-bar .seg button{background:transparent; color:var(--txt-dim); border:0; padding:5px 14px; font-size:13px; cursor:pointer; font-family:inherit}
   .demo-bar .seg button.on{background:var(--accent); color:#1a1408; font-weight:600}
   .demo-bar .tip{margin-left:auto}
 
-  /* ===== 模拟游戏画面 ===== */
   .frame{
     position:relative; width:min(96vw,1180px); aspect-ratio:16/9;
     background:var(--frame-bg); border:1px solid var(--line); border-radius:8px;
     overflow:hidden; user-select:none;
   }
   .frame .scene{position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
-  /* 主菜单场景 */
   .scene.menu{background:
     radial-gradient(1200px 700px at 50% 120%, #1c2b3a55, transparent 60%),
     linear-gradient(180deg,#0e131c,#131926 55%,#0e131c)}
@@ -53,7 +43,8 @@
     border:1px solid #ffffff26; border-radius:6px; background:#ffffff0d;
   }
   .scene.menu .fake-list span:first-child{border-color:#e8a33d66; color:#e8a33d}
-  /* 游戏内场景 */
+  .scene.menu .fake-list span.mc-entry{border-color:#e8a33d99; color:#f0c069; cursor:pointer}
+  .scene.menu .fake-list span.mc-entry:hover{background:#e8a33d22}
   .scene.game{background:
     radial-gradient(900px 500px at 20% 0%, #2a24165e, transparent 60%),
     linear-gradient(180deg,#171a17,#1c2018 60%,#141712)}
@@ -62,63 +53,44 @@
   .scene.game .hud-br{position:absolute; right:16px; bottom:14px; display:flex; gap:8px}
   .scene.game .hud-br i{width:44px; height:44px; border-radius:8px; background:#00000052; border:1px solid #ffffff22}
   .scene.game .hud-br i:first-child{border-color:#e8a33d88}
+  .scene.game .hud-tr{position:absolute; right:140px; top:14px; display:flex; gap:8px; align-items:center}
   .scene.game .hud-map{position:absolute; right:16px; top:14px; width:110px; height:78px; border-radius:8px; background:#0f1116cc; border:1px solid #ffffff1f}
   .scene.game .fake-center{color:#cfd3c3aa; font-size:15px; letter-spacing:4px}
-  .scene-label{
-    position:absolute; left:12px; bottom:10px; font-size:12px; color:#ffffff59;
-    background:#00000059; padding:3px 10px; border-radius:10px; z-index:5;
+  .mc-menubtn{
+    padding:6px 14px; font-size:13.5px; color:#e6e0d0cc; background:#00000052;
+    border:1px solid #ffffff22; border-radius:8px; cursor:pointer; font-family:inherit;
   }
+  .mc-menubtn:hover{border-color:#ffffff55}
+  .mc-pop{
+    position:absolute; right:16px; top:100px; z-index:45; min-width:170px;
+    background:#0f1219f2; border:1px solid var(--line); border-radius:10px;
+    padding:6px; display:none; flex-direction:column; box-shadow:0 10px 40px #000a;
+  }
+  .mc-pop.show{display:flex}
+  .mc-pop span{padding:9px 16px; font-size:14px; color:#cfd3dc; border-radius:6px}
+  .mc-pop span:hover{background:#ffffff0d}
+  .mc-pop span.ent{color:#f0c069}
+  .scene-label{position:absolute; left:12px; bottom:10px; font-size:12px; color:#ffffff59; background:#00000059; padding:3px 10px; border-radius:10px; z-index:5}
 
-  /* ===== 齿轮入口 ===== */
-  .gear{
-    position:absolute; left:14px; top:12px; z-index:40;
-    width:42px; height:42px; border-radius:50%;
-    background:#0f1219d9; border:1px solid #ffffff2e;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:.15s transform,.15s border-color;
-    box-shadow:0 3px 14px #0007;
-  }
-  .gear:hover{transform:rotate(28deg); border-color:var(--accent)}
-  .gear svg{width:22px; height:22px; fill:#d8dce6}
-  .gear:hover svg{fill:var(--accent)}
-  .gear .dot{position:absolute; right:-2px; top:-2px; width:10px; height:10px; border-radius:50%; background:var(--ok); border:2px solid #0f1219}
-
-  /* ===== 管理面板 ===== */
-  .overlay{
-    position:absolute; inset:0; z-index:50;
-    background:#05060acc; backdrop-filter:blur(3px);
-    display:none; align-items:center; justify-content:center;
-  }
+  .overlay{position:absolute; inset:0; z-index:50; background:#05060acc; backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center}
   .overlay.open{display:flex}
   .panel{
-    width:92%; height:88%;
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    display:flex; flex-direction:column; overflow:hidden;
-    box-shadow:0 18px 70px #000c;
+    width:92%; height:88%; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 70px #000c;
   }
-  .panel-head{
-    display:flex; align-items:center; gap:12px; padding:13px 18px;
-    border-bottom:1px solid var(--line); background:var(--panel-2);
-  }
+  .panel-head{display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid var(--line); background:var(--panel-2)}
   .panel-head h1{font-size:17px; letter-spacing:2px}
   .panel-head .sub{font-size:12px; color:var(--txt-faint)}
   .panel-head .close{
-    margin-left:auto; width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
-    background:transparent; color:var(--txt-dim); font-size:15px; cursor:pointer;
+    margin-left:auto; width:32px; height:32px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--txt-dim); font-size:15px; cursor:pointer; line-height:1;
   }
   .panel-head .close:hover{border-color:var(--cold); color:var(--cold)}
 
   .panel-body{flex:1; display:flex; min-height:0}
-  /* 左列 */
-  .side{
-    width:230px; flex-shrink:0; border-right:1px solid var(--line);
-    overflow-y:auto; padding:8px;
-  }
+  .side{width:230px; flex-shrink:0; border-right:1px solid var(--line); overflow-y:auto; padding:8px}
   .side .cat{font-size:11px; color:var(--txt-faint); letter-spacing:2px; padding:8px 10px 4px}
-  .mod-row{
-    display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px;
-    cursor:pointer; border:1px solid transparent;
-  }
+  .mod-row{display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; border:1px solid transparent}
   .mod-row:hover{background:#ffffff08}
   .mod-row.sel{background:var(--accent-soft); border-color:#e8a33d44}
   .mod-row .st{width:8px; height:8px; border-radius:50%; background:var(--ok); flex-shrink:0}
@@ -126,56 +98,49 @@
   .mod-row .nm{font-size:13.5px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .mod-row.off .nm{color:var(--txt-faint)}
   .mod-row.lock .nm{color:var(--txt-faint)}
-  .mini-sw{
-    width:30px; height:17px; border-radius:9px; background:var(--off);
-    position:relative; cursor:pointer; flex-shrink:0; transition:.15s;
-  }
-  .mini-sw::after{
-    content:""; position:absolute; left:2px; top:2px; width:13px; height:13px;
-    border-radius:50%; background:#cfd3dc; transition:.15s;
-  }
-  .mini-sw.on{background:var(--ok)}
-  .mini-sw.on::after{left:15px}
+  .mini-sw{width:30px; height:17px; border-radius:9px; background:var(--off); position:relative; cursor:pointer; flex-shrink:0; transition:.15s; border:0}
+  .mini-sw::after{content:""; position:absolute; left:2px; top:2px; width:13px; height:13px; border-radius:50%; background:#cfd3dc; transition:.15s}
+  .mini-sw[aria-checked="true"]{background:var(--ok)}
+  .mini-sw[aria-checked="true"]::after{left:15px}
+  .mini-sw.big{width:46px; height:25px}
+  .mini-sw.big::after{width:20px; height:20px}
+  .mini-sw.big[aria-checked="true"]::after{left:23px}
   .mini-sw.lock{opacity:.35; cursor:not-allowed}
 
-  /* 右区 */
   .cfg{flex:1; overflow-y:auto; padding:16px 22px 30px; min-width:0}
   .cfg .mod-title{display:flex; align-items:center; gap:12px}
   .cfg .mod-title h2{font-size:18px}
   .cfg .mod-title .en{font-size:12px; color:var(--txt-faint); font-weight:400}
   .cfg .mod-desc{margin:8px 0 4px; font-size:13px; color:var(--txt-dim); line-height:1.6}
-  .mod-switch{
-    display:flex; align-items:center; gap:12px; margin:12px 0 4px; padding:11px 14px;
-    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel-2);
-  }
-  .mod-switch .big-sw{width:46px; height:25px; border-radius:13px; flex-shrink:0}
-  .mod-switch .big-sw::after{width:20px; height:20px}
-  .mod-switch .big-sw.on::after{left:23px}
+  .mod-switch{display:flex; align-items:center; gap:12px; margin:12px 0 4px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2)}
   .mod-switch .lbl{font-size:13.5px}
   .mod-switch .hint{font-size:12px; color:var(--txt-faint); margin-top:2px; line-height:1.5}
-  .stop-banner{
-    margin:10px 0 0; padding:9px 14px; border-radius:8px; font-size:12.5px; line-height:1.6;
-    background:#7f1d1d33; border:1px solid #f8717144; color:#fca5a5; display:none;
-  }
+  .stop-banner{margin:10px 0 0; padding:9px 14px; border-radius:8px; font-size:12.5px; line-height:1.6; background:#7f1d1d33; border:1px solid #f8717144; color:#fca5a5; display:none}
   .stop-banner.show{display:block}
   .grp{margin-top:20px}
-  .grp>h3{
-    font-size:12.5px; color:var(--accent); letter-spacing:2px; padding-bottom:7px;
-    border-bottom:1px solid var(--line); margin-bottom:4px;
-  }
-  details.grp summary{cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px}
-  details.grp summary::-webkit-details-marker{display:none}
-  details.grp summary .arr{font-size:10px; color:var(--txt-faint)}
-  .item{
-    display:flex; align-items:center; gap:14px; padding:10px 4px;
-    border-bottom:1px dashed #ffffff0f;
-  }
+  .grp>h3{font-size:12.5px; color:var(--accent); letter-spacing:2px; padding-bottom:7px; border-bottom:1px solid var(--line); margin-bottom:4px; font-weight:500}
+  .item{display:flex; align-items:center; gap:14px; padding:10px 4px; border-bottom:1px dashed #ffffff0f}
   .item .info{flex:1; min-width:0}
   .item .info .lb{font-size:13.5px}
   .item .info .ck{font-size:11px; color:var(--txt-faint); font-family:Consolas,monospace; margin-top:2px}
-  .item .ctl{width:300px; flex-shrink:0; display:flex; align-items:center; gap:10px; justify-content:flex-end}
+  .item .ctl{width:min(300px,42%); flex-shrink:0; display:flex; align-items:center; gap:10px; justify-content:flex-end}
   .item .badge{width:96px; flex-shrink:0; text-align:right; font-size:11.5px}
   .b-now{color:var(--ok)} .b-reload{color:var(--warn)} .b-reboot{color:var(--cold)}
+
+  /* 动作覆盖清单 */
+  .ovr-add{display:flex; gap:8px; align-items:center; padding:10px 4px 6px}
+  .ovr-add input{width:120px; background:#0f1219; border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:5px 9px; font-size:13px; font-family:Consolas,monospace}
+  .ovr-add button{
+    background:#0f1219; border:1px solid var(--accent); color:var(--accent);
+    border-radius:6px; padding:5px 14px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .ovr-add button:hover{background:var(--accent-soft)}
+  .item .del{
+    width:26px; height:26px; border-radius:6px; border:1px solid var(--line);
+    background:transparent; color:var(--txt-faint); font-size:12px; cursor:pointer; flex-shrink:0;
+  }
+  .item .del:hover{border-color:var(--cold); color:var(--cold)}
+  .ovr-empty{padding:12px 4px; font-size:12.5px; color:var(--txt-faint)}
 
   input[type=range]{flex:1; accent-color:var(--accent); height:4px}
   input[type=number]{
@@ -191,16 +156,10 @@
     background:#0f1219; border:1px solid var(--line); color:var(--txt);
     border-radius:6px; padding:5px 8px; font-size:12.5px; font-family:inherit; max-width:170px;
   }
-  .sw{cursor:pointer}
 
-  .panel-foot{
-    display:flex; align-items:center; gap:18px; padding:9px 18px;
-    border-top:1px solid var(--line); background:var(--panel-2);
-    font-size:12px; color:var(--txt-faint);
-  }
+  .panel-foot{display:flex; align-items:center; gap:18px; padding:9px 18px; border-top:1px solid var(--line); background:var(--panel-2); font-size:12px; color:var(--txt-faint)}
   .panel-foot .lg{display:flex; gap:14px}
 
-  /* toast */
   .toast{
     position:absolute; right:18px; bottom:16px; z-index:60;
     background:#0f1219f0; border:1px solid var(--ok); color:var(--txt);
@@ -209,7 +168,6 @@
   }
   .toast.show{display:block}
   .toast small{color:var(--txt-dim); display:block; font-size:11.5px}
-
   .side::-webkit-scrollbar,.cfg::-webkit-scrollbar{width:8px}
   .side::-webkit-scrollbar-thumb,.cfg::-webkit-scrollbar-thumb{background:#2a2f3d; border-radius:4px}
 </style>
@@ -217,45 +175,47 @@
 <body>
 
 <div class="demo-bar">
-  <b>ModCenter 原型</b>
+  <b>ModCenter 原型 v2</b>
   <div class="seg" id="ctxSeg">
     <button data-ctx="menu" class="on">模拟：主菜单（读档前）</button>
     <button data-ctx="game">模拟：游戏内（读档后）</button>
   </div>
-  <span>原型仅演示 UI 与交互，不连真实 cfg；左右两个阶段入口为同一齿轮。</span>
-  <span class="tip">2026-10-24 · 配套 spec：2026-10-24-modcenter-design.md</span>
+  <span>入口已改为官方菜单列表项（主菜单列表 / 游戏内菜单弹层），不再是左上角齿轮。</span>
+  <span class="tip">2026-10-24 v2 · 配套 spec：2026-10-24-modcenter-design.md</span>
 </div>
 
 <div class="frame" id="frame">
-  <!-- 场景：主菜单 -->
+  <!-- 场景：主菜单（入口=菜单列表项） -->
   <div class="scene menu" id="sceneMenu">
     <div class="fake-title">SURVIVAL LOG</div>
     <div class="fake-list">
-      <span>继续游戏</span><span>新游戏</span><span>图鉴</span><span>设置</span><span>退出</span>
+      <span>继续游戏</span><span>新游戏</span><span>图鉴</span><span>设置</span>
+      <span class="mc-entry" id="entryMenu">MOD 管理</span>
+      <span>退出</span>
     </div>
   </div>
-  <!-- 场景：游戏内 -->
+  <!-- 场景：游戏内（入口=右上菜单弹层） -->
   <div class="scene game" id="sceneGame" style="display:none">
     <div class="hud-tl"><span>❤ 86</span><span>💚 72</span><span>🛡 3</span></div>
+    <div class="hud-tr">
+      <button class="mc-menubtn" id="gameMenuBtn">☰ 菜单</button>
+    </div>
     <div class="hud-map"></div>
     <div class="fake-center">··· 游 戏 画 面 ···</div>
     <div class="hud-br"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="mc-pop" id="gamePop">
+      <span>设置</span><span>图鉴</span><span class="ent" id="entryGame">MOD 管理</span><span>退出游戏</span>
+    </div>
   </div>
-  <div class="scene-label" id="sceneLabel">模拟主菜单 MainUI 页 · 齿轮注入于页面角落</div>
-
-  <!-- 齿轮入口 -->
-  <div class="gear" id="gear" title="Mod 管理中心">
-    <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.5 7.5 0 0 0 .06-.94 7.5 7.5 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.65 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.19.1.47.02.61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2Z"/></svg>
-    <span class="dot"></span>
-  </div>
+  <div class="scene-label" id="sceneLabel">模拟主菜单 MainUI 页 · 入口注入官方菜单列表</div>
 
   <!-- 管理面板 -->
   <div class="overlay" id="overlay">
     <div class="panel">
       <div class="panel-head">
         <h1>MOD 管理中心</h1>
-        <span class="sub">套件 mod 统一配置 · 改动实时写入 cfg · 无需重启</span>
-        <button class="close" id="btnClose">✕ 关闭</button>
+        <span class="sub">改动实时写入 cfg · 无需重启</span>
+        <button class="close" id="btnClose" aria-label="关闭面板">✕</button>
       </div>
       <div class="panel-body">
         <div class="side" id="side"></div>
@@ -276,143 +236,97 @@
 </div>
 
 <script>
-/* ============ 徽标 ============ */
 const BADGE = {
   now:    {t:'⚡ 立即生效', cls:'b-now'},
   reload: {t:'📁 读档后',   cls:'b-reload'},
   reboot: {t:'🔄 重启后',   cls:'b-reboot'},
 };
 
-/* ============ 元数据（真实 cfg 清单，spec §7 蓝本） ============ */
+/* ============ 元数据 v2（作者 2026-10-24 原型评审反馈版） ============ */
 const MODS = [
 { id:'backpackexpand', name:'背包扩容', en:'BackpackExpand', enabled:true,
-  desc:'背包宽度/高度/负重自由扩容（内存表改写，进程内原值缓存，幂等重算）。',
+  desc:'一个倍率搞定：自动计算背包宽度与高度（超游戏上限自动封顶）；负重单独调。',
   groups:[
-    {sec:'扩容 Expand', items:[
-      {k:'Expand.WidthMult',  l:'背包宽度倍率', t:'float', v:1.5, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.HeightMult', l:'背包高度倍率', t:'float', v:1.5, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.BurdenMult', l:'负重倍率',     t:'int',   v:2,   min:1, max:10, st:1, b:'reload'},
-      {k:'Expand.ExtraIds',   l:'追加背包ID',   t:'text',  v:'', b:'now', ph:'如 1001,1002'},
-      {k:'Expand.ExcludeIds', l:'排除背包ID',   t:'text',  v:'', b:'now', ph:'如 1003'},
-    ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.Verbose', l:'详细日志', t:'bool', v:false, b:'now'},
+    {sec:'扩容', items:[
+      {k:'Expand.Mult', l:'背包倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'自动计算宽与高，超出游戏列数上限自动封顶'},
+      {k:'Expand.BurdenMult', l:'负重倍率', t:'int', v:2, min:1, max:10, st:1, b:'reload',
+       note:'表值即时改，既有背包读档后体现'},
     ]},
   ]},
 { id:'cabinetexpand', name:'柜子扩容', en:'CabinetExpand', enabled:true,
-  desc:'储藏柜/冰箱/载具三类容器分列扩容 + 超宽柜视口自适应（封顶列数防溢屏）。',
+  desc:'普通柜 / 冰箱 / 载具三档各自一个倍率：自动计算宽与高（超上限自动封顶）。',
   groups:[
-    {sec:'扩容 Expand', items:[
-      {k:'Expand.WidthMult',  l:'普通柜 宽度倍率', t:'float', v:1.5, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.HeightMult', l:'普通柜 高度倍率', t:'float', v:2.0, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.FridgeWidthMult',  l:'冰箱 宽度倍率', t:'float', v:1.5, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.FridgeHeightMult', l:'冰箱 高度倍率', t:'float', v:2.0, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.VehicleWidthMult',  l:'载具 宽度倍率', t:'float', v:1.5, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.VehicleHeightMult', l:'载具 高度倍率', t:'float', v:2.0, min:1, max:5, st:0.1, b:'now'},
-      {k:'Expand.MaxCols', l:'最大列数（封顶）', t:'int', v:20, min:8, max:23, st:1, b:'now'},
-      {k:'Expand.ExtraIds',   l:'追加柜ID', t:'text', v:'', b:'now', ph:''},
-      {k:'Expand.ExcludeIds', l:'排除柜ID', t:'text', v:'', b:'now', ph:''},
+    {sec:'扩容', items:[
+      {k:'Expand.Mult', l:'普通柜倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now'},
+      {k:'Expand.FridgeMult', l:'冰箱倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now'},
+      {k:'Expand.VehicleMult', l:'载具倍率', t:'float', v:1.5, min:1, max:3, st:0.1, b:'now',
+       note:'三项均自动计算宽与高，超上限自动封顶'},
     ]},
-    {sec:'视口自适应 UiFit', items:[
+    {sec:'视口自适应', items:[
       {k:'UiFit.Enabled', l:'启用视口自适应', t:'bool', v:true, b:'now'},
       {k:'UiFit.Mode',    l:'自适应模式', t:'sel', v:'Scroll', opts:['Scroll','Fit','Off'], b:'now'},
     ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.Verbose',   l:'详细日志', t:'bool', v:false, b:'now'},
-      {k:'Debug.ListOnReady', l:'就绪时列名单', t:'bool', v:true, b:'now'},
-      {k:'Debug.DiagOnOpen',  l:'开柜诊断日志', t:'bool', v:false, b:'now'},
-    ]},
   ]},
 { id:'fridgechill', name:'保鲜增强', en:'FridgeChill', enabled:true,
-  desc:'冰箱/保鲜类容器食材保鲜时长倍率；天赋保鲜上限可调（字节级补丁，进程内常驻但行为可热还原）。',
+  desc:'冰箱/保鲜类容器食材保鲜时长倍率；天赋保鲜上限可调。',
   groups:[
-    {sec:'保鲜 Chill', items:[
+    {sec:'保鲜', items:[
       {k:'Chill.KeepMult', l:'保鲜时长倍率', t:'float', v:2, min:1, max:50, st:0.5, b:'now'},
       {k:'Chill.MaxTotalMult', l:'天赋保鲜上限倍率', t:'float', v:100, min:1, max:500, st:1, b:'now',
-        note:'启动时字节补丁安装失败则置灰（反射读安装状态）'},
-      {k:'Chill.BagIds', l:'生效容器ID', t:'text', v:'', b:'now', ph:'留空=默认名单'},
-    ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.Verbose', l:'详细日志', t:'bool', v:false, b:'now'},
+       note:'启动时字节补丁安装失败则置灰'},
     ]},
   ]},
-{ id:'quickaction', name:'快捷动作', en:'QuickAction', enabled:true,
-  desc:'全游戏动作耗时按五分类统一改写（毫秒）；0 = 恢复官方原值。',
+{ id:'quickaction', name:'动作加速', en:'QuickAction', enabled:true,
+  desc:'全游戏动作耗时按分类统一加速（毫秒，0=官方原值）；单个动作可加覆盖单独调。',
   groups:[
-    {sec:'分类修改（毫秒，0=恢复原值）', items:[
+    {sec:'分类耗时（毫秒，0=官方原值）', items:[
       {k:'分类修改.物品使用Ms', l:'物品使用', t:'int', v:500, min:0, max:5000, st:50, b:'now'},
       {k:'分类修改.家具功能Ms', l:'家具功能', t:'int', v:500, min:0, max:5000, st:50, b:'now'},
       {k:'分类修改.房屋维护Ms', l:'房屋维护', t:'int', v:500, min:0, max:5000, st:50, b:'now'},
       {k:'分类修改.杂项交互Ms', l:'杂项交互', t:'int', v:500, min:0, max:5000, st:50, b:'now'},
       {k:'分类修改.娱乐锻炼Ms', l:'娱乐锻炼', t:'int', v:500, min:0, max:5000, st:50, b:'now'},
     ]},
-    {sec:'其他', items:[
-      {k:'其他.Overrides', l:'动作覆盖（ID:毫秒）', t:'text', v:'', b:'now', ph:'如 9075:1000,8012:250'},
-    ]},
-  ]},
+  ],
+  ovr:[{id:9075, ms:1000}],   /* 动作覆盖清单（动态） */
+},
 { id:'cabineteverywhere', name:'柜子直达+筛选', en:'CabinetEverywhere', enabled:true,
   desc:'全容器作为制作/烹饪/酿造等取料源直达；柜子页签标签筛选与场景固定视图。',
   groups:[
-    {sec:'直达 Access', items:[
+    {sec:'直达', items:[
       {k:'Access.EnableCraftSource', l:'制作取料直达', t:'bool', v:true, b:'now'},
       {k:'Access.EnableCooking', l:'烹饪台直达', t:'bool', v:true, b:'now'},
       {k:'Access.EnableRatCage',  l:'鼠笼直达', t:'bool', v:true, b:'now'},
       {k:'Access.EnableBrew',     l:'酿造直达', t:'bool', v:true, b:'now'},
       {k:'Access.EnableDye',      l:'染色直达', t:'bool', v:true, b:'now'},
-      {k:'Access.IncludeFurnitureIds',  l:'包含家具ID', t:'text', v:'', b:'now', ph:''},
-      {k:'Access.ExcludeFurnitureIds',  l:'排除家具ID', t:'text', v:'', b:'now', ph:''},
-      {k:'Access.ExcludeBagIds',        l:'排除容器ID', t:'text', v:'(内置大黑名单)', b:'now', ph:''},
     ]},
-    {sec:'标签筛选 Filter', items:[
+    {sec:'标签筛选', items:[
       {k:'Filter.Enable', l:'启用标签筛选', t:'bool', v:true, b:'now'},
     ]},
-    {sec:'场景固定视图 Scenario（10 项）', items:[
+    {sec:'场景固定视图（共 10 项，示意 4 项）', items:[
       {k:'Scenario.View_Cooking', l:'灶台视图', t:'sel', v:'Food', opts:['Food','Material','Browser','Off'], b:'now'},
       {k:'Scenario.View_Brew',    l:'酿造视图', t:'sel', v:'Food', opts:['Food','Material','Browser','Off'], b:'now'},
       {k:'Scenario.View_Workbench', l:'工作台视图', t:'sel', v:'Material', opts:['Food','Material','Browser','Off'], b:'now'},
       {k:'Scenario.View_DroneHub',  l:'无人机枢纽视图', t:'sel', v:'Browser', opts:['Food','Material','Browser','Off'], b:'now'},
     ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.ListOnReady',  l:'就绪时列名单', t:'bool', v:true, b:'now'},
-      {k:'Debug.DumpFurniture',l:'转储家具清单', t:'bool', v:false, b:'now'},
-      {k:'Debug.Verbose',      l:'详细日志（含性能探针，探针安装需重启）', t:'bool', v:false, b:'reboot'},
-    ]},
-  ]},
-{ id:'cabinetburden', name:'柜子负重解放', en:'CabinetBurden', enabled:true,
-  desc:'储藏类容器承重倍率解放（×1000 起步）；改回 1 = 还原。',
-  groups:[
-    {sec:'负重 Burden', items:[
-      {k:'Burden.BurdenMult', l:'负重倍率', t:'int', v:1000, min:1, max:10000, st:100, b:'reload'},
-      {k:'Burden.IncludeBagIds', l:'包含容器ID', t:'text', v:'', b:'now', ph:''},
-      {k:'Burden.ExcludeBagIds', l:'排除容器ID', t:'text', v:'3,4', b:'now', ph:''},
-    ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.ListOnReady', l:'就绪时列名单', t:'bool', v:true, b:'now'},
-      {k:'Debug.Verbose',     l:'详细日志', t:'bool', v:false, b:'now'},
-    ]},
   ]},
 { id:'roleunlock', name:'角色解锁', en:'RoleUnlock', enabled:true,
-  desc:'角色专属内容解锁开关（藤蔓/防御配方/花种子等）；关闭即还原官方门槛。',
+  desc:'角色专属内容逐项解锁；关闭即还原官方门槛。',
   groups:[
-    {sec:'藤蔓 Vine', items:[
-      {k:'Vine.UnlockVine',       l:'解锁藤蔓角色', t:'bool', v:true, b:'now'},
-      {k:'Vine.SkipDefenseGate',  l:'跳过防御门槛', t:'bool', v:false, b:'now'},
-      {k:'Vine.UnlockFlowerSeeds',l:'解锁花种子', t:'bool', v:false, b:'now'},
+    {sec:'藤蔓角色', items:[
+      {k:'Vine.UnlockVine', l:'解锁藤蔓角色', t:'bool', v:true, b:'now'},
+      {k:'Vine.SkipDefenseGate', l:'藤蔓免防御等级门槛', t:'bool', v:false, b:'now',
+       note:'开启后跳过官方解锁藤蔓所需的防御等级条件'},
+      {k:'Vine.UnlockFlowerSeeds', l:'解锁藤蔓专属花种子', t:'bool', v:false, b:'now'},
     ]},
-    {sec:'防御 Defense', items:[
-      {k:'Defense.ShareDefenseRecipes', l:'防御配方共享', t:'bool', v:true, b:'now'},
-    ]},
-    {sec:'生存规划 Plan（本 mod 新增开关）', items:[
-      {k:'Plan.ClearPool',  l:'生存规划专属白名单', t:'bool', v:true, b:'now'},
-      {k:'Plan.VaseRecipe', l:'花瓶配方 325', t:'bool', v:true, b:'now'},
-    ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.ListOnReady', l:'就绪时列名单', t:'bool', v:true, b:'now'},
-      {k:'Debug.Verbose',     l:'详细日志', t:'bool', v:false, b:'now'},
+    {sec:'配方与规划', items:[
+      {k:'Defense.ShareDefenseRecipes', l:'解锁防御系角色专属配方（全角色共享）', t:'bool', v:true, b:'now'},
+      {k:'Plan.ClearPool',  l:'解锁角色专属生存规划（46 项功能类）', t:'bool', v:true, b:'now'},
+      {k:'Plan.VaseRecipe', l:'解锁花瓶配方', t:'bool', v:true, b:'now'},
     ]},
   ]},
 { id:'robotspeed', name:'机器人提速', en:'RobotSpeed', enabled:true,
-  desc:'机器人移速/充电/续航/耗电/动作时长/货舱格数六维倍率 + 与手动动作对齐。',
+  desc:'机器人移速/充电/续航/耗电/动作时长/货舱六维倍率 + 与手动动作对齐。',
   groups:[
     {sec:'机器人提速', items:[
       {k:'机器人提速.动作速度对齐手动', l:'动作速度对齐手动', t:'bool', v:true, b:'now'},
@@ -422,52 +336,37 @@ const MODS = [
       {k:'机器人提速.耗电降低倍率', l:'耗电降低倍率', t:'float', v:2, min:0.5, max:10, st:0.5, b:'now'},
       {k:'机器人提速.动作时长倍率', l:'动作时长倍率', t:'float', v:2, min:0.5, max:10, st:0.5, b:'now'},
       {k:'机器人提速.货舱格数倍率', l:'货舱格数倍率', t:'float', v:2, min:0.5, max:10, st:0.5, b:'now',
-        note:'机器人面板重开即见'},
+       note:'面板重开即见'},
     ]},
   ]},
 { id:'planpick', name:'自选生存规划', en:'PlanPick', enabled:true,
   desc:'生存规划改自选：解锁日全表候选 + 搜索 + 键盘；整数百分比加成。',
   groups:[
-    {sec:'花费 Cost', items:[
+    {sec:'花费', items:[
       {k:'Cost.CostMultiplierPercent', l:'加成百分比（100=原值）', t:'int', v:200, min:100, max:300, st:5, b:'now'},
     ]},
-    {sec:'列表 List', items:[
+    {sec:'列表', items:[
       {k:'List.ShowLocked',   l:'展示未解锁规划（置灰+原因）', t:'bool', v:true, b:'now'},
       {k:'List.ShowUnpooled', l:'展示不入池规划', t:'bool', v:true, b:'now'},
     ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.ListOnReady', l:'就绪时列统计', t:'bool', v:true, b:'now'},
-      {k:'Debug.Verbose',     l:'推送明细日志', t:'bool', v:false, b:'now'},
-    ]},
   ]},
 { id:'predisasterspeed', name:'灾前加速', en:'PreDisasterSpeed', enabled:true,
-  desc:'灾变倒计时前官方速度条增强：热键变档 + 真三倍校正（睡眠保官方×32）。',
+  desc:'灾变倒计时前的官方速度条增强（热键变档 + 真三倍校正）。仅支持启用/停用。',
   groups:[
-    {sec:'常规 General', items:[
-      {k:'General.Enabled',  l:'总开关', t:'bool', v:true, b:'now'},
-      {k:'General.TrueThreeX', l:'真三倍校正', t:'bool', v:true, b:'now',
-        note:'逐调用读值，关闭立即回落官方 ×32'},
-    ]},
-    {sec:'热键 Hotkeys', items:[
-      {k:'Hotkeys.Enabled', l:'热键（~/1/2/3/4，仅灾前）', t:'bool', v:true, b:'now'},
-    ]},
-    {sec:'调试 Debug', debug:true, items:[
-      {k:'Debug.Verbose', l:'注入明细日志', t:'bool', v:false, b:'now'},
+    {sec:'总控', items:[
+      {k:'General.Enabled', l:'灾前加速', t:'bool', v:true, b:'now'},
     ]},
   ]},
 ];
 
-/* ModCenter 自身（列表展示，防呆不可停） */
 const SELF = { id:'modcenter', name:'Mod 管理中心', en:'ModCenter（本面板）' };
-
 let cur = 0;
 
-/* ============ 渲染 ============ */
 const side = document.getElementById('side');
 const cfg  = document.getElementById('cfg');
 
 function renderSide(){
-  let h = '<div class="cat">套件 MOD（10）</div>';
+  let h = '<div class="cat">套件 MOD（9）</div>';
   MODS.forEach((m,i)=>{
     h += `<div class="mod-row ${m.enabled?'':'off'} ${i===cur?'sel':''}" data-i="${i}">
       <span class="st"></span><span class="nm">${m.name}</span>
@@ -490,9 +389,6 @@ function ctlHtml(it, gi, ii){
     return `<select data-act="set" data-g="${gi}" data-i="${ii}">${
       it.opts.map(o=>`<option ${o===it.v?'selected':''}>${o}</option>`).join('')
     }</select>`;
-  }
-  if(it.t==='text'){
-    return `<input type="text" value="${it.v}" placeholder="${it.ph||''}" data-act="set" data-g="${gi}" data-i="${ii}">`;
   }
   const step = it.st||0.1;
   return `<input type="range" min="${it.min}" max="${it.max}" step="${step}" value="${it.v}"
@@ -528,8 +424,8 @@ function renderCfg(){
       ⛔ 该 mod 当前已停用。此处修改仍会写入 cfg 保存，但需<b>重新启用后</b>才会生效。
     </div>`;
   m.groups.forEach((g,gi)=>{
-    const head = `<h3>${g.sec}<span class="arr">▾</span></h3>`;
-    const body = g.items.map((it,ii)=>`
+    h += `<div class="grp"><h3>${g.sec}</h3>${
+      g.items.map((it,ii)=>`
       <div class="item">
         <div class="info">
           <div class="lb">${it.l}</div>
@@ -538,18 +434,36 @@ function renderCfg(){
         </div>
         <div class="ctl">${ctlHtml(it,gi,ii)}</div>
         <div class="badge ${BADGE[it.b].cls}">${BADGE[it.b].t}</div>
-      </div>`).join('');
-    if(g.debug){
-      h += `<details class="grp"${gi===0?' open':''}><summary>${head.replace('</h3>','</h3>')} </summary>${body}</details>`;
-      // open by default only if it's the sole group
-    }else{
-      h += `<div class="grp">${head}${body}</div>`;
-    }
+      </div>`).join('')
+    }</div>`;
   });
+  /* 动作覆盖清单（仅动作加速） */
+  if(m.ovr){
+    h += `<div class="grp"><h3>动作覆盖（单个动作单独调）</h3>
+      <div class="ovr-add">
+        <input type="number" id="ovrNewId" placeholder="动作 ID" min="1">
+        <button data-act="ovr-add">＋ 新增覆盖</button>
+      </div>
+      ${ m.ovr.length===0 ? '<div class="ovr-empty">暂无覆盖。新增后在此列出，滑条即时调整。</div>' :
+        m.ovr.map((o,idx)=>`
+        <div class="item">
+          <div class="info">
+            <div class="lb">动作 #${o.id}</div>
+            <div class="ck">其他.Overrides · ${o.id}:${o.ms}</div>
+          </div>
+          <div class="ctl">
+            <input type="range" min="0" max="5000" step="50" value="${o.ms}" data-act="ovr-set" data-idx="${idx}">
+            <input type="number" min="0" max="5000" step="50" value="${o.ms}" data-act="ovr-set" data-idx="${idx}">
+          </div>
+          <div class="badge b-now">⚡ 立即生效</div>
+          <button class="del" data-act="ovr-del" data-idx="${idx}" title="删除此覆盖">✕</button>
+        </div>`).join('')
+      }
+    </div>`;
+  }
   cfg.innerHTML = h;
 }
 
-/* ============ 交互 ============ */
 function toast(main, badge){
   const t = document.getElementById('toast');
   t.innerHTML = `${main}<small>已写入 cfg · ${
@@ -562,14 +476,20 @@ function toast(main, badge){
   toast._h = setTimeout(()=>t.classList.remove('show'), 2600);
 }
 
+function toggleMod(i){
+  const m = MODS[i];
+  m.enabled = !m.enabled;
+  renderSide(); renderCfg();
+  toast(m.enabled
+    ? `${m.name} 已启用：恢复生效（≤5秒）`
+    : `${m.name} 已停用：行为立即还原，下次启动不再加载`, 'now');
+}
+
 side.addEventListener('click', e=>{
   const sw = e.target.closest('[data-act="toggle"]');
   if(sw){ toggleMod(+sw.dataset.i); return; }
   const row = e.target.closest('.mod-row');
-  if(row){
-    cur = +row.dataset.i;
-    renderSide(); renderCfg();
-  }
+  if(row){ cur = +row.dataset.i; renderSide(); renderCfg(); }
 });
 
 cfg.addEventListener('click', e=>{
@@ -582,52 +502,77 @@ cfg.addEventListener('click', e=>{
     set.classList.toggle('on', it.v);
     toast(`${MODS[cur].name} · ${it.l} → ${it.v?'开':'关'}`, it.b);
   }
+  /* 覆盖清单：新增 / 删除 */
+  const add = e.target.closest('[data-act="ovr-add"]');
+  if(add){
+    const m = MODS[cur];
+    const inp = document.getElementById('ovrNewId');
+    const id = parseInt(inp.value);
+    if(!isNaN(id) && id>0 && !m.ovr.some(o=>o.id===id)){
+      m.ovr.push({id, ms:1000});
+      renderCfg();
+      toast(`动作加速 · 新增覆盖 #${id}（默认 1000ms）`, 'now');
+    }
+    return;
+  }
+  const del = e.target.closest('[data-act="ovr-del"]');
+  if(del){
+    const m = MODS[cur];
+    const idx = +del.dataset.idx;
+    const gone = m.ovr[idx].id;
+    m.ovr.splice(idx,1);
+    renderCfg();
+    toast(`动作加速 · 已删除覆盖 #${gone}`, 'now');
+  }
 });
 
 cfg.addEventListener('input', e=>{
   const el = e.target;
-  if(!el.dataset || el.dataset.act!=='set') return;
-  const it = MODS[cur].groups[+el.dataset.g].items[+el.dataset.i];
+  if(!el.dataset || !el.dataset.act) return;
+  const m = MODS[cur];
+  if(el.dataset.act==='ovr-set'){
+    const v = parseFloat(el.value);
+    if(!isNaN(v)){
+      m.ovr[+el.dataset.idx].ms = v;
+      cfg.querySelectorAll(`[data-act="ovr-set"][data-idx="${el.dataset.idx}"]`).forEach(x=>{ if(x!==el) x.value=v; });
+      const ck = el.closest('.item').querySelector('.ck');
+      ck.textContent = `其他.Overrides · ${m.ovr[+el.dataset.idx].id}:${v}`;
+      toast(`动作加速 · 覆盖 #${m.ovr[+el.dataset.idx].id} → ${v}ms`, 'now');
+    }
+    return;
+  }
+  if(el.dataset.act!=='set') return;
   if(el.type==='range' || el.type==='number'){
+    const it = m.groups[+el.dataset.g].items[+el.dataset.i];
     const v = parseFloat(el.value);
     if(!isNaN(v)){
       it.v = v;
-      // 同步同 item 的另一个控件
-      cfg.querySelectorAll(`[data-g="${el.dataset.g}"][data-i="${el.dataset.i}"]`).forEach(x=>{
-        if(x!==el) x.value = v;
-      });
-      toast(`${MODS[cur].name} · ${it.l} → ${v}`, it.b);
+      cfg.querySelectorAll(`[data-g="${el.dataset.g}"][data-i="${el.dataset.i}"]`).forEach(x=>{ if(x!==el) x.value=v; });
+      toast(`${m.name} · ${it.l} → ${v}`, it.b);
     }
   }else if(el.tagName==='SELECT'){
+    const it = m.groups[+el.dataset.g].items[+el.dataset.i];
     it.v = el.value;
-    toast(`${MODS[cur].name} · ${it.l} → ${el.value}`, it.b);
+    toast(`${m.name} · ${it.l} → ${el.value}`, it.b);
   }
 });
-
-cfg.addEventListener('change', e=>{
-  if(e.target.type==='text'){
-    const el = e.target;
-    const it = MODS[cur].groups[+el.dataset.g].items[+el.dataset.i];
-    it.v = el.value;
-    toast(`${MODS[cur].name} · ${it.l} → ${el.value||'（空）'}`, it.b);
-  }
-});
-
-function toggleMod(i){
-  const m = MODS[i];
-  m.enabled = !m.enabled;
-  renderSide(); renderCfg();
-  toast(m.enabled
-    ? `${m.name} 已启用：恢复生效（≤5秒）`
-    : `${m.name} 已停用：行为立即还原，下次启动不再加载`, 'now');
-}
 
 /* 面板开关 */
 const overlay = document.getElementById('overlay');
-document.getElementById('gear').addEventListener('click', ()=>overlay.classList.add('open'));
+function openPanel(){ overlay.classList.add('open'); }
+document.getElementById('entryMenu').addEventListener('click', openPanel);
+document.getElementById('entryGame').addEventListener('click', ()=>{
+  document.getElementById('gamePop').classList.remove('show');
+  openPanel();
+});
 document.getElementById('btnClose').addEventListener('click', ()=>overlay.classList.remove('open'));
 overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') overlay.classList.remove('open'); });
+
+/* 游戏内菜单弹层 */
+document.getElementById('gameMenuBtn').addEventListener('click', ()=>{
+  document.getElementById('gamePop').classList.toggle('show');
+});
 
 /* 场景切换 */
 document.getElementById('ctxSeg').addEventListener('click', e=>{
@@ -637,9 +582,10 @@ document.getElementById('ctxSeg').addEventListener('click', e=>{
   const menu = b.dataset.ctx==='menu';
   document.getElementById('sceneMenu').style.display = menu?'flex':'none';
   document.getElementById('sceneGame').style.display = menu?'none':'flex';
+  document.getElementById('gamePop').classList.remove('show');
   document.getElementById('sceneLabel').textContent = menu
-    ? '模拟主菜单 MainUI 页 · 齿轮注入于页面角落'
-    : '模拟游戏内 Root 层 · 齿轮悬浮左上角（不碰页签数组）';
+    ? '模拟主菜单 MainUI 页 · 入口注入官方菜单列表'
+    : '模拟游戏内 · 入口在右上菜单弹层（对应官方系统菜单）';
 });
 
 renderSide(); renderCfg();
