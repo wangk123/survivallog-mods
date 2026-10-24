@@ -4,8 +4,8 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 5 注入骨架完成**（主菜单阶段 CDP 18 项断言
-> 全绿 + 实机日志回读；游戏内 OutSetting 入口已部署、实机断言留任务 7 首轮，见 §5；
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 6 配置桥完成**（Meta 九表 + 快照/写链路 +
+> 消息协议 + Save 防抖；RobotSpeed 改值热生效装机实测，见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe` 默认关）。
 
 ## 1. 功能定位
@@ -21,9 +21,9 @@
 
 | 层 | 代码 | 职责 |
 |---|---|---|
-| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` /（任务 6 起）`ConfigBridge` | BepInEx 插件宿主。Ticker 每 2s（unscaled）心跳；各 mod Enabled 配置的读写（`SetModEnabled`）；轮询面板 outbox 执行面板命令。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
-| 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec/Eval`（Eval 回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（`JSON.stringify(window.__mcDrain?__mcDrain():[])` 回读，暂只 Log，任务 8 起消费） |
-| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 长出完整面板） | 面板 UI 与交互。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` 为计划既定契约，全程一致；键盘上报任务 8 |
+| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（cfg `[Disabled]` 名单）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
+| 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
+| 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 长出完整面板） | 面板 UI 与交互。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（后两者任务 6 推送存根：存 `__mcLastSnapshot` / `__mcLastEvent`，任务 7 换真渲染）为既定契约，全程一致；键盘上报任务 8 |
 
 panel.js 作为内嵌资源随 dll 分发，不落盘、不改游戏资源文件（同 CabinetEverywhere
 tagfilter.page.js 模式）。
@@ -64,8 +64,9 @@ if (!(info?.Instance is BepInEx.Unity.IL2CPP.BasePlugin bp)) return;
 var cfgFile = bp.Config;   // BepInEx.Configuration.ConfigFile
 
 // ④ 读 entry：泛型 TryGetEntry（T 必须与目标 mod Bind 时的类型字面一致，此处 float）
-if (cfgFile.TryGetEntry("机器人提速", "移速倍率", out ConfigEntry<float> entry))
-    float cur = entry.Value;                       // 实测读到 2
+ConfigEntry<float> entry;                       // 声明在 if 外（out var 声明不能直接作内嵌语句）
+if (!cfgFile.TryGetEntry("机器人提速", "移速倍率", out entry)) return;
+float cur = entry.Value;                        // 实测读到 2
 
 // ⑤ 写值热生效：typed Value 直接赋值
 entry.Value = 3f;
@@ -110,7 +111,9 @@ entry.Value = 3f;
    吻合）。任务 6 做"恢复默认值"时禁止拿 gamekb 数值当原始基线，应读 entry.DefaultValue。
 4. **本构型 API 与常见记忆不符**：无 `Chainloader.Instance.Plugins` 静态、无
    `Chainloader.PluginInfos` 静态字典；正确入口 `IL2CPPChainloader.Instance.Plugins`（实例）。
-   升级 BepInEx 后此节需复核（改挂钩点须同步 moddeps.json 的口径同样适用于此处依赖）。
+   BepInEx 侧 API（Chainloader/BasePlugin.Config/ConfigFile/ConfigEntry）**不在 moddeps.json 登记口径内**
+   ——那是游戏侧挂钩点/表字段/字节签名的登记表（硬规则 11 范围）；此处依赖的复核方式 =
+   升级 BepInEx 后重验 §4.1 API 面（任务 4 的 Cecil dump 法，`tools/dump_bepinex_api.ps1`）。
 5. **`TryGetEntry` 区分大小写与全角**：section/key 必须与目标 mod Bind 字符串逐字一致
    （本靶为中文 `机器人提速`/`移速倍率`，UTF-8 无障碍）。
 6. **探针门控**：`Debug.Probe` 默认 false 常驻 `com.local.survivallog.modcenter.cfg` [Debug] 节，
@@ -157,7 +160,8 @@ entry.Value = 3f;
    **实机 OutSetting 场景下 ESC 可能先被 Unity 拿去关暂停菜单**——✕ 按钮与遮罩点击是保底
    关闭路径；任务 8 键盘门（消费 MC_CLOSE）落地时再统一处理。
 5. **outbox 消息形状**：`{type:'MC_OPEN', host:'<宿主页 pathname>'}` / `{type:'MC_CLOSE'}`
-   —— host 字段方便日志定位面板挂在哪页。C# 侧暂只 Log（已实测回读成功，见 5.3）。
+   —— host 字段方便日志定位面板挂在哪页。任务 5 时 C# 只 Log（回读成功实证见 5.3）；
+   任务 6 起入队 ConfigBridge 主线程分发（MC_SET/MC_TOGGLE_MOD 协议见 §6.2）。
 
 ### 5.3 实测记录（2026-10-24 17:28–17:33，主菜单阶段）
 
@@ -174,8 +178,65 @@ entry.Value = 3f;
 - **游戏内 OutSetting 断言未跑**（读档会动作者存档，自动化不冒险），代码路径与主菜单
   同一脚本分支（仅锚点/插入方式不同），留任务 7 首轮实机复核——这是本任务唯一未实证点。
 
-## 6. 迭代维护清单
+## 6. 配置桥与消息协议（任务 6，2026-10-24）
 
+### 6.1 组成与纪律
+
+- `Meta.cs`：9 mod 页面定义唯一蓝本 = spec §7 v4 九张表逐行转写（结构对照原型 v4 MODS 数组）。
+  **默认值与范围不写死为准**：快照时从 `ConfigEntry.BoxedValue`（当前值）与
+  `Description.AcceptableValues`（`AcceptableValueRange.MinValue/MaxValue` / `AcceptableValueList`，
+  closed generic 走 `GetType().GetProperty` 反射读）合入；Meta 里的 Def/Min/Max 只在范围缺失或
+  entry 尚不存在时兜底（数值照 spec §7 表抄）。步进 st 无反射来源，永远兜底。
+- `Payload.cs`：DTO（Snapshot/ModInfo/GroupInfo/ItemInfo/OvrInfo）+ 手写 JSON（AOT 零反射）；
+  入向消息解析 `JsonDocument`（EndlessGuard 同款实绩 API）。契约签名冻结：任务 7 UI 逐字消费
+  （`{self:{ver},mods,tp}` / `Item={k,l,t,v,min,max,st,b,note,opts}` / ovr 类 mod 另挂 `ovr:[{id,ms}]`）。
+- `ConfigBridge.cs`：枚举/快照/写/启停/消息分发/Save 防抖，全部在 Ticker 主线程（Pump）执行；
+  Eval 回调线程只入队（`ConcurrentQueue`）。
+- 两处对 spec 的实证修正（实证优先）：**UiFit.Mode 合法值是 Scroll/Zoom/Off**（ViewportFit.cs
+  描述明示；spec §7 表 "Fit" 为笔误，写 Fit 会静默按 Scroll 处理）；RoleUnlock `Plan.ClearPool/
+  VaseRecipe` 两 entry 任务 8 才新增，快照先按 spec 默认 true 兜底展示（写会被拒并回 MC_SET_FAIL）。
+
+### 6.2 消息协议（JS→C# 走 outbox drain；C#→JS 走 Exec 直推 Root）
+
+| 入（type） | 字段 | 行为 |
+|---|---|---|
+| MC_OPEN | host | 推全量快照：`window.__mcRender(snapshot)` |
+| MC_SET | guid, section, key, value | `TrySet` → 成功回 `__mcEvent({type:'MC_SET_OK',k,badge})`（k=Meta 展示键，badge=Item.b）；失败回 `{type:'MC_SET_FAIL',k,err}` |
+| MC_TOGGLE_MOD | guid, enabled | `SetModEnabled` → 推新快照（`__mcRender`） |
+| MC_CLOSE | — | 立即落盘全部脏 cfg（防抖收口） |
+| MC_EVIDENCE | tag | 验证辅助（只读）：写 `BepInEx/ModCenter_evidence.txt`（RobotSpeed 移速倍率 entry 值 + Config_RobotAttribute 表快照，表读复用 BridgeProbe.Table）；正常玩家不触发 |
+
+- **guid 路由**：完整 GUID / En 短名 / GUID 尾段均可（大小写不敏感；`'RobotSpeed'`、`'robotspeed'`、
+  `'com.local.survivallog.robotspeed'` 同效）。
+- **key 路由**：主键 / 任一 writeKeys / 组合展示键（联动项 `"Expand.WidthMult + HeightMult"`）均可；
+  **实写键一律以 Meta.WriteKeys 为准**（联动 = 宽高两键等值写；Item.v 展示宽度键值）。
+- **只写 Meta 声明过的键**：未登记的 section/key 一律拒绝（spec §2.2 暴露原则的写侧执行）。
+- 值转换按 entry.SettingType：float/double/int/long/short/byte 系/bool/string/enum（enum 名大小写不敏感）。
+
+### 6.3 启停与 Save 防抖
+
+- `SetModEnabled(guid, enabled)`：任务 6 落**本插件 cfg `[Disabled]<guid>` 名单**（true=停用）；
+  快照 `enabled = 插件在链上 && !名单`。任务 13 起改写各 mod `General.Enabled`（名单届时退役）。
+- 防抖（DESIGN §4.3-2 落地）：首写某 ConfigFile 前 `SaveOnConfigSet=false`（记住原值）→ 标脏；
+  **3s 节流**（首写起算，连写不重置——长拖动按 3s 批落盘）到点 / MC_CLOSE 时 `Save()` 全部脏文件
+  并**恢复各自原 SaveOnConfigSet**。进程被强杀最多丢 3s 内的未落盘写（面板改值路径可接受）。
+
+### 6.4 实测记录（2026-10-24，主菜单阶段，无需读档）
+
+`tools/_mc_verify6_cdp.js`（连法照抄 `_mc_verify_cdp.js`）：注入脚本调 `__mcOpen()` → 断言
+`__mcLastSnapshot`：mods 9 项（名字/启停/分组对账 Meta）+ 柜子扩容三项联动键 + 动作加速 ovr 数组 +
+更好的储物柜 enabled=true 仅启停 + RoleUnlock 兜底项；实弹 MC_SET（RobotSpeed 移速倍率→4）→
+MC_EVIDENCE 轮询读表：MoveSpeed 4.8→9.6（=2.4×4，≤5s）→ 写回 2 → 表回 4.8；MC_TOGGLE_MOD
+一轮（false→名单落盘 `com.local.survivallog.modcenter.cfg [Disabled]`→true→恢复）；MC_CLOSE 即时
+落盘断言。证据：`.superpowers/sdd/2026-10-24-modcenter/task-6-report.md`（输出全文）。
+
+## 7. 迭代维护清单
+
+- 2026-10-24 任务 6：配置桥正式化。新增 `Meta.cs`（九表）/`Payload.cs`（DTO+手写 JSON）/
+  `ConfigBridge.cs`（快照/写/启停名单/消息分发/Save 防抖/MC_EVIDENCE）；`ModCenterPlugin.cs`
+  Ticker 接 Pump、BridgeProbe.Table 转 internal、探针注释去已证伪期望值（真原值 2.4 口径）；
+  `MenuEntryInjector.DrainOutbox` 回读入队；`panel.js` 增 `__mcRender/__mcEvent` 存根；
+  DESIGN §4.1④ 样例修 CS1023、§2/§4.3-4 措辞清理；新增 §6（协议/防抖/实测记录）。
 - 2026-10-24 任务 5：注入骨架。`WebBridge.cs`（通道+Eval）、`MenuEntryInjector.cs`
   （双锚点入口 + outbox 轮询）、`panel.js`（占位→空壳面板：遮罩/标题/✕/ESC/outbox 契约）、
   Ticker 接线；主菜单阶段 CDP 18 项全绿 + 日志回读。关键结论固化 §5（Root 无 clickThrough →

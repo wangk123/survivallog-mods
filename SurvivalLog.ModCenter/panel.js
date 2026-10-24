@@ -1,9 +1,10 @@
 /* ModCenter 面板 JS（内嵌资源 SurvivalLog.ModCenter.panel.js）。
- * 任务 5 = 空壳骨架（遮罩+标题+关闭+outbox）；任务 7 在此生长完整面板。
+ * 任务 5 = 空壳骨架（遮罩+标题+关闭+outbox）；任务 6 = C#→JS 推送存根（__mcRender/__mcEvent，
+ * 快照存 window.__mcLastSnapshot / 事件存 window.__mcLastEvent，任务 7 在此生长真渲染）。
  *
  * 注入落点：Root 文档（C# WebBridge.ExecuteJavaScript 上下文）。__McInstalled 守卫幂等。
  * 全局契约（与 C# Ticker / 任务 8 键盘门对齐）：__McInstalled / __mcOutbox / __mcDrain /
- * __mcOpen(hostDoc) / __mcClose / __mcEsc(e)。
+ * __mcOpen(hostDoc) / __mcClose / __mcEsc(e) / __mcRender(snapshot) / __mcEvent(event)。
  *
  * 面板 DOM 挂在「入口按钮所在的 iframe 文档」（host doc），不挂 Root：各页 webui-core.js
  * clickThrough 只同步 button/[data-interactive] 等清单元素的矩形给 Unity（Root 文档自身不跑
@@ -20,6 +21,11 @@
   /* ---- outbox：JS → C# 单向信箱（C# 每 2s __mcDrain 取走） ---- */
   window.__mcOutbox = [];
   window.__mcDrain = function () { return window.__mcOutbox.splice(0); };
+
+  /* ---- C# → JS 推送存根（任务 6）：MC_OPEN/MC_TOGGLE_MOD 后 C# 直推快照对象到 __mcRender；
+   * MC_SET 成败回 MC_SET_OK / MC_SET_FAIL 到 __mcEvent。任务 7 把存根换成真渲染。 ---- */
+  window.__mcRender = function (snapshot) { window.__mcLastSnapshot = snapshot; };
+  window.__mcEvent = function (event) { window.__mcLastEvent = event; };
 
   var S = { host: null, root: null }; // host=面板所在 iframe 文档；root=overlay 根元素
 

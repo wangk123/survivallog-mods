@@ -16,7 +16,8 @@ namespace SurvivalLog.ModCenter;
 /// 三层架构与迭代史见 DESIGN.md；菜单锚点单源见本目录 ANCHORS.md（T1，改挂钩点须同步）。
 /// 任务 3：宿主入口 + Ticker 心跳 + 日志门/自证通道；任务 4：反射桥探针（BridgeProbe，cfg
 /// Debug.Probe 门控，结论固化 DESIGN.md「反射桥 API 实证记录」）；任务 5：注入骨架（WebBridge
-/// 通道 + MenuEntryInjector 双锚点入口 + panel.js 空壳面板 + outbox 轮询，完整面板任务 7）。
+/// 通道 + MenuEntryInjector 双锚点入口 + panel.js 面板壳 + outbox 轮询）；任务 6：配置桥
+/// （Meta 九表 + ConfigBridge 快照/写/消息协议/Save 防抖，面板 UI 任务 7 移植）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class ModCenterPlugin : BasePlugin
@@ -42,7 +43,7 @@ public sealed class ModCenterPlugin : BasePlugin
 
         DebugProbe = Config.Bind("Debug", "Probe", false,
             "反射桥 API 诊断探针（默认关，仅供开发验证）。true 时启动 30 秒后对 RobotSpeed『机器人提速/移速倍率』\n" +
-            "执行一轮：枚举插件 → 取 ConfigFile → 读原值 → 写 3 → 等 5 秒验内存表热重写（4.8×3=14.4）→ 写回原值并落盘。\n" +
+            "执行一轮：枚举插件 → 取 ConfigFile → 读原值 → 写 3 → 等 5 秒验内存表热重写（真原值 2.4×3=7.2）→ 写回原值并落盘。\n" +
             "证据追加到 BepInEx/ModCenter_probe.txt。玩家长开无意义，验完请改回 false。");
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<ModCenterTicker>())
@@ -52,7 +53,7 @@ public sealed class ModCenterPlugin : BasePlugin
         go.AddComponent<ModCenterTicker>();
 
         Log("loaded");
-        Trace($"loaded v{Version}（注入骨架：菜单入口+空壳面板+outbox；完整面板待任务 7）");
+        Trace($"loaded v{Version}（配置桥：Meta 九表+快照/写/消息协议/Save 防抖；面板 UI 待任务 7）");
         SurvivalLog.ModShared.WelcomeTip.Install(Logger);
     }
 
@@ -77,9 +78,9 @@ public sealed class ModCenterPlugin : BasePlugin
 }
 
 /// <summary>
-/// 宿主心跳：每 2s（unscaled，主菜单/暂停均照走）。任务 5 起接入注入巡检（WebBridge.GetWebView
-/// → MenuEntryInjector.Tick：入口+面板幂等安装 + 面板 outbox 轮询）。
-/// 另挂任务 4 反射桥探针泵（ProbePump，Debug.Probe 门控）。
+/// 宿主心跳：每帧跑配置桥泵（任务 6：outbox 消息分发 + Save 防抖计时，主线程），每 2s（unscaled，
+/// 主菜单/暂停均照走）跑注入巡检（任务 5：WebBridge.GetWebView → MenuEntryInjector.Tick：
+/// 入口+面板幂等安装 + 面板 outbox 轮询）。另挂任务 4 反射桥探针泵（ProbePump，Debug.Probe 门控）。
 /// </summary>
 internal sealed class ModCenterTicker : MonoBehaviour
 {
@@ -95,6 +96,9 @@ internal sealed class ModCenterTicker : MonoBehaviour
     public void Update()
     {
         ProbePump();
+
+        // 任务 6：配置桥泵（面板消息分发 + Save 防抖计时）——每帧、主线程（cfg 读写线程纪律，DESIGN §4.2）
+        ConfigBridge.Pump(Time.unscaledDeltaTime);
 
         _acc += Time.unscaledDeltaTime;
         if (_acc < 2f) return;
@@ -135,8 +139,9 @@ internal sealed class ModCenterTicker : MonoBehaviour
 
 /// <summary>
 /// 任务 4 反射桥 API 实证探针（cfg Debug.Probe 门控，一轮三拍：A 写 3 → B 验表/写回 → C 终验落盘）。
-/// 靶：RobotSpeed『机器人提速/移速倍率』（float，默认 2）。表原值 MoveSpeed=4.8（三机型 2003/2004/2005），
-/// 故倍率 2→表 9.6；探针写 3→表 14.4；写回 2→表回 9.6。全部证据追加写 BepInEx/ModCenter_probe.txt。
+/// 靶：RobotSpeed『机器人提速/移速倍率』（float，默认 2）。表当前值 MoveSpeed=4.8（三机型 2003/2004/2005）
+/// = 真原值 2.4 × 现倍率 2（DESIGN §4.3-3：gamekb 的 4.8 是套件生效中 dump，勿当原始基线）；
+/// 探针写 3→表 7.2（2.4×3）；写回 2→表回 4.8。全部证据追加写 BepInEx/ModCenter_probe.txt。
 /// 确切可用 API/类型转换/线程上下文/踩坑结论固化于 DESIGN.md「反射桥 API 实证记录」，任务 6 逐字消费。
 /// </summary>
 internal static class BridgeProbe
@@ -185,7 +190,7 @@ internal static class BridgeProbe
 
             // 第四环：typed Value 写 → ConfigFile.SettingChanged → RobotSpeed.Rerun=true（0.5s 内重写表）
             _entry.Value = 3f;
-            P("A 已写 Value=3（期望 RobotSpeed Ticker ≤0.5s 把表 MoveSpeed 重写为 4.8×3=14.4）");
+            P("A 已写 Value=3（期望 RobotSpeed Ticker ≤0.5s 把表 MoveSpeed 重写为 2.4×3=7.2）");
         }
         catch (Exception e) { P("A 异常: " + e); }
     }
@@ -197,9 +202,9 @@ internal static class BridgeProbe
         try
         {
             P($"B 5s 后 entry.Value={_entry.Value:0.###}（期望 3）");
-            P($"B 5s 后表快照: {Table()}（期望三行 14.4 = 热重写实证）");
+            P($"B 5s 后表快照: {Table()}（期望三行 7.2 = 热重写实证）");
             _entry.Value = _orig;
-            P($"B 已写回原值 {_orig:0.###}（期望 Ticker ≤0.5s 内表回 4.8×2=9.6）");
+            P($"B 已写回原值 {_orig:0.###}（期望 Ticker ≤0.5s 内表回 2.4×2=4.8）");
         }
         catch (Exception e) { P("B 异常: " + e); }
     }
@@ -211,15 +216,16 @@ internal static class BridgeProbe
         try
         {
             P($"C 终验 entry.Value={_entry.Value:0.###}（期望 2）");
-            P($"C 终验表快照: {Table()}（期望三行 9.6 已还原）");
+            P($"C 终验表快照: {Table()}（期望三行 4.8 已还原）");
             _cfg.Save(); // SaveOnConfigSet=true 时每写即存，此处兜底确保盘上=原值
             P("C ConfigFile.Save 已调；探针 DONE");
         }
         catch (Exception e) { P("C 异常: " + e); }
     }
 
-    /// <summary>读内存表 Config_RobotAttribute 全行 MoveSpeed（读法与 RobotSpeedPlugin 现役代码一致）。</summary>
-    private static string Table()
+    /// <summary>读内存表 Config_RobotAttribute 全行 MoveSpeed（读法与 RobotSpeedPlugin 现役代码一致；
+    /// 任务 6 起供 ConfigBridge 装机证据复用，internal）。</summary>
+    internal static string Table()
     {
         try
         {

@@ -31,7 +31,7 @@ internal static class WebBridge
         catch { return null; }
     }
 
-    /// <summary>执行 JS（无回调，注入主通道）。异常只 Warn 不中断轮询。</summary>
+    /// <summary>执行 JS（无回调；注入与 C#→JS 推送共用的主通道——Root 上下文）。异常只 Warn 不中断轮询。</summary>
     internal static void Exec(Vuplex.WebView.IWebView web, string js)
     {
         try { web.ExecuteJavaScript(js); }
@@ -39,8 +39,9 @@ internal static class WebBridge
     }
 
     /// <summary>
-    /// 执行 JS 并回读结果字符串。回调经 DelegateSupport 包装成 Il2Cpp 委托交给 Vuplex；
-    /// 包装抛异常时只 Warn（同源探针同款降级语义），返回 false 供调用方感知。
+    /// 执行 JS 并回读结果字符串。任务 6 起承载 JS→C# 消息回读（outbox drain）；回调经
+    /// DelegateSupport 包装成 Il2Cpp 委托交给 Vuplex；包装抛异常时只 Warn 降级（消息该轮丢失、
+    /// 下轮补上，不影响注入本身——同源探针同款降级语义），返回 false 供调用方感知。
     /// </summary>
     internal static bool Eval(Vuplex.WebView.IWebView web, string js, Action<string> cb)
     {

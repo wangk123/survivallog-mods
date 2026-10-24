@@ -24,7 +24,7 @@ internal static class MenuEntryInjector
     private static string _panelJs;
     private static bool _readyLogged;
 
-    /// <summary>Ticker 心跳入口：面板引导（幂等）→ 双锚点入口注入（幂等）→ 面板 outbox 轮询。</summary>
+    /// <summary>Ticker 心跳入口：面板引导（幂等）→ 双锚点入口注入（幂等）→ 面板 outbox 轮询（任务 6 起由 ConfigBridge 消费）。</summary>
     internal static void Tick(Vuplex.WebView.IWebView web)
     {
         try
@@ -46,7 +46,10 @@ internal static class MenuEntryInjector
         }
     }
 
-    /// <summary>面板 outbox 轮询：取走 JS 侧待发消息数组（任务 5 只 Log；任务 8 起消费做键盘门/命令）。</summary>
+    /// <summary>
+    /// 面板 outbox 轮询：取走 JS 侧待发消息数组。任务 5 只 Log；任务 6 起入队 ConfigBridge
+    /// （回调线程只入队，分发在 Ticker 主线程 Pump 执行——cfg 读写线程纪律见 DESIGN §4.2）。
+    /// </summary>
     internal static void DrainOutbox(Vuplex.WebView.IWebView web)
     {
         WebBridge.Eval(web,
@@ -55,6 +58,7 @@ internal static class MenuEntryInjector
             {
                 if (string.IsNullOrEmpty(r) || r == "[]") return;
                 ModCenterPlugin.Log("面板消息: " + r);
+                ConfigBridge.EnqueueOutboxJson(r);
             });
     }
 
