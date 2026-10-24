@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Il2CppInterop.Runtime;
 
 namespace SurvivalLog.PlanPick;
 
@@ -22,19 +23,20 @@ internal static class PlanState
     internal static int CurrentDay() { ReadStates(); return _day; }
     internal static bool IsTodayCandidate(int id) { ReadStates(); return _today != null && _today.Contains(id); }
 
-    /// <summary>读 Redux 状态树。任何一步失败保持旧值（下一轮重试）。</summary>
+    /// <summary>读 Redux 状态树。任何一步失败保持旧值（下一轮重试）。
+    /// UI/Web 状态不在 reduxStoreLayer.dataTree（那里只有 Data 状态）——
+    /// 经 GetStateByUI(UI类型) 取（CabinetEverywhere ToolTablePruner/TabInjector 同款先例）：
+    /// State_UI_RogueSelect ← UI_RogueSelect；State_Web_RogueSelect ← WebUI_RogueSelect。</summary>
     private static void ReadStates()
     {
         try
         {
             if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.IsInstanceCreated) return;
             var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
-            var dataTree = rus?.reduxStoreLayer?.dataTree;
-            if (dataTree == null) return;
+            if (rus == null) return;
 
-            GameCore.HotUpdate.ReduxUI.BaseReduxState raw;
-            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect)), out raw);
-            var ui = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect>();
+            var ui = rus.GetStateByUI(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.UI_RogueSelect)))
+                ?.TryCast<GameCore.HotUpdate.ReduxUI.State_UI_RogueSelect>();
             if (ui != null)
             {
                 _day = ui.Day;
@@ -50,14 +52,24 @@ internal static class PlanState
         catch { /* 保持旧值 */ }
     }
 
+    /// <summary>payload 前置条件未就绪时的一次性打点（同一原因只打一次；v1.3.2 判定链全打点之训）。</summary>
+    private static string _lastFailReason;
+    private static void FailOnce(string reason)
+    {
+        if (reason == _lastFailReason) return;
+        _lastFailReason = reason;
+        PlanPickPlugin.Log.LogInfo("[PlanPick] 数据未就绪，暂不推送：" + reason);
+    }
+
     /// <summary>组装 payload JSON。返回 false=依赖未就绪（不推送）。</summary>
     internal static bool TryBuildPayload(out string json, out List<string> logs)
     {
         json = null; logs = new List<string>();
         var cm = SurvivalLog.ModShared.BagTable.Cm();
-        if (cm == null || !PlanCatalog.Build(cm)) return false;
+        if (cm == null) { FailOnce("ConfigManager 未就绪"); return false; }
+        if (!PlanCatalog.Build(cm)) { FailOnce("目录构建失败（" + (PlanCatalog.BuildLog.Count > 0 ? PlanCatalog.BuildLog[PlanCatalog.BuildLog.Count - 1] : "表未就绪") + "）"); return false; }
         ReadStates();
-        if (_day < 0) return false;
+        if (_day < 0) { FailOnce("State_UI_RogueSelect 未读到（天数）——规划页未开过或 GetStateByUI 失败"); return false; }
 
         int role = 1; try { role = GameCore.HotUpdate.ConfigManager.GetCurrentPlayerSelectId(); } catch { }
         int points = 0;
@@ -65,12 +77,12 @@ internal static class PlanState
         try
         {
             var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
-            var dataTree = rus?.reduxStoreLayer?.dataTree;
-            GameCore.HotUpdate.ReduxUI.BaseReduxState raw;
-            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect)), out raw);
-            var web = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect>();
+            var web = rus?.GetStateByUI(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.WebUI_RogueSelect)))
+                ?.TryCast<GameCore.HotUpdate.ReduxUI.State_Web_RogueSelect>();
             if (web != null && web.OwnPoints != null) points = web.OwnPoints.Value;
-            dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out raw);
+            var dataTree = rus?.reduxStoreLayer?.dataTree;   // Data 状态仍走 dataTree（State_Data_Item 先例）
+            GameCore.HotUpdate.ReduxUI.BaseReduxState raw = null;
+            dataTree?.TryGetValue(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out raw);
             var talent = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Data_Talent>();
             if (talent?.SurvivalPlanningIds != null)
             {
@@ -80,7 +92,8 @@ internal static class PlanState
             }
         }
         catch { }
-        if (activated == null) return false;
+        if (activated == null) { FailOnce("State_Data_Talent 未读到（已激活名单）"); return false; }
+        _lastFailReason = null;   // 成功后清零：下次失败再打一次（比如换档重来）
 
         // 条件管理器（特殊条件判定）
         GameCore.HotUpdate.Battle.Logic.ConditionSetManager csm = null;

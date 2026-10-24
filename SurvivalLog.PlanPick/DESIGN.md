@@ -258,3 +258,9 @@
   PlayerSelectId，读失败回退目录原值）——同装 RoleUnlock（互通清功能类 46 张白名单）即自动放行，
   家具位 77 张仍锁（范围跟随 RoleUnlock 表现状）；只装本 mod 照锁；零跨 mod API、无加载顺序依赖。
   VERIFY.md 增 ⑫ 联动验证项。
+- 2026-10-24 装机首轮修复（作者实测：入口未出现）：根因=UI/Web 状态不在
+  reduxStoreLayer.dataTree（那里只有 Data 状态）——State_UI_RogueSelect/State_Web_RogueSelect
+  改经 ReduxUISystem.GetStateByUI(UI类型) 取（UI_RogueSelect/WebUI_RogueSelect，
+  CabinetEverywhere ToolTablePruner 同款先例）；State_Data_Talent 仍走 dataTree。
+  同时补 payload 失败原因一次性打点（FailOnce，同一原因只打一条——v1.3.2 判定链全打点之训，
+  本次全静默即缺此）。注：天数读自 UI 状态，规划页首开后约 2s 内入口就位。
