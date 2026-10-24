@@ -49,6 +49,18 @@ public sealed class ModCenterPlugin : BasePlugin
 
         FocusTick.Reset(); // 任务 8：清上一轮键盘门自证文件（每轮运行从空文件开始）
 
+        DllDisabler.ScanOnLoad(); // 任务 16：[DisabledTp] 残留检测（强杀自愈：补拉分离进程+toast 暂存）
+
+        // 任务 16：退出双钩子（幂等互备）——MonoBehaviour OnApplicationQuit 消息 + Application.quitting 事件。
+        // 后者在某些退出路径（如引擎内部请求退出）可能先到/独到；两钩同函数，_quitDone 守卫只跑一次。
+        try
+        {
+            UnityEngine.Application.add_quitting(
+                Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(
+                    new Action(ModCenterTicker.RunQuitHooks)));
+        }
+        catch (Exception e) { Log("warn quitting 事件订阅降级（OnApplicationQuit 消息单钩兜底）: " + e.Message); }
+
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<ModCenterTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<ModCenterTicker>();
         var go = new GameObject("ModCenter.Ticker");
@@ -92,6 +104,21 @@ internal sealed class ModCenterTicker : MonoBehaviour
 
     private float _acc;
     private float _kbAcc; // 任务 8：键盘门巡检节拍（0.3s，unscaled——暂停菜单打开也要照走）
+    private bool _residueSoftDone; // 任务 16：残留软停重放只跑一次（首帧=Chainloader 全插件就绪后）
+
+    // 任务 16：退出钩子——先把全部脏 cfg 落盘（[DisabledTp] marker 必须先于分离进程上盘），
+    // 再拉分离进程等本进程退出后改名 .disabled（运行中 dll 被锁，此刻改必败；详见 DllDisabler）。
+    // 强杀（taskkill/断电）不会到这里——残留由下次启动 ScanOnLoad 自愈。
+    private static bool _quitDone; // 双钩子（MonoBehaviour 消息 + Application.quitting）幂等守卫
+    internal static void RunQuitHooks()
+    {
+        if (_quitDone) return;
+        _quitDone = true;
+        try { ConfigBridge.FlushDirty(); } catch (Exception e) { ModCenterPlugin.Log("warn quit 落盘异常: " + e.Message); }
+        DllDisabler.OnQuit();
+    }
+
+    private void OnApplicationQuit() => RunQuitHooks();
 
     // 探针状态机：-1 未启用/已结束；0 等 30s（A 枚举+读+写）；1 等 5s（B 验表+写回）；2 等 3s（C 终验+Save）
     private int _probePhase;
@@ -100,6 +127,13 @@ internal sealed class ModCenterTicker : MonoBehaviour
     public void Update()
     {
         ProbePump();
+
+        if (!_residueSoftDone)
+        {
+            _residueSoftDone = true;
+            try { DllDisabler.ReapplySoft(); } // 任务 16：残留 Tier 2 软停重放（首帧=全插件已 Load）
+            catch (Exception e) { ModCenterPlugin.Log("warn residue 软停重放异常: " + e.Message); }
+        }
 
         // 任务 6：配置桥泵（面板消息分发 + Save 防抖计时）——每帧、主线程（cfg 读写线程纪律，DESIGN §4.2）
         ConfigBridge.Pump(Time.unscaledDeltaTime);

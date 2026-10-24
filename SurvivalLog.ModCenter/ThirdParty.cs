@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -107,7 +108,160 @@ internal static class ThirdParty
     /// <summary>清单徽标（展示键 k → 归一面板徽标；Tier 0 / 未列项 → null，回执缺省 cfg）。</summary>
     internal static string BadgeOf(string guid, string displayK) =>
         displayK != null && Cache.TryGetValue(guid ?? "", out var m) && m != null
-        && m.Badges.TryGetValue(displayK, out var b) ? b : null;
+            && m.Badges.TryGetValue(displayK, out var b) ? b : null;
+
+    // ============ Tier 2 深度对接（任务 16；指南 §四，Contracts 见 Contracts/ModCenterIntegration.cs） ============
+
+    /// <summary>
+    /// 第三方运行时状态（QueryStates 回报，duck-typing 读出后归一为托管副本；
+    /// 空串 Key 代表整个 mod，State 只认 ok——非 ok 一律按 failed 展示 Reason）。
+    /// </summary>
+    internal sealed class McState
+    {
+        internal string Key, State, Reason;
+    }
+
+    /// <summary>发现的 Tier 2 约定类型句柄（反射按名 duck-typing——不同程序集各自编入的
+    /// 接口类型不可强转，禁止 cast；Degraded=OnEnabledChanged 曾返回 false，本会话降级重启级）。</summary>
+    private sealed class T2Integration
+    {
+        internal System.Reflection.MethodInfo OnEnabled;  // static bool OnEnabledChanged(bool)
+        internal System.Reflection.MethodInfo Query;      // static Xxx QueryStates()（可选）
+        internal bool Degraded;
+    }
+
+    private static readonly Dictionary<string, T2Integration> T2Cache = new();
+    private static readonly HashSet<string> T2None = new();
+
+    /// <summary>
+    /// 约定类型发现：插件程序集内 <c>ModCenterIntegration</c>（先精确全局名，后按简单名兜底扫描——
+    /// 允许作者套命名空间），要求 public static <c>bool OnEnabledChanged(bool)</c>；
+    /// 静态属性 <c>McSpec</c> 在场且 ≠1 → 不认识，降级 Tier 1/0（指南 §七接口冻结）。
+    /// QueryStates 可选。逐插件解析一次入缓存；任何缺失/异常都只是"没有 Tier 2"，绝不报错。
+    /// </summary>
+    private static T2Integration T2Of(BepInEx.PluginInfo info)
+    {
+        var guid = info.Metadata?.GUID;
+        if (string.IsNullOrEmpty(guid)) return null;
+        if (T2Cache.TryGetValue(guid, out var hit)) return hit;
+        if (T2None.Contains(guid)) return null;
+
+        T2Integration t2 = null;
+        try
+        {
+            var asm = info.Instance.GetType().Assembly;
+            var t = asm.GetType("ModCenterIntegration", false);
+            if (t == null)
+            {
+                foreach (var ty in asm.GetTypes())
+                    if (ty.Name == "ModCenterIntegration") { t = ty; break; }
+            }
+            if (t != null)
+            {
+                var on = t.GetMethod("OnEnabledChanged",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null,
+                    new[] { typeof(bool) }, null);
+                if (on == null || on.ReturnType != typeof(bool))
+                    Log($"Tier2(tp) {guid}: 类型 ModCenterIntegration 在场但缺 static bool OnEnabledChanged(bool)——按 Tier 1/0 对待");
+                else
+                {
+                    var specProp = t.GetProperty("McSpec",
+                        System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (specProp != null)
+                    {
+                        var specOk = false;
+                        try { specOk = Convert.ToInt32(specProp.GetValue(null), CultureInfo.InvariantCulture) == McSpecSupported; }
+                        catch { }
+                        if (!specOk)
+                        {
+                            Log($"Tier2(tp) {guid}: McSpec 不识别——按 Tier 1/0 对待（接口冻结：mcSpec 1）");
+                            t = null;
+                        }
+                    }
+                    if (t != null)
+                    {
+                        t2 = new T2Integration
+                        {
+                            OnEnabled = on,
+                            Query = t.GetMethod("QueryStates",
+                                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null,
+                                Type.EmptyTypes, null),
+                        };
+                        Log($"Tier2(tp) {guid}: 约定类型命中（OnEnabledChanged 就绪，QueryStates {(t2.Query != null ? "就绪" : "缺席(可选)")}）——软停回调生效");
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Log($"Tier2(tp) {guid}: 发现异常（按 Tier 1/0 对待）: {e.Message}");
+            t2 = null;
+        }
+        if (t2 == null) T2None.Add(guid);
+        else T2Cache[guid] = t2;
+        return t2;
+    }
+
+    /// <summary>软停能力（面板两层语义判据，任务 16）：Tier 2 约定在场且未降级，或清单声明 softDisable。</summary>
+    internal static bool SoftOf(BepInEx.PluginInfo info)
+    {
+        var t2 = T2Of(info);
+        return (t2 != null && !t2.Degraded) || SoftDisableOf(info.Metadata?.GUID);
+    }
+
+    /// <summary>
+    /// 启停回调（主线程 Pump 调）：enabled=false 对方应立即还原全部行为，true 恢复。
+    /// 返回 true=对方已处理（软停语义）；无约定/异常/返回 false → false（调用方降级重启级语义），
+    /// 返回 false 时本会话标记 Degraded（后续快照 Soft 同步回落）。
+    /// </summary>
+    internal static bool FireEnabledChanged(BepInEx.PluginInfo info, bool enabled)
+    {
+        var t2 = T2Of(info);
+        if (t2 == null || t2.Degraded && !enabled) return false; // 已降级后不再打扰；enable 重试交给下次真启用
+        try
+        {
+            var r = t2.OnEnabled.Invoke(null, new object[] { enabled });
+            var ok = r is bool b && b;
+            if (!ok && !enabled)
+            {
+                t2.Degraded = true;
+                Log($"Tier2(tp) {info.Metadata?.GUID}: OnEnabledChanged(false) 返回 false——本会话降级重启级语义");
+            }
+            return ok;
+        }
+        catch (Exception e)
+        {
+            Log($"Tier2(tp) {info.Metadata?.GUID}: OnEnabledChanged({enabled}) 异常（降级重启级）: {e.Message}");
+            if (!enabled) t2.Degraded = true;
+            return false;
+        }
+    }
+
+    /// <summary>状态回报（快照构建时调；无约定/异常/缺席 → null）。上限 64 项防病态清单。</summary>
+    internal static List<McState> QueryStatesOf(BepInEx.PluginInfo info)
+    {
+        var t2 = T2Of(info);
+        if (t2?.Query == null) return null;
+        try
+        {
+            var r = t2.Query.Invoke(null, Array.Empty<object>());
+            if (r is not System.Collections.IEnumerable en) return null;
+            var list = new List<McState>();
+            foreach (var o in en)
+            {
+                if (o == null || list.Count >= 64) continue;
+                var ty = o.GetType();
+                string P(string name) => ty.GetProperty(name)?.GetValue(o) as string;
+                list.Add(new McState { Key = P("Key") ?? "", State = P("State") ?? "ok", Reason = P("Reason") ?? "" });
+            }
+            return list;
+        }
+        catch (Exception e)
+        {
+            Log($"Tier2(tp) {info.Metadata?.GUID}: QueryStates 异常（忽略）: {e.Message}");
+            return null;
+        }
+    }
 
     // ============ 清单发现与解析 ============
 

@@ -119,6 +119,7 @@ internal static class ConfigBridge
         {
             var tp = FindTp(guidOrName);
             if (tp != null) { SetTpEnabled(tp, enabled); return; }
+            if (DllDisabler.TrySetAbsent(guidOrName, enabled)) return; // 任务 16：缺席行（dll 已禁用）启用路由
             Log("toggle 拒绝：未知插件 " + guidOrName); return;
         }
         var cfg = CfgOf(mm.Guid);
@@ -271,8 +272,23 @@ internal static class ConfigBridge
             }
             catch (Exception e) { Log("warn tp 构建跳过 " + (info?.Metadata?.GUID ?? "?") + ": " + e.Message); }
         }
+        // 任务 16：dll 已禁用（.disabled 在场）→ 未加载 → 链上枚举不可见；补缺席行供玩家重新启用
+        foreach (var dllRel in DllDisabler.AbsentDisabled())
+        {
+            var nm = dllRel.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                ? dllRel.Substring(0, dllRel.Length - 4) : dllRel;
+            snap.Tp.Add(new ModInfo
+            {
+                Guid = dllRel, // 未加载无 GUID，用 dll 相对名作路由键（DllDisabler.TrySetAbsent 消费）
+                Name = nm,
+                En = nm,
+                Enabled = false,
+                Absent = true,
+                Desc = "第三方 mod：dll 已禁用（当前未加载）。此处启用将恢复 dll 文件，下次启动正常加载。",
+            });
+        }
         if (snap.Tp.Count > 0)
-            Log("tp 快照: " + snap.Tp.Count + " 个第三方插件（" + string.Join(", ", snap.Tp.Select(m => m.En)) + "）");
+            Log("tp 快照: " + snap.Tp.Count + " 个第三方条目（" + string.Join(", ", snap.Tp.Select(m => m.En)) + "）");
     }
 
     /// <summary>豁免判定：Meta 登记（套件 9）/ ModCenter 自身 / 第一方 GUID 族 / 探针名。</summary>
@@ -297,22 +313,30 @@ internal static class ConfigBridge
     /// <see cref="ThirdParty.Apply"/>——插件程序集内嵌 modcenter.json（mcSpec 1）有效时
     /// display/summary/groups/label/badge/min-max-step/order 全量覆盖为中文定制页
     /// （清单没列的键不出现；清单键不在 cfg → 该项隐藏），无效时保持 Tier 0 形态。
+    /// 任务 16：启停真值源=DllDisabler [DisabledTp] marker 取反（退出改名，下次启动不加载）；
+    /// Tier 2 软停能力标记（约定类型在场或清单 softDisable）与 QueryStates 状态回报随后合入。
     /// </summary>
     private static ModInfo BuildTpMod(BepInEx.PluginInfo info)
     {
         var md = info.Metadata;
+        var dllRel = DllDisabler.DllRelOf(info);
         var mi = new ModInfo
         {
             Guid = md.GUID,
             Name = md.Name,          // Tier 0：显示名 = 插件自报名（无中文定制，Tier 1 清单才有）
             En = md.Name,
-            Enabled = TpEnabled(md.GUID), // 标记名单取反（T16 起换 dll 禁用真值源）
+            Enabled = dllRel == null || !DllDisabler.MarkerOf(dllRel), // 任务 16：[DisabledTp] marker 取反
             Desc = "第三方 mod（Tier 0 自动识别）：通用页由其 cfg 自动生成；写入即触发其 SettingChanged，生效视该 mod。",
         };
         ConfigFile cfg = null;
         try { if (info.Instance is BasePlugin bp) cfg = bp.Config; } catch { }
 
-        if (ThirdParty.Apply(info, mi, cfg)) return mi; // Tier 1 清单定制页（任务 15；groups 已重组）
+        if (ThirdParty.Apply(info, mi, cfg))
+        {
+            ApplyStates(mi, ThirdParty.QueryStatesOf(info)); // Tier 2 状态回报（清单定制页组之后）
+            mi.Soft = ThirdParty.SoftOf(info); // 两层语义标记（面板横幅/toast 措辞分流）
+            return mi;
+        }
         var defs = new List<ConfigDefinition>();
         if (cfg != null) { try { defs.AddRange(cfg.Keys); } catch { } } // Keys=现役 API（ConfigDefinitions 已过时）
 
@@ -334,7 +358,31 @@ internal static class ConfigBridge
         }
         if (mi.Groups.Count == 0)
             mi.Desc = "第三方 mod（Tier 0 自动识别）：无公开 cfg 配置，仅支持启用/停用（重启级）。";
+        ApplyStates(mi, ThirdParty.QueryStatesOf(info));
+        mi.Soft = ThirdParty.SoftOf(info);
         return mi;
+    }
+
+    /// <summary>Tier 2 状态回报合入（任务 16）：Key "Section:Key" → 定位项 K "Section.Key" 置灰
+    /// （ItemInfo.Fail=Reason）；空 Key=整 mod 级（Desc 追加警示）。State 只认 ok，非 ok 一律 failed。</summary>
+    private static void ApplyStates(ModInfo mi, List<ThirdParty.McState> states)
+    {
+        if (states == null) return;
+        foreach (var st in states)
+        {
+            if (string.IsNullOrEmpty(st.Key))
+            {
+                if (!string.Equals(st.State, "ok", StringComparison.OrdinalIgnoreCase))
+                    mi.Desc += "\n⚠ " + (string.IsNullOrEmpty(st.Reason) ? "状态异常：" + st.State : st.Reason);
+                continue;
+            }
+            var want = st.Key.Replace(':', '.');
+            foreach (var g in mi.Groups)
+                foreach (var it in g.Items)
+                    if (string.Equals(it.K, want, StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(st.State, "ok", StringComparison.OrdinalIgnoreCase))
+                        it.Fail = string.IsNullOrEmpty(st.Reason) ? "状态：" + st.State : st.Reason;
+        }
     }
 
     /// <summary>逐 entry→Item：键名即标签（英文）、k=节.键、徽标一律 cfg、Description→note、
@@ -356,37 +404,34 @@ internal static class ConfigBridge
         return ii;
     }
 
-    /// <summary>第三方启停真值源（任务 14）：本插件 cfg [Disabled]&lt;guid&gt; 标记名单取反
-    /// （T6 时代机制回用；懒 Bind 幂等。任务 16 起换"退出时 dll 改名 .disabled"，名单退役）。</summary>
-    private static bool TpEnabled(string guid)
-    {
-        try
-        {
-            var mk = TpMarker(guid);
-            return mk == null || !mk.Value;
-        }
-        catch { return true; }
-    }
-
-    /// <summary>第三方停用标记 entry（懒 Bind，幂等；本插件 cfg [Disabled] 节，key=插件 GUID）。</summary>
-    private static ConfigEntry<bool> TpMarker(string guid)
-    {
-        var self = ModCenterPlugin.Instance;
-        if (self == null) return null;
-        return self.Config.Bind("Disabled", guid, false,
-            "第三方 mod 停用标记（true=面板已标记停用，重启级）。任务 16 起改为退出时 dll 改名 .disabled 真禁用。");
-    }
-
-    /// <summary>第三方标记名单写（重启级语义：本会话对方仍在运行，仅记录停用意图）。</summary>
+    /// <summary>第三方启停（任务 16 分流，指南 §五）：套件→直写 General.Enabled（上方主流程）；
+    /// 第三方→Tier 2 软停回调优先（OnEnabledChanged 返回 true=行为已立即停止），清单 softDisable
+    /// 次之（自实现 gate）；两者都无=重启级。三层统一写 [DisabledTp] marker（退出时 dll 改名
+    /// .disabled，下次启动不加载——Tier 2 行的"下次启动不加载"由此兜底），区别只在面板文案语义。</summary>
     private static void SetTpEnabled(BepInEx.PluginInfo tp, bool enabled)
     {
         var self = ModCenterPlugin.Instance;
         if (self == null) { Log("toggle 拒绝：ModCenter 宿主未就绪"); return; }
-        var mk = TpMarker(tp.Metadata.GUID);
-        if (mk == null) { Log("toggle 拒绝：标记 entry 创建失败 " + tp.Metadata.GUID); return; }
-        MarkDirty(self.Config);
-        mk.Value = !enabled;
-        Log($"toggle(tp) {tp.Metadata.Name} → {(enabled ? "启用" : "停用")}（[Disabled] 名单标记 {tp.Metadata.GUID}={!enabled}，重启级；任务 16 起换 dll .disabled 真禁用）");
+        var dllRel = DllDisabler.DllRelOf(tp);
+        if (string.IsNullOrEmpty(dllRel)) { Log("toggle 拒绝：插件 Location 缺失 " + tp.Metadata.GUID); return; }
+        var name = tp.Metadata.Name;
+        if (enabled)
+        {
+            var restored = ThirdParty.FireEnabledChanged(tp, true); // Tier 2 恢复回调（无契约/降级=false 静默）
+            DllDisabler.Enable(dllRel);
+            Log($"toggle(tp) {name} → 启用（Tier2 回调 {(restored ? "已恢复" : "无/降级")}；marker 清除）");
+        }
+        else
+        {
+            var soft = ThirdParty.FireEnabledChanged(tp, false);
+            var viaManifest = ThirdParty.SoftDisableOf(tp.Metadata.GUID);
+            DllDisabler.Disable(dllRel);
+            Log($"toggle(tp) {name} → 停用（"
+                + (soft ? "Tier2 软停回调已处理，行为立即停止"
+                        : viaManifest ? "清单 softDisable：对方自实现 gate（面板按软停语义展示）"
+                                      : "重启级：本会话仍在运行，退出时 dll 改名 .disabled")
+                + $"；marker [{dllRel}]=true）");
+        }
     }
 
     /// <summary>第三方插件解析（完整 GUID / 插件名 / GUID 尾段，大小写不敏感；仅未豁免者）。</summary>
@@ -559,6 +604,12 @@ internal static class ConfigBridge
                         case "MC_OPEN":
                             FocusTick.NotifyOpen(); // 任务 8：面板开⇒键盘门交给网页（FocusTick 0.3s 沿触发）
                             PushRender(BuildSnapshot().ToJson());
+                            // 任务 16：强杀残留提示（一轮）：Load 检出"标记停用但 dll 未改名"时，面板首次打开告知
+                            var residue = DllDisabler.ConsumeToast();
+                            if (residue != null)
+                                PushEvent("{\"type\":\"MC_TOAST\",\"main\":"
+                                    + JsonW.Str("\u26a0 \u4e0a\u6b21\u505c\u7528\u672a\u5b8c\u6210")
+                                    + ",\"small\":" + JsonW.Str(residue) + "}");
                             break;
                         case "MC_CLOSE": // 面板关闭：键盘门双还原（任务 8）+ 立即落盘全部脏 cfg（防抖收口）
                             FocusTick.NotifyClose();
@@ -643,7 +694,7 @@ internal static class ConfigBridge
 
     // ============ Save 防抖 ============
 
-    private static void MarkDirty(ConfigFile f)
+    internal static void MarkDirty(ConfigFile f)
     {
         if (!Dirty.ContainsKey(f))
         {

@@ -4,8 +4,9 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 15 Tier 1 声明式清单完成**（ThirdParty
-> 清单发现/容错/合并见 §6.9；任务 14 Tier 0 第三方通用页见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 16 Tier 2 深度对接 + 重启级 dll 禁用完成**
+> （Contracts 编入 + 反射 duck-typing 发现 + 软停回调/状态回报见 §6.10；DllDisabler 分离进程改名/
+> 强杀残留自愈同节；任务 15 Tier 1 声明式清单见 §6.9；任务 14 Tier 0 第三方通用页见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
 > 复用见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
 > 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe`
 > 默认关）。
@@ -23,7 +24,7 @@
 
 | 层 | 代码 | 职责 |
 |---|---|---|
-| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（任务 13 直写各 mod `General.Enabled`）/ `MC_EVIDENCE` 验证辅助；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
+| C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8）/ `DllDisabler`（任务 16） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（任务 13 直写各 mod `General.Enabled`；任务 16 第三方分流——Tier 2 软停回调优先，§6.10）/ `MC_EVIDENCE` 验证辅助；`DllDisabler`：第三方重启级 dll 禁用（[DisabledTp] marker + 退出分离进程改名 + 残留自愈，§6.10）；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
 | 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
 | 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；任务 8 起 `MC_OPEN`/`MC_CLOSE` 兼作键盘门信号 + Root 侧孤儿看门狗（§6.6） |
 
@@ -484,8 +485,74 @@ cold→reboot 文案；RefreshMs 无 AcceptableValueRange 纯清单范围 100-50
 now；滑条写路由（MC_SET 整展示键 → 回执 badge=reboot → 对方 cfg 落盘 1.1 → 还原 1）；
 mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射范围 0.8-1.2）。
 
+## 6.10 Tier 2 深度对接 + 重启级 dll 禁用（任务 16，2026-10-24/25）
+
+接入协议单源：`docs/modcenter-integration-guide.md` §四（Contracts）/§五（启停语义）。
+
+### 6.10.1 机制
+
+- **Contracts 编入**：指南 §4.1 接口源码原样编入 `Contracts/ModCenterIntegration.cs`
+  （命名空间 `ModCenter.Integration`，接口 `IModCenterIntegration` + `McItemState`）。
+  **发现机制 = 反射按类型名 duck-typing，禁止接口强转**——第三方 mod 编入的是自己那份
+  接口副本，跨程序集接口类型互不可 cast。`ThirdParty.T2Of`：`asm.GetType("ModCenterIntegration")`
+  （未中再按简单名扫 `GetTypes()` 兜底）→ 要求 `public static bool OnEnabledChanged(bool)`；
+  静态属性 `McSpec` 在场且 ≠1 → 不识别降级 Tier 1/0（接口冻结）；`QueryStates` 可选。
+  逐插件解析一次入缓存；任何缺失/异常都只是"没有 Tier 2"，绝不报错（指南承诺）。
+- **软停回调**：`ThirdParty.FireEnabledChanged(info, enabled)` 反射调
+  `OnEnabledChanged.Invoke(null, new object[]{enabled})`。返回 false/异常 → 降级重启级
+  并标记 Degraded（本会话后续快照 Soft 同步回落）。`SetTpEnabled` 停用分流（指南 §五）：
+  Tier 2 回调返回 true（软停，行为立即停止）或清单 `softDisable=true`（对方自实现 gate）
+  → 面板软停语义文案；否则重启级文案。**三层统一写 [DisabledTp] marker**——Tier 2 行的
+  "下次启动不再加载"由 dll 改名兜底（ModCenter 不依赖对方自实现 Load 首行 gate）。
+- **状态回报**：`ThirdParty.QueryStatesOf(info)` 反射调 `QueryStates()` 读 `Key/State/Reason`
+  属性（duck-typing，上限 64 项）；`ConfigBridge.ApplyStates` 合入快照：Key "Section:Key" →
+  项 K "Section.Key" 置灰（`ItemInfo.Fail`=Reason，panel.js 锁控件+红字）；空 Key=整 mod 级
+  （Desc 追加 ⚠）。State 只认 ok，非 ok 一律 failed。
+- **DllDisabler**（重启级禁用执行方，指南 §五"工程细节"）：
+  - **marker**：ModCenter 自身 cfg `[DisabledTp]` 节，key = **plugins 目录下 dll 相对名**
+    （dll 禁用后插件不在链上，GUID 无从解析）。T6/T14 的 `[Disabled]<guid>` 名单退役
+    （无读取方；游戏侧 cfg 的 9 条孤儿裸行随本任务清理，4 条 tp GUID 惰性条目保留）。
+  - **退出执行**：运行中 dll 被锁（OnApplicationQuit 时本进程仍持有），改名交**分离进程**
+    `powershell -NoProfile -WindowStyle Hidden -EncodedCommand <base64(UTF-16LE)>`
+    （脚本 ASCII-only；EncodedCommand 彻底规避引号/反斜杠转义）循环 Rename-Item
+    （`<名>.dll`→`<名>.dll.disabled`，**只改名绝不删除**）直到成功/目标消失，超时 10 分钟。
+    退出钩子 = **双钩子幂等**（`ModCenterTicker.OnApplicationQuit` 消息 +
+    `Application.add_quitting` 事件，`RunQuitHooks._quitDone` 守卫只跑一次）；
+    顺序 = 先 `ConfigBridge.FlushDirty()`（marker 必须先落盘）再拉分离进程。
+  - **启用** = 反向改名：dll 未加载不锁，直接 `File.Move`；失败才分离进程兜底（2 分钟）。
+    同时撤销残留补拉进程（`Armed` 句柄表 Kill——玩家当场反悔时改名意图已失效）。
+  - **强杀残留自愈**：`ScanOnLoad`（Load 时）解析自身 cfg 的 [DisabledTp] true 项 × plugins
+    目录对照——marker=true 且 `.disabled` 在场 → 预 Bind（快照行/再启用路由就绪）；
+    marker=true 但 dll 还在（退出钩子没跑）→ **残留**：补拉一次分离进程（本会话结束后
+    生效）+ 面板下次打开 `MC_TOAST` 提示一轮（panel.js `toastRaw` 原文展示）+ Tier 2 者
+    `ReapplySoft` 软停回调重放（Ticker 首帧——此时 Chainloader 全插件就绪）。
+  - **缺席行**：`AbsentDisabled()` 扫描 plugins `*.dll.disabled`（排除第一方 `SurvivalLog.*`）
+    → 快照补 enabled=false 的"仅启停"行（guid=dll 相对名，`Absent` 标记），供玩家重新启用
+    （`TrySetAbsent` 路由反向改名）。
+- **panel.js 两层语义**：第三方停用横幅/toast 三档——缺席行（"dll 已禁用：当前未加载"）/
+  软停（"行为已立即停止"）/ 重启级（"本次会话仍在运行"）；`MC_TOAST` 事件 → 原文 toast。
+
+### 6.10.2 实测记录（2026-10-25，三轮，靶 = Tier2Demo + Tier0FallbackDemo 一次性 dll）
+
+见 `.superpowers/sdd/2026-10-24-modcenter/task-16-report.md`（菜单断言组 + 正常退出改名 +
+重启不加载 + 再启用恢复 + taskkill 强杀残留 toast/自愈全链路）。
+
 ## 7. 迭代维护清单
 
+- 2026-10-25 任务 16：Tier 2 深度对接 + 重启级 dll 禁用。新增 `Contracts/ModCenterIntegration.cs`
+  （指南 §4.1 接口源码原样编入，ModCenter.Integration 命名空间）与 `DllDisabler.cs`
+  （[DisabledTp]<dll 相对名> marker / 退出双钩子 FlushDirty→分离进程 EncodedCommand 循环
+  Rename-Item 只改名不删除 / 启用反向改名+残留补拉撤销 / ScanOnLoad 残留自愈+MC_TOAST
+  一轮提示 / AbsentDisabled 缺席行 / TrySetAbsent 再启用路由）；`ThirdParty.cs` 增 Tier 2
+  反射 duck-typing 发现（类型名+静态签名，禁接口强转）与 FireEnabledChanged/QueryStatesOf/
+  SoftOf（返回 false 降级 Degraded）；`ConfigBridge.cs`：SetTpEnabled 三层分流（Tier2 回调/
+  清单 softDisable/重启级，统一写 marker）、BuildTpMod 真值源换 marker+Soft/Absent 标记+
+  ApplyStates 状态回报、BuildTp 补缺席行、MC_OPEN 残留 toast、MarkDirty 收 internal；
+  `Payload.cs`：ModInfo.Soft/Absent、ItemInfo.Fail；`ModCenterPlugin.cs`：Load 接 ScanOnLoad+
+  quitting 双钩子、Ticker 首帧 ReapplySoft、OnApplicationQuit→RunQuitHooks；panel.js：第三方
+  停用三档横幅/toast（软停/重启级/缺席）、MC_TOAST→toastRaw、failed 项置灰锁控件。
+  旧 [Disabled]<guid> 名单退役（游戏侧 cfg 9 条孤儿裸行已清理，4 条 tp 惰性条目保留）。
+  实测见 §6.10.2。
 - 2026-10-24 任务 15：Tier 1 声明式清单。新增 `ThirdParty.cs`（清单发现=程序集内嵌资源
   精确名/后缀名匹配、重复取第一个；解析容错=mcSpec 不识别/解析失败/缺 groups 整单降级
   Tier 0、键不在 cfg 项隐藏、逐字段回落；合并=display/summary/groups/label/note/badge/

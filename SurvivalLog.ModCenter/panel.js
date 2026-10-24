@@ -99,6 +99,8 @@
     + '#__mc_overlay .__mc-item .__mc-info .__mc-lb{font-size:13.5px;}'
     + '#__mc_overlay .__mc-item .__mc-info .__mc-ck{font-size:11px;color:#6b7180;font-family:Consolas,monospace;margin-top:2px;}'
     + '#__mc_overlay .__mc-item .__mc-info .__mc-ck.__mc-note{color:#8a90a0;}'
+    + '#__mc_overlay .__mc-item.__mc-failed .__mc-ctl{opacity:.35;pointer-events:none;}' /* 任务 16：failed 项置灰锁控件 */
+    + '#__mc_overlay .__mc-item .__mc-info .__mc-ck.__mc-fail-note{color:#f87171;}'
     + '#__mc_overlay .__mc-item .__mc-ctl{width:min(300px,42%);flex-shrink:0;display:flex;align-items:center;gap:10px;justify-content:flex-end;}'
     + '#__mc_overlay .__mc-item .__mc-badge{width:96px;flex-shrink:0;text-align:right;font-size:11.5px;}'
     + '#__mc_overlay .__mc-b-now{color:#4ade80;}#__mc_overlay .__mc-b-reload{color:#60a5fa;}'
@@ -299,11 +301,13 @@
 
   function itemHtml(m, it, gi, ii) {
     var bd = badgeOf(it.b);
-    return '<div class="__mc-item">'
+    /* 任务 16：Tier 2 failed 状态（QueryStates 回报）→ 项置灰锁控件 + 红字原因（指南 §4.1） */
+    return '<div class="__mc-item' + (it.fail ? ' __mc-failed' : '') + '">'
       + '<div class="__mc-info">'
       + '<div class="__mc-lb">' + esc(it.l) + '</div>'
       + '<div class="__mc-ck">' + esc(it.k) + '</div>'
       + (it.note ? '<div class="__mc-ck __mc-note">' + esc(it.note) + '</div>' : '')
+      + (it.fail ? '<div class="__mc-ck __mc-fail-note">\u26a0 ' + esc(it.fail) + '</div>' : '')
       + '</div>'
       + '<div class="__mc-ctl">' + ctlHtml(it, gi, ii) + '</div>'
       + '<div class="__mc-badge ' + bd.cls + '">' + esc(bd.t) + '</div>'
@@ -354,13 +358,18 @@
     var m = curMod();
     if (!m) return;
     var tp = isTpMod(m);
+    /* 任务 16 启停语义（指南 §五）：第三方停用横幅分三档——缺席行（dll 已禁用未加载）/
+     * 软停（Tier 2 回调已处理或清单 softDisable，行为立即停止）/ 重启级（本会话仍在运行）。 */
+    var banner = tp
+      ? (m.absent
+        ? '\u26d4 \u5df2\u505c\u7528\uff08dll \u5df2\u7981\u7528\uff09\uff1a\u5f53\u524d\u672a\u52a0\u8f7d\u3002\u6b64\u5904\u542f\u7528\u5c06\u6062\u590d dll \u6587\u4ef6\uff0c\u4e0b\u6b21\u542f\u52a8\u6b63\u5e38\u52a0\u8f7d\u3002'
+        : (m.soft
+          ? '\u26d4 \u5df2\u505c\u7528\uff08\u8f6f\u505c\uff09\uff1a\u8be5 mod \u884c\u4e3a\u5df2\u7acb\u5373\u505c\u6b62\uff0c<b>\u4e0b\u6b21\u542f\u52a8\u540e</b>\u4e0d\u518d\u52a0\u8f7d\u3002'
+          : '\u26d4 \u5df2\u6807\u8bb0\u505c\u7528\uff1a\u672c\u6b21\u4f1a\u8bdd\u8be5 mod \u4ecd\u5728\u8fd0\u884c\uff0c<b>\u4e0b\u6b21\u542f\u52a8\u540e</b>\u4e0d\u518d\u52a0\u8f7d\u3002'))
+      : '\u26d4 \u8be5 mod \u5f53\u524d\u5df2\u505c\u7528\u3002\u6b64\u5904\u4fee\u6539\u4ecd\u4f1a\u5199\u5165 cfg \u4fdd\u5b58\uff0c\u4f46\u9700<b>\u91cd\u65b0\u542f\u7528\u540e</b>\u624d\u4f1a\u751f\u6548\uff08\u5de6\u5217\u5f00\u5173\uff09\u3002';
     var h = '<div class="__mc-mod-title"><h2>' + esc(m.name) + '</h2><span class="__mc-en">' + esc(m.en) + '</span></div>'
       + '<div class="__mc-mod-desc">' + esc(m.desc) + '</div>'
-      + '<div class="__mc-stop-banner' + (m.enabled ? '' : ' __mc-show') + '">'
-      + (tp
-        ? '\u26d4 \u5df2\u6807\u8bb0\u505c\u7528\uff1a\u672c\u6b21\u4f1a\u8bdd\u8be5 mod \u4ecd\u5728\u8fd0\u884c\uff0c<b>\u4e0b\u6b21\u542f\u52a8\u540e</b>\u4e0d\u518d\u52a0\u8f7d\u3002'
-        : '\u26d4 \u8be5 mod \u5f53\u524d\u5df2\u505c\u7528\u3002\u6b64\u5904\u4fee\u6539\u4ecd\u4f1a\u5199\u5165 cfg \u4fdd\u5b58\uff0c\u4f46\u9700<b>\u91cd\u65b0\u542f\u7528\u540e</b>\u624d\u4f1a\u751f\u6548\uff08\u5de6\u5217\u5f00\u5173\uff09\u3002')
-      + '</div>';
+      + '<div class="__mc-stop-banner' + (m.enabled ? '' : ' __mc-show') + '">' + banner + '</div>';
     for (var gi = 0; gi < m.groups.length; gi++) {
       h += '<div class="__mc-grp"><h3>' + esc(m.groups[gi].title) + '</h3>';
       for (var ii = 0; ii < m.groups[gi].items.length; ii++)
@@ -388,6 +397,17 @@
     toast._h = setTimeout(function () {
       if (S.toastEl) S.toastEl.className = '__mc-toast';
     }, 2600);
+  }
+
+  /* 任务 16：原文 toast（第三方启停两档语义 / C# MC_TOAST 残留提示）——小字直接给文案 */
+  function toastRaw(main, small) {
+    if (!S.toastEl || !S.toastEl.isConnected) return;
+    S.toastEl.className = '__mc-toast __mc-show';
+    S.toastEl.innerHTML = '<span>' + esc(main) + '</span><small>' + esc(small || '') + '</small>';
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function () {
+      if (S.toastEl) S.toastEl.className = '__mc-toast';
+    }, 3400);
   }
 
   /* ================= 消息发送 ================= */
@@ -440,10 +460,27 @@
     renderSide(); renderCfg();
     window.__mcOutbox.push({ type: 'MC_TOGGLE_MOD', guid: guid, enabled: m.enabled });
     var tp = isTpMod(m);
+    if (tp) {
+      /* 任务 16：第三方两档语义（指南 §五）——软停（Tier 2 回调/清单 softDisable）vs 重启级；
+       * 缺席行（dll 已禁用）只有启用方向。小字原文给足生效时机。 */
+      if (m.enabled) {
+        toastRaw(m.name + ' \u5df2\u6062\u590d\u542f\u7528',
+          m.absent ? 'dll \u5df2\u6062\u590d \u00b7 \u4e0b\u6b21\u542f\u52a8\u6b63\u5e38\u52a0\u8f7d'
+                   : (m.soft ? '\u884c\u4e3a\u5df2\u6062\u590d\uff08\u8f6f\u505c\uff09 \u00b7 \u4e0b\u6b21\u542f\u52a8\u6b63\u5e38\u52a0\u8f7d'
+                              : '\u4e0b\u6b21\u542f\u52a8\u6b63\u5e38\u52a0\u8f7d\uff08\u672c\u6b21\u4f1a\u8bdd\u4ecd\u5728\u8fd0\u884c\uff09'));
+      } else if (m.soft) {
+        toastRaw(m.name + ' \u5df2\u505c\u7528\uff08\u8f6f\u505c\uff09',
+          '\u884c\u4e3a\u5df2\u7acb\u5373\u505c\u6b62 \u00b7 \u4e0b\u6b21\u542f\u52a8\u540e\u4e0d\u518d\u52a0\u8f7d');
+      } else {
+        toastRaw(m.name + ' \u5df2\u6807\u8bb0\u505c\u7528\uff08\u91cd\u542f\u7ea7\uff09',
+          '\u672c\u6b21\u4f1a\u8bdd\u4ecd\u5728\u8fd0\u884c \u00b7 \u4e0b\u6b21\u542f\u52a8\u540e\u4e0d\u518d\u52a0\u8f7d');
+      }
+      return;
+    }
     toast(m.name + (m.enabled
-      ? (tp ? ' \u5df2\u6062\u590d\u542f\u7528\uff1a\u4e0b\u6b21\u542f\u52a8\u6b63\u5e38\u52a0\u8f7d' : ' \u5df2\u542f\u7528\uff1a\u6062\u590d\u751f\u6548\uff08\u22645\u79d2\uff09')
-      : (tp ? ' \u5df2\u6807\u8bb0\u505c\u7528\uff1a\u4e0b\u6b21\u542f\u52a8\u4e0d\u518d\u52a0\u8f7d\uff08\u91cd\u542f\u7ea7\uff09' : ' \u5df2\u505c\u7528\uff1a\u884c\u4e3a\u7acb\u5373\u8fd8\u539f\uff0c\u4e0b\u6b21\u542f\u52a8\u4e0d\u518d\u52a0\u8f7d')),
-      tp ? 'reboot' : 'now');
+      ? ' \u5df2\u542f\u7528\uff1a\u6062\u590d\u751f\u6548\uff08\u22645\u79d2\uff09'
+      : ' \u5df2\u505c\u7528\uff1a\u884c\u4e3a\u7acb\u5373\u8fd8\u539f\uff0c\u4e0b\u6b21\u542f\u52a8\u4e0d\u518d\u52a0\u8f7d'),
+      'now');
   }
 
   /* ================= 右区交互 ================= */
@@ -589,6 +626,10 @@
       toast('\u2715 ' + (event.k || '?'), null, true, event.err);
     }
     /* MC_SET_OK 不二次 toast：改值瞬间已按徽标 toast，OK 回执仅落 __mcLastEvent 供断言 */
+    /* 任务 16：C# 推送的原文 toast（强杀残留提示一轮；MC_OPEN 后紧跟到达） */
+    if (event && event.type === 'MC_TOAST') {
+      toastRaw(event.main || '', event.small || '');
+    }
   };
 
   /* ================= 开关 ================= */

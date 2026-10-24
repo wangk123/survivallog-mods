@@ -98,7 +98,7 @@ ModCenter 启动后反射枚举 BepInEx Chainloader 的全部插件（套件 9 m
 
 ### 4.1 Contracts 单文件（无 dll 依赖）
 
-将下面这份源码**直接编进你的 mod**（源码共享，不引用任何外部程序集——与 Survival Log 套件 ModShared 同款模式）。ModCenter 按命名空间+类型名反射发现你：
+将下面这份源码**直接编进你的 mod**（源码共享，不引用任何外部程序集——与 Survival Log 套件 ModShared 同款模式）。ModCenter 按类型名反射发现你——**duck-typing：按"类型名 + 静态成员签名"匹配调用，不做接口强转**（不同程序集各自编入的接口类型互不可 cast），接口源码只是契约文档：
 
 ```csharp
 using System;
@@ -137,20 +137,20 @@ namespace ModCenter.Integration
 }
 ```
 
-在你的插件程序集里：
+在你的插件程序集里（C# 的 `static class` 不能继承接口——协议按静态成员签名 duck-typing，写成下面这样即可）：
 
 ```csharp
-public static class ModCenterIntegration : ModCenter.Integration.IModCenterIntegration
+public static class ModCenterIntegration
 {
-    public int McSpec => 1;
+    public static int McSpec => 1;
 
-    public bool OnEnabledChanged(bool enabled)
+    public static bool OnEnabledChanged(bool enabled)
     {
-        MyPlugin.Instance.SetActive(enabled); // 你的启停 gate：还原/恢复原值
+        MyPlugin.SetActive(enabled); // 你的启停 gate：还原/恢复原值（静态可达即可）
         return true;
     }
 
-    public IReadOnlyList<McItemState> QueryStates()
+    public static IReadOnlyList<McItemState> QueryStates()
         => Array.Empty<McItemState>();
 }
 ```

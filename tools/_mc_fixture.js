@@ -12,6 +12,11 @@
 //        - Fix R1 (review P2/F1): synthetic no-range numeric item (min/max absent)
 //          renders number box ONLY (no fabricated 0..100 slider); out-of-range 500
 //          shows uncapped and MC_SET sends 500 uncapped
+//        - Task 15: t1 manifest page + t0 fallback groups (SKIP w/o targets)
+//        - Task 16 (menu slice): Tier2 callback round-trip (Tier2Demo evidence file),
+//          soft vs restart banner/toast wording, [DisabledTp]<dll> marker semantics,
+//          absent-row render + MC_TOAST handling (exit-rename / residue cycles are
+//          driven out-of-band with game restarts; see task-16-report)
 //        - interactions through REAL DOM events:
 //            slider (RobotSpeed moveMult) incl. 100ms throttle burst shape
 //            bool (RoleUnlock flower seeds), select (UiFit.Mode), reload-badge toast
@@ -478,6 +483,27 @@ async function menuMode() {
   F.tpList = TP.map((m) => ({ guid: m.guid, name: m.name, enabled: m.enabled,
     groups: m.groups.map((g) => ({ t: g.title, n: g.items.length })) }));
   const tpCfgOf = (guid) => GAME_ROOT + '/BepInEx/config/' + guid + '.cfg';
+  // Task 16: [DisabledTp] marker key = dll FILE NAME (plugins-relative), not the guid.
+  // Resolve via known targets map, else scan plugins dir for a stem matching the guid
+  // tail (case-insensitive; ivmakk mods name their dlls after the guid tail).
+  const dllOfTp = (guid) => {
+    const known = {
+      'tier1.demo': 'Tier1Demo.dll', 'tier0.fallback': 'Tier0FallbackDemo.dll',
+      'tier2.demo': 'Tier2Demo.dll', 'tier2.noint': 'Tier2NoIntDemo.dll',
+    };
+    if (known[guid]) return known[guid];
+    const tail = guid.split('.').pop().toLowerCase();
+    const flat = guid.toLowerCase().replace(/[^a-z0-9]/g, '');
+    try {
+      for (const f of FS.readdirSync(GAME_ROOT + '/BepInEx/plugins')) {
+        if (!/\.dll$/i.test(f)) continue;
+        const stem = f.slice(0, -4);
+        if (stem.toLowerCase() === tail || stem.toLowerCase().replace(/[^a-z0-9]/g, '') === flat) return f;
+      }
+    } catch (e) {}
+    return tail + '.dll';
+  };
+  const tpMarkerLine = (guid) => readCfgSection(MC_CFG, 'DisabledTp', dllOfTp(guid));
   const parseCfgSections = (p) => {
     try {
       const t = FS.readFileSync(p, 'utf8');
@@ -507,6 +533,11 @@ async function menuMode() {
       // Task 15: Tier 1 manifest page — groups/labels are manifest-authored by design
       // (cfg-section groups / key-name labels do NOT hold); asserted by its own group below.
       tpStruct.push({ guid: m.guid, tier1: 'skipped (manifest page, own assertion group)' });
+      continue;
+    }
+    if (m.absent) {
+      // Task 16: disabled row (dll renamed .disabled, not loaded) — no cfg to reconcile.
+      tpStruct.push({ guid: m.guid, absent: 'skipped (disabled row, task 16)' });
       continue;
     }
     const secs = parseCfgSections(tpCfgOf(m.guid));
@@ -715,7 +746,7 @@ async function menuMode() {
     let markerLine = null;
     const dlM = Date.now() + 12000;
     for (;;) {
-      markerLine = readCfgSection(MC_CFG, 'Disabled', tgt.guid);
+      markerLine = tpMarkerLine(tgt.guid); // Task 16: [DisabledTp] <dll file name>
       if (markerLine && markerLine.indexOf('true') !== -1) break;
       if (Date.now() > dlM) break;
       await sleep(600);
@@ -731,7 +762,7 @@ async function menuMode() {
     let markerBack = null;
     const dlM2 = Date.now() + 12000;
     for (;;) {
-      markerBack = readCfgSection(MC_CFG, 'Disabled', tgt.guid);
+      markerBack = tpMarkerLine(tgt.guid);
       if (markerBack && markerBack.indexOf('false') !== -1) break;
       if (Date.now() > dlM2) break;
       await sleep(600);
@@ -1470,6 +1501,240 @@ async function menuMode() {
       && !items.some((it) => it.k.indexOf('Ghost') !== -1); // 清单幽灵组/幽灵项未混入
   }
 
+  // =========================================================================
+  // Task 16: Tier 2 deep integration + restart-level dll disable (menu-phase
+  // slice: callback round-trip, soft/restart banner wording, [DisabledTp]
+  // marker semantics, absent-row rendering, MC_TOAST handling; the exit-rename
+  // and strong-kill residue cycles are driven out-of-band with game restarts).
+  // Driver deploys throwaway Tier2Demo.dll (contract type writes an evidence
+  // file and returns true). SKIP semantics: same as t15 (targets absent -> SKIP).
+  // =========================================================================
+  const T2_GUID = 'tier2.demo';
+  const T2_DLL = 'Tier2Demo.dll';
+  const t2 = TP.find((m) => m.guid === T2_GUID) || null;
+  const CB_PATH = GAME_ROOT + '/BepInEx/ModCenter_t2cb.txt';
+  const cbLines = () => {
+    try { return FS.readFileSync(CB_PATH, 'utf8').split('\n').filter((l) => l.indexOf('OnEnabledChanged') !== -1); }
+    catch (e) { return []; }
+  };
+  const toastText = () => page.evaluate((tail) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let i = 0; i < fs.length; i++) {
+      try {
+        const d = fs[i].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const t = d.getElementById('__mc_toast');
+          return t ? { shown: t.classList.contains('__mc-show'), text: t.innerText } : null;
+        }
+      } catch (e) {}
+    }
+    return null;
+  }, MAIN_HTML);
+  const waitTpEnabled = async (guid, want) => {
+    const seq0w = await page.evaluate(() => window.__mcSnapSeq || 0);
+    const dlw = Date.now() + 15000;
+    for (;;) {
+      const r = await page.evaluate((g) => {
+        const s = window.__mcLastSnapshot;
+        const m = s && s.tp && s.tp.find((x) => x.guid === g);
+        return { enabled: m ? m.enabled : undefined, seq: window.__mcSnapSeq || 0 };
+      }, guid);
+      if (r.enabled === want && r.seq > seq0w) return r;
+      if (Date.now() > dlw) return r;
+      await sleep(400);
+    }
+  };
+  F.t16 = { t2Found: !!t2, t2Snap: null, t2Off: null, t2On: null, t0Restart: null, absentRow: null, mcToast: null };
+  if (t2) {
+    // -- snapshot layer: tier=1 + soft capability from the CONTRACT (manifest softDisable=false) --
+    F.t16.t2Snap = { tier: t2.tier, soft: t2.soft === true, enabled: t2.enabled, groups: t2.groups.map((g) => g.title) };
+    V.t16SoftCap = t2.tier === 1 && t2.soft === true && t2.enabled === true;
+
+    // -- disable: callback evidence + soft banner + toast wording + [DisabledTp] marker --
+    const cb0 = cbLines().length;
+    await tpClickToggle(T2_GUID);
+    const toastOff = await toastText(); // read fast before the 3.4s auto-hide
+    const togOff = await waitTpEnabled(T2_GUID, false);
+    let cbOffLine = null;
+    const dlC = Date.now() + 12000;
+    for (;;) {
+      const ls = cbLines();
+      if (ls.length > cb0) { cbOffLine = ls[ls.length - 1]; break; }
+      if (Date.now() > dlC) break;
+      await sleep(500);
+    }
+    let markerT2 = null;
+    const dlT2 = Date.now() + 12000;
+    for (;;) {
+      markerT2 = tpMarkerLine(T2_GUID);
+      if (markerT2 && markerT2.indexOf('true') !== -1) break;
+      if (Date.now() > dlT2) break;
+      await sleep(600);
+    }
+    await clickRow(T2_GUID);
+    await sleep(80);
+    const t2OffPage = await readPage();
+    const t2OffBanner = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const b = d.querySelector('#__mc_cfg .__mc-stop-banner');
+            return b ? b.textContent : null;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    F.t16.t2Off = { togOff, cbOffLine, markerT2, toastOff, bannerShown: t2OffPage && t2OffPage.stopBannerShown, bannerText: t2OffBanner };
+    V.t16CbOff = !!(cbOffLine && cbOffLine.indexOf('enabled=False') !== -1);
+    V.t16MarkerOff = !!(markerT2 && markerT2.indexOf('true') !== -1);
+    V.t16SoftBanner = !!(t2OffPage && t2OffPage.stopBannerShown && t2OffBanner
+      && t2OffBanner.indexOf('\u8f6f\u505c') !== -1 // 软停
+      && t2OffBanner.indexOf('\u7acb\u5373\u505c\u6b62') !== -1 // 行为已立即停止
+      && t2OffBanner.indexOf('\u4ecd\u5728\u8fd0\u884c') === -1); // 不得再是重启级措辞
+    V.t16SoftToast = !!(toastOff && toastOff.shown && toastOff.text
+      && toastOff.text.indexOf('\u8f6f\u505c') !== -1 && toastOff.text.indexOf('\u7acb\u5373\u505c\u6b62') !== -1);
+
+    // -- enable: callback again + marker cleared --
+    const cb1 = cbLines().length;
+    await tpClickToggle(T2_GUID);
+    const togOn = await waitTpEnabled(T2_GUID, true);
+    let cbOnLine = null;
+    const dlC2 = Date.now() + 12000;
+    for (;;) {
+      const ls = cbLines();
+      if (ls.length > cb1) { cbOnLine = ls[ls.length - 1]; break; }
+      if (Date.now() > dlC2) break;
+      await sleep(500);
+    }
+    let markerT2b = null;
+    const dlT2b = Date.now() + 12000;
+    for (;;) {
+      markerT2b = tpMarkerLine(T2_GUID);
+      if (markerT2b && markerT2b.indexOf('false') !== -1) break;
+      if (Date.now() > dlT2b) break;
+      await sleep(600);
+    }
+    F.t16.t2On = { togOn, cbOnLine, markerT2b };
+    V.t16CbOn = !!(togOn && togOn.enabled === true && cbOnLine && cbOnLine.indexOf('enabled=True') !== -1);
+    V.t16MarkerOn = !!(markerT2b && markerT2b.indexOf('false') !== -1);
+  }
+
+  // -- restart-level target (Tier0FallbackDemo, mcSpec99 manifests -> Tier 0, no
+  //    integration): disable must keep restart wording + [DisabledTp] marker --
+  if (t0f) {
+    const seqR0 = await page.evaluate(() => window.__mcSnapSeq || 0);
+    await tpClickToggle(T0_GUID);
+    let togR = null;
+    const dlR = Date.now() + 15000;
+    for (;;) {
+      togR = await page.evaluate((guid) => {
+        const s = window.__mcLastSnapshot;
+        const m = s && s.tp && s.tp.find((x) => x.guid === guid);
+        return { enabled: m ? m.enabled : undefined, seq: window.__mcSnapSeq || 0 };
+      }, T0_GUID);
+      if (togR.enabled === false && togR.seq > seqR0) break;
+      if (Date.now() > dlR) break;
+      await sleep(400);
+    }
+    await clickRow(T0_GUID);
+    await sleep(80);
+    const bannerR = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const b = d.querySelector('#__mc_cfg .__mc-stop-banner');
+            return b ? b.textContent : null;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    let markerR = null;
+    const dlRm = Date.now() + 12000;
+    for (;;) {
+      markerR = tpMarkerLine(T0_GUID);
+      if (markerR && markerR.indexOf('true') !== -1) break;
+      if (Date.now() > dlRm) break;
+      await sleep(600);
+    }
+    F.t16.t0Restart = { togR, bannerR, markerR };
+    V.t16RestartSemantics = !!(togR && togR.enabled === false && markerR && markerR.indexOf('true') !== -1
+      && bannerR && bannerR.indexOf('\u4ecd\u5728\u8fd0\u884c') !== -1 // 重启级措辞（本会话仍在运行）
+      && bannerR.indexOf('\u8f6f\u505c') === -1);
+    await tpClickToggle(T0_GUID); // restore
+    await waitTpEnabled(T0_GUID, true);
+  }
+
+  // -- panel-side forms (synthetic snapshot / event through REAL render paths) --
+  {
+    // absent row (dll renamed .disabled, not loaded): off row + dedicated banner wording
+    const fakeAbs = 'tp.fixture.abs';
+    const fakeSnap2 = JSON.parse(JSON.stringify(F.render0.snap));
+    fakeSnap2.tp = (fakeSnap2.tp || []).concat([{ guid: fakeAbs, name: 'Fixture Abs', en: 'Fixture Abs',
+      desc: 'fixture absent', enabled: false, absent: true, groups: [] }]);
+    await page.evaluate((s) => { window.__mcRender(s); return true; }, fakeSnap2);
+    await sleep(60);
+    await clickRow(fakeAbs);
+    await sleep(60);
+    const absBanner = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="tp.fixture.abs"]');
+            const b = d.querySelector('#__mc_cfg .__mc-stop-banner');
+            return { rowOff: row ? row.classList.contains('__mc-off') : null, banner: b ? b.textContent : null };
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    F.t16.absentRow = absBanner;
+    V.t16AbsentRow = !!(absBanner && absBanner.rowOff === true && absBanner.banner
+      && absBanner.banner.indexOf('dll \u5df2\u7981\u7528') !== -1
+      && absBanner.banner.indexOf('\u5f53\u524d\u672a\u52a0\u8f7d') !== -1);
+
+    // MC_TOAST (C# residue notice path): __mcEvent -> toastRaw visible
+    await page.evaluate(() => {
+      window.__mcEvent({ type: 'MC_TOAST', main: 'T16 FIXTURE', small: 'residue probe' });
+      return true;
+    });
+    await sleep(300);
+    const mcToast = await toastText();
+    F.t16.mcToast = mcToast;
+    V.t16McToast = !!(mcToast && mcToast.shown && mcToast.text.indexOf('T16 FIXTURE') !== -1
+      && mcToast.text.indexOf('residue probe') !== -1);
+
+    // restore real snapshot (MC_OPEN -> C# pushes fresh render)
+    const seqR2 = await page.evaluate(() => window.__mcSnapSeq || 0);
+    await page.evaluate(() => { window.__mcOutbox.push({ type: 'MC_OPEN' }); return true; });
+    let fakeAbsGone = false;
+    const dlG2 = Date.now() + 12000;
+    for (;;) {
+      const r = await page.evaluate((guid) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try {
+            const d = fs[i].contentDocument;
+            if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1)
+              return { gone: !d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]'), seq: window.__mcSnapSeq || 0 };
+          } catch (e) {}
+        }
+        return null;
+      }, fakeAbs);
+      if (r && r.gone && r.seq > seqR2) { fakeAbsGone = true; break; }
+      if (Date.now() > dlG2) { fakeAbsGone = false; break; }
+      await sleep(400);
+    }
+    V.t16SyntheticCleanedUp = fakeAbsGone === true;
+  }
+
   // ---- close via X ----
   const m8 = await sentMark();
   await page.evaluate((tail) => {
@@ -1543,6 +1808,7 @@ async function menuMode() {
     tpBool: F.tpBool, tpToggle: F.tpToggle, tpStrCtl: F.tpStrCtl, tpStrSent: F.tpStrSent,
     tpNoRangeCtl: F.tpNoRangeCtl, tpNoRangeSent: F.tpNoRangeSent,
     t15: F.t15,
+    t16: F.t16,
     pages: F.pages ? Object.keys(F.pages).reduce((acc, k) => {
       const p = F.pages[k];
       acc[k] = p ? { title: p.title, grps: p.grps, totalItems: p.totalItems, selOpts: p.selOpts, notes: p.notes, firstRange: p.firstRange, ovrNew: p.ovrNew, ovrRows: p.ovrRows, placeholder: p.placeholder } : null;
@@ -1577,7 +1843,7 @@ async function menuMode() {
     ['14 tp bool persisted to third-party cfg (debounce)', V.tpBoolPersisted],
     ['14 tp bool restored to original', V.tpBoolRestored],
     ['14 tp toggle: snapshot push-back + row off + restart banner', V.tpToggleSnapshotBack && V.tpToggleRowOffBanner],
-    ['14 tp toggle: [Disabled] marker persisted then restored', V.tpToggleMarkerPersisted && V.tpToggleMarkerRestored],
+    ['14 tp toggle: [DisabledTp] marker persisted then restored (T16 semantics)', V.tpToggleMarkerPersisted && V.tpToggleMarkerRestored],
     ['14 str control renders text box (synthetic snapshot)', V.tpStrRender],
     ['14 str change commits MC_SET (string value)', V.tpStrMsgShape],
     ['F1 no-range numeric: number box only, 500 uncapped (no slider)', V.tpNoRangeRender],
@@ -1599,6 +1865,25 @@ async function menuMode() {
     ...(t0f
       ? [['15 t0 fallback (mcSpec99 x2): tier0 page, Secret shown, reflected range', V.t15Fallback]]
       : [['15 t0 fallback', null]]),
+    // Task 16: SKIP (null) when the throwaway Tier2Demo dll is absent — verdict printer
+    // treats null as SKIP (same net-machine semantics as t15).
+    ...(t2 ? [
+      ['16 t2 soft capability in snapshot (tier=1 + soft + enabled)', V.t16SoftCap],
+      ['16 t2 disable: OnEnabledChanged(False) evidence file', V.t16CbOff],
+      ['16 t2 disable: [DisabledTp] marker true', V.t16MarkerOff],
+      ['16 t2 disable: soft banner (软停/立即停止, 非重启级)', V.t16SoftBanner],
+      ['16 t2 disable: soft toast wording', V.t16SoftToast],
+      ['16 t2 enable: OnEnabledChanged(True) + marker cleared', V.t16CbOn && V.t16MarkerOn],
+    ] : [
+      ['16 t2 soft capability', null], ['16 t2 cb off', null], ['16 t2 marker off', null],
+      ['16 t2 soft banner', null], ['16 t2 soft toast', null], ['16 t2 enable', null],
+    ]),
+    ...(t0f
+      ? [['16 t0 restart: 重启级 wording + [DisabledTp] marker (no soft)', V.t16RestartSemantics]]
+      : [['16 t0 restart semantics', null]]),
+    ['16 absent row: off row + dll 已禁用/当前未加载 banner', V.t16AbsentRow],
+    ['16 MC_TOAST event -> toastRaw shown', V.t16McToast],
+    ['16 synthetic snapshot cleaned up by fresh render', V.t16SyntheticCleanedUp],
     ...EXPECT.map((e) => ['1  page ' + e.name, V['page:' + e.name]]),
     ['D  PlanPick Cost min=100/max=300 reflected (snapshot+DOM)', V.planpickReflectedRange
       && (F.pages && F.pages[Z.pp] && F.pages[Z.pp].firstRange ? F.pages[Z.pp].firstRange.min === '100' && F.pages[Z.pp].firstRange.max === '300' : false)],

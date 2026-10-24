@@ -51,7 +51,9 @@ public sealed class ModInfo
     public string Name;  // 面板显示名（中文）
     public string En;    // 内部名（原型 id 的对应物，兼容短名路由）
     public string Desc;  // 一句话功能简介
-    public bool Enabled; // 启停状态（任务 6 = ModCenter cfg [Disabled] 名单取反；任务 13 接各 mod General.Enabled）
+    public bool Enabled; // 启停状态（套件=各 mod General.Enabled；第三方=[DisabledTp] marker 取反，任务 16）
+    public bool? Soft;   // 第三方软停能力（任务 16）：Tier 2 约定在场或清单 softDisable→true（套件 null 不输出）
+    public bool? Absent; // 第三方缺席行（任务 16）：dll 已禁用未加载（面板补行供再启用；套件 null 不输出）
     public int? Tier;    // 第三方接入档（任务 15）：null/省略 = Tier 0 通用页；1 = 清单定制页（fixture/面板判别）
     public List<GroupInfo> Groups = new();
     public List<OvrInfo> Ovr; // 仅动作加速挂（其他.Overrides 解析结果）；null 不输出该字段
@@ -63,6 +65,8 @@ public sealed class ModInfo
           .Append(",\"en\":").Append(JsonW.Str(En))
           .Append(",\"desc\":").Append(JsonW.Str(Desc))
           .Append(",\"enabled\":").Append(Enabled ? "true" : "false");
+        if (Soft == true) sb.Append(",\"soft\":true");       // 任务 16：软停语义标记（仅第三方输出）
+        if (Absent == true) sb.Append(",\"absent\":true");   // 任务 16：dll 已禁用缺席行（仅第三方输出）
         if (Tier != null) sb.Append(",\"tier\":").Append(Tier.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         sb.Append(",\"groups\":[");
         for (var i = 0; i < Groups.Count; i++)
@@ -113,6 +117,7 @@ public sealed class ItemInfo
     public double? Max;
     public double? St;  // 滑条步进：AcceptableValue 不携带步进，永远 Meta 兜底
     public string B;     // 徽标：now(⚡≤5s) / reload(📁读档后) / reboot(🔄重启后) / cfg(⚙)
+    public string Fail;  // Tier 2 状态回报 failed（任务 16）：非空=该项置灰展示原因（QueryStates）
     public string Note;  // 补充说明（联动项含动态"当前 宽w×高h"）
     public List<string> Opts; // sel 选项（enum 名/白名单值/Meta 兜底）
 
@@ -126,6 +131,7 @@ public sealed class ItemInfo
         if (Max != null) sb.Append(",\"max\":").Append(JsonW.Num(Max.Value));
         if (St != null) sb.Append(",\"st\":").Append(JsonW.Num(St.Value));
         sb.Append(",\"b\":").Append(JsonW.Str(B));
+        if (Fail != null) sb.Append(",\"fail\":").Append(JsonW.Str(Fail)); // Tier 2 failed 状态（任务 16）
         if (Note != null) sb.Append(",\"note\":").Append(JsonW.Str(Note));
         if (Opts != null && Opts.Count > 0)
         {
