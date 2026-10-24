@@ -114,6 +114,7 @@
     /* 控件 */
     + '#__mc_overlay input[type=range]{flex:1;accent-color:#e8a33d;height:4px;}'
     + '#__mc_overlay input[type=number]{width:62px;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;font-family:inherit;}'
+    + '#__mc_overlay input[type=text]{flex:1;min-width:0;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 9px;font-size:13px;text-align:left;font-family:inherit;}'
     + '#__mc_overlay input:focus,#__mc_overlay select:focus{outline:1px solid #e8a33d;}'
     + '#__mc_overlay select{background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:5px 8px;font-size:12.5px;font-family:inherit;max-width:170px;}'
     /* 底部图例 */
@@ -275,6 +276,9 @@
       for (var i = 0; i < opts.length; i++)
         o += '<option value="' + esc(opts[i]) + '"' + (opts[i] === it.v ? ' selected' : '') + '>' + esc(opts[i]) + '</option>';
       return '<select data-act="set" data-g="' + gi + '" data-i="' + ii + '">' + o + '</select>';
+    }
+    if (it.t === 'str') { // 任务 14：无选项 string 项（Tier 0 第三方）→ 文本框，change 提交
+      return '<input type="text" value="' + esc(it.v) + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">';
     }
     var step = (it.st != null) ? it.st : 0.1;
     var mn = (it.min != null) ? it.min : 0, mx = (it.max != null) ? it.max : 100;
@@ -539,6 +543,11 @@
       var it = itemOf(m, +el.getAttribute('data-g'), +el.getAttribute('data-i'));
       if (!it) return;
       if (el.tagName === 'SELECT') {
+        it.v = el.value;
+        sendSet(m, it, it.v);
+        toast(m.name + ' \u00b7 ' + it.l + ' \u2192 ' + el.value, it.b);
+      } else if (el.tagName === 'INPUT' && el.type === 'text') {
+        // 任务 14：str 文本框——change（失焦/回车）提交整串，不在逐键 input 发送
         it.v = el.value;
         sendSet(m, it, it.v);
         toast(m.name + ' \u00b7 ' + it.l + ' \u2192 ' + el.value, it.b);

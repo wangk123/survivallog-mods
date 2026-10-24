@@ -262,6 +262,7 @@ async function menuMode() {
             rangeCount: q('#__mc_cfg input[type=range]').length,
             badgeCount: q('#__mc_cfg .__mc-badge').length,
             ver: window.__mcLastSnapshot && window.__mcLastSnapshot.self ? window.__mcLastSnapshot.self.ver : null,
+            tpCount: window.__mcLastSnapshot && window.__mcLastSnapshot.tp ? window.__mcLastSnapshot.tp.length : 0,
             curW: curW,
           };
         }
@@ -277,9 +278,9 @@ async function menuMode() {
     V.closeBtn = layout.closeBtn;
     V.footFourBadges = layout.footBadges === 4;
     V.toastEl = layout.toastEl;
-    V.sideTenRows = layout.sideRows === 10;
+    V.sideTenRows = layout.sideRows === 10 + layout.tpCount; // 9 suite + self lock + N tp（T14 自适应）
     V.selfLock = layout.lockRow && layout.lockSw;
-    V.tpEmptyHint = !!layout.tpHint;
+    V.tpEmptyHint = layout.tpCount === 0 ? !!layout.tpHint : !layout.tpHint; // 空数组→占位；非空→无占位
     V.threeCats = layout.cats.length === 3
       && layout.cats[0].indexOf('\u5957\u4ef6 MOD') === 0 && layout.cats[1].indexOf('\u9762\u677f\u81ea\u8eab') === 0
       && layout.cats[2].indexOf('\u7b2c\u4e09\u65b9 MOD') === 0;
@@ -463,6 +464,361 @@ async function menuMode() {
   }, mark);
   const firstOf = (arr, type) => (arr || []).find((m) => m && m.type === type) || null;
   const sentMark = () => page.evaluate(() => (window.__mcSentLog || []).length);
+
+  // =========================================================================
+  // Task 14: third-party (Tier 0) assertion group.
+  // Ground truth for structure = the tp mod's own cfg file on disk
+  // (BepInEx auto-names <guid>.cfg); interactions round-trip and restore.
+  // Skip-tolerant: machines without third-party plugins skip with a note.
+  // =========================================================================
+  const TP = (F.render0.snap.tp || []).slice();
+  F.tpList = TP.map((m) => ({ guid: m.guid, name: m.name, enabled: m.enabled,
+    groups: m.groups.map((g) => ({ t: g.title, n: g.items.length })) }));
+  const tpCfgOf = (guid) => GAME_ROOT + '/BepInEx/config/' + guid + '.cfg';
+  const parseCfgSections = (p) => {
+    try {
+      const t = FS.readFileSync(p, 'utf8');
+      const secs = [];
+      let cur = null;
+      for (const line0 of t.split('\n')) {
+        const s = line0.trim();
+        if (!s || s.charAt(0) === '#') continue;
+        const m2 = s.match(/^\[(.+)\]$/);
+        if (m2) { cur = { sec: m2[1], keys: {} }; secs.push(cur); continue; }
+        const eq = s.indexOf('=');
+        if (eq > 0 && cur) cur.keys[s.slice(0, eq).trim()] = s.slice(eq + 1).trim();
+      }
+      return secs;
+    } catch (e) { return null; }
+  };
+  // exemption: no first-party guid, no probe/self/burden/endlessguard ever in tp
+  const tpGuidsNoFirstParty = TP.every((m) => m.guid.indexOf('com.local.survivallog.') !== 0 && !/probe/i.test(m.name));
+  V.tpExempt = tpGuidsNoFirstParty; // non-empty asserted separately by tpPresent
+  V.tpPresent = TP.length > 0;
+
+  // snapshot structure vs disk cfg (set-of-sections + per-item k/l/b/t/v)
+  const tpStruct = [];
+  let tpStructOk = TP.length > 0;
+  for (const m of TP) {
+    const secs = parseCfgSections(tpCfgOf(m.guid));
+    const rec = { guid: m.guid, cfgExists: !!secs };
+    if (!secs) { rec.err = 'cfg missing'; tpStructOk = false; tpStruct.push(rec); continue; }
+    const panelSecs = m.groups.map((g) => g.title);
+    rec.panelSecs = panelSecs;
+    rec.diskSecs = secs.map((s) => s.sec);
+    rec.secSetOk = panelSecs.length === secs.length && secs.every((s) => panelSecs.indexOf(s.sec) !== -1);
+    if (!rec.secSetOk) { tpStructOk = false; tpStruct.push(rec); continue; }
+    rec.items = [];
+    let itemOk = true;
+    for (const g of m.groups) {
+      const diskSec = secs.find((s) => s.sec === g.title);
+      for (const it of g.items) {
+        const diskV = diskSec.keys[it.l];
+        const ok = it.k === g.title + '.' + it.l && it.b === 'cfg' && diskV !== undefined
+          && (diskV === 'true' || diskV === 'false' ? (it.t === 'bool' && String(it.v) === diskV) : true);
+        rec.items.push({ k: it.k, t: it.t, v: it.v, diskV, ok });
+        if (!ok) itemOk = false;
+      }
+    }
+    rec.itemOk = itemOk;
+    if (!itemOk) tpStructOk = false;
+    tpStruct.push(rec);
+  }
+  F.tpStruct = tpStruct;
+  V.tpSnapshotVsDisk = tpStructOk;
+
+  // side rows for every tp guid + third-party category header present
+  const tpSorted = TP.slice().sort((a, b) => (a.guid < b.guid ? -1 : 1));
+  const tgt = tpSorted[0] || null;
+  const tpRows = await page.evaluate(({ tail, guids }) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let i = 0; i < fs.length; i++) {
+      try {
+        const d = fs[i].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const rows = [];
+          for (const g of guids) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + g + '"]');
+            rows.push(!!row && !!row.querySelector('[data-act="toggle"]'));
+          }
+          return { rows, cats: Array.from(d.querySelectorAll('#__mc_side .__mc-cat')).map((c) => c.textContent) };
+        }
+      } catch (e) {}
+    }
+    return null;
+  }, { tail: MAIN_HTML, guids: TP.map((m) => m.guid) });
+  F.tpRows = tpRows;
+  V.tpSideRows = !!(tpRows && tpRows.rows.length && tpRows.rows.every(Boolean)
+    && tpRows.cats.length === 3 && tpRows.cats[2].indexOf('\u7b2c\u4e09\u65b9 MOD') === 0);
+
+  // local helpers (page-scoped; reuse of later-section helpers avoided on purpose)
+  const tpClickToggle = (guid) => page.evaluate(({ tail, guid }) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let k = 0; k < fs.length; k++) {
+      try {
+        const d = fs[k].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const b = d.querySelector('#__mc_side [data-act="toggle"][data-guid="' + guid + '"]');
+          if (b) { b.click(); return true; }
+        }
+      } catch (e) {}
+    }
+    return false;
+  }, { tail: MAIN_HTML, guid });
+  const tpClickBool = (g, i) => page.evaluate(({ tail, g, i }) => {
+    const fs = document.querySelectorAll('#iframe-container iframe');
+    for (let k = 0; k < fs.length; k++) {
+      try {
+        const d = fs[k].contentDocument;
+        if (d && d.location.pathname.indexOf(tail) !== -1) {
+          const b = d.querySelector('#__mc_cfg .__mc-mini-sw.__mc-big[data-act="set"][data-g="' + g + '"][data-i="' + i + '"]');
+          if (b) { b.click(); return b.classList.contains('__mc-on'); }
+        }
+      } catch (e) {}
+    }
+    return false;
+  }, { tail: MAIN_HTML, g, i });
+  const tpDisk = (guid, sec, key) => stripNonCodeLines(readCfgSection(tpCfgOf(guid), sec, key));
+
+  // DOM page of first tp mod: groups/items/notes/badges mirror snapshot
+  if (tgt) {
+    await clickRow(tgt.guid);
+    await sleep(60);
+    const tpPage = await readPage();
+    F.tpPage = tpPage;
+    const snapTgt = TP.find((m) => m.guid === tgt.guid);
+    const snapNotes = snapTgt.groups.reduce((a, g) => a + g.items.filter((it) => it.note).length, 0);
+    const snapBools = snapTgt.groups.reduce((a, g) => a + g.items.filter((it) => it.t === 'bool').length, 0);
+    V.tpPageRender = !!(tpPage && tpPage.title === snapTgt.name && tpPage.en === snapTgt.name
+      && tpPage.grps.length === snapTgt.groups.length
+      && snapTgt.groups.every((g, i) => tpPage.grps[i] && tpPage.grps[i].t === g.title && tpPage.grps[i].items === g.items.length)
+      && tpPage.notes.length === snapNotes
+      && tpPage.grps.reduce((a, g) => a + g.bools, 0) === snapBools
+      && tpPage.totalItems === snapTgt.groups.reduce((a, g) => a + g.items.length, 0));
+  } else {
+    V.tpPageRender = false;
+  }
+
+  // bool round-trip on a REAL tp cfg (first bool item of tgt; restore exact original)
+  if (tgt) {
+    const snapTgt = TP.find((m) => m.guid === tgt.guid);
+    let bt = null;
+    outerT: for (let gi = 0; gi < snapTgt.groups.length; gi++)
+      for (let ii = 0; ii < snapTgt.groups[gi].items.length; ii++)
+        if (snapTgt.groups[gi].items[ii].t === 'bool') { bt = { g: gi, i: ii, it: snapTgt.groups[gi].items[ii] }; break outerT; }
+    if (bt) {
+      const sec = bt.it.k.slice(0, bt.it.k.indexOf('.'));
+      const before = tpDisk(tgt.guid, sec, bt.it.l);
+      const want = before === 'true' ? 'false' : 'true';
+      const mk1 = await sentMark();
+      await clickRow(tgt.guid);
+      await sleep(60);
+      // race-proof receipt wait: snapshot the CURRENT event first, then accept any
+      // NEW MC_SET_OK/FAIL (the drain tick can land between click and a clear-first wait)
+      const evPre = await page.evaluate(() => JSON.stringify(window.__mcLastEvent || null));
+      await tpClickBool(bt.g, bt.i);
+      let ev1 = null;
+      const dlE = Date.now() + 12000;
+      for (;;) {
+        ev1 = await page.evaluate(() => window.__mcLastEvent || null);
+        if (ev1 && JSON.stringify(ev1) !== evPre
+          && (ev1.type === 'MC_SET_OK' || ev1.type === 'MC_SET_FAIL')) break;
+        if (Date.now() > dlE) break;
+        await sleep(300);
+      }
+      const sent1 = firstOf(await sentSince(mk1), 'MC_SET');
+      let after = null;
+      const dlA = Date.now() + 12000;
+      for (;;) {
+        after = tpDisk(tgt.guid, sec, bt.it.l);
+        if (after === want) break;
+        if (Date.now() > dlA) break;
+        await sleep(600);
+      }
+      F.tpBool = { k: bt.it.k, before, want, sent: sent1, ev: ev1, after };
+      V.tpBoolMsgShape = !!(sent1 && sent1.guid === tgt.guid && sent1.section === sec
+        && sent1.key === bt.it.k && sent1.value === (want === 'true'));
+      V.tpBoolOkReceipt = !!(ev1 && ev1.k === bt.it.k && ev1.badge === 'cfg');
+      V.tpBoolPersisted = after === want;
+      await tpClickBool(bt.g, bt.i); // restore original value
+      await waitEvent('MC_SET_OK');
+      let back = null;
+      const dlB = Date.now() + 12000;
+      for (;;) {
+        back = tpDisk(tgt.guid, sec, bt.it.l);
+        if (back === before) break;
+        if (Date.now() > dlB) break;
+        await sleep(600);
+      }
+      V.tpBoolRestored = back === before;
+      F.tpBool.back = back;
+    } else {
+      F.tpBool = { skip: 'no bool item in first tp mod' };
+      V.tpBoolMsgShape = V.tpBoolOkReceipt = V.tpBoolPersisted = V.tpBoolRestored = false;
+    }
+
+    // toggle marker round-trip (restart-level semantics): off -> push-back + row off +
+    // restart-level banner + [Disabled] marker true on modcenter cfg -> on -> marker false
+    const mk2 = await sentMark();
+    const seq0 = await page.evaluate(() => window.__mcSnapSeq || 0);
+    await tpClickToggle(tgt.guid);
+    let tog = null;
+    const dlT = Date.now() + 15000;
+    for (;;) {
+      tog = await page.evaluate((guid) => {
+        const s = window.__mcLastSnapshot;
+        const m = s && s.tp && s.tp.find((x) => x.guid === guid);
+        return { enabled: m ? m.enabled : undefined, seq: window.__mcSnapSeq || 0 };
+      }, tgt.guid);
+      if (tog.enabled === false && tog.seq > seq0) break;
+      if (Date.now() > dlT) break;
+      await sleep(400);
+    }
+    const offRow = await page.evaluate(({ tail, guid }) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            return row ? row.classList.contains('__mc-off') : null;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, { tail: MAIN_HTML, guid: tgt.guid });
+    await clickRow(tgt.guid);
+    await sleep(60);
+    const offPage = await readPage();
+    const bannerText = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const b = d.querySelector('#__mc_cfg .__mc-stop-banner');
+            return b ? b.textContent : null;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    let markerLine = null;
+    const dlM = Date.now() + 12000;
+    for (;;) {
+      markerLine = readCfgSection(MC_CFG, 'Disabled', tgt.guid);
+      if (markerLine && markerLine.indexOf('true') !== -1) break;
+      if (Date.now() > dlM) break;
+      await sleep(600);
+    }
+    F.tpToggle = { tog, offRow, bannerShown: offPage && offPage.stopBannerShown, bannerText, markerLine,
+      sent: firstOf(await sentSince(mk2), 'MC_TOGGLE_MOD') };
+    V.tpToggleSnapshotBack = !!(tog && tog.enabled === false && tog.seq > seq0);
+    V.tpToggleRowOffBanner = offRow === true && !!(offPage && offPage.stopBannerShown)
+      && !!bannerText && bannerText.indexOf('\u4e0b\u6b21\u542f\u52a8\u540e') !== -1; // restart-level wording
+    V.tpToggleMarkerPersisted = !!(markerLine && markerLine.indexOf('true') !== -1);
+    await tpClickToggle(tgt.guid); // restore enabled
+    await sleep(2500);
+    let markerBack = null;
+    const dlM2 = Date.now() + 12000;
+    for (;;) {
+      markerBack = readCfgSection(MC_CFG, 'Disabled', tgt.guid);
+      if (markerBack && markerBack.indexOf('false') !== -1) break;
+      if (Date.now() > dlM2) break;
+      await sleep(600);
+    }
+    V.tpToggleMarkerRestored = !!(markerBack && markerBack.indexOf('false') !== -1);
+    F.tpToggle.markerBack = markerBack;
+  } else {
+    V.tpBoolMsgShape = V.tpBoolOkReceipt = V.tpBoolPersisted = V.tpBoolRestored = false;
+    V.tpToggleSnapshotBack = V.tpToggleRowOffBanner = V.tpToggleMarkerPersisted = V.tpToggleMarkerRestored = false;
+  }
+
+  // str control (panel-side): synthetic snapshot injection through the REAL render
+  // path (C# string write path is already live-proven by the ovr Overrides writes)
+  if (tgt) {
+    const fakeGuid = 'tp.fixture.str';
+    const fakeSnap = JSON.parse(JSON.stringify(F.render0.snap));
+    fakeSnap.tp = (fakeSnap.tp || []).concat([{ guid: fakeGuid, name: 'Fixture Str', en: 'Fixture Str',
+      desc: 'fixture', enabled: true,
+      groups: [{ title: 'S', items: [
+        { k: 'S.Msg', l: 'Msg', t: 'str', v: 'hello', b: 'cfg' },
+        { k: 'S.N', l: 'N', t: 'int', v: 7, min: 0, max: 10, st: 1, b: 'cfg' },
+      ] }] }]);
+    await page.evaluate((s) => { window.__mcRender(s); return true; }, fakeSnap);
+    await sleep(60);
+    await clickRow(fakeGuid);
+    await sleep(60);
+    const strCtl = await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const t = d.querySelector('#__mc_cfg input[type=text][data-act="set"]');
+            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"]');
+            return { text: t ? t.value : null, num: n ? n.value : null };
+          }
+        } catch (e) {}
+      }
+      return null;
+    }, MAIN_HTML);
+    F.tpStrCtl = strCtl;
+    V.tpStrRender = !!(strCtl && strCtl.text === 'hello' && strCtl.num === '7');
+    const mk3 = await sentMark();
+    await page.evaluate((tail) => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf(tail) !== -1) {
+            const el = d.querySelector('#__mc_cfg input[type=text][data-act="set"]');
+            if (el) {
+              el.value = 'world';
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            return true;
+          }
+        } catch (e) {}
+      }
+      return false;
+    }, MAIN_HTML);
+    let sentStr = null;
+    const dlS = Date.now() + 8000;
+    for (;;) {
+      sentStr = firstOf(await sentSince(mk3), 'MC_SET');
+      if (sentStr) break;
+      if (Date.now() > dlS) break;
+      await sleep(500);
+    }
+    F.tpStrSent = sentStr;
+    V.tpStrMsgShape = !!(sentStr && sentStr.guid === fakeGuid && sentStr.section === 'S'
+      && sentStr.key === 'S.Msg' && sentStr.value === 'world');
+    // restore real snapshot (MC_OPEN -> C# pushes fresh render) and assert fake row gone
+    const seqR = await page.evaluate(() => window.__mcSnapSeq || 0);
+    await page.evaluate(() => { window.__mcOutbox.push({ type: 'MC_OPEN' }); return true; });
+    let fakeGone = null;
+    const dlG = Date.now() + 12000;
+    for (;;) {
+      const r = await page.evaluate((guid) => {
+        const fs = document.querySelectorAll('#iframe-container iframe');
+        for (let i = 0; i < fs.length; i++) {
+          try {
+            const d = fs[i].contentDocument;
+            if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1)
+              return { gone: !d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]'), seq: window.__mcSnapSeq || 0 };
+          } catch (e) {}
+        }
+        return null;
+      }, fakeGuid);
+      if (r && r.gone && r.seq > seqR) { fakeGone = true; break; }
+      if (Date.now() > dlG) { fakeGone = false; break; }
+      await sleep(400);
+    }
+    V.tpSyntheticCleanedUp = fakeGone === true;
+  } else {
+    V.tpStrRender = V.tpStrMsgShape = V.tpSyntheticCleanedUp = false;
+  }
 
   // ---- interaction 1: slider RobotSpeed moveMult 2 -> 3.5 (real input event) ----
   await clickRow(guidOf[Z.rs]);
@@ -979,6 +1335,8 @@ async function menuMode() {
   console.log('---- facts ----');
   console.log(JSON.stringify({
     layout: F.layout, planpickCost: F.planpickCost,
+    tpList: F.tpList, tpStruct: F.tpStruct, tpRows: F.tpRows, tpPage: F.tpPage,
+    tpBool: F.tpBool, tpToggle: F.tpToggle, tpStrCtl: F.tpStrCtl, tpStrSent: F.tpStrSent,
     pages: F.pages ? Object.keys(F.pages).reduce((acc, k) => {
       const p = F.pages[k];
       acc[k] = p ? { title: p.title, grps: p.grps, totalItems: p.totalItems, selOpts: p.selOpts, notes: p.notes, firstRange: p.firstRange, ovrNew: p.ovrNew, ovrRows: p.ovrRows, placeholder: p.placeholder } : null;
@@ -999,11 +1357,24 @@ async function menuMode() {
     ['0  head title/sub(ver)/close', V.headTitle && V.headSubVer && V.closeBtn],
     ['0  foot 4-badge legend', V.footFourBadges],
     ['0  toast element present', V.toastEl],
-    ['0  side: 9 suite + self lock rows', V.sideTenRows && V.selfLock],
-    ['0  side: tp empty hint handled', V.tpEmptyHint],
+    ['0  side: 9 suite + self lock rows (+N tp)', V.sideTenRows && V.selfLock],
+    ['0  side: tp empty hint consistent with tp count', V.tpEmptyHint],
     ['0  side: 3 category headers', V.threeCats],
     ['0  default page = backpack 2 items 2 ranges', V.defaultPageBackpack],
     ['0  backpack linked dynamic note (当前 宽..)', V.backpackDynNote],
+    ['14 tp present (>=1 third-party plugin)', V.tpPresent],
+    ['14 tp exempt: no first-party guid / probe name in tp', V.tpExempt],
+    ['14 tp snapshot vs own cfg on disk (sections/items/values)', V.tpSnapshotVsDisk],
+    ['14 tp side rows + third-party category header', V.tpSideRows],
+    ['14 tp page render (groups/labels/notes/bool controls)', V.tpPageRender],
+    ['14 tp bool MC_SET shape + cfg badge receipt', V.tpBoolMsgShape && V.tpBoolOkReceipt],
+    ['14 tp bool persisted to third-party cfg (debounce)', V.tpBoolPersisted],
+    ['14 tp bool restored to original', V.tpBoolRestored],
+    ['14 tp toggle: snapshot push-back + row off + restart banner', V.tpToggleSnapshotBack && V.tpToggleRowOffBanner],
+    ['14 tp toggle: [Disabled] marker persisted then restored', V.tpToggleMarkerPersisted && V.tpToggleMarkerRestored],
+    ['14 str control renders text box (synthetic snapshot)', V.tpStrRender],
+    ['14 str change commits MC_SET (string value)', V.tpStrMsgShape],
+    ['14 synthetic snapshot cleaned up by fresh render', V.tpSyntheticCleanedUp],
     ...EXPECT.map((e) => ['1  page ' + e.name, V['page:' + e.name]]),
     ['D  PlanPick Cost min=100/max=300 reflected (snapshot+DOM)', V.planpickReflectedRange
       && (F.pages && F.pages[Z.pp] && F.pages[Z.pp].firstRange ? F.pages[Z.pp].firstRange.min === '100' && F.pages[Z.pp].firstRange.max === '300' : false)],

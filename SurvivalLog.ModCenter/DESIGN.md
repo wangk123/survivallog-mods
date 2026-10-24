@@ -4,10 +4,11 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**任务 8 键盘门复用完成**（FocusTick：面板开
-> SetKeyboardEnabled(true)+IME On、关双还原，MC_OPEN/MC_CLOSE 消息驱动 + panel.js 孤儿
-> 看门狗，见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
-> 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe` 默认关）。
+> `tools/gamekb/moddeps.json`）。当前状态：**任务 14 Tier 0 第三方通用页完成**（BuildTp/
+> TrySetTp/SetTpEnabled 标记名单，见 §6.8；任务 13 启停直写见 §6.3/§6.7；任务 8 键盘门
+> 复用见 §6.6；任务 7 面板 UI 见 §6.5；任务 6 配置桥见 §6；任务 5 注入骨架见 §5；
+> 任务 4 反射桥 API 实证结论见 §4，`BridgeProbe` 探针保留为诊断功能，cfg `Debug.Probe`
+> 默认关）。
 
 ## 1. 功能定位
 
@@ -376,8 +377,74 @@ CabinetSize（c899f20 系列），面板无该页，热还原断言待套件组�
 第 2 轮修 fixture（活性自愈 + FC 滑块实参 bug + QA 守卫收窄）后全绿。证据全文：
 `.superpowers/sdd/2026-10-24-modcenter/task-13-report.md` 与 task-13-ev-*.txt。
 
+## 6.8 Tier 0 第三方通用页（任务 14，2026-10-24）
+
+接入协议单源：`docs/modcenter-integration-guide.md` §二（mcSpec 1）。本节只记实现口径与实测。
+
+### 6.8.1 机制（ConfigBridge `BuildTp`/`FindTp`/`TrySetTp`/`SetTpEnabled`）
+
+- **枚举与豁免**：快照时枚举 `IL2CPPChainloader.Instance.Plugins`（§4.1① 同源 API），按
+  Name 排序稳定输出。豁免 = Meta 登记（套件 9）+ ModCenter 自身 + **第一方 GUID 前缀
+  `com.local.survivallog.`**（覆盖 Meta 未登记的本仓 mod：CabinetBurden/EndlessGuard/
+  StackLimit999 等——简报名单之外的本机实装情形，实证后扩展）+ 探针名兜底
+  （ActionProbe/ViewportProbe/ConfigDumpProbe，名字含即豁免，防 GUID 换族）。
+- **通用页构建**：`BasePlugin.Config` → `cfg.Keys`（现役 API；`ConfigDefinitions` 已过时）
+  逐 `ConfigDefinition` 取 entry → section 分组沿用对方 cfg 节名（首现顺序）→ Item：
+  `k=节.键`、`l=键名`（Tier 0 英文键名即标签）、徽标一律 `cfg`、
+  `ConfigDescription.Description`→note、AcceptableValueRange/List 反射合入（§6.1 同款
+  `ApplyRange`，已从 BuildItem 抽出共用）、enum→下拉/无范围 string→**文本框（新 t=`str`）**/
+  数值带范围→滑条（步进兜底：整型 1/浮点 0.1）。无 entry（无 ConfigFile 或空 cfg）→
+  仅启停形态（空 groups + desc 说明，同灾前加速页）。
+- **写路由（通用）**：`TrySet` 解析不到 Meta 时落 `FindTp`（完整 GUID/插件名/GUID 尾段）→
+  `TrySetTp`：按 section/key 直取对方 entry——**只写实际存在的键**（指南 §二核心原则，
+  无登记表）；面板 key 发整展示键 k 原串，首查未中时剥一次节前缀兜底。写入触发对方
+  ClampValue+SettingChanged 链（订阅即热响应），Save 走统一防抖。回执 k 用展示键原串
+  （`DisplayK`：已带节前缀不重复拼——初版重复拼出 `Features.Features.X` 实坑，fixture
+  回执断言拦截）、badge 一律 `cfg`。
+- **启停（标记名单，重启级）**：`SetModEnabled` 解析不到 Meta 时走 `SetTpEnabled`——回用
+  T6 时代机制：本插件 cfg `[Disabled]` 节懒 Bind `<guid>` bool 标记（true=已标记停用），
+  快照 enabled=标记取反。**本会话对方仍在运行**（面板横幅/toast 均重启级文案，T7 已备）。
+  任务 16 起换"退出时 dll 改名 `.disabled`"真禁用，名单届时退役（横幅文案语义不变）。
+- **panel.js**：T7 已备第三方分组渲染（空数组安全→自动长行）与 cfg 档徽标/toast 分支；
+  本任务仅新增 `str` 文本控件（ctlHtml 渲染 + change 提交整串，不逐键发送）。
+  套件侧不受影响：现役套件 string 项均带 Opts（sel），无 Opts 的 string 才降级 str。
+
+### 6.8.2 实测记录（2026-10-24，主菜单，59/59 PASS）
+
+靶 = 作者实装第三方 4 件（`com.ivmakk.survivallog.*`：Better Trade/Compact Inventory/
+Project Cook/Stats UI，全 bool entry）。`tools/_mc_fixture.js` menu 模式新增 18 项 tp 断言组
+（结构以**对方 cfg 文件盘上内容为基准**对账）：
+
+- 快照 4 件全数入列（分组=cfg 节集合、逐项 k/l/b/t/v 对盘一致；注意 cfg.Keys=内存 Bind
+  序 ≠ cfg 文件 Save 序（字典/排序差异），断言按集合比对）；豁免断言：tp 内无
+  `com.local.survivallog.*`、无 probe 名（ViewportProbe/ConfigDumpProbe 在装未出现）；
+- 面板：第三方分类头 + 4 行（含启停开关）；BetterTrade 页渲染（页题/分组/条目/bool 控件/
+  note 数与快照自洽）；
+- 交互：`General.Verbose` false→true（MC_SET 形态 guid/section/key=整串/value=布尔 →
+  OK 回执 k=`General.Verbose` badge=`cfg` → 对方 cfg 防抖落盘 true → 写回 false 精确还原）；
+- 启停：标记停用 → 快照回推 enabled=false + 行置灰 + 重启级横幅（"本次会话仍在运行，
+  下次启动后不再加载"）→ modcenter cfg `[Disabled] com.ivmakk...bettertrade = true` 落盘
+  → 恢复 → false；
+- str 控件：合成快照（真实渲染路径）→ 文本框渲染 + change 提交 MC_SET（string 值）→
+  MC_OPEN 刷新后合成行清除（C# string 写路径由 ovr Overrides 实弹久证）；
+- 遗留 41 项全回归 PASS（侧列行数断言改自适应 10+N tp；tp 空占位断言改与 tp 数一致性）。
+- 副作用披露：modcenter cfg `[Disabled]` 节经本轮 Save 后，T13 时代的 9 条套件残留项被
+  BepInEx 自然清出（只写现役 Bind 项）——现该节仅 4 条 tp 标记（全 false 惰性），
+  作者原计划"顺手删"的残留自动了结。
+- 过程杂记：第 2 轮启动空跑（上局强杀后 webview 孤儿占 9222、新进程未起，fixture 误连
+  孤儿后随其中止）——以 `ModCenter_loaded.txt` 时间戳为新一轮就绪判据重跑即过；
+  第 1 轮 1 FAIL 即上文 `DisplayK` 重复拼前缀实坑，修复后全绿。
+
 ## 7. 迭代维护清单
 
+- 2026-10-24 任务 14：Tier 0 第三方通用页。`ConfigBridge.cs` 增 `BuildTp`（枚举插件→豁免→
+  通用页：section 分组沿用对方 cfg 节名/键名即标签/徽标一律 cfg/Description→note/
+  ApplyRange 反射合入抽公用/无范围 string→str 文本框/步进兜底）、`FindTp`+`TrySetTp`
+  （通用写路由：只写实际存在的键，展示键原串剥前缀兜底）、`SetTpEnabled`（启停回用
+  T6 时代本插件 cfg `[Disabled]` 标记名单，重启级；T16 换 dll .disabled 真禁用）、
+  `HandleSet` 回执 k 用 `DisplayK` 展示键原串（防节前缀重复拼）；`panel.js` 增 str 文本
+  控件（change 提交）；`tools/_mc_fixture.js` menu 模式增 18 项 tp 断言组 + 侧列行数/
+  空占位断言自适应。实测见 §6.8.2。
 - 2026-10-24 任务 13：启停接线升级。`ConfigBridge.SetModEnabled` 从本插件 cfg `[Disabled]`
   名单改为**直写各 mod 自己的 `General.Enabled`**（`Meta.cs` 新增 `MetaMod.EnabledSection/
   EnabledKey`，默认 General:Enabled，全套件无例外）；写入触发目标 mod 现役 SettingChanged→
