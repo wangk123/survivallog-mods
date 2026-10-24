@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>PdsSpeed fixture</title>
+<style>
+    body { margin: 0; background: #2b2b2b; font-family: 'Microsoft YaHei', sans-serif; }
+    .top-center { position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                  display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .timer-box { display: flex; gap: 6px; align-items: center; background: #222;
+                 padding: 4px 12px; border-radius: 6px; color: #fff; }
+    .progress-container { width: 220px; height: 6px; background: #333; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+    <div class="top-center" data-interactive>
+        <div class="timer-box"><span>倒计时 12:34</span></div>
+        <div class="progress-container"><div class="progress-bar"></div></div>
+    </div>
+</div>
+<script>
+    // 夹具通道 1：模拟 Root→页面的官方 TimeScaleMsg（走真 postMessage 触发 message 事件）
+    window.__fixtureTimeScale = function (v) {
+        window.postMessage({ type: 'WebUI_CoreUI0_TimeScaleMsg', data: { timeScale: v } }, '*');
+    };
+    // 夹具通道 2：截获 page.js 的点击上报（fixture 无父页，window.parent===window）
+    window.__sent = [];
+    (function () {
+        var orig = window.postMessage.bind(window);
+        window.postMessage = function (msg, origin) {
+            if (msg && msg.type === 'PDS_SPEED') { window.__sent.push(msg); return; }
+            return orig(msg, origin);
+        };
+    })();
+</script>
+<script src="page.js"></script>
+<script>window.__PdsBoot && window.__PdsBoot({ s1: 2, s2: 32 });</script>
+</body>
+</html>
