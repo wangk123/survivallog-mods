@@ -7,6 +7,9 @@ namespace SurvivalLog.PlanPick;
 /// Root 巡检注入器（每 2s 由 PlanTicker 调用，幂等）。ExecuteJavaScript 跑在 Root 页
 /// 上下文；RogueSelect 是 Root.html 内的同源 iframe（DOM id = 'RogueSelect'）。
 ///
+/// General.Enabled 门（2026-10-24，ModCenter 启停位）：巡检首行 false=RemoveEntry（移除
+/// #ppEntry+关悬浮层+复位重装标记）并停推；FocusTick 同门交还键盘。
+///
 /// 每轮两段脚本（均条件式，避免每 tick 重复 eval/boot）：
 /// 1) 安装：iframe 可见且 w.__PlanPickInstalled 未置（page.js 尾部自置该标记）才 eval
 ///    page.js —— iframe 被游戏重建/导航后标记随窗口消失，自动重装。
@@ -24,9 +27,18 @@ internal static class Injector
     private static bool _announced;      // 首轮就绪打点（目录+payload 统计）；WebView 失联时复位
     private static bool _warnedInstall;  // 注入/推送异常各只打一次（v1.3.2 红线：静默出口打点）
     private static bool _warnedPush;
+    private static bool _warnedRemove;   // 禁用移除异常只打一次
 
     internal static void Tick()
     {
+        // General.Enabled 门（ModCenter 启停位，2026-10-24）巡检首行：false=移除入口按钮（含关悬浮层、
+        // 复位页面侧安装/签名标记）并停推；键盘还原由 FocusTick 的同门走现役还原分支。true 恢复后
+        // 标记已复位→下一轮整页重装（iframe 自愈路径，page.js 幂等不重复建 #pp-root/样式）。
+        if (!PlanPickPlugin.Enabled.Value)
+        {
+            RemoveEntry();
+            return;
+        }
         var web = GetWebView();
         if (web == null) { _announced = false; return; }
         if (_pageJsJson == null && !LoadPageJs()) return;
@@ -62,6 +74,25 @@ internal static class Injector
             foreach (var l in PlanCatalog.BuildLog) PlanPickPlugin.Log.LogInfo("[PlanPick] 目录: " + l);
             foreach (var l in logs) PlanPickPlugin.Log.LogInfo("[PlanPick] " + l);
         }
+    }
+
+    /// <summary>禁用收尾（幂等）：移除入口按钮 #ppEntry，关闭开着的悬浮层；复位页面侧
+    /// __PlanPickInstalled/__PlanPickSig 标记，使重新启用后下一轮巡检整页重装（page.js
+    /// 双注入守卫放行；install() 对 #pp-root/#pp-style 幂等，不重复建）。WebView 失联则无事可做。</summary>
+    private static void RemoveEntry()
+    {
+        var web = GetWebView();
+        if (web == null) return;
+        var remove =
+            "(function(){var f=document.getElementById('RogueSelect');" +
+            "if(!f||!f.contentWindow)return 0;" +
+            "var w=f.contentWindow,d=w.document;if(!d)return 0;var n=0;" +
+            "var e=d.getElementById('ppEntry');if(e&&e.parentNode){e.parentNode.removeChild(e);n=1;}" +
+            "var o=d.getElementById('ppOverlay');if(o&&o.classList.contains('open')){o.classList.remove('open');n=1;}" +
+            "try{delete w.__PlanPickInstalled;delete w.__PlanPickSig;}catch(x){}" +
+            "return n;})()";
+        try { web.ExecuteJavaScript(remove, null); }
+        catch (Exception e) { WarnOnce(ref _warnedRemove, "禁用移除异常", e); }
     }
 
     private static bool LoadPageJs()
@@ -105,12 +136,14 @@ internal static class Injector
     private static UnityEngine.IMECompositionMode _prevIme = UnityEngine.IMECompositionMode.Auto;
     private static bool _logHanded, _logReturned;
 
-    /// <summary>0.3s 快通道：键盘门 + IME 转运冲刷。</summary>
+    /// <summary>0.3s 快通道：键盘门 + IME 转运冲刷。General.Enabled=false 视为"页面不激活"，
+    /// 走下方现役还原分支（SetKeyboardEnabled(false)+IME 还原）交还键盘，不再接手。</summary>
     internal static void FocusTick()
     {
         var layer = GetLayer();
         if (layer == null) { _kbHanded = false; return; }
-        bool active = SafePageActive(layer, "RogueSelect") || SafePageActive(layer, "UI_RogueSelect") || SafePageActive(layer, "WebUI_RogueSelect");
+        bool active = PlanPickPlugin.Enabled.Value &&
+            (SafePageActive(layer, "RogueSelect") || SafePageActive(layer, "UI_RogueSelect") || SafePageActive(layer, "WebUI_RogueSelect"));
         if (active && !_kbHanded)
         {
             _kbHanded = true;

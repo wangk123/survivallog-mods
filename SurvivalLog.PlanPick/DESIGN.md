@@ -143,6 +143,7 @@
 
 | 项 | 默认 | 说明 |
 |---|---|---|
+| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=Injector 巡检首行 RemoveEntry（移除 #ppEntry+关悬浮层+复位页面侧安装/签名标记）停推送、FocusTick 同门走现役还原分支交还键盘（SetKeyboardEnabled(false)+IME 还原）；下次启动 Load 在 Bind 后早退（不 PatchAll/不建 Ticker，零日志零注入——CostPatch 未挂，官方购买链原价）。恢复 true 后下一轮巡检整页重装（删 __PlanPickInstalled 放行双注入守卫，install 对 #pp-root/#pp-style 幂等） |
 | CostMultiplier | 2 | 自选消耗倍率（**1=原价（无加价）**；读取经 `Multiplier` 统一出口 sanitize：NaN/<1→1、>100→100——`Math.Max(1f,NaN)` 仍是 NaN，`(int)Round(NaN)` 会毒化表行） |
 | ShowLocked | true | 未解锁项展示（置灰+原因） |
 | ShowUnpooled | true | 不入池规划（图纸/无人机）展示 |
@@ -333,3 +334,11 @@
   (int 100~300，AcceptableValueRange 夹取，默认 200；100=原值零干预)。实收=原价×百分比/100
   四舍五入取整——C# 用 Floor(x+0.5)（半值向上）与 page.js Math.round 双端一致；payload.mult
   直传整数百分比，页面显示 ×200% 形态。旧 cfg 键 CostMultiplier 成为孤儿行（无害，新键生效）。
+- 2026-10-24 启停门 General.Enabled（ModCenter Task 12，注入型 gate 变体）：RobotSpeed T9 模板同款
+  语义——Bind 最前（cfg 键先生成才早退），Load 在 Bind 后 `if (!Enabled.Value) return;`（不
+  PatchAll/不建 Ticker/零日志）；热禁用=Injector.Tick 首行 RemoveEntry（移除 #ppEntry+关 ppOverlay
+  +删 __PlanPickInstalled/__PlanPickSig 标记）停推送，FocusTick 视为"页面不激活"走现役还原分支
+  （SetKeyboardEnabled(false)+IME 还原）；恢复 true 下一轮巡检自动整页重装（iframe 自愈路径复用）。
+  热禁用期间 CostPatch 已挂但不触发（其 prefix 只对"非今日候选"购买干预，入口隐藏后无该路径——
+  官方链只能买候选内原价）。重启级实测两轮：false=零 `[PlanPick]` 日志（仅 BepInEx Loading 行）；
+  true=loaded 正常+作者自定义 CostMultiplierPercent=150 无损。UI 级（入口出现/消失）留 T17 存档轮。
