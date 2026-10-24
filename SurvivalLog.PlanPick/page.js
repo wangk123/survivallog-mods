@@ -379,7 +379,11 @@ function renderTabs() {
     window.__ppIme = function (s) {
         var el = document.activeElement;
         if (!el || el.id !== 'ppSearch') return;
-        el.value += s;
+        for (var i = 0; i < s.length; i++) {
+            var ch = s.charAt(i);
+            if (ch === '') el.value = el.value.slice(0, -1);
+            else el.value += ch;
+        }
         el.dispatchEvent(new Event('input', { bubbles: true }));
     };
 }

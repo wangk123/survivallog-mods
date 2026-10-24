@@ -302,3 +302,9 @@
   FocusedInputFieldChanged（Text/IFrame=聚焦→SetFocused(true) 原生焦点→Chromium 自接 IME；
   None→false）。英文裸键由 Vuplex 输入框聚焦自动转发（已实证）。inputString 非 ASCII 转运保留兜底。
   判读行："已订阅 FocusedInputFieldChanged"（启动后 WebView 就绪即出）+ "输入框聚焦 → SetFocused(true)"。
+- 2026-10-24 装机九轮（键盘/IME 收官组合定稿）：S1/S3 对照实证——英文通道唯一开关=
+  SetKeyboardEnabled 门（S1 开=英文通且 H 捕获；S3 删=全灭）→ 门恢复；官方中文机制实证=
+  Unity inputString 转运（作者工作台打中文时 inputString 出组合字）→ 转运无条件冲刷保留；
+  退格入转运（C# 收 \b、page 侧逐字符 slice）；订阅 FocusedInputFieldChanged 失败（il2cpp 泛型
+  委托 ConvertDelegate 参数原生指针不匹配——已知坑）且经实证非官方路径，整体删除。
+  最终组合=门(SetKeyboardEnabled)+转运(inputString 非 ASCII+\b)，两职责单一。
