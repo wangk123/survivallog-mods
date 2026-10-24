@@ -359,6 +359,9 @@ function renderTabs() {
     $('ppTabs').querySelectorAll('.pp-tab').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; S.sub = null; S.subExpand = false; renderTabs(); renderSubBar(); renderList(true); });
     const si = $('ppSearch');
     si.oninput = () => { S.search = si.value.trim(); renderList(true); };
+    // Vuplex 转发的点击只派发 click/mousedown、不带浏览器原生聚焦（2026-10-24 观察日志实证：
+    // 真实点击搜索框连 focusin 都没有）——点击时显式 focus()，C# 焦点桥才能看见并 SetFocused 交接键盘
+    ['mousedown', 'click'].forEach(ev => si.addEventListener(ev, function () { this.focus(); }));
 }
 
 function renderSubBar() {
