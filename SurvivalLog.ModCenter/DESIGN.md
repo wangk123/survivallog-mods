@@ -515,20 +515,27 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   - **退出执行**：运行中 dll 被锁（OnApplicationQuit 时本进程仍持有），改名交**分离进程**
     `powershell -NoProfile -WindowStyle Hidden -EncodedCommand <base64(UTF-16LE)>`
     （脚本 ASCII-only；EncodedCommand 彻底规避引号/反斜杠转义）循环 Rename-Item
-    （`<名>.dll`→`<名>.dll.disabled`，**只改名绝不删除**）直到成功/目标消失，超时 10 分钟。
+    （`<名>.dll`→`<名>.dll.disabled`，**只改名绝不删除**；`-NewName` 喂 `Split-Path -Leaf`
+    ——BepInEx 递归加载 plugins 子目录，marker 记的是子目录相对名如 `Pack\Mod.dll`，
+    带路径喂 `-NewName` 必败→禁用静默失败，Fix Round 1 P2）直到成功/目标消失，超时 10 分钟。
     退出钩子 = **双钩子幂等**（`ModCenterTicker.OnApplicationQuit` 消息 +
     `Application.add_quitting` 事件，`RunQuitHooks._quitDone` 守卫只跑一次）；
     顺序 = 先 `ConfigBridge.FlushDirty()`（marker 必须先落盘）再拉分离进程。
-  - **启用** = 反向改名：dll 未加载不锁，直接 `File.Move`；失败才分离进程兜底（2 分钟）。
-    同时撤销残留补拉进程（`Armed` 句柄表 Kill——玩家当场反悔时改名意图已失效）。
+    名字边界守卫 `IsSafeRelName`（剔绝对路径/盘符/`..` 越界；`'` 等合法字符单引号翻倍转义放行——
+    EncodedCommand 无注入面，Fix Round 1 P3-1）。
+  - **启用** = 反向改名：dll 未加载不锁，直接 `File.Move`（marker 存相对名→直接拼全路径，
+    子目录天然支持）；失败才分离进程兜底（2 分钟，同样 Leaf）。同时撤销残留补拉进程
+    （`Armed` 句柄表 Kill——玩家当场反悔时改名意图已失效）。
   - **强杀残留自愈**：`ScanOnLoad`（Load 时）解析自身 cfg 的 [DisabledTp] true 项 × plugins
     目录对照——marker=true 且 `.disabled` 在场 → 预 Bind（快照行/再启用路由就绪）；
     marker=true 但 dll 还在（退出钩子没跑）→ **残留**：补拉一次分离进程（本会话结束后
     生效）+ 面板下次打开 `MC_TOAST` 提示一轮（panel.js `toastRaw` 原文展示）+ Tier 2 者
     `ReapplySoft` 软停回调重放（Ticker 首帧——此时 Chainloader 全插件就绪）。
-  - **缺席行**：`AbsentDisabled()` 扫描 plugins `*.dll.disabled`（排除第一方 `SurvivalLog.*`）
-    → 快照补 enabled=false 的"仅启停"行（guid=dll 相对名，`Absent` 标记），供玩家重新启用
-    （`TrySetAbsent` 路由反向改名）。
+  - **缺席行**：`AbsentDisabled()` **递归**扫描 plugins `*.dll.disabled`（BepInEx 递归加载
+    子目录——非递归扫不到子目录禁用文件，缺席行永不出现，Fix Round 1 P2；排除第一方
+    `SurvivalLog.*`）→ 快照补 enabled=false 的"仅启停"行（guid=dll 相对名**剥 `.disabled` 后缀**，
+    `Absent` 标记），供玩家重新启用（`TrySetAbsent` 路由按相对名拼全路径反向改名）。
+    注意 guid 可含 `\`/`'`——CDP/fixture 查询一律属性值比对，勿拼进 CSS 选择器字符串。
 - **panel.js 两层语义**：第三方停用横幅/toast 三档——缺席行（"dll 已禁用：当前未加载"）/
   软停（"行为已立即停止"）/ 重启级（"本次会话仍在运行"）；`MC_TOAST` 事件 → 原文 toast。
 
@@ -539,6 +546,15 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
 
 ## 7. 迭代维护清单
 
+- 2026-10-25 任务 16 Fix Round 1（评审 P2+P3）：P2 子目录 dll 禁用——分离进程 `-NewName` 改喂
+  `Split-Path -Leaf`（带路径名必败→静默失败+重复残留 toast）、`AbsentDisabled` 改递归扫描且
+  返回相对名**剥 `.disabled`**（原递归化时首版漏剥后缀，实机抽查抓出即修）、启用反向改名同 Leaf；
+  P3-1 名字过滤白名单删除→`IsSafeRelName` 边界守卫（仅剔绝对路径/盘符/`..`，`'` 翻倍转义放行）；
+  P3-2 fixture t14 组排除缺席行（`TPL` 过滤，防净机残留 .disabled 误报）+ clickRow/tpClickToggle/
+  tpRows/offRow 改属性值比对（guid 含 `\`/`'` 时 CSS 选择器失效，实机抓出）+ tpBool 还原补点
+  加按钮态前置检查（T15-run3 同款点击竞态，防误补点翻回错值）。冒烟：分离进程脚本带
+  子目录+空格+`'`+`;` 假名双向往返 PASS；实机子目录假 .disabled 缺席行出现→面板启用恢复 PASS；
+  fixture run2/run4 均 70 PASS/6 SKIP/0 FAIL。实测补记见 §6.10.2 与 task-16-report Fix Round 1。
 - 2026-10-25 任务 16：Tier 2 深度对接 + 重启级 dll 禁用。新增 `Contracts/ModCenterIntegration.cs`
   （指南 §4.1 接口源码原样编入，ModCenter.Integration 命名空间）与 `DllDisabler.cs`
   （[DisabledTp]<dll 相对名> marker / 退出双钩子 FlushDirty→分离进程 EncodedCommand 循环

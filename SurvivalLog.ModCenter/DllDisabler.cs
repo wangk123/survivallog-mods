@@ -198,20 +198,27 @@ internal static class DllDisabler
         catch (Exception e) { Log("warn dll禁用 quit 异常: " + e.Message); }
     }
 
-    /// <summary>plugins 目录 .disabled 扫描（快照缺席行源；第一方 SurvivalLog.* 不进第三方组）。</summary>
+    /// <summary>plugins 目录 .disabled 扫描（快照缺席行源；第一方 SurvivalLog.* 不进第三方组）。
+    /// **递归**（评审 P2：BepInEx 递归加载 plugins 子目录，禁用后的 <c>Pack\Mod.dll.disabled</c>
+    /// 在子目录——非递归扫不到→缺席行永远不出现）；返回 plugins 相对名（与 marker/启用路径拼接同源）。</summary>
     internal static List<string> AbsentDisabled()
     {
         var list = new List<string>();
         try
         {
-            foreach (var f in Directory.GetFiles(Paths.PluginPath))
+            var root = Paths.PluginPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            foreach (var f in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
             {
                 var name = Path.GetFileName(f);
                 if (!name.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase)) continue;
                 var dllRel = name.Substring(0, name.Length - Suffix.Length);
-                if (dllRel.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-                    && !dllRel.StartsWith("SurvivalLog.", StringComparison.OrdinalIgnoreCase))
-                    list.Add(dllRel);
+                if (!dllRel.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                    || dllRel.StartsWith("SurvivalLog.", StringComparison.OrdinalIgnoreCase)) continue;
+                var rel = f.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                    ? f.Substring(root.Length + 1) : name; // 相对名（子目录含路径，与 DllRelOf 同源）
+                if (!rel.EndsWith(Suffix, StringComparison.OrdinalIgnoreCase)) continue;
+                rel = rel.Substring(0, rel.Length - Suffix.Length); // 剥 .disabled——marker/再启用路由用 dll 原名
+                if (IsSafeRelName(rel)) list.Add(rel);
             }
         }
         catch (Exception e) { Log("warn .disabled 扫描异常: " + e.Message); }
@@ -298,11 +305,13 @@ internal static class DllDisabler
 
     // ---- 分离进程（ASCII-only 命令行；-EncodedCommand = base64(UTF-16LE)，规避一切引号转义） ----
 
-    /// <summary>禁用批：循环 Rename-Item 直到成功/目标消失（等本进程退出释放锁）。**只改名，绝不删除。**</summary>
+    /// <summary>禁用批：循环 Rename-Item 直到成功/目标消失（等本进程退出释放锁）。**只改名，绝不删除。**
+    /// 子目录 dll（BepInEx 递归加载 plugins，如 <c>Pack\Mod.dll</c>）：<c>-NewName</c> 只吃文件名
+    /// （吃带路径名必败→禁用静默失败，评审 P2），故喂 <c>Split-Path -Leaf</c>。名字过滤已放开
+    /// （评审 P3-1）——EncodedCommand 无命令行注入面，PS 单引号串里 <c>'</c> 翻倍转义即一切合法文件名可用。</summary>
     private static void SpawnDisableBatch(List<string> names, bool trackArmed)
     {
-        var usable = names.Where(n => !string.IsNullOrEmpty(n)
-            && n.IndexOf('\'') < 0 && n.IndexOf('"') < 0 && n.IndexOf(';') < 0).ToList();
+        var usable = names.Where(IsSafeRelName).ToList(); // 仅剔绝对路径/盘符/../越界（边界守卫非字符白名单，评审 P3-1）
         if (usable.Count == 0) { Log("warn 禁用分离进程跳过：无合法 dll 名（" + string.Join(",", names) + "）"); return; }
         var b = Paths.PluginPath;
         var sb = new StringBuilder();
@@ -318,7 +327,7 @@ internal static class DllDisabler
         sb.Append("    if(Test-Path -LiteralPath $d){continue}\n");
         sb.Append("    if(-not(Test-Path -LiteralPath $s)){continue}\n");
         sb.Append("    $left=1\n");
-        sb.Append("    try{Rename-Item -LiteralPath $s -NewName ($n+'.disabled') -ErrorAction Stop}catch{}\n");
+        sb.Append("    try{Rename-Item -LiteralPath $s -NewName ((Split-Path -Leaf $n)+'.disabled') -ErrorAction Stop}catch{}\n"); // P2：子目录相对名须降为纯文件名（-NewName 不吃路径）
         sb.Append("  }\n");
         sb.Append("  if($left -eq 0){break}\n");
         sb.Append("  Start-Sleep -Milliseconds 1500\n");
@@ -327,10 +336,11 @@ internal static class DllDisabler
         if (p != null && trackArmed && usable.Count == 1) Armed[usable[0]] = p; // 残留补拉单靶才需可撤销
     }
 
-    /// <summary>启用兜底：反向改名重试（dll 未加载本不该锁；AV/索引器短暂占用时兜底）。</summary>
+    /// <summary>启用兜底：反向改名重试（dll 未加载本不该锁；AV/索引器短暂占用时兜底）。
+    /// 子目录相对名同样须 <c>Split-Path -Leaf</c>（P2）。</summary>
     private static void SpawnReverse(string dllRel)
     {
-        if (dllRel.IndexOf('\'') >= 0 || dllRel.IndexOf('"') >= 0 || dllRel.IndexOf(';') >= 0) return;
+        if (!IsSafeRelName(dllRel)) { Log("warn 启用兜底跳过：非法相对名 " + dllRel); return; }
         var sb = new StringBuilder();
         sb.Append("$ErrorActionPreference='SilentlyContinue'\n");
         sb.Append("$s='").Append(Path.Combine(Paths.PluginPath, dllRel + Suffix).Replace("'", "''")).Append("'\n");
@@ -338,10 +348,21 @@ internal static class DllDisabler
         sb.Append("$end=(Get-Date).AddSeconds(").Append((ReverseRetryMs / 1000).ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(")\n");
         sb.Append("while((Get-Date) -lt $end){\n");
         sb.Append("  if(-not(Test-Path -LiteralPath $s)){break}\n");
-        sb.Append("  try{Rename-Item -LiteralPath $s -NewName $n -ErrorAction Stop;break}catch{}\n");
+        sb.Append("  try{Rename-Item -LiteralPath $s -NewName (Split-Path -Leaf $n) -ErrorAction Stop;break}catch{}\n");
         sb.Append("  Start-Sleep -Milliseconds 1000\n");
         sb.Append("}\n");
         StartDetached(sb.ToString());
+    }
+
+    /// <summary>相对名边界守卫（评审 P3-1：非字符白名单——EncodedCommand 无注入面，' 翻倍转义放行；
+    /// 只剔能越出 plugins 目录的形态：空/绝对路径（盘符或反斜杠开头）/ 含 .. 段）。</summary>
+    private static bool IsSafeRelName(string n)
+    {
+        if (string.IsNullOrEmpty(n) || n.IndexOf(':') >= 0
+            || n[0] == '\\' || n[0] == '/') return false;
+        foreach (var seg in n.Split('\\', '/'))
+            if (seg == "..") return false;
+        return true;
     }
 
     private static Process StartDetached(string psScript)

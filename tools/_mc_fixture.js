@@ -321,7 +321,8 @@ async function menuMode() {
       try {
         const d = fs[i].contentDocument;
         if (d && d.location.pathname.indexOf(tail) !== -1) {
-          const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+          const row = Array.from(d.querySelectorAll('#__mc_side .__mc-mod-row'))
+            .find((r) => r.getAttribute('data-guid') === guid); // attr-compare（guid 可含 \ ' 等）
           if (row) { row.click(); return true; }
         }
       } catch (e) {}
@@ -523,21 +524,20 @@ async function menuMode() {
   // exemption: no first-party guid, no probe/self/burden/endlessguard ever in tp
   const tpGuidsNoFirstParty = TP.every((m) => m.guid.indexOf('com.local.survivallog.') !== 0 && !/probe/i.test(m.name));
   V.tpExempt = tpGuidsNoFirstParty; // non-empty asserted separately by tpPresent
-  V.tpPresent = TP.length > 0;
+  // Fix R1 (review P3-2): exclude absent rows (disabled dlls, task 16) from the T14
+  // loaded-plugin assertions — a leftover .disabled would otherwise become tgt (cfg
+  // missing / no bool item / toggle rejected -> false FAILs on net machines).
+  const TPL = TP.filter((m) => !m.absent);
+  V.tpPresent = TPL.length > 0;
 
   // snapshot structure vs disk cfg (set-of-sections + per-item k/l/b/t/v)
   const tpStruct = [];
-  let tpStructOk = TP.length > 0;
-  for (const m of TP) {
+  let tpStructOk = TPL.length > 0;
+  for (const m of TPL) {
     if (m.tier === 1) {
       // Task 15: Tier 1 manifest page — groups/labels are manifest-authored by design
       // (cfg-section groups / key-name labels do NOT hold); asserted by its own group below.
       tpStruct.push({ guid: m.guid, tier1: 'skipped (manifest page, own assertion group)' });
-      continue;
-    }
-    if (m.absent) {
-      // Task 16: disabled row (dll renamed .disabled, not loaded) — no cfg to reconcile.
-      tpStruct.push({ guid: m.guid, absent: 'skipped (disabled row, task 16)' });
       continue;
     }
     const secs = parseCfgSections(tpCfgOf(m.guid));
@@ -568,7 +568,7 @@ async function menuMode() {
   V.tpSnapshotVsDisk = tpStructOk;
 
   // side rows for every tp guid + third-party category header present
-  const tpSorted = TP.slice().sort((a, b) => (a.guid < b.guid ? -1 : 1));
+  const tpSorted = TPL.slice().sort((a, b) => (a.guid < b.guid ? -1 : 1)); // P3-2: loaded rows only
   const tgt = tpSorted[0] || null;
   const tpRows = await page.evaluate(({ tail, guids }) => {
     const fs = document.querySelectorAll('#iframe-container iframe');
@@ -576,17 +576,21 @@ async function menuMode() {
       try {
         const d = fs[i].contentDocument;
         if (d && d.location.pathname.indexOf(tail) !== -1) {
-          const rows = [];
-          for (const g of guids) {
-            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + g + '"]');
-            rows.push(!!row && !!row.querySelector('[data-act="toggle"]'));
-          }
+          // Fix R1 (P2 followup): attr-compare instead of CSS selector — absent-row
+          // guids are dll relative names that may contain '\' / '\'' (selector-hostile).
+          const byGuid = new Map();
+          for (const r of d.querySelectorAll('#__mc_side .__mc-mod-row'))
+            byGuid.set(r.getAttribute('data-guid'), r);
+          const rows = guids.map((g) => {
+            const row = byGuid.get(g);
+            return !!row && !!row.querySelector('[data-act="toggle"]');
+          });
           return { rows, cats: Array.from(d.querySelectorAll('#__mc_side .__mc-cat')).map((c) => c.textContent) };
         }
       } catch (e) {}
     }
     return null;
-  }, { tail: MAIN_HTML, guids: TP.map((m) => m.guid) });
+  }, { tail: MAIN_HTML, guids: TPL.map((m) => m.guid) });
   F.tpRows = tpRows;
   V.tpSideRows = !!(tpRows && tpRows.rows.length && tpRows.rows.every(Boolean)
     && tpRows.cats.length === 3 && tpRows.cats[2].indexOf('\u7b2c\u4e09\u65b9 MOD') === 0);
@@ -598,7 +602,8 @@ async function menuMode() {
       try {
         const d = fs[k].contentDocument;
         if (d && d.location.pathname.indexOf(tail) !== -1) {
-          const b = d.querySelector('#__mc_side [data-act="toggle"][data-guid="' + guid + '"]');
+          const b = Array.from(d.querySelectorAll('#__mc_side [data-act="toggle"]'))
+            .find((el) => el.getAttribute('data-guid') === guid); // attr-compare（guid 可含选择器敏感字符）
           if (b) { b.click(); return true; }
         }
       } catch (e) {}
@@ -690,6 +695,34 @@ async function menuMode() {
         if (Date.now() > dlB) break;
         await sleep(600);
       }
+      // T15-run3 同款还原点击偶发丢失（点击竞态）：**先查按钮态**——仍亮着才补点（防"已发未落盘"
+      // 被误补点翻回错值），断言不变（盘上必须回原值）。
+      if (back !== before) {
+        const stillOn = await page.evaluate(({ tail, g, i }) => {
+          const fs = document.querySelectorAll('#iframe-container iframe');
+          for (let k = 0; k < fs.length; k++) {
+            try {
+              const d = fs[k].contentDocument;
+              if (d && d.location.pathname.indexOf(tail) !== -1) {
+                const b = d.querySelector('#__mc_cfg .__mc-mini-sw.__mc-big[data-act="set"][data-g="' + g + '"][data-i="' + i + '"]');
+                return b ? b.classList.contains('__mc-on') : null;
+              }
+            } catch (e) {}
+          }
+          return null;
+        }, { tail: MAIN_HTML, g: bt.g, i: bt.i });
+        if (stillOn === true) {
+          await tpClickBool(bt.g, bt.i);
+          await waitEvent('MC_SET_OK', 12000);
+          const dlB2 = Date.now() + 12000;
+          for (;;) {
+            back = tpDisk(tgt.guid, sec, bt.it.l);
+            if (back === before) break;
+            if (Date.now() > dlB2) break;
+            await sleep(600);
+          }
+        }
+      }
       V.tpBoolRestored = back === before;
       F.tpBool.back = back;
     } else {
@@ -720,7 +753,8 @@ async function menuMode() {
         try {
           const d = fs[i].contentDocument;
           if (d && d.location.pathname.indexOf(tail) !== -1) {
-            const row = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
+            const row = Array.from(d.querySelectorAll('#__mc_side .__mc-mod-row'))
+              .find((r) => r.getAttribute('data-guid') === guid); // attr-compare（P2 followup）
             return row ? row.classList.contains('__mc-off') : null;
           }
         } catch (e) {}
