@@ -86,8 +86,15 @@
    情绪播报（"好饿！"）、呕吐/腹泻等强制状态、系统动作不被引用 ⇒ 不动。
 4. **During<=0** 哨兵值（-1/0 的特殊语义动作）跳过；**只减不增**（原值快于目标不放大）。
 
+### General.Enabled 启停门（2026-10-24，ModCenter 任务 9）
+
+- **Bind 最前**（保证 cfg 键生成后才可能早退）；`Load()` 全部 Bind 完成后 `if (!Enabled.Value) return`——不创建 Ticker、不写 ActionList、零日志（表值本会话从未改过，无需还原）。
+- Ticker 轮询体首行 gate：false 时若本会话已落笔过（`_applied`），`RestoreAll()` 按 `OrigDuring` 原值缓存把改写过的动作行 During 全部回写原值（复用现役"0=恢复原值"路径）后停写；动作表未就绪则下轮重试。
+- 9130 等与 RobotSpeed 共用行各自独立缓存，本 mod 还原后对方仍启用则继续按其自己的原值管理（让位守卫同理，互不打架）。
+
 ### 配置优先级（高 → 低）
 
+0. `General.Enabled`（总开关，false=一切改写归零还原并停写）
 1. `Overrides`（`ID:毫秒`；`ID:0` = 恢复原值）——v2.1 起判定先于分类，可命中
    引用轴漏掉的动作（家具本体 BT 硬编码交互，如上厕所 9075：效果全 0 无周期收益，
    但不被 FurnitureFunc/Item 任何表引用，cfg 写 `9075:500` 即可提速）
@@ -185,6 +192,7 @@ v2.0.0 实测（全开）：物品×2746 家具×733 维护×69 杂项×67 娱�
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 
+- 2026-10-24 ModCenter 任务 9：加 `General.Enabled` 启停门（Load 早退 + Ticker 首行 gate + OrigDuring 还原），机制见 §3 启停门小节；
 - 分类/守卫规则变化 → §3 并附实证依据（EffectDump/反汇编）；
 - 换算/天赋结论变化 → §2；
 - 配置形态变化 → §3 + tools\make_quickaction_release.ps1（预置 cfg 直接生成）+ installer.iss 勾选；

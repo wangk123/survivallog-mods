@@ -40,6 +40,7 @@
 
 | 键 | 默认 | 说明 |
 |---|---|---|
+| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=宽高/负重按 ×1 回写原值并停写（复用共享层幂等"mult=1=还原"路径）；下次启动不创建 Ticker（零日志零改写） |
 | WidthMult | 1.5 | 宽度倍数（AwayFromZero 四舍五入，7×1.5=10.5→11）。宽高同乘避免单边过长被 UI 压缩 |
 | HeightMult | 1.5 | 高度倍数（同上） |
 | BurdenMult | 2 | 负重倍数，仅背包基础值；天赋加成不受影响。**改后需重新读档** |
@@ -48,6 +49,12 @@
 | Verbose | false | 输出每条明细（含未变化项） |
 
 所有倍数/名单项改动即时触发 Rerun（SettingChanged），无需重启游戏；仅负重因快照机制需读档。
+
+### General.Enabled 启停门（2026-10-24，ModCenter 任务 9）
+
+- **Bind 最前**（保证 cfg 键生成后才可能早退）；`Load()` 全部 Bind 完成后 `if (!Enabled.Value) return`——不创建 Ticker、不打日志、不装气泡（表值本会话从未改过，无需还原）。
+- Ticker 轮询体首行 gate：false 时若本会话已落笔过（`_applied`），调 `BagTable.RewriteSize(targets,1,1)` + `RewriteBurden(targets,1)` 按**原值缓存**回写（共享层 mult=1 即精确原值），完成后停写；表未就绪（scanned<0）则下轮重试。
+- 边界：**负重是读档快照**，运行中关闭只还原表值，已穿背包的负重需读一次档才回官方值（与 §7 既有边界同源）。
 
 ## 5. 默认名单与依据
 
@@ -75,6 +82,7 @@
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 
+- 2026-10-24 ModCenter 任务 9：加 `General.Enabled` 启停门（Load 早退 + Ticker 首行 gate + mult=1 还原），机制见 §4 启停门小节；
 - 改名单/倍数/新增配置 → 更新 §4 §5；
 - 改实现方式（轮询节奏、改写通道）→ 更新 §2 §3 并注明依据；
 - 发现新的原生交互/限制 → 补 §6 §7；

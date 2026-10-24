@@ -17,6 +17,8 @@ namespace SurvivalLog.BackpackExpand;
 /// 天赋链整链统一改写，链内尺寸相对关系保持 → 天赋换包照常工作；
 /// 负重 = Round((Burden+ExtraBurden)×(1+天赋比例)+固定值)，基础与天赋独立叠加。
 /// 负重为快照值：改表/改配置后需重新读档才体现到玩家。
+/// General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=宽高/负重按 ×1 回写原值并
+/// 停写；下次启动不创建 Ticker（零日志零改写）。cfg 写入热生效。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class BackpackExpandPlugin : BasePlugin
@@ -27,6 +29,9 @@ public sealed class BackpackExpandPlugin : BasePlugin
 
     internal static ManualLogSource Log;
 
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=宽高/负重按 ×1 回写原值
+    // 并停写（复用 BagTable 幂等"mult=1=还原"路径）；下次启动不加载（不创建 Ticker，零日志）。
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<float> WidthMult;
     internal static ConfigEntry<float> HeightMult;
     internal static ConfigEntry<int> BurdenMult;
@@ -40,6 +45,8 @@ public sealed class BackpackExpandPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方原值并停写；下次启动不加载。");
         WidthMult = Config.Bind("Expand", "WidthMult", 1.5f,
             "宽度倍数（四舍五入取整）。1.5 = +50%。宽高同时放大可避免界面单边过长被压缩。");
         HeightMult = Config.Bind("Expand", "HeightMult", 1.5f, "高度倍数（四舍五入取整）。");
@@ -51,11 +58,14 @@ public sealed class BackpackExpandPlugin : BasePlugin
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细（含未变化项）。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
+        Enabled.SettingChanged += reload;
         WidthMult.SettingChanged += reload;
         HeightMult.SettingChanged += reload;
         BurdenMult.SettingChanged += reload;
         ExtraIds.SettingChanged += reload;
         ExcludeIds.SettingChanged += reload;
+
+        if (!Enabled.Value) return; // General.Enabled=false：不启 Ticker、零日志（表值本会话从未改过）
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<BackpackTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<BackpackTicker>();
@@ -82,9 +92,30 @@ internal sealed class BackpackTicker : MonoBehaviour
 
     private float _check;
     private bool _announced;
+    // General.Enabled 门：本轮会话是否已按配置落笔过（false 化时据此触发一次性还原）
+    private bool _applied;
 
     public void Update()
     {
+        // General.Enabled 总开关：false=宽高/负重按 ×1 回写原值并停写（复用 BagTable 幂等
+        // "mult=1=还原"路径——按原值缓存回写）；Load 阶段 false 时 Ticker 不会创建，本分支
+        // 覆盖"运行中被关闭"。边界：负重是读档快照，已穿背包的负重值需读一次档才回官方值。
+        if (!BackpackExpandPlugin.Enabled.Value)
+        {
+            if (_applied)
+            {
+                var (rScan, rChangedS, _) = BagTable.RewriteSize(BackpackExpandPlugin.BuildTargets(), 1f, 1f, false);
+                var (_, rChangedB, _) = BagTable.RewriteBurden(BackpackExpandPlugin.BuildTargets(), 1, false);
+                if (rScan >= 0) // 表就绪：还原完成（rChangedS+rChangedB=本次回写处数；<0 下轮重试）
+                {
+                    _applied = false;
+                    BackpackExpandPlugin.Log.LogInfo(
+                        $"[BackpackExpand] General.Enabled=false：已还原官方原值并停写（回写 {rChangedS + rChangedB} 处）。已穿背包的负重读一次档后回官方值。");
+                }
+            }
+            return;
+        }
+
         // 持续轮询幂等改写：配置表在切场景/读档时可能整体重载（对象重建、回到原值），
         // 一次式改写会被覆盖；周期性按 原值×倍数 重写则始终有效（旧 mod 验证过的模式）。
         _check += Time.deltaTime;
@@ -102,6 +133,7 @@ internal sealed class BackpackTicker : MonoBehaviour
         if (scannedS < 0) { BackpackExpandPlugin.Rerun = true; return; } // 配置表未就绪，立即重试
 
         BackpackExpandPlugin.Rerun = false;
+        _applied = true; // 已按当前配置落笔（General.Enabled 关闭时据此触发还原）
 
         if (changedS > 0 || changedB > 0 || BackpackExpandPlugin.Verbose.Value)
         {

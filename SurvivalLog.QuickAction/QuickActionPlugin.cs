@@ -36,6 +36,8 @@ namespace SurvivalLog.QuickAction;
 ///   探索 TimeScale=120；只减不增守卫；0=恢复原值；Overrides 兜底优先级最高
 ///   （v2.1：覆盖表先于分类判定，可命中引用轴漏掉的家具本体 BT 交互，如上厕所 9075；
 ///   五分类默认统一 500，旧 cfg 一次性迁移 DefaultsV21）。
+/// - General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=把改写过的动作 During
+///   全部回写原值并停写；下次启动不创建 Ticker（零日志零改写）。cfg 写入热生效。
 /// - 已实证无周期收益（可安全提速）：看书 100003xxx/100000004、空调吹风 1915（End 型
 ///   士气+5/健康+5）、上厕所 9075（效果全 0，收益走内急解除）、浇水 1615（植物状态另算）。
 /// </summary>
@@ -51,6 +53,9 @@ public sealed class QuickActionPlugin : BasePlugin
 
     internal static ManualLogSource Log;
 
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=把改写过的动作 During
+    // 全部回写原值并停写；下次启动不加载（不创建 Ticker、不写 ActionList，零日志）。
+    internal static ConfigEntry<bool> Enabled;
     // 五个分类开关（毫秒；0=恢复原值）
     internal static ConfigEntry<int> ItemMs;    // 物品使用：Food=1 ∪ Treatment=6（吃/喝/品尝/吞咽/药品）
     internal static ConfigEntry<int> FurnMs;    // 家具功能：type=0（拆封包裹/种植/烹饪/升级/改装/救援建造）
@@ -64,6 +69,9 @@ public sealed class QuickActionPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方原值并停写；下次启动不加载。");
 
         // 安装引导勾选结果（ASCII 引导文件 BepInEx\config\quickaction.boot.ini，读后即删；
         // 仅作下述 Bind 的默认值——玩家已有 cfg 键永远优先，重装不覆盖调好的数值）
@@ -108,6 +116,8 @@ public sealed class QuickActionPlugin : BasePlugin
         Config.SettingChanged += (object s, BepInEx.Configuration.SettingChangedEventArgs e) => { Rerun = true; };
 
         StripLegacySections();
+
+        if (!Enabled.Value) return; // General.Enabled=false：不启 Ticker、不写 ActionList、零日志
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<QuickTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<QuickTicker>();
@@ -206,12 +216,22 @@ internal sealed class QuickTicker : MonoBehaviour
     private float _check;
     private bool _announced;
     private bool _listWritten;
+    // General.Enabled 门：本轮会话是否已按配置落笔过（false 化时据此触发一次性还原）
+    private bool _applied;
 
     // key: actionId -> 原始 During（幂等：永远按原值判断/恢复）
     private static readonly Dictionary<int, float> OrigDuring = new();
 
     public void Update()
     {
+        // General.Enabled 总开关：false=把改写过的动作 During 全部回写原值并停写（Load 阶段 false
+        // 时 Ticker 不会创建，本分支覆盖"运行中被关闭"——ModCenter 写 cfg 经 SettingChanged 热生效）
+        if (!QuickActionPlugin.Enabled.Value)
+        {
+            if (_applied && RestoreAll()) _applied = false; // 表未就绪返回 false，下一轮重试
+            return;
+        }
+
         var due = QuickActionPlugin.Rerun || _check >= 5f;
         if (!due) { _check += Time.deltaTime; return; }
         _check = 0f;
@@ -253,6 +273,7 @@ internal sealed class QuickTicker : MonoBehaviour
 
         var (scanned, changed, restored, cat, skipped, lines) = Apply(dict, cm);
         QuickActionPlugin.Rerun = false;
+        _applied = true; // 已按当前配置落笔（General.Enabled 关闭时据此触发还原）
 
         if (changed > 0 || restored > 0)
             foreach (var l in lines.Take(80)) QuickActionPlugin.Log.LogInfo("[QuickAction] " + l);
@@ -292,6 +313,37 @@ internal sealed class QuickTicker : MonoBehaviour
             return GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.Instance;
         }
         catch { return null; }
+    }
+
+    /// <summary>
+    /// General.Enabled=false 还原：把 OrigDuring 缓存过的动作行 During 全部回写原值并停写
+    /// （复用现役"0=恢复原值"路径的原值缓存）。返回 false=动作表未就绪（下轮重试）。
+    /// 9130 等与 RobotSpeed 共用行各自独立缓存：本 mod 还原后若 RobotSpeed 仍启用，
+    /// 其 Ticker 会按自己的原值缓存继续管理，互不打架（让位守卫同理）。
+    /// </summary>
+    private static bool RestoreAll()
+    {
+        var cm = GetCm();
+        if (cm == null) return false;
+        Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_Action> dict = null;
+        try { dict = cm._Config_Action_Dict; } catch { }
+        if (dict == null || dict.Count == 0) return false;
+
+        int n = 0;
+        foreach (var kv in OrigDuring)
+        {
+            if (kv.Value <= 0f) continue;
+            try
+            {
+                if (!dict.TryGetValue(kv.Key, out var a) || a == null) continue;
+                if (Math.Abs(a.During - kv.Value) > 1e-6f) { a.During = kv.Value; n++; }
+            }
+            catch { }
+        }
+        QuickActionPlugin.Log.LogInfo(n > 0
+            ? $"[QuickAction] General.Enabled=false：已还原官方原值并停写（回写 {n} 条动作 During）"
+            : "[QuickAction] General.Enabled=false：表已在原值，停写。");
+        return true;
     }
 
     private static string NameOf(GameCore.HotUpdate.Config_Action a)

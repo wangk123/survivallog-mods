@@ -104,6 +104,7 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
 
 | 键 | 默认 | 说明 |
 |---|---|---|
+| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=按原值缓存还原全部已改表值并停写；下次启动不创建 Ticker（零日志零改写） |
 | 动作速度对齐手动 | true | WorkSpeedRatio→0；false=恢复原值 |
 | 移速倍率 | 2 | 机型基础移速 ×N |
 | 充电速率倍率 | 2 | ChargeTripsPerHour ×N（秒/趟=3600÷速率，游戏小时制） |
@@ -116,6 +117,11 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
 
 ## 5. 已知边界与风险
 
+- **General.Enabled 启停门（2026-10-24，ModCenter 任务 9）**：Bind 最前，`Load()` 全部 Bind
+  完成后 false 即早退（不创建 Ticker、零日志——表值本会话从未改过）；运行中被置 false 时
+  Ticker 首行 gate 触发 `RestoreAll()`：按八组原值缓存回写机型属性五字段/机器人动作行/
+  货舱行宽高后停写（表未就绪下轮重试）。边界：已加载机器人的内部快照字段（充电 cfg/电量
+  上限等）不回滚，模块重算或下次读档自然回官方值——与"删 dll 即还原"同边界。
 - **QuickAction 互不冲突**：本 mod 只写机器人专属动作行（type 8 中五条）与机器人属性表，
   QuickAction 按分类写玩家动作行。**例外：9130 正在种植与玩家共用**（v1.2.0 误判专属），
   QuickAction（杂项交互 500ms）与本项目（÷2）曾每 5 秒互相覆盖、日志各刷 200+ 条——
@@ -128,6 +134,11 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
 
 ## 6. 验证记录
 
+- 2026-10-24 20:33–20:44 ModCenter 任务 9（General.Enabled 启停门）四轮主菜单实测（ConfigDumpProbe
+  全表 dump + trace 自证，未读档未碰存档）：全 on（MoveSpeed 4.8/WSR 0/动作÷2/货舱 8x2）→
+  全 off（全部回官方基线：MoveSpeed 2.4、WSR 2/3/0、9098=300、货舱 4x2，三 mod 零 trace 零日志）→
+  混合（RS off + BP/QA on：RS 字段全基线、BP/QA 全生效，独立性实证）→ RS 恢复 on（回到 4.8/0/÷2）。
+  运行中关闭触发的 RestoreAll 分支待 ModCenter 任务 13 接 MC_SET 写 General.Enabled 后可实证。
 - 2026-10-13 21:49 玩家实测（v1.2.0 测试轮）：属性表/动作行/货舱基础行/插槽设置行全部改写成功
   （机型原值：HK-1 整理 WorkSpeedRatio=2、TB-3 种植=3、WX-5 维修=0 本就无此加成；9130 官方热更已
   从 900 砍到 60 游戏秒）。发现两问题并当日修复：

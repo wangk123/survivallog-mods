@@ -42,6 +42,8 @@ namespace SurvivalLog.RobotSpeed;
 /// - 全部幂等：进程内首次读到的值缓存为原值，轮询永远按 原值×倍率 重写
 ///  （配置表可能随切场景/读档整体重载回原值，轮询自动恢复；世界就绪首轮 0.5s 快扫抢在
 ///   玩家打开面板前完成货舱改写，之后回落 5s）。
+/// - General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=按原值缓存一次性还原全部
+///   已改表值并停写；下次启动不创建 Ticker（零日志零改写）。cfg 写入经 SettingChanged 热生效。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class RobotSpeedPlugin : BasePlugin
@@ -53,6 +55,9 @@ public sealed class RobotSpeedPlugin : BasePlugin
     internal static ManualLogSource Log;
 
     // ---- 配置项（默认翻倍；1 或 false = 不改/恢复原值）----
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=按原值缓存还原全部已改表值
+    // 并停写；下次启动不加载（不创建 Ticker，零日志）。
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<bool> WorkSpeedZero;  // WorkSpeedRatio → 0（开关语义，无倍率）
     internal static ConfigEntry<float> MoveSpeedMult; // 移速倍率
     internal static ConfigEntry<float> ChargeRateMult;// 充电速率倍率
@@ -66,6 +71,9 @@ public sealed class RobotSpeedPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方原值并停写；下次启动不加载。");
 
         const string sec = "机器人提速";
         WorkSpeedZero = Config.Bind(sec, "动作速度对齐手动", true,
@@ -90,6 +98,8 @@ public sealed class RobotSpeedPlugin : BasePlugin
 
         Config.SettingChanged += (object s, SettingChangedEventArgs e) => { Rerun = true; };
 
+        if (!Enabled.Value) return; // General.Enabled=false：不启 Ticker、零日志（表值本会话从未改过）
+
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<RobotTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<RobotTicker>();
         var go = new GameObject("RobotSpeed.Ticker");
@@ -107,6 +117,8 @@ internal sealed class RobotTicker : MonoBehaviour
 
     private float _check;
     private bool _announced;
+    // General.Enabled 门：本轮会话是否已按配置落笔过（false 化时据此触发一次性还原）
+    private bool _applied;
 
     // 幂等原值缓存（key: 配置行主键）
     private static readonly Dictionary<int, int> OrigBattery = new();
@@ -129,6 +141,24 @@ internal sealed class RobotTicker : MonoBehaviour
     // 各轮扫描均为轻量遍历（几张小表 + agentList 直扫），0.5s 无压力。
     public void Update()
     {
+        // General.Enabled 总开关：false=立即按原值缓存还原全部已改表值并停写（Load 阶段 false 时
+        // Ticker 不会创建，本分支覆盖"运行中被关闭"——ModCenter 写 cfg 经 SettingChanged 热生效）。
+        if (!RobotSpeedPlugin.Enabled.Value)
+        {
+            if (_applied)
+            {
+                var rl = new List<string>();
+                if (RestoreAll(rl)) // 表未就绪返回 false，下一帧重试
+                {
+                    _applied = false;
+                    RobotSpeedPlugin.Log.LogInfo("[RobotSpeed] General.Enabled=false：已还原官方原值并停写"
+                        + (rl.Count > 0 ? $"（回写 {rl.Count} 处）" : "（表已在原值）"));
+                    foreach (var l in rl.Take(30)) RobotSpeedPlugin.Log.LogInfo("[RobotSpeed] " + l);
+                }
+            }
+            return;
+        }
+
         var due = RobotSpeedPlugin.Rerun || _check >= 0.5f;
         if (!due) { _check += Time.deltaTime; return; }
         _check = 0f;
@@ -150,6 +180,7 @@ internal sealed class RobotTicker : MonoBehaviour
         changes += ApplyCargoBags(cm, lines);
         ApplyLiveRobots(cm, lines);
         RobotSpeedPlugin.Rerun = false;
+        _applied = true; // 已按当前配置落笔（General.Enabled 关闭时据此触发还原）
 
         if (changes > 0 || lines.Count > 0)
         {
@@ -319,6 +350,105 @@ internal sealed class RobotTicker : MonoBehaviour
         }
         catch (Exception e) { lines.Add($"WARN BAG {id} 改写异常: {e.Message}"); }
         return 0;
+    }
+
+    /// <summary>
+    /// General.Enabled=false 还原：把已改写的表值按原值缓存全部回写官方原值
+    /// （机型属性五字段 / 机器人动作行 / 货舱行宽高）。返回 false=配置表尚未就绪（下轮重试）。
+    /// 边界：已加载机器人的内部快照字段（0x84/0x88 等）不回滚——模块重算或下次读档自然回
+    /// 官方值，与"删 dll 即还原"同边界；9130 等与 QuickAction 共用行按各自缓存独立管理。
+    /// </summary>
+    private static bool RestoreAll(List<string> lines)
+    {
+        GameCore.HotUpdate.ConfigManager cm;
+        try
+        {
+            if (!GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.IsInstanceCreated) return false;
+            cm = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ConfigManager>.Instance;
+        }
+        catch { return false; }
+        if (cm == null) return false;
+
+        int n = 0;
+        bool bagChanged = false;
+
+        try
+        {
+            var dict = cm._Config_RobotAttribute_Dict;
+            if (dict != null)
+            {
+                foreach (var kv in OrigWorkRatio)
+                {
+                    if (!dict.TryGetValue(kv.Key, out var c) || c == null) continue;
+                    if (Math.Abs(c.WorkSpeedRatio - kv.Value) > 1e-6f)
+                    { c.WorkSpeedRatio = kv.Value; n++; lines.Add($"ROBOT {kv.Key}({c.Comment}) WorkSpeedRatio -> {kv.Value:0.###}（还原）"); }
+                }
+                foreach (var kv in OrigMoveSpeed)
+                {
+                    if (!dict.TryGetValue(kv.Key, out var c) || c == null) continue;
+                    if (Math.Abs(c.MoveSpeed - kv.Value) > 1e-6f)
+                    { c.MoveSpeed = kv.Value; n++; lines.Add($"ROBOT {kv.Key}({c.Comment}) MoveSpeed -> {kv.Value:0.###}（还原）"); }
+                }
+                foreach (var kv in OrigBattery)
+                {
+                    if (!dict.TryGetValue(kv.Key, out var c) || c == null) continue;
+                    if (c.BatteryTrips != kv.Value)
+                    { c.BatteryTrips = kv.Value; n++; lines.Add($"ROBOT {kv.Key}({c.Comment}) BatteryTrips -> {kv.Value}（还原）"); }
+                }
+                foreach (var kv in OrigTripCost)
+                {
+                    if (!dict.TryGetValue(kv.Key, out var c) || c == null) continue;
+                    if (c.TripCost != kv.Value)
+                    { c.TripCost = kv.Value; n++; lines.Add($"ROBOT {kv.Key}({c.Comment}) TripCost -> {kv.Value}（还原）"); }
+                }
+                foreach (var kv in OrigCharge)
+                {
+                    if (!dict.TryGetValue(kv.Key, out var c) || c == null) continue;
+                    if (c.ChargeTripsPerHour != kv.Value)
+                    { c.ChargeTripsPerHour = kv.Value; n++; lines.Add($"ROBOT {kv.Key}({c.Comment}) ChargeTripsPerHour -> {kv.Value}（还原）"); }
+                }
+            }
+        }
+        catch { }
+
+        try
+        {
+            var adict = cm._Config_Action_Dict;
+            if (adict != null)
+                foreach (var kv in OrigActionDuring)
+                {
+                    if (kv.Value <= 0f) continue;
+                    if (!adict.TryGetValue(kv.Key, out var a) || a == null) continue;
+                    if (Math.Abs(a.During - kv.Value) > 1e-6f)
+                    { a.During = kv.Value; n++; lines.Add($"ACTION {kv.Key}({Name(a)}) During -> {kv.Value:0.#}（还原）"); }
+                }
+        }
+        catch { }
+
+        try
+        {
+            var bdict = cm._Config_Bag_Dict;
+            if (bdict != null)
+                foreach (var kv in OrigBagW)
+                {
+                    if (!bdict.TryGetValue(kv.Key, out var bag) || bag == null) continue;
+                    var size = bag.Size;
+                    if (size == null || size.Count < 2) continue;
+                    int w0 = size[0], h0 = size[1];
+                    int wantW = kv.Value, wantH = OrigBagH.TryGetValue(kv.Key, out var oh) ? oh : h0;
+                    if (w0 != wantW || h0 != wantH)
+                    {
+                        size[0] = wantW;
+                        size[1] = wantH;
+                        n++; bagChanged = true;
+                        lines.Add($"BAG {kv.Key}({Name(bag)}) Size {w0}x{h0} -> {wantW}x{wantH}（还原）");
+                    }
+                }
+        }
+        catch { }
+
+        if (bagChanged) { try { cm._bagSizeSet = null; } catch { } } // 尺寸白名单懒重建
+        return true;
     }
 
     // 插槽/模块相关修改：作者定版不做（2026-10-13）。
