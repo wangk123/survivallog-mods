@@ -87,7 +87,7 @@ internal static class ScavengePlans
                     t.DemoTwoMode = 0; t.EndlessMode = 0; t.IsReget = false;
                     t.Name = "Talent_Name_" + p.TalentId; t.Name_Local = p.Name;
                     t.Dec = "Talent_Dec_" + p.TalentId; t.Dec_Local = "搜索能力增强，可以发现更多被忽略的物资（发现等级+" + p.Level + "档）";
-                    t.Type = 2; t.ShowType = 1; t.Icon = icon.Item1; t.WebIcon = icon.Item2;
+                    t.Type = 2; t.ShowType = 2; t.Icon = icon.Item1; t.WebIcon = icon.Item2;
                     t.LvParaShow = ""; t.LvParaShow_Local = "";
                     t.LvUpCost = p.Cost; t.BuffID = 0; t.BuffRefresh = 0;
                     t.ConditionSetId = p.CondId;
