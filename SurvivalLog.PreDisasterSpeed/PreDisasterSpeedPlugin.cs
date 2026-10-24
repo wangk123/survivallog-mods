@@ -44,5 +44,5 @@ internal sealed class PdsTicker : MonoBehaviour
     public PdsTicker(IntPtr ptr) : base(ptr) { }
     public PdsTicker() { }
     private float _check;
-    private void Update() { _check += Time.deltaTime; if (_check < 2f) return; _check = 0; Injector.Tick(); }
+    private void Update() { _check += Time.unscaledDeltaTime; if (_check < 2f) return; _check = 0; Injector.Tick(); }
 }

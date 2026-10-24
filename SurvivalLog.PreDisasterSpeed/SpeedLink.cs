@@ -1,4 +1,6 @@
 using System;
+using System.Text.RegularExpressions;
+using Il2CppInterop.Runtime;
 
 namespace SurvivalLog.PreDisasterSpeed;
 
@@ -61,5 +63,70 @@ internal static class SpeedLink
             PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 读章节表异常: " + e.Message);
             return false;
         }
+    }
+
+    // ---------- 桥接 + 自愈（Task 5） ----------
+
+    private static Vuplex.WebView.IWebView _bridged;
+    private static bool _coreUi0Visible;
+    private static bool _warnBridge;
+    private static readonly Regex SpeedRegex = new Regex("\"speed\"\\s*:\\s*([0-4])", RegexOptions.Compiled);
+
+    /// <summary>订阅 Vuplex MessageEmitted（与官方 WebUILayer.OnMessageFromJS 并行收，多播互不干扰）。
+    /// WebView 实例变更时对新实例重挂；旧实例随页面销毁，无需退订。</summary>
+    internal static void EnsureBridge(Vuplex.WebView.IWebView web)
+    {
+        if (ReferenceEquals(_bridged, web)) return;
+        try
+        {
+            // interop 无事件元数据（add_/remove_ 访问器）且 Il2Cpp 委托非 CLR 委托：
+            // 经 add_MessageEmitted + DelegateSupport.ConvertDelegate 编组（CabinetEverywhere 同款），订阅机制与处理器不变。
+            web.add_MessageEmitted(DelegateSupport.ConvertDelegate<Il2CppSystem.EventHandler<Vuplex.WebView.EventArgs<string>>>(
+                new EventHandler<Vuplex.WebView.EventArgs<string>>(OnMessageEmitted)));
+            _bridged = web;
+            PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] MessageEmitted 桥已挂");
+        }
+        catch (Exception e)
+        {
+            if (_warnBridge) return;
+            _warnBridge = true;
+            PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 订阅 MessageEmitted 异常: " + e.Message);
+        }
+    }
+
+    /// <summary>官方协议 `typeId\x1EpageId\x1EeventType\x1Ejson`（Root.html 中继，DESIGN §3.5）。
+    /// 只认 3/CoreUI0/PDS_SPEED，其余消息原样放过不碰。</summary>
+    private static void OnMessageEmitted(object sender, Vuplex.WebView.EventArgs<string> e)
+    {
+        try
+        {
+            var msg = e.Value;
+            if (string.IsNullOrEmpty(msg)) return;
+            var p = msg.Split('\x1E');
+            if (p.Length < 4 || p[0] != "3" || p[1] != "CoreUI0" || p[2] != "PDS_SPEED") return;
+            var m = SpeedRegex.Match(p[3]);
+            if (!m.Success) return;
+            SetSpeed(int.Parse(m.Groups[1].Value));
+        }
+        catch
+        {
+            // v1.3.2 红线：静默出口必须可观测——桥内异常打点（只记一次，防刷屏）
+            if (_warnBridge) return;
+            _warnBridge = true;
+            PreDisasterSpeedPlugin.Log.LogWarning("[PdsSpeed] 桥内解析异常（后续静默）");
+        }
+    }
+
+    /// <summary>CoreUI0 可见性回执（Injector 安装脚本 0=不在/隐藏 1=已装 2=本轮新装）。
+    /// 可见→不可见 = 灾变过渡：mod 记录的档位 ≠1 则归 1x，防倍率带进灾后（DESIGN §4.4）。</summary>
+    internal static void OnCoreUi0State(int state)
+    {
+        var visible = state > 0;
+        if (_coreUi0Visible && !visible && LastSpeed != 1)
+        {
+            SetSpeed(1);
+            PreDisasterSpeedPlugin.Log.LogInfo("[PdsSpeed] CoreUI0 消失（灾变过渡）——档位自动归 1x");
+        }
+        _coreUi0Visible = visible;
     }
 }
