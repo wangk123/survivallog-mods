@@ -52,7 +52,7 @@
 | 文件 | 职责 |
 |---|---|
 | `FridgeChillPlugin.cs` | 入口：配置定义、Rerun、注入 Ticker、挂 TalentCapPatch |
-| `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）；KeepMult≤1.01 直接跳过 |
+| `ChillTicker`（同文件） | 5 秒轮询：RewriteFridgeChill（改系数）；KeepMult≤1.01 直接跳过。**首行 General.Enabled 门 + `_applied` 单次还原**（2026-10-24）：false=RestoreColdRates（×1 回写原值）+ `TalentCapBytePatch.UpdateFloor(0.1f)`（scratch 回原生语义）后停写；KeepMult≤1.01 早退分支同款单次还原（早退还原补丁，§8） |
 | `TalentCapBytePatch`（同文件） | 零开销**字节补丁**：改写 Apply 函数内读取 0.1 常量的 movss 指令的 rel32，指向 int3 间隙里的自备 scratch float（=1/MaxTotalMult）。签名扫描+旧槽值校验+回读自证三重安全闸，任何一步不符即功能关闭回落原生。ApplyColdChainEnhance 与其同一段原生代码，一处覆盖两条通道。**scratch 页权限必须 0x40 RWX（2026-10-18 v1.3.7 闪退事故）**：int3 间隙与在役函数同 4KB 页，误用 0x04（RW 无执行权）→ 页上任何函数一执行即 AccessViolation 首启必崩；实测禁用即恢复、改 0x40 后带补丁满速运行（日志"签名命中 1 处取 1"后持续存活） |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll）：RewriteFridgeChill 按 `Config_Furniture.BagId ∈ 名单 && ColdRate>0` 定位冰箱家具 |
 
@@ -60,7 +60,8 @@
 
 | 键 | 默认 | 说明 |
 |---|---|---|
-| KeepMult | 2 | 保鲜倍数：2 = 保质期翻倍（ColdRate÷2）；1 = 不改 |
+| **General.Enabled** | true | 总开关（2026-10-24，ModCenter 启停位）：false=还原官方原值并停写；下次启动不加载（不装字节补丁、不启 Ticker、零日志——字节补丁不装=原生 0.1 下限即停用语义） |
+| KeepMult | 2 | 保鲜倍数：2 = 保质期翻倍（ColdRate÷2）；1 = 不改（运行中调回 ≤1 时已改写的 ColdRate 按原值缓存回写一次，见 §8 早退还原补丁） |
 | MaxTotalMult | 100 | 总保鲜倍数上限：表值改写与天赋/规划等加成合并后的封顶；10 = 原生 ×10（不抬高）；低于 10 按 10 处理；KeepMult≤1 时不生效 |
 | BagIds | 空 | 冰箱 BagId 名单（留空用默认 1004,115000,115001,115005,3002，可追加） |
 | Verbose | false | 输出每条明细 |
@@ -99,6 +100,12 @@
   OnSyncItem/ExecuteSwap/ComputeItemTimeScale/ReduxUI 显示等 12 处，每次调用付原生↔托管
   跳转成本，无人机交易界面明显），改为 **TalentCapBytePatch 零开销字节补丁**（movss 的 rel32
   重定向到 int3 间隙 scratch float；签名扫描+旧槽值校验+回读自证三重安全闸），移除 0Harmony 依赖。
+- 2026-10-24（T10，ModCenter）：① `General.Enabled` 启停门（Bind 最前 + Load 早退 +
+  Ticker 首行 gate + `_applied` 单次还原；还原=共享层 ×1 回写 ColdRate + scratch 回 0.1）；
+  ② **早退还原补丁**：KeepMult 运行中调回 ≤1 的早退原不回写 ColdRate（表值停在改写值直到
+  重启，名义关闭实际仍翻倍）——现在早退分支也执行一次原值回写（RestoreColdRatesOnce 语义，
+  复用 RewriteFridgeChill ×1 路径）；UpdateFloor 增幂等 float 重载（值未变空操作，供停用门
+  每帧调用不刷屏），ComputeFloor 感知总开关（停用即 0.1）。
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 

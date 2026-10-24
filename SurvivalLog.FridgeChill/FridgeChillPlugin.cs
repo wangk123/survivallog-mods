@@ -22,6 +22,10 @@ namespace SurvivalLog.FridgeChill;
 /// - 界面上的"保鲜率"显示（Round(1/ColdRate)）读同一字段，会自动跟随
 /// 本 mod 对冰箱包名单内的家具把 ColdRate ÷ KeepMult（默认 2 = 保质期翻倍）。
 /// 注意：只影响单家具冷藏；冷链房间（FridgeAreaMap/areaScale）与堆肥箱不在范围内。
+///
+/// General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=按原值缓存回写 ColdRate
+/// 并停写，天赋上限字节补丁的 scratch 回 0.1（原生封顶 ×10 语义）；下次启动不加载。
+/// KeepMult 调回 ≤1 的早退路径同样回写一次原值（此前停在改写值直到重启，名义关闭实际仍翻倍）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class FridgeChillPlugin : BasePlugin
@@ -32,6 +36,8 @@ public sealed class FridgeChillPlugin : BasePlugin
 
     internal static ManualLogSource Log;
 
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=还原官方原值并停写
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<float> KeepMult;
     internal static ConfigEntry<float> MaxTotalMult;
     internal static ConfigEntry<string> BagIds;
@@ -43,6 +49,8 @@ public sealed class FridgeChillPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方原值并停写；下次启动不加载。");
         KeepMult = Config.Bind("Chill", "KeepMult", 2f,
             "保鲜倍数：2 = 食物在冰箱里的保质期翻倍（ColdRate÷2）。1 = 不改。");
         MaxTotalMult = Config.Bind("Chill", "MaxTotalMult", 100f,
@@ -52,6 +60,11 @@ public sealed class FridgeChillPlugin : BasePlugin
         Verbose = Config.Bind("Debug", "Verbose", false, "输出每条明细。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
+        Enabled.SettingChanged += (object s0, System.EventArgs e0) =>
+        {
+            Rerun = true;
+            TalentCapBytePatch.UpdateFloor(); // 重开时把 scratch 从 0.1 拉回配置下限（ComputeFloor 感知总开关）
+        };
         KeepMult.SettingChanged += (object s2, System.EventArgs e2) => { Rerun = true; TalentCapBytePatch.UpdateFloor(); };
         BagIds.SettingChanged += reload;
         MaxTotalMult.SettingChanged += (object s3, System.EventArgs e3) =>
@@ -59,6 +72,10 @@ public sealed class FridgeChillPlugin : BasePlugin
             TalentCapBytePatch.UpdateFloor();
             Log.LogInfo($"[FridgeChill] 总保鲜封顶调整为 ×{Math.Max(10f, MaxTotalMult.Value):0.##}（即时生效）");
         };
+
+        // General.Enabled=false：不装字节补丁、不启 Ticker、零日志
+        //（表值与原生封顶本会话从未改过；字节补丁不装=原生 0.1 下限即停用语义）
+        if (!Enabled.Value) return;
 
         // 抬高保鲜总上限（TalentCapBytePatch）：原生 MinColdRate=0.1 会把本 mod 表值之上的
         // 天赋加成钳为零（2026-10-18 反汇编实证，详见该类注释与 DESIGN.md §2）。
@@ -81,6 +98,18 @@ public sealed class FridgeChillPlugin : BasePlugin
         foreach (var id in BagTable.ParseIds(BagIds.Value)) set.Add(id);
         return set;
     }
+
+    /// <summary>
+    /// 启停门/早退还原（2026-10-24）：名单内 ColdRate 按共享层原值缓存回写官方原值——
+    /// 复用现役 RewriteFridgeChill 的 ×1 语义（want=orig/1=orig 精确回写，只动已偏离项）。
+    /// 表未就绪返回 false（调用方下一帧重试）；changed=本次实际回写处数。
+    /// </summary>
+    internal static bool RestoreColdRates(out int changed)
+    {
+        var (scanned, ch, _) = BagTable.RewriteFridgeChill(BuildTargets(), 1f, false);
+        changed = ch;
+        return scanned >= 0;
+    }
 }
 
 internal sealed class ChillTicker : MonoBehaviour
@@ -90,13 +119,42 @@ internal sealed class ChillTicker : MonoBehaviour
 
     private float _check;
     private bool _announced;
+    // General.Enabled 门：本轮会话是否已按配置落笔过（false 化时据此触发一次性还原）
+    private bool _applied;
 
     public void Update()
     {
+        // General.Enabled 总开关：false=立即按原值缓存回写 ColdRate 并停写，字节补丁 scratch
+        // 回 0.1（原生封顶 ×10 语义）；Load 阶段 false 时补丁根本不装、Ticker 不会创建，
+        // 本分支覆盖运行中被关闭。UpdateFloor(0.1f) 幂等（值未变空操作），覆盖"未落笔即禁用"
+        // 但补丁已装（floor=1/MaxTotalMult）的边界。
+        if (!FridgeChillPlugin.Enabled.Value)
+        {
+            if (_applied && FridgeChillPlugin.RestoreColdRates(out var rChanged))
+            {
+                _applied = false;
+                FridgeChillPlugin.Log.LogInfo(
+                    $"[FridgeChill] General.Enabled=false：已还原官方原值并停写（回写 {rChanged} 处 ColdRate；保鲜封顶回原生 ×10）");
+            }
+            TalentCapBytePatch.UpdateFloor(0.1f);
+            return;
+        }
+
         // 只改系数（ColdRate），绝不直接改物品字段（v1.1.0 教训：动 Data_Item.TimeScale
         // 会污染游戏进出容器换算，菠菜 13 天一进一出变 6.5 天）。
         // 已在冰箱里的旧物品：下次进出容器时游戏按新系数重算，速率自然翻倍。
-        if (FridgeChillPlugin.KeepMult.Value <= 1.01f) return;
+        // 早退还原补丁（2026-10-24）：KeepMult 运行中调回 ≤1 时，早退前先把已改写的 ColdRate
+        // 按原值缓存回写一次——现状停在改写值直到重启，保鲜名义关闭实际仍翻倍。
+        if (FridgeChillPlugin.KeepMult.Value <= 1.01f)
+        {
+            if (_applied && FridgeChillPlugin.RestoreColdRates(out var rChanged2))
+            {
+                _applied = false;
+                FridgeChillPlugin.Log.LogInfo(
+                    $"[FridgeChill] KeepMult≤1：已还原 ColdRate 官方原值并停写（回写 {rChanged2} 处；封顶同步回原生，见 UpdateFloor）");
+            }
+            return;
+        }
 
         _check += Time.deltaTime;
         var due = FridgeChillPlugin.Rerun || _check >= 5f;
@@ -111,6 +169,7 @@ internal sealed class ChillTicker : MonoBehaviour
 
         if (scanned < 0) { FridgeChillPlugin.Rerun = true; return; }
         FridgeChillPlugin.Rerun = false;
+        _applied = true; // 已按当前配置落笔（General.Enabled 关闭时据此触发还原）
 
         if (changed > 0 || FridgeChillPlugin.Verbose.Value)
         {
@@ -266,13 +325,24 @@ internal static class TalentCapBytePatch
         }
     }
 
-    /// <summary>cfg 变更即时生效：只重写 scratch float，不动指令。</summary>
+    /// <summary>cfg 变更即时生效：只重写 scratch float，不动指令（值未变时空操作，不刷日志）。</summary>
     internal static void UpdateFloor()
     {
         if (_scratch == IntPtr.Zero) return;
+        UpdateFloor(ComputeFloor(FridgeChillPlugin.MaxTotalMult, FridgeChillPlugin.KeepMult));
+    }
+
+    /// <summary>
+    /// 直写指定保鲜下限（General.Enabled 停用门用：0.1=原生语义）。幂等——已是该值则
+    /// 空操作，供停用门每帧调用不刷屏；未装补丁（_scratch 空）同样空操作。
+    /// </summary>
+    internal static void UpdateFloor(float floor)
+    {
+        if (_scratch == IntPtr.Zero) return;
+        if (!(floor > 0f) || Math.Abs(_floor - floor) < 1e-9f) return;
         try
         {
-            _floor = ComputeFloor(FridgeChillPlugin.MaxTotalMult, FridgeChillPlugin.KeepMult);
+            _floor = floor;
             WriteF32(_scratch, _floor);
             Log?.LogInfo($"[FridgeChill] 保鲜下限更新为 {_floor:0.####}（总封顶 ×{1f / _floor:0.##}）");
         }
@@ -281,7 +351,8 @@ internal static class TalentCapBytePatch
 
     private static float ComputeFloor(ConfigEntry<float> maxTotal, ConfigEntry<float> keepMult)
     {
-        // 保鲜关闭 → 原生语义（0.1）；上限不允许低于原生 ×10
+        // 总开关关闭 → 原生语义（0.1）；保鲜关闭 → 原生语义（0.1）；上限不允许低于原生 ×10
+        if (FridgeChillPlugin.Enabled != null && !FridgeChillPlugin.Enabled.Value) return 0.1f;
         if (keepMult != null && keepMult.Value <= 1.01f) return 0.1f;
         float cap = maxTotal?.Value ?? 100f;
         if (cap < 10f) cap = 10f;
