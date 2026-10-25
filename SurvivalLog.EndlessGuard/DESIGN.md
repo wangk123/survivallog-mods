@@ -139,7 +139,7 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 
 - **格式层零风险**：功能 2/3/4 从头到尾不碰存档文件，只改内存对象（名单/counter/tags/配置表/难度倍率），落盘由游戏自己的序列化在正常时机完成。写入 API 全是原版自用（`TagManager.RemoveTags` 0x27FD5B0 原版 76 处调用；`GameCounter.SetCounter` 即沦陷写档同款；名单是 GameSaveData 原生字段）。
 - **清完状态 = 原版天然状态**：全新无尽档就是"空名单+无计数+无沦陷 tag"。
-- **逻辑层唯一实质风险 = 营地**：营地沦陷牵撤离剧情链——功能 2 用 `IsCampMapPoint` 过滤，营地永不恢复。
+- **营地红线（2026-10-25 细化）**：仅已进入撤离剧情链的营地（campState=Evacuated/Lost）不恢复；普通日程沦陷的营地照常恢复（全量诊断实锤 1100/1101 两营地 campState=0，撤离链未跑、无剧情冲突——原一刀切误伤即作者验收"两个沦陷点不恢复"的根因）。
 - 兜底：存档目录 .snap0-5 + .bak 轮转；全程 trace 自证；装机验证 = 复制存档目录当测试档先跑。
 
 ## 3. 代码结构（规划，实现时落地）
@@ -178,7 +178,7 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 
 ## 6. 红线与边界
 
-- **营地永不恢复**（撤离剧情链一致性，§2.6）；
+- **营地按剧情链状态区分**：campState=Evacuated(5)/Lost(6) 不恢复（撤离剧情链一致性）；campState=None 的日程沦陷营地照常恢复（2026-10-25 诊断定案，§2.6）；
 - **不回滚已触发的一次性事件**（沦陷广播/遗产事件是历史新闻）；
 - **不进官方随机池**（本地化键缺失 + 池污染，§2.5.5）；
 - **数量层不得另造私有刷新曲线**（v5 定稿：一律走官方 RollExploreLootCopies 通道，作者明令）；
