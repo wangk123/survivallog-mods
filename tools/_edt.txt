@@ -1,0 +1,63 @@
+TYPE GameCore.HotUpdate.Battle.Logic.ExploreDiscoveryTools
+    field NativeFieldInfoPtr_DiscoverLvCounterPrefix : IntPtr
+    field NativeFieldInfoPtr_LastBuyCounterPrefix : IntPtr
+    field NativeFieldInfoPtr_GsMapsKey : IntPtr
+    field NativeFieldInfoPtr_GsCardsKeyPrefix : IntPtr
+    field NativeFieldInfoPtr_GsRampKeyPrefix : IntPtr
+    field NativeFieldInfoPtr_GsLvGateKeyPrefix : IntPtr
+    field NativeFieldInfoPtr__registryLoaded : IntPtr
+    field NativeFieldInfoPtr__insightMaps : IntPtr
+    field NativeFieldInfoPtr__cardsByMap : IntPtr
+    field NativeFieldInfoPtr__mapByCard : IntPtr
+    field NativeFieldInfoPtr__rampByMap : IntPtr
+    field NativeFieldInfoPtr__maxLvGateByMap : IntPtr
+    field NativeMethodInfoPtr_LastBuyCounterKey_Public_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_NormalizeMapId_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDiscoveryLv_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasNewDiscovery_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetNewDiscoveryMapIds_Public_Static_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetInsightCards_Public_Static_List_1_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetInsightMapForCard_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetEffectiveInsightWeight_Public_Static_Int32_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RecordInsightBuy_Public_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDiscoverThreshold_Public_Static_Int32_Config_RandomGroup_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_EnsureRegistry_Private_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ParseIntList_Private_Static_List_1_Int32_String_0 : IntPtr
+    method .cctor : Void ()
+    method LastBuyCounterKey : String (Int32)
+    method NormalizeMapId : Int32 (Int32)
+    method GetDiscoveryLv : Int32 (Int32)
+    method HasNewDiscovery : Boolean (Int32)
+    method GetNewDiscoveryMapIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method GetInsightCards : Il2CppSystem.Collections.Generic.List`1<Int32> (Int32)
+    method GetInsightMapForCard : Int32 (Int32)
+    method GetEffectiveInsightWeight : Int32 (Int32,Int32,Int32)
+    method RecordInsightBuy : Void (Int32)
+    method GetDiscoverThreshold : Int32 (GameCore.HotUpdate.Config_RandomGroup,Int32)
+    method EnsureRegistry : Void ()
+    method ParseIntList : Il2CppSystem.Collections.Generic.List`1<Int32> (String)
+    method .ctor : Void (IntPtr)
+    method get_DiscoverLvCounterPrefix : String ()
+    method set_DiscoverLvCounterPrefix : Void (String)
+    method get_LastBuyCounterPrefix : String ()
+    method set_LastBuyCounterPrefix : Void (String)
+    method get_GsMapsKey : String ()
+    method set_GsMapsKey : Void (String)
+    method get_GsCardsKeyPrefix : String ()
+    method set_GsCardsKeyPrefix : Void (String)
+    method get_GsRampKeyPrefix : String ()
+    method set_GsRampKeyPrefix : Void (String)
+    method get_GsLvGateKeyPrefix : String ()
+    method set_GsLvGateKeyPrefix : Void (String)
+    method get__registryLoaded : Boolean ()
+    method set__registryLoaded : Void (Boolean)
+    method get__insightMaps : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__insightMaps : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__cardsByMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<Int32>> ()
+    method set__cardsByMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<Int32>>)
+    method get__mapByCard : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__mapByCard : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get__rampByMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.ValueTuple`3<Int32,Int32,Int32>> ()
+    method set__rampByMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.ValueTuple`3<Int32,Int32,Int32>>)
+    method get__maxLvGateByMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__maxLvGateByMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)

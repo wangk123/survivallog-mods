@@ -1,0 +1,130 @@
+0x026d5fb0  push rbx
+0x026d5fb2  push rbp
+0x026d5fb3  push rsi
+0x026d5fb4  sub rsp,50h
+0x026d5fb8  cmp byte [rel 5F48DE4h],0
+0x026d5fbf  mov ebx,edx
+0x026d5fc1  movaps [rsp+40h],xmm6
+0x026d5fc6  mov rsi,rcx
+0x026d5fc9  movaps [rsp+30h],xmm7
+0x026d5fce  jne short 00000000026D601Fh
+0x026d5fd0  lea rcx,[rel 5C17400h]
+0x026d5fd7  call 000000000050A950h
+0x026d5fdc  lea rcx,[rel 5C12180h]
+0x026d5fe3  call 000000000050A950h
+0x026d5fe8  lea rcx,[rel 5BC2480h]
+0x026d5fef  call 000000000050A950h
+0x026d5ff4  lea rcx,[rel 5BF10D0h]
+0x026d5ffb  call 000000000050A950h
+0x026d6000  lea rcx,[rel 5C22048h]
+0x026d6007  call 000000000050A950h
+0x026d600c  lea rcx,[rel 5C220A0h]
+0x026d6013  call 000000000050A950h
+0x026d6018  mov byte [rel 5F48DE4h],1
+0x026d601f  xor edx,edx
+0x026d6021  mov rcx,rsi
+0x026d6024  call 00000000026D5760h  ; GameCore.HotUpdate.Battle.Logic.GameTimeManager$$CancelIdleSlowdown
+0x026d6029  movss xmm0,[rsi+70h]
+0x026d602e  xor eax,eax
+0x026d6030  xorps xmm6,xmm6
+0x026d6033  comiss xmm0,xmm6
+0x026d6036  setb al
+0x026d6039  test eax,eax
+0x026d603b  jne short 00000000026D604Ah
+0x026d603d  mov eax,[rsi+70h]
+0x026d6040  mov [rsi+40h],eax
+0x026d6043  mov dword [rsi+70h],0BF800000h
+0x026d604a  comiss xmm6,[rsi+48h]
+0x026d604e  jbe short 00000000026D6056h
+0x026d6050  mov eax,[rsi+40h]
+0x026d6053  mov [rsi+48h],eax
+0x026d6056  movd xmm7,[rsi+60h]
+0x026d605b  cvtdq2ps xmm7,xmm7
+0x026d605e  movss [rsi+40h],xmm7
+0x026d6063  mov rcx,[rel 5BF10D0h]
+0x026d606a  cmp dword [rcx+0E4h],0
+0x026d6071  jne short 00000000026D6078h
+0x026d6073  call 000000000050AC30h
+0x026d6078  xor edx,edx
+0x026d607a  movaps xmm0,xmm7
+0x026d607d  call 000000000061DAA0h  ; GameCore.Scripts.TimeManager$$SetBattleTimeScale
+0x026d6082  mov r8,[rel 5C12180h]
+0x026d6089  mov edx,ebx
+0x026d608b  mov ecx,2717h
+0x026d6090  call 0000000000B898F0h  ; GameCore.HotUpdate.EventDispatcherTools$$NotifyGlobal<Int32Enum>
+0x026d6095  movss xmm0,[rsi+70h]
+0x026d609a  xor eax,eax
+0x026d609c  movaps xmm7,[rsp+30h]
+0x026d60a1  comiss xmm0,xmm6
+0x026d60a4  movaps xmm6,[rsp+40h]
+0x026d60a9  setb al
+0x026d60ac  test eax,eax
+0x026d60ae  je short 00000000026D60EAh
+0x026d60b0  cmp byte [rsi+6Eh],0
+0x026d60b4  jne short 00000000026D60E3h
+0x026d60b6  movd xmm1,[rsi+60h]
+0x026d60bb  movss xmm0,[rsi+40h]
+0x026d60c0  cvtdq2ps xmm1,xmm1
+0x026d60c3  comiss xmm0,xmm1
+0x026d60c6  jae short 00000000026D60DCh
+0x026d60c8  movd xmm1,[rsi+5Ch]
+0x026d60cd  xor edx,edx
+0x026d60cf  cvtdq2ps xmm1,xmm1
+0x026d60d2  comiss xmm0,xmm1
+0x026d60d5  setae dl
+0x026d60d8  inc edx
+0x026d60da  jmp short 00000000026D60EFh
+0x026d60dc  mov edx,3
+0x026d60e1  jmp short 00000000026D60EFh
+0x026d60e3  mov edx,4
+0x026d60e8  jmp short 00000000026D60EFh
+0x026d60ea  mov edx,5
+0x026d60ef  mov r9,[rel 5C17400h]
+0x026d60f6  mov ecx,2719h
+0x026d60fb  movss xmm2,[rsi+40h]
+0x026d6100  call 0000000000B97430h  ; GameCore.HotUpdate.EventDispatcherTools$$NotifyGlobal<int, float>
+0x026d6105  xor edx,edx
+0x026d6107  mov rcx,rsi
+0x026d610a  call 00000000026D6FC0h  ; GameCore.HotUpdate.Battle.Logic.GameTimeManager$$NotifyCountDownTimerScaleSync
+0x026d610f  mov rcx,[rel 5C22048h]
+0x026d6116  cmp dword [rcx+0E4h],0
+0x026d611d  jne short 00000000026D6124h
+0x026d611f  call 000000000050AC30h
+0x026d6124  xor ecx,ecx
+0x026d6126  call 0000000002943C70h  ; GameCore.HotUpdate.WebGm$$get_Instance
+0x026d612b  mov rbp,rax
+0x026d612e  test rax,rax
+0x026d6131  je near 00000000026D61CCh
+0x026d6137  mov [rsp+80h],rdi
+0x026d613f  mov rcx,[rel 5BC2480h]
+0x026d6146  lea rdx,[rsp+78h]
+0x026d614b  mov [rsp+78h],ebx
+0x026d614f  call 0000000000509C60h
+0x026d6154  movss xmm0,[rsi+48h]
+0x026d6159  lea rdx,[rsp+70h]
+0x026d615e  mov rcx,[rel 5F5D8E8h]
+0x026d6165  mov rdi,rax
+0x026d6168  movss [rsp+70h],xmm0
+0x026d616e  call 0000000000509C60h
+0x026d6173  movss xmm0,[rsi+40h]
+0x026d6178  lea rdx,[rsp+88h]
+0x026d6180  mov rcx,[rel 5F5D8E8h]
+0x026d6187  mov rbx,rax
+0x026d618a  movss [rsp+88h],xmm0
+0x026d6193  call 0000000000509C60h
+0x026d6198  mov rcx,[rel 5C220A0h]
+0x026d619f  mov r9,rax
+0x026d61a2  mov r8,rbx
+0x026d61a5  mov qword [rsp+20h],0
+0x026d61ae  mov rdx,rdi
+0x026d61b1  call 00000000032687E0h  ; System.String$$Format
+0x026d61b6  xor r8d,r8d
+0x026d61b9  mov rdx,rax
+0x026d61bc  mov rcx,rbp
+0x026d61bf  call 00000000029129C0h  ; GameCore.HotUpdate.WebGm$$LogWarning
+0x026d61c4  mov rdi,[rsp+80h]
+0x026d61cc  add rsp,50h
+0x026d61d0  pop rsi
+0x026d61d1  pop rbp
+0x026d61d2  pop rbx
+0x026d61d3  ret

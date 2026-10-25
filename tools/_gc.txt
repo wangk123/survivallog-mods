@@ -1,0 +1,2143 @@
+TYPE GameCore.HotUpdate.TelemetryProbe
+    field NativeFieldInfoPtr_MarkerVersion : IntPtr
+    field NativeFieldInfoPtr__quitting : IntPtr
+    field NativeFieldInfoPtr__quitSource : IntPtr
+    field NativeFieldInfoPtr__sdkSessionIdField : IntPtr
+    field NativeFieldInfoPtr_PeriodicSnapshotIntervalSec : IntPtr
+    field NativeFieldInfoPtr__lastPeriodicSnapshotTime : IntPtr
+    field NativeFieldInfoPtr_PerfSamplingEnabled : IntPtr
+    field NativeFieldInfoPtr__frameTimes : IntPtr
+    field NativeFieldInfoPtr__lastGcGen0 : IntPtr
+    field NativeFieldInfoPtr__lastGcGen1 : IntPtr
+    field NativeFieldInfoPtr__lastGcGen2 : IntPtr
+    field NativeFieldInfoPtr__lastPerfSampleTime : IntPtr
+    field NativeMethodInfoPtr_get_MarkerPath_Private_Static_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_OnSessionStart_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_UpdateSessionMarker_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetLiveWorld_Private_Static_BattleLogicWorld_0 : IntPtr
+    field NativeMethodInfoPtr_OnCleanExit_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_LogChallengeReached_Public_Static_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_LogMilestoneReached_Public_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_LogChallengeChoice_Public_Static_Void_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_FlushOnQuitTail_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_LogRunSnapshot_Public_Static_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_TryLogPeriodicSnapshot_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_SamplePerformance_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_PushFrameSample_Public_Static_Void_Single_0 : IntPtr
+    field NativeMethodInfoPtr_ResetFrameWindow_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_LogGameCounterSnapshot_Public_Static_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AppendAutumnCounters_Private_Static_Void_Dictionary_2_String_Object_0 : IntPtr
+    field NativeMethodInfoPtr_LogSessionEnded_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_MarkQuitSource_Public_Static_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_LogWishlistClicked_Public_Static_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_LogCommunityClicked_Public_Static_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_LogTransitionEnterPostDisaster_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_LogUiOpened_Public_Static_Void_String_String_Dictionary_2_String_Object_0 : IntPtr
+    field NativeMethodInfoPtr_WriteMarker_Private_Static_Void_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_GetSdkSessionId_Private_Static_String_0 : IntPtr
+    field NativeMethodInfoPtr_LogWishGenerated_Public_Static_Void_WishData_0 : IntPtr
+    field NativeMethodInfoPtr_LogWishCompleted_Public_Static_Void_WishData_0 : IntPtr
+    field NativeMethodInfoPtr_LogWishExpired_Public_Static_Void_WishData_0 : IntPtr
+    field NativeMethodInfoPtr_LogWishEvent_Private_Static_Void_String_String_WishData_Boolean_0 : IntPtr
+    method .cctor : Void ()
+    method get_MarkerPath : String ()
+    method OnSessionStart : Void ()
+    method UpdateSessionMarker : Void ()
+    method TryGetLiveWorld : GameCore.HotUpdate.Battle.Logic.BattleLogicWorld ()
+    method OnCleanExit : Void ()
+    method LogChallengeReached : Void (Int32,Int32)
+    method LogMilestoneReached : Void (Int32)
+    method LogChallengeChoice : Void (Int32,Boolean)
+    method FlushOnQuitTail : Void ()
+    method LogRunSnapshot : Void (String)
+    method TryLogPeriodicSnapshot : Void ()
+    method SamplePerformance : Void ()
+    method PushFrameSample : Void (Single)
+    method ResetFrameWindow : Void ()
+    method LogGameCounterSnapshot : Void (Int32,Int32)
+    method AppendAutumnCounters : Void (Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>)
+    method LogSessionEnded : Void ()
+    method MarkQuitSource : Void (String)
+    method LogWishlistClicked : Void (String)
+    method LogCommunityClicked : Void (String)
+    method LogTransitionEnterPostDisaster : Void ()
+    method LogUiOpened : Void (String,String,Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>)
+    method WriteMarker : Void (Int32,String)
+    method GetSdkSessionId : String ()
+    method LogWishGenerated : Void (GameCore.HotUpdate.WishData)
+    method LogWishCompleted : Void (GameCore.HotUpdate.WishData)
+    method LogWishExpired : Void (GameCore.HotUpdate.WishData)
+    method LogWishEvent : Void (String,String,GameCore.HotUpdate.WishData,Boolean)
+    method .ctor : Void (IntPtr)
+    method get_MarkerVersion : Int32 ()
+    method set_MarkerVersion : Void (Int32)
+    method get__quitting : Boolean ()
+    method set__quitting : Void (Boolean)
+    method get__quitSource : String ()
+    method set__quitSource : Void (String)
+    method get__sdkSessionIdField : Il2CppSystem.Reflection.FieldInfo ()
+    method set__sdkSessionIdField : Void (Il2CppSystem.Reflection.FieldInfo)
+    method get_PeriodicSnapshotIntervalSec : Single ()
+    method set_PeriodicSnapshotIntervalSec : Void (Single)
+    method get__lastPeriodicSnapshotTime : Single ()
+    method set__lastPeriodicSnapshotTime : Void (Single)
+    method get_PerfSamplingEnabled : Boolean ()
+    method set_PerfSamplingEnabled : Void (Boolean)
+    method get__frameTimes : Il2CppSystem.Collections.Generic.List`1<Single> ()
+    method set__frameTimes : Void (Il2CppSystem.Collections.Generic.List`1<Single>)
+    method get__lastGcGen0 : Int32 ()
+    method set__lastGcGen0 : Void (Int32)
+    method get__lastGcGen1 : Int32 ()
+    method set__lastGcGen1 : Void (Int32)
+    method get__lastGcGen2 : Int32 ()
+    method set__lastGcGen2 : Void (Int32)
+    method get__lastPerfSampleTime : Single ()
+    method set__lastPerfSampleTime : Void (Single)
+TYPE GameCore.HotUpdate.SaveChildData
+    field NativeFieldInfoPtr__LeadingRole_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ChapterAgentMap_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__Day_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GameTime_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__VitalityHistory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LeadingRoleUsedItemsHistory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LeadingRoleUsedActionsHistory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LeadingRoleBuffChanges_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__EventLogHistory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DataCollectionCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CurrentWish_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__WishConsecutiveMiss_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DynamicEventSave_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__TagSave_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__Permissions_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__Power_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PromptTriggerSave_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__Statistics_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__IsPerfectPreparation_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayDescriptionLog_CN_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayDescriptionLog_EN_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalPoint_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalTotalPoints_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CachedFaithPoints_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayCachePoint_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ItemDailyUsageDict_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompletedWishes_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ToolTableDataList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ProductionRecordList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PreDisasterPurchaseRecords_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PaperAirplaneSaveList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ExtraCountDownTime_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DropItemSaveList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__WeatherConfigId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PlacedTrapSaveList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ProficiencyDiscoveryData_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__BasketPendingReturns_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborRescueProgress_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborTodayWishCategories_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborMilestoneDone_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborAffinityOnceFlags_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastRollDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PhoneSMSConvList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NpcCommonStateList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborAffinity_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastProactiveGiftDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborAffinitySeeded_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeActiveLastDealDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneDepartSec_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneReturnSec_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneCargoJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneOwnerId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeActiveDealCountToday_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipLastPushedDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborPendingDeathEventId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborCrisisFiredIdxList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborRescueTriggerDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborActiveRescueLineId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PhoneSMSNpcReplyQueue_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkCompromiseTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkFedCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkCompromiseDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneTripType_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneEncounterDone_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__VehicleTrunkItems_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DoorBoxItems_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipTodayPushDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipMorningTopic_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipEveningTopic_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipDrawnTopicIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipSpokeTopicIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GroupAnger_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GossipLastRaidDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborCrisisActiveIndex_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborCrisisRequiredCategory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborCrisisDeadlineDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastCrisisDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastReturnSmsStamp_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeNpcStockJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeDroneIsCharity_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PhoneSMSQueuePlanDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PhoneSMSQueuePlan_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DoorBoxItems2_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__BuildShopStockSnapshot_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingDaySettlement_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_Day_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_HistoryMaxDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_Morale_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_DailyPoints_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_Points_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_WishCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingSettlement_SurvivalPlanIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__IsFaithSettled_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FaithSettledTotal_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FaithSettledStages_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GameCounterDict_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionFurnitureIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionLastResetDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CityChatPushedStamp_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SeenProductionRecipeKeys_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CraftUnlockedProductionIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionRescueProgress_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionAffinity_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionTodayWishCategories_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionMilestoneDone_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionAffinityOnceFlags_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastRollDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastProactiveGiftDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionAffinitySeeded_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionPendingDeathEventId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionCrisisFiredIdxList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionRescueTriggerDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionActiveRescueLineId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionCrisisActiveIndex_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionCrisisRequiredCategory_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionCrisisDeadlineDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastCrisisDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastReturnSmsStamp_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GroundLootBatchMap_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DossierPayloadJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerSupportJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__TowerDefenseSave_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastCompanionSmsDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastCompanionSmsDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__EndlessSettlementJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__WorkbenchDrawerItems_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SceneRatCatchCooldownEndHour_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PurchaseSafetyState_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ExploreVisitedList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ConsumedWeightTrimmed_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborNeglectAnchorSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborLastSendDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborConsecutiveSendDays_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborWishIndex_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborStruggleState_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborStruggleDeadlineSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborStruggleCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborDeathDayBonus_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionCellMap_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionLastSpreadHour_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingDeathChoice_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingDeath_Day_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingDeath_Hour_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingDeath_CauseJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SeenNewSlotNames_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionLastShrinkHour_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionCrisisStartDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionLastSeedDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FoodPollutionMinorCabinetId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkAppViewed_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborSurvivalTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborTierAnchorSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__NeighborWishPendingReveal_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkRevengeTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkRevengeDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkRevengeCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkStalkTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkStalkDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkStalkCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionNeglectAnchorSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionSurvivalTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionTierAnchorSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionWishPendingReveal_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionStruggleState_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionStruggleDeadlineSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionStruggleCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionLastSendDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionConsecutiveSendDays_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CompanionWishIndex_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkGnawRemainDamage_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkGnawRemainTicks_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkGnawNextSeconds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LoanSharkGnawEventId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PreDisasterFurniturePurchaseRecords_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PhoneMuted_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__RainedToday_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrayZombieTodayTriggerCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrayZombieTodayStamp_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrayZombieCooldownEndHour_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__QuickActionSlots_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__FurnitureFuncLastUseTicks_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ActiveShelfDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ActiveShelfSnapshots_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__PendingEndingChoiceEventId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__AidPlatformJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__TruthRecorderJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CampJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__RenovationStyleMap_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ActiveShelfStock_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__ActiveShelfRestockDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__EndlessExploreTripDay_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__EndlessExploreTripCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__StrangerTradeAcceptCount_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CasualStateJson_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__LightPropSaveList_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalPlanShownIds_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalPlanShownBatchSizes_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayDescriptionLog_Community_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayDescriptionLog_CommunityLang_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalPlanPinnedId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__SurvivalPlanPinnedSlot_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DoorBoxRobotTakeOn_k__BackingField : IntPtr
+    field NativeMethodInfoPtr_get_LeadingRole_Public_get_AgentSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_LeadingRole_Public_set_Void_AgentSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_ChapterAgentMap_Public_get_Dictionary_2_Int32_List_1_AgentSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_ChapterAgentMap_Public_set_Void_Dictionary_2_Int32_List_1_AgentSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_Day_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_Day_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GameTime_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GameTime_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_VitalityHistory_Public_get_List_1_VitalityChangeRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_VitalityHistory_Public_set_Void_List_1_VitalityChangeRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_LeadingRoleUsedItemsHistory_Public_get_List_1_ItemUsageRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_LeadingRoleUsedItemsHistory_Public_set_Void_List_1_ItemUsageRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_LeadingRoleUsedActionsHistory_Public_get_List_1_ActionRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_LeadingRoleUsedActionsHistory_Public_set_Void_List_1_ActionRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_LeadingRoleBuffChanges_Public_get_List_1_BuffChangeRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_LeadingRoleBuffChanges_Public_set_Void_List_1_BuffChangeRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_EventLogHistory_Public_get_List_1_EventLogRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_EventLogHistory_Public_set_Void_List_1_EventLogRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_DataCollectionCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_DataCollectionCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CurrentWish_Public_get_WishData_0 : IntPtr
+    field NativeMethodInfoPtr_set_CurrentWish_Public_set_Void_WishData_0 : IntPtr
+    field NativeMethodInfoPtr_get_WishConsecutiveMiss_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_WishConsecutiveMiss_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DynamicEventSave_Public_get_DynamicEventSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_DynamicEventSave_Public_set_Void_DynamicEventSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_TagSave_Public_get_TagSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_TagSave_Public_set_Void_TagSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_Permissions_Public_get_PermissionsSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_Permissions_Public_set_Void_PermissionsSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_Power_Public_get_PowerSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_Power_Public_set_Void_PowerSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_PromptTriggerSave_Public_get_PromptTriggerSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_PromptTriggerSave_Public_set_Void_PromptTriggerSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_Statistics_Public_get_PreDisasterStatistics_0 : IntPtr
+    field NativeMethodInfoPtr_set_Statistics_Public_set_Void_PreDisasterStatistics_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsPerfectPreparation_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsPerfectPreparation_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayDescriptionLog_CN_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayDescriptionLog_CN_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayDescriptionLog_EN_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayDescriptionLog_EN_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPoint_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPoint_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalTotalPoints_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalTotalPoints_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CachedFaithPoints_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CachedFaithPoints_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayCachePoint_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayCachePoint_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_ItemDailyUsageDict_Public_get_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_ItemDailyUsageDict_Public_set_Void_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompletedWishes_Public_get_List_1_CompletedWishRecord_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompletedWishes_Public_set_Void_List_1_CompletedWishRecord_0 : IntPtr
+    field NativeMethodInfoPtr_get_ToolTableDataList_Public_get_List_1_ToolTableData_0 : IntPtr
+    field NativeMethodInfoPtr_set_ToolTableDataList_Public_set_Void_List_1_ToolTableData_0 : IntPtr
+    field NativeMethodInfoPtr_get_ProductionRecordList_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_ProductionRecordList_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_PreDisasterPurchaseRecords_Public_get_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PreDisasterPurchaseRecords_Public_set_Void_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PaperAirplaneSaveList_Public_get_List_1_PaperAirplaneSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_set_PaperAirplaneSaveList_Public_set_Void_List_1_PaperAirplaneSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_get_ExtraCountDownTime_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_ExtraCountDownTime_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DropItemSaveList_Public_get_List_1_DropItemSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_set_DropItemSaveList_Public_set_Void_List_1_DropItemSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_get_WeatherConfigId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_WeatherConfigId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PlacedTrapSaveList_Public_get_List_1_PlacedTrapSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_PlacedTrapSaveList_Public_set_Void_List_1_PlacedTrapSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_ProficiencyDiscoveryData_Public_get_ProficiencyDiscoverySave_0 : IntPtr
+    field NativeMethodInfoPtr_set_ProficiencyDiscoveryData_Public_set_Void_ProficiencyDiscoverySave_0 : IntPtr
+    field NativeMethodInfoPtr_get_BasketPendingReturns_Public_get_List_1_BasketScheduledReturn_0 : IntPtr
+    field NativeMethodInfoPtr_set_BasketPendingReturns_Public_set_Void_List_1_BasketScheduledReturn_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborRescueProgress_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborRescueProgress_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborTodayWishCategories_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborTodayWishCategories_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborMilestoneDone_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborMilestoneDone_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborAffinityOnceFlags_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborAffinityOnceFlags_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastRollDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastRollDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PhoneSMSConvList_Public_get_List_1_PhoneSMSConvSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_PhoneSMSConvList_Public_set_Void_List_1_PhoneSMSConvSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_NpcCommonStateList_Public_get_List_1_NpcCommonState_0 : IntPtr
+    field NativeMethodInfoPtr_set_NpcCommonStateList_Public_set_Void_List_1_NpcCommonState_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborAffinity_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborAffinity_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastProactiveGiftDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastProactiveGiftDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborAffinitySeeded_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborAffinitySeeded_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeActiveLastDealDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeActiveLastDealDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneDepartSec_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneDepartSec_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneReturnSec_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneReturnSec_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneCargoJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneCargoJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneOwnerId_Public_get_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneOwnerId_Public_set_Void_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeActiveDealCountToday_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeActiveDealCountToday_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipLastPushedDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipLastPushedDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborPendingDeathEventId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborPendingDeathEventId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborCrisisFiredIdxList_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborCrisisFiredIdxList_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborRescueTriggerDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborRescueTriggerDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborActiveRescueLineId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborActiveRescueLineId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PhoneSMSNpcReplyQueue_Public_get_List_1_PhoneSMSNpcReplyTask_0 : IntPtr
+    field NativeMethodInfoPtr_set_PhoneSMSNpcReplyQueue_Public_set_Void_List_1_PhoneSMSNpcReplyTask_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkCompromiseTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkCompromiseTier_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkFedCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkFedCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkCompromiseDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkCompromiseDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneTripType_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneTripType_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneEncounterDone_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneEncounterDone_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_VehicleTrunkItems_Public_get_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_VehicleTrunkItems_Public_set_Void_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_DoorBoxItems_Public_get_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_DoorBoxItems_Public_set_Void_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipTodayPushDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipTodayPushDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipMorningTopic_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipMorningTopic_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipEveningTopic_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipEveningTopic_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipDrawnTopicIds_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipDrawnTopicIds_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipSpokeTopicIds_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipSpokeTopicIds_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GroupAnger_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GroupAnger_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GossipLastRaidDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GossipLastRaidDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborCrisisActiveIndex_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborCrisisActiveIndex_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborCrisisRequiredCategory_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborCrisisRequiredCategory_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborCrisisDeadlineDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborCrisisDeadlineDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastCrisisDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastCrisisDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastReturnSmsStamp_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastReturnSmsStamp_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeNpcStockJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeNpcStockJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeDroneIsCharity_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeDroneIsCharity_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_PhoneSMSQueuePlanDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PhoneSMSQueuePlanDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PhoneSMSQueuePlan_Public_get_List_1_PhoneSMSQueuePlanEntry_0 : IntPtr
+    field NativeMethodInfoPtr_set_PhoneSMSQueuePlan_Public_set_Void_List_1_PhoneSMSQueuePlanEntry_0 : IntPtr
+    field NativeMethodInfoPtr_get_DoorBoxItems2_Public_get_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_DoorBoxItems2_Public_set_Void_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_BuildShopStockSnapshot_Public_get_Dictionary_2_Int32_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_BuildShopStockSnapshot_Public_set_Void_Dictionary_2_Int32_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingDaySettlement_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingDaySettlement_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_Day_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_Day_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_HistoryMaxDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_HistoryMaxDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_Morale_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_Morale_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_DailyPoints_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_DailyPoints_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_Points_Public_get_Il2CppStructArray_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_Points_Public_set_Void_Il2CppStructArray_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_WishCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_WishCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingSettlement_SurvivalPlanIds_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingSettlement_SurvivalPlanIds_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsFaithSettled_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsFaithSettled_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_FaithSettledTotal_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FaithSettledTotal_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FaithSettledStages_Public_get_Il2CppStructArray_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FaithSettledStages_Public_set_Void_Il2CppStructArray_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GameCounterDict_Public_get_Dictionary_2_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_GameCounterDict_Public_set_Void_Dictionary_2_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionFurnitureIds_Public_get_List_1_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionFurnitureIds_Public_set_Void_List_1_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionLastResetDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionLastResetDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CityChatPushedStamp_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CityChatPushedStamp_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_SeenProductionRecipeKeys_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_SeenProductionRecipeKeys_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_CraftUnlockedProductionIds_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CraftUnlockedProductionIds_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionRescueProgress_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionRescueProgress_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionAffinity_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionAffinity_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionTodayWishCategories_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionTodayWishCategories_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionMilestoneDone_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionMilestoneDone_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionAffinityOnceFlags_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionAffinityOnceFlags_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastRollDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastRollDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastProactiveGiftDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastProactiveGiftDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionAffinitySeeded_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionAffinitySeeded_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionPendingDeathEventId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionPendingDeathEventId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionCrisisFiredIdxList_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionCrisisFiredIdxList_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionRescueTriggerDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionRescueTriggerDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionActiveRescueLineId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionActiveRescueLineId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionCrisisActiveIndex_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionCrisisActiveIndex_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionCrisisRequiredCategory_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionCrisisRequiredCategory_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionCrisisDeadlineDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionCrisisDeadlineDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastCrisisDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastCrisisDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastReturnSmsStamp_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastReturnSmsStamp_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GroundLootBatchMap_Public_get_Dictionary_2_Int32_List_1_GroundLootEntrySave_0 : IntPtr
+    field NativeMethodInfoPtr_set_GroundLootBatchMap_Public_set_Void_Dictionary_2_Int32_List_1_GroundLootEntrySave_0 : IntPtr
+    field NativeMethodInfoPtr_get_DossierPayloadJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_DossierPayloadJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerSupportJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerSupportJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_TowerDefenseSave_Public_get_TowerDefenseSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_set_TowerDefenseSave_Public_set_Void_TowerDefenseSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastCompanionSmsDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastCompanionSmsDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastCompanionSmsDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastCompanionSmsDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_EndlessSettlementJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_EndlessSettlementJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_WorkbenchDrawerItems_Public_get_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_set_WorkbenchDrawerItems_Public_set_Void_List_1_ItemSave_0 : IntPtr
+    field NativeMethodInfoPtr_get_SceneRatCatchCooldownEndHour_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SceneRatCatchCooldownEndHour_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PurchaseSafetyState_Public_get_PurchaseSafetyState_0 : IntPtr
+    field NativeMethodInfoPtr_set_PurchaseSafetyState_Public_set_Void_PurchaseSafetyState_0 : IntPtr
+    field NativeMethodInfoPtr_get_ExploreVisitedList_Public_get_List_1_ExploreVisitedEntry_0 : IntPtr
+    field NativeMethodInfoPtr_set_ExploreVisitedList_Public_set_Void_List_1_ExploreVisitedEntry_0 : IntPtr
+    field NativeMethodInfoPtr_get_ConsumedWeightTrimmed_Public_get_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_set_ConsumedWeightTrimmed_Public_set_Void_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborNeglectAnchorSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborNeglectAnchorSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborLastSendDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborLastSendDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborConsecutiveSendDays_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborConsecutiveSendDays_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborWishIndex_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborWishIndex_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborStruggleState_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborStruggleState_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborStruggleDeadlineSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborStruggleDeadlineSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborStruggleCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborStruggleCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborDeathDayBonus_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborDeathDayBonus_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionCellMap_Public_get_Dictionary_2_Int64_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionCellMap_Public_set_Void_Dictionary_2_Int64_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionLastSpreadHour_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionLastSpreadHour_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingDeathChoice_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingDeathChoice_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingDeath_Day_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingDeath_Day_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingDeath_Hour_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingDeath_Hour_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingDeath_CauseJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingDeath_CauseJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_SeenNewSlotNames_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_SeenNewSlotNames_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionLastShrinkHour_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionLastShrinkHour_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionCrisisStartDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionCrisisStartDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionLastSeedDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionLastSeedDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FoodPollutionMinorCabinetId_Public_get_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_set_FoodPollutionMinorCabinetId_Public_set_Void_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkAppViewed_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkAppViewed_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborSurvivalTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborSurvivalTier_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborTierAnchorSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborTierAnchorSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_NeighborWishPendingReveal_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_NeighborWishPendingReveal_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkRevengeTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkRevengeTier_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkRevengeDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkRevengeDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkRevengeCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkRevengeCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkStalkTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkStalkTier_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkStalkDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkStalkDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkStalkCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkStalkCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionNeglectAnchorSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionNeglectAnchorSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionSurvivalTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionSurvivalTier_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionTierAnchorSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionTierAnchorSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionWishPendingReveal_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionWishPendingReveal_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionStruggleState_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionStruggleState_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionStruggleDeadlineSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionStruggleDeadlineSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionStruggleCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionStruggleCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionLastSendDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionLastSendDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionConsecutiveSendDays_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionConsecutiveSendDays_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CompanionWishIndex_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CompanionWishIndex_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkGnawRemainDamage_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkGnawRemainDamage_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkGnawRemainTicks_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkGnawRemainTicks_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkGnawNextSeconds_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkGnawNextSeconds_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_LoanSharkGnawEventId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_LoanSharkGnawEventId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PreDisasterFurniturePurchaseRecords_Public_get_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PreDisasterFurniturePurchaseRecords_Public_set_Void_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_PhoneMuted_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_PhoneMuted_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_RainedToday_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_RainedToday_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrayZombieTodayTriggerCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrayZombieTodayTriggerCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrayZombieTodayStamp_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrayZombieTodayStamp_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrayZombieCooldownEndHour_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrayZombieCooldownEndHour_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_QuickActionSlots_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_QuickActionSlots_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_FurnitureFuncLastUseTicks_Public_get_Dictionary_2_Int32_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_set_FurnitureFuncLastUseTicks_Public_set_Void_Dictionary_2_Int32_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_get_ActiveShelfDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_ActiveShelfDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_ActiveShelfSnapshots_Public_get_Dictionary_2_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_ActiveShelfSnapshots_Public_set_Void_Dictionary_2_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_PendingEndingChoiceEventId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_PendingEndingChoiceEventId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_AidPlatformJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_AidPlatformJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_TruthRecorderJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_TruthRecorderJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_CampJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_CampJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_RenovationStyleMap_Public_get_Dictionary_2_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_RenovationStyleMap_Public_set_Void_Dictionary_2_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_ActiveShelfStock_Public_get_Dictionary_2_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_ActiveShelfStock_Public_set_Void_Dictionary_2_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_ActiveShelfRestockDay_Public_get_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_ActiveShelfRestockDay_Public_set_Void_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_EndlessExploreTripDay_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_EndlessExploreTripDay_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_EndlessExploreTripCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_EndlessExploreTripCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_StrangerTradeAcceptCount_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_StrangerTradeAcceptCount_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CasualStateJson_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_CasualStateJson_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_LightPropSaveList_Public_get_List_1_LightPropSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_set_LightPropSaveList_Public_set_Void_List_1_LightPropSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPlanShownIds_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPlanShownIds_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPlanShownBatchSizes_Public_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPlanShownBatchSizes_Public_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayDescriptionLog_Community_Public_get_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayDescriptionLog_Community_Public_set_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayDescriptionLog_CommunityLang_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayDescriptionLog_CommunityLang_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPlanPinnedId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPlanPinnedId_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPlanPinnedSlot_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPlanPinnedSlot_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DoorBoxRobotTakeOn_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_DoorBoxRobotTakeOn_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_RegisterFormatter_Public_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Serialize_Public_Static_Void_byref_MemoryPackWriter_1_TBufferWriter_byref_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_Deserialize_Public_Static_Void_byref_MemoryPackReader_byref_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    method .cctor : Void ()
+    method get_LeadingRole : GameCore.HotUpdate.AgentSave ()
+    method set_LeadingRole : Void (GameCore.HotUpdate.AgentSave)
+    method get_ChapterAgentMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.AgentSave>> ()
+    method set_ChapterAgentMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.AgentSave>>)
+    method get_Day : Int32 ()
+    method set_Day : Void (Int32)
+    method get_GameTime : Int32 ()
+    method set_GameTime : Void (Int32)
+    method get_VitalityHistory : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.VitalityChangeRecord> ()
+    method set_VitalityHistory : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.VitalityChangeRecord>)
+    method get_LeadingRoleUsedItemsHistory : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemUsageRecord> ()
+    method set_LeadingRoleUsedItemsHistory : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemUsageRecord>)
+    method get_LeadingRoleUsedActionsHistory : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ActionRecord> ()
+    method set_LeadingRoleUsedActionsHistory : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ActionRecord>)
+    method get_LeadingRoleBuffChanges : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BuffChangeRecord> ()
+    method set_LeadingRoleBuffChanges : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BuffChangeRecord>)
+    method get_EventLogHistory : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EventLogRecord> ()
+    method set_EventLogHistory : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EventLogRecord>)
+    method get_DataCollectionCount : Int32 ()
+    method set_DataCollectionCount : Void (Int32)
+    method get_CurrentWish : GameCore.HotUpdate.WishData ()
+    method set_CurrentWish : Void (GameCore.HotUpdate.WishData)
+    method get_WishConsecutiveMiss : Int32 ()
+    method set_WishConsecutiveMiss : Void (Int32)
+    method get_DynamicEventSave : GameCore.HotUpdate.DynamicEventSave ()
+    method set_DynamicEventSave : Void (GameCore.HotUpdate.DynamicEventSave)
+    method get_TagSave : GameCore.HotUpdate.TagSave ()
+    method set_TagSave : Void (GameCore.HotUpdate.TagSave)
+    method get_Permissions : GameCore.HotUpdate.PermissionsSave ()
+    method set_Permissions : Void (GameCore.HotUpdate.PermissionsSave)
+    method get_Power : GameCore.HotUpdate.PowerSave ()
+    method set_Power : Void (GameCore.HotUpdate.PowerSave)
+    method get_PromptTriggerSave : GameCore.HotUpdate.PromptTriggerSave ()
+    method set_PromptTriggerSave : Void (GameCore.HotUpdate.PromptTriggerSave)
+    method get_Statistics : GameCore.PreDisasterStatistics ()
+    method set_Statistics : Void (GameCore.PreDisasterStatistics)
+    method get_IsPerfectPreparation : Boolean ()
+    method set_IsPerfectPreparation : Void (Boolean)
+    method get_DayDescriptionLog_CN : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_DayDescriptionLog_CN : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_DayDescriptionLog_EN : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_DayDescriptionLog_EN : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_SurvivalPoint : Int32 ()
+    method set_SurvivalPoint : Void (Int32)
+    method get_SurvivalTotalPoints : Int32 ()
+    method set_SurvivalTotalPoints : Void (Int32)
+    method get_CachedFaithPoints : Int32 ()
+    method set_CachedFaithPoints : Void (Int32)
+    method get_DayCachePoint : Int32 ()
+    method set_DayCachePoint : Void (Int32)
+    method get_ItemDailyUsageDict : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_ItemDailyUsageDict : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_CompletedWishes : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CompletedWishRecord> ()
+    method set_CompletedWishes : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CompletedWishRecord>)
+    method get_ToolTableDataList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Battle.Logic.ToolTableData> ()
+    method set_ToolTableDataList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Battle.Logic.ToolTableData>)
+    method get_ProductionRecordList : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_ProductionRecordList : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_PreDisasterPurchaseRecords : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_PreDisasterPurchaseRecords : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_PaperAirplaneSaveList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PaperAirplaneSaveData> ()
+    method set_PaperAirplaneSaveList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PaperAirplaneSaveData>)
+    method get_ExtraCountDownTime : Int32 ()
+    method set_ExtraCountDownTime : Void (Int32)
+    method get_DropItemSaveList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.DropItemSaveData> ()
+    method set_DropItemSaveList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.DropItemSaveData>)
+    method get_WeatherConfigId : Int32 ()
+    method set_WeatherConfigId : Void (Int32)
+    method get_PlacedTrapSaveList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PlacedTrapSave> ()
+    method set_PlacedTrapSaveList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PlacedTrapSave>)
+    method get_ProficiencyDiscoveryData : GameCore.HotUpdate.ProficiencyDiscoverySave ()
+    method set_ProficiencyDiscoveryData : Void (GameCore.HotUpdate.ProficiencyDiscoverySave)
+    method get_BasketPendingReturns : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BasketScheduledReturn> ()
+    method set_BasketPendingReturns : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BasketScheduledReturn>)
+    method get_NeighborRescueProgress : Int32 ()
+    method set_NeighborRescueProgress : Void (Int32)
+    method get_NeighborTodayWishCategories : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_NeighborTodayWishCategories : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_NeighborMilestoneDone : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_NeighborMilestoneDone : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_NeighborAffinityOnceFlags : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_NeighborAffinityOnceFlags : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_NeighborLastRollDay : Int32 ()
+    method set_NeighborLastRollDay : Void (Int32)
+    method get_PhoneSMSConvList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSConvSave> ()
+    method set_PhoneSMSConvList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSConvSave>)
+    method get_NpcCommonStateList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.NpcCommonState> ()
+    method set_NpcCommonStateList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.NpcCommonState>)
+    method get_NeighborAffinity : Int32 ()
+    method set_NeighborAffinity : Void (Int32)
+    method get_NeighborLastProactiveGiftDay : Int32 ()
+    method set_NeighborLastProactiveGiftDay : Void (Int32)
+    method get_NeighborAffinitySeeded : Boolean ()
+    method set_NeighborAffinitySeeded : Void (Boolean)
+    method get_StrangerTradeActiveLastDealDay : Int32 ()
+    method set_StrangerTradeActiveLastDealDay : Void (Int32)
+    method get_StrangerTradeDroneDepartSec : Int32 ()
+    method set_StrangerTradeDroneDepartSec : Void (Int32)
+    method get_StrangerTradeDroneReturnSec : Int32 ()
+    method set_StrangerTradeDroneReturnSec : Void (Int32)
+    method get_StrangerTradeDroneCargoJson : String ()
+    method set_StrangerTradeDroneCargoJson : Void (String)
+    method get_StrangerTradeDroneOwnerId : Int64 ()
+    method set_StrangerTradeDroneOwnerId : Void (Int64)
+    method get_StrangerTradeActiveDealCountToday : Int32 ()
+    method set_StrangerTradeActiveDealCountToday : Void (Int32)
+    method get_GossipLastPushedDay : Int32 ()
+    method set_GossipLastPushedDay : Void (Int32)
+    method get_NeighborPendingDeathEventId : Int32 ()
+    method set_NeighborPendingDeathEventId : Void (Int32)
+    method get_NeighborCrisisFiredIdxList : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_NeighborCrisisFiredIdxList : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_NeighborRescueTriggerDay : Int32 ()
+    method set_NeighborRescueTriggerDay : Void (Int32)
+    method get_NeighborActiveRescueLineId : Int32 ()
+    method set_NeighborActiveRescueLineId : Void (Int32)
+    method get_PhoneSMSNpcReplyQueue : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSNpcReplyTask> ()
+    method set_PhoneSMSNpcReplyQueue : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSNpcReplyTask>)
+    method get_LoanSharkCompromiseTier : Int32 ()
+    method set_LoanSharkCompromiseTier : Void (Int32)
+    method get_LoanSharkFedCount : Int32 ()
+    method set_LoanSharkFedCount : Void (Int32)
+    method get_LoanSharkCompromiseDay : Int32 ()
+    method set_LoanSharkCompromiseDay : Void (Int32)
+    method get_StrangerTradeDroneTripType : Int32 ()
+    method set_StrangerTradeDroneTripType : Void (Int32)
+    method get_StrangerTradeDroneEncounterDone : Boolean ()
+    method set_StrangerTradeDroneEncounterDone : Void (Boolean)
+    method get_VehicleTrunkItems : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set_VehicleTrunkItems : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get_DoorBoxItems : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set_DoorBoxItems : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get_GossipTodayPushDay : Int32 ()
+    method set_GossipTodayPushDay : Void (Int32)
+    method get_GossipMorningTopic : Int32 ()
+    method set_GossipMorningTopic : Void (Int32)
+    method get_GossipEveningTopic : Int32 ()
+    method set_GossipEveningTopic : Void (Int32)
+    method get_GossipDrawnTopicIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_GossipDrawnTopicIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_GossipSpokeTopicIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_GossipSpokeTopicIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_GroupAnger : Int32 ()
+    method set_GroupAnger : Void (Int32)
+    method get_GossipLastRaidDay : Int32 ()
+    method set_GossipLastRaidDay : Void (Int32)
+    method get_NeighborCrisisActiveIndex : Int32 ()
+    method set_NeighborCrisisActiveIndex : Void (Int32)
+    method get_NeighborCrisisRequiredCategory : Int32 ()
+    method set_NeighborCrisisRequiredCategory : Void (Int32)
+    method get_NeighborCrisisDeadlineDay : Int32 ()
+    method set_NeighborCrisisDeadlineDay : Void (Int32)
+    method get_NeighborLastCrisisDay : Int32 ()
+    method set_NeighborLastCrisisDay : Void (Int32)
+    method get_NeighborLastReturnSmsStamp : Int32 ()
+    method set_NeighborLastReturnSmsStamp : Void (Int32)
+    method get_StrangerTradeNpcStockJson : String ()
+    method set_StrangerTradeNpcStockJson : Void (String)
+    method get_StrangerTradeDroneIsCharity : Boolean ()
+    method set_StrangerTradeDroneIsCharity : Void (Boolean)
+    method get_PhoneSMSQueuePlanDay : Int32 ()
+    method set_PhoneSMSQueuePlanDay : Void (Int32)
+    method get_PhoneSMSQueuePlan : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSQueuePlanEntry> ()
+    method set_PhoneSMSQueuePlan : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSQueuePlanEntry>)
+    method get_DoorBoxItems2 : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set_DoorBoxItems2 : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get_BuildShopStockSnapshot : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>> ()
+    method set_BuildShopStockSnapshot : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>>)
+    method get_PendingDaySettlement : Boolean ()
+    method set_PendingDaySettlement : Void (Boolean)
+    method get_PendingSettlement_Day : Int32 ()
+    method set_PendingSettlement_Day : Void (Int32)
+    method get_PendingSettlement_HistoryMaxDay : Int32 ()
+    method set_PendingSettlement_HistoryMaxDay : Void (Int32)
+    method get_PendingSettlement_Morale : Int32 ()
+    method set_PendingSettlement_Morale : Void (Int32)
+    method get_PendingSettlement_DailyPoints : Int32 ()
+    method set_PendingSettlement_DailyPoints : Void (Int32)
+    method get_PendingSettlement_Points : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_PendingSettlement_Points : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_PendingSettlement_WishCount : Int32 ()
+    method set_PendingSettlement_WishCount : Void (Int32)
+    method get_PendingSettlement_SurvivalPlanIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_PendingSettlement_SurvivalPlanIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_IsFaithSettled : Boolean ()
+    method set_IsFaithSettled : Void (Boolean)
+    method get_FaithSettledTotal : Int32 ()
+    method set_FaithSettledTotal : Void (Int32)
+    method get_FaithSettledStages : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_FaithSettledStages : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_GameCounterDict : Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32> ()
+    method set_GameCounterDict : Void (Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32>)
+    method get_FoodPollutionFurnitureIds : Il2CppSystem.Collections.Generic.List`1<Int64> ()
+    method set_FoodPollutionFurnitureIds : Void (Il2CppSystem.Collections.Generic.List`1<Int64>)
+    method get_FoodPollutionLastResetDay : Int32 ()
+    method set_FoodPollutionLastResetDay : Void (Int32)
+    method get_CityChatPushedStamp : Int32 ()
+    method set_CityChatPushedStamp : Void (Int32)
+    method get_SeenProductionRecipeKeys : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_SeenProductionRecipeKeys : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_CraftUnlockedProductionIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_CraftUnlockedProductionIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_CompanionRescueProgress : Int32 ()
+    method set_CompanionRescueProgress : Void (Int32)
+    method get_CompanionAffinity : Int32 ()
+    method set_CompanionAffinity : Void (Int32)
+    method get_CompanionTodayWishCategories : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_CompanionTodayWishCategories : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_CompanionMilestoneDone : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_CompanionMilestoneDone : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_CompanionAffinityOnceFlags : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_CompanionAffinityOnceFlags : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_CompanionLastRollDay : Int32 ()
+    method set_CompanionLastRollDay : Void (Int32)
+    method get_CompanionLastProactiveGiftDay : Int32 ()
+    method set_CompanionLastProactiveGiftDay : Void (Int32)
+    method get_CompanionAffinitySeeded : Boolean ()
+    method set_CompanionAffinitySeeded : Void (Boolean)
+    method get_CompanionPendingDeathEventId : Int32 ()
+    method set_CompanionPendingDeathEventId : Void (Int32)
+    method get_CompanionCrisisFiredIdxList : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_CompanionCrisisFiredIdxList : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_CompanionRescueTriggerDay : Int32 ()
+    method set_CompanionRescueTriggerDay : Void (Int32)
+    method get_CompanionActiveRescueLineId : Int32 ()
+    method set_CompanionActiveRescueLineId : Void (Int32)
+    method get_CompanionCrisisActiveIndex : Int32 ()
+    method set_CompanionCrisisActiveIndex : Void (Int32)
+    method get_CompanionCrisisRequiredCategory : Int32 ()
+    method set_CompanionCrisisRequiredCategory : Void (Int32)
+    method get_CompanionCrisisDeadlineDay : Int32 ()
+    method set_CompanionCrisisDeadlineDay : Void (Int32)
+    method get_CompanionLastCrisisDay : Int32 ()
+    method set_CompanionLastCrisisDay : Void (Int32)
+    method get_CompanionLastReturnSmsStamp : Int32 ()
+    method set_CompanionLastReturnSmsStamp : Void (Int32)
+    method get_GroundLootBatchMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.GroundLootEntrySave>> ()
+    method set_GroundLootBatchMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.GroundLootEntrySave>>)
+    method get_DossierPayloadJson : String ()
+    method set_DossierPayloadJson : Void (String)
+    method get_StrangerSupportJson : String ()
+    method set_StrangerSupportJson : Void (String)
+    method get_TowerDefenseSave : GameCore.HotUpdate.TowerDefenseSaveData ()
+    method set_TowerDefenseSave : Void (GameCore.HotUpdate.TowerDefenseSaveData)
+    method get_NeighborLastCompanionSmsDay : Int32 ()
+    method set_NeighborLastCompanionSmsDay : Void (Int32)
+    method get_CompanionLastCompanionSmsDay : Int32 ()
+    method set_CompanionLastCompanionSmsDay : Void (Int32)
+    method get_EndlessSettlementJson : String ()
+    method set_EndlessSettlementJson : Void (String)
+    method get_WorkbenchDrawerItems : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set_WorkbenchDrawerItems : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get_SceneRatCatchCooldownEndHour : Int32 ()
+    method set_SceneRatCatchCooldownEndHour : Void (Int32)
+    method get_PurchaseSafetyState : GameCore.HotUpdate.PurchaseSafetyState ()
+    method set_PurchaseSafetyState : Void (GameCore.HotUpdate.PurchaseSafetyState)
+    method get_ExploreVisitedList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ExploreVisitedEntry> ()
+    method set_ExploreVisitedList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ExploreVisitedEntry>)
+    method get_ConsumedWeightTrimmed : Int64 ()
+    method set_ConsumedWeightTrimmed : Void (Int64)
+    method get_NeighborNeglectAnchorSeconds : Int32 ()
+    method set_NeighborNeglectAnchorSeconds : Void (Int32)
+    method get_NeighborLastSendDay : Int32 ()
+    method set_NeighborLastSendDay : Void (Int32)
+    method get_NeighborConsecutiveSendDays : Int32 ()
+    method set_NeighborConsecutiveSendDays : Void (Int32)
+    method get_NeighborWishIndex : Int32 ()
+    method set_NeighborWishIndex : Void (Int32)
+    method get_NeighborStruggleState : Int32 ()
+    method set_NeighborStruggleState : Void (Int32)
+    method get_NeighborStruggleDeadlineSeconds : Int32 ()
+    method set_NeighborStruggleDeadlineSeconds : Void (Int32)
+    method get_NeighborStruggleCount : Int32 ()
+    method set_NeighborStruggleCount : Void (Int32)
+    method get_NeighborDeathDayBonus : Int32 ()
+    method set_NeighborDeathDayBonus : Void (Int32)
+    method get_FoodPollutionCellMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int64,Il2CppSystem.Collections.Generic.List`1<Int32>> ()
+    method set_FoodPollutionCellMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int64,Il2CppSystem.Collections.Generic.List`1<Int32>>)
+    method get_FoodPollutionLastSpreadHour : Int32 ()
+    method set_FoodPollutionLastSpreadHour : Void (Int32)
+    method get_PendingDeathChoice : Boolean ()
+    method set_PendingDeathChoice : Void (Boolean)
+    method get_PendingDeath_Day : Int32 ()
+    method set_PendingDeath_Day : Void (Int32)
+    method get_PendingDeath_Hour : Int32 ()
+    method set_PendingDeath_Hour : Void (Int32)
+    method get_PendingDeath_CauseJson : String ()
+    method set_PendingDeath_CauseJson : Void (String)
+    method get_SeenNewSlotNames : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_SeenNewSlotNames : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_FoodPollutionLastShrinkHour : Int32 ()
+    method set_FoodPollutionLastShrinkHour : Void (Int32)
+    method get_FoodPollutionCrisisStartDay : Int32 ()
+    method set_FoodPollutionCrisisStartDay : Void (Int32)
+    method get_FoodPollutionLastSeedDay : Int32 ()
+    method set_FoodPollutionLastSeedDay : Void (Int32)
+    method get_FoodPollutionMinorCabinetId : Int64 ()
+    method set_FoodPollutionMinorCabinetId : Void (Int64)
+    method get_LoanSharkAppViewed : Boolean ()
+    method set_LoanSharkAppViewed : Void (Boolean)
+    method get_NeighborSurvivalTier : Int32 ()
+    method set_NeighborSurvivalTier : Void (Int32)
+    method get_NeighborTierAnchorSeconds : Int32 ()
+    method set_NeighborTierAnchorSeconds : Void (Int32)
+    method get_NeighborWishPendingReveal : Boolean ()
+    method set_NeighborWishPendingReveal : Void (Boolean)
+    method get_LoanSharkRevengeTier : Int32 ()
+    method set_LoanSharkRevengeTier : Void (Int32)
+    method get_LoanSharkRevengeDay : Int32 ()
+    method set_LoanSharkRevengeDay : Void (Int32)
+    method get_LoanSharkRevengeCount : Int32 ()
+    method set_LoanSharkRevengeCount : Void (Int32)
+    method get_LoanSharkStalkTier : Int32 ()
+    method set_LoanSharkStalkTier : Void (Int32)
+    method get_LoanSharkStalkDay : Int32 ()
+    method set_LoanSharkStalkDay : Void (Int32)
+    method get_LoanSharkStalkCount : Int32 ()
+    method set_LoanSharkStalkCount : Void (Int32)
+    method get_CompanionNeglectAnchorSeconds : Int32 ()
+    method set_CompanionNeglectAnchorSeconds : Void (Int32)
+    method get_CompanionSurvivalTier : Int32 ()
+    method set_CompanionSurvivalTier : Void (Int32)
+    method get_CompanionTierAnchorSeconds : Int32 ()
+    method set_CompanionTierAnchorSeconds : Void (Int32)
+    method get_CompanionWishPendingReveal : Boolean ()
+    method set_CompanionWishPendingReveal : Void (Boolean)
+    method get_CompanionStruggleState : Int32 ()
+    method set_CompanionStruggleState : Void (Int32)
+    method get_CompanionStruggleDeadlineSeconds : Int32 ()
+    method set_CompanionStruggleDeadlineSeconds : Void (Int32)
+    method get_CompanionStruggleCount : Int32 ()
+    method set_CompanionStruggleCount : Void (Int32)
+    method get_CompanionLastSendDay : Int32 ()
+    method set_CompanionLastSendDay : Void (Int32)
+    method get_CompanionConsecutiveSendDays : Int32 ()
+    method set_CompanionConsecutiveSendDays : Void (Int32)
+    method get_CompanionWishIndex : Int32 ()
+    method set_CompanionWishIndex : Void (Int32)
+    method get_LoanSharkGnawRemainDamage : Int32 ()
+    method set_LoanSharkGnawRemainDamage : Void (Int32)
+    method get_LoanSharkGnawRemainTicks : Int32 ()
+    method set_LoanSharkGnawRemainTicks : Void (Int32)
+    method get_LoanSharkGnawNextSeconds : Int32 ()
+    method set_LoanSharkGnawNextSeconds : Void (Int32)
+    method get_LoanSharkGnawEventId : Int32 ()
+    method set_LoanSharkGnawEventId : Void (Int32)
+    method get_PreDisasterFurniturePurchaseRecords : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_PreDisasterFurniturePurchaseRecords : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_PhoneMuted : Boolean ()
+    method set_PhoneMuted : Void (Boolean)
+    method get_RainedToday : Boolean ()
+    method set_RainedToday : Void (Boolean)
+    method get_StrayZombieTodayTriggerCount : Int32 ()
+    method set_StrayZombieTodayTriggerCount : Void (Int32)
+    method get_StrayZombieTodayStamp : Int32 ()
+    method set_StrayZombieTodayStamp : Void (Int32)
+    method get_StrayZombieCooldownEndHour : Int32 ()
+    method set_StrayZombieCooldownEndHour : Void (Int32)
+    method get_QuickActionSlots : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_QuickActionSlots : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_FurnitureFuncLastUseTicks : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int64> ()
+    method set_FurnitureFuncLastUseTicks : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int64>)
+    method get_ActiveShelfDay : Int32 ()
+    method set_ActiveShelfDay : Void (Int32)
+    method get_ActiveShelfSnapshots : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String> ()
+    method set_ActiveShelfSnapshots : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String>)
+    method get_PendingEndingChoiceEventId : Int32 ()
+    method set_PendingEndingChoiceEventId : Void (Int32)
+    method get_AidPlatformJson : String ()
+    method set_AidPlatformJson : Void (String)
+    method get_TruthRecorderJson : String ()
+    method set_TruthRecorderJson : Void (String)
+    method get_CampJson : String ()
+    method set_CampJson : Void (String)
+    method get_RenovationStyleMap : Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32> ()
+    method set_RenovationStyleMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32>)
+    method get_ActiveShelfStock : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String> ()
+    method set_ActiveShelfStock : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String>)
+    method get_ActiveShelfRestockDay : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_ActiveShelfRestockDay : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_EndlessExploreTripDay : Int32 ()
+    method set_EndlessExploreTripDay : Void (Int32)
+    method get_EndlessExploreTripCount : Int32 ()
+    method set_EndlessExploreTripCount : Void (Int32)
+    method get_StrangerTradeAcceptCount : Int32 ()
+    method set_StrangerTradeAcceptCount : Void (Int32)
+    method get_CasualStateJson : String ()
+    method set_CasualStateJson : Void (String)
+    method get_LightPropSaveList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.LightPropSaveData> ()
+    method set_LightPropSaveList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.LightPropSaveData>)
+    method get_SurvivalPlanShownIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_SurvivalPlanShownIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_SurvivalPlanShownBatchSizes : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_SurvivalPlanShownBatchSizes : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_DayDescriptionLog_Community : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set_DayDescriptionLog_Community : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get_DayDescriptionLog_CommunityLang : String ()
+    method set_DayDescriptionLog_CommunityLang : Void (String)
+    method get_SurvivalPlanPinnedId : Int32 ()
+    method set_SurvivalPlanPinnedId : Void (Int32)
+    method get_SurvivalPlanPinnedSlot : Int32 ()
+    method set_SurvivalPlanPinnedSlot : Void (Int32)
+    method get_DoorBoxRobotTakeOn : Boolean ()
+    method set_DoorBoxRobotTakeOn : Void (Boolean)
+    method RegisterFormatter : Void ()
+    method Serialize : Void (MemoryPack.MemoryPackWriter`1<!!0>&,GameCore.HotUpdate.SaveChildData&)
+    method Deserialize : Void (MemoryPack.MemoryPackReader&,GameCore.HotUpdate.SaveChildData&)
+    method .ctor : Void ()
+    method .ctor : Void (IntPtr)
+    method get__LeadingRole_k__BackingField : GameCore.HotUpdate.AgentSave ()
+    method set__LeadingRole_k__BackingField : Void (GameCore.HotUpdate.AgentSave)
+    method get__ChapterAgentMap_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.AgentSave>> ()
+    method set__ChapterAgentMap_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.AgentSave>>)
+    method get__Day_k__BackingField : Int32 ()
+    method set__Day_k__BackingField : Void (Int32)
+    method get__GameTime_k__BackingField : Int32 ()
+    method set__GameTime_k__BackingField : Void (Int32)
+    method get__VitalityHistory_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.VitalityChangeRecord> ()
+    method set__VitalityHistory_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.VitalityChangeRecord>)
+    method get__LeadingRoleUsedItemsHistory_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemUsageRecord> ()
+    method set__LeadingRoleUsedItemsHistory_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemUsageRecord>)
+    method get__LeadingRoleUsedActionsHistory_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ActionRecord> ()
+    method set__LeadingRoleUsedActionsHistory_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ActionRecord>)
+    method get__LeadingRoleBuffChanges_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BuffChangeRecord> ()
+    method set__LeadingRoleBuffChanges_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BuffChangeRecord>)
+    method get__EventLogHistory_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EventLogRecord> ()
+    method set__EventLogHistory_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EventLogRecord>)
+    method get__DataCollectionCount_k__BackingField : Int32 ()
+    method set__DataCollectionCount_k__BackingField : Void (Int32)
+    method get__CurrentWish_k__BackingField : GameCore.HotUpdate.WishData ()
+    method set__CurrentWish_k__BackingField : Void (GameCore.HotUpdate.WishData)
+    method get__WishConsecutiveMiss_k__BackingField : Int32 ()
+    method set__WishConsecutiveMiss_k__BackingField : Void (Int32)
+    method get__DynamicEventSave_k__BackingField : GameCore.HotUpdate.DynamicEventSave ()
+    method set__DynamicEventSave_k__BackingField : Void (GameCore.HotUpdate.DynamicEventSave)
+    method get__TagSave_k__BackingField : GameCore.HotUpdate.TagSave ()
+    method set__TagSave_k__BackingField : Void (GameCore.HotUpdate.TagSave)
+    method get__Permissions_k__BackingField : GameCore.HotUpdate.PermissionsSave ()
+    method set__Permissions_k__BackingField : Void (GameCore.HotUpdate.PermissionsSave)
+    method get__Power_k__BackingField : GameCore.HotUpdate.PowerSave ()
+    method set__Power_k__BackingField : Void (GameCore.HotUpdate.PowerSave)
+    method get__PromptTriggerSave_k__BackingField : GameCore.HotUpdate.PromptTriggerSave ()
+    method set__PromptTriggerSave_k__BackingField : Void (GameCore.HotUpdate.PromptTriggerSave)
+    method get__Statistics_k__BackingField : GameCore.PreDisasterStatistics ()
+    method set__Statistics_k__BackingField : Void (GameCore.PreDisasterStatistics)
+    method get__IsPerfectPreparation_k__BackingField : Boolean ()
+    method set__IsPerfectPreparation_k__BackingField : Void (Boolean)
+    method get__DayDescriptionLog_CN_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__DayDescriptionLog_CN_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__DayDescriptionLog_EN_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__DayDescriptionLog_EN_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__SurvivalPoint_k__BackingField : Int32 ()
+    method set__SurvivalPoint_k__BackingField : Void (Int32)
+    method get__SurvivalTotalPoints_k__BackingField : Int32 ()
+    method set__SurvivalTotalPoints_k__BackingField : Void (Int32)
+    method get__CachedFaithPoints_k__BackingField : Int32 ()
+    method set__CachedFaithPoints_k__BackingField : Void (Int32)
+    method get__DayCachePoint_k__BackingField : Int32 ()
+    method set__DayCachePoint_k__BackingField : Void (Int32)
+    method get__ItemDailyUsageDict_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__ItemDailyUsageDict_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get__CompletedWishes_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CompletedWishRecord> ()
+    method set__CompletedWishes_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CompletedWishRecord>)
+    method get__ToolTableDataList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Battle.Logic.ToolTableData> ()
+    method set__ToolTableDataList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Battle.Logic.ToolTableData>)
+    method get__ProductionRecordList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__ProductionRecordList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__PreDisasterPurchaseRecords_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__PreDisasterPurchaseRecords_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get__PaperAirplaneSaveList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PaperAirplaneSaveData> ()
+    method set__PaperAirplaneSaveList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PaperAirplaneSaveData>)
+    method get__ExtraCountDownTime_k__BackingField : Int32 ()
+    method set__ExtraCountDownTime_k__BackingField : Void (Int32)
+    method get__DropItemSaveList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.DropItemSaveData> ()
+    method set__DropItemSaveList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.DropItemSaveData>)
+    method get__WeatherConfigId_k__BackingField : Int32 ()
+    method set__WeatherConfigId_k__BackingField : Void (Int32)
+    method get__PlacedTrapSaveList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PlacedTrapSave> ()
+    method set__PlacedTrapSaveList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PlacedTrapSave>)
+    method get__ProficiencyDiscoveryData_k__BackingField : GameCore.HotUpdate.ProficiencyDiscoverySave ()
+    method set__ProficiencyDiscoveryData_k__BackingField : Void (GameCore.HotUpdate.ProficiencyDiscoverySave)
+    method get__BasketPendingReturns_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BasketScheduledReturn> ()
+    method set__BasketPendingReturns_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.BasketScheduledReturn>)
+    method get__NeighborRescueProgress_k__BackingField : Int32 ()
+    method set__NeighborRescueProgress_k__BackingField : Void (Int32)
+    method get__NeighborTodayWishCategories_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__NeighborTodayWishCategories_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__NeighborMilestoneDone_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__NeighborMilestoneDone_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__NeighborAffinityOnceFlags_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__NeighborAffinityOnceFlags_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__NeighborLastRollDay_k__BackingField : Int32 ()
+    method set__NeighborLastRollDay_k__BackingField : Void (Int32)
+    method get__PhoneSMSConvList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSConvSave> ()
+    method set__PhoneSMSConvList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSConvSave>)
+    method get__NpcCommonStateList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.NpcCommonState> ()
+    method set__NpcCommonStateList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.NpcCommonState>)
+    method get__NeighborAffinity_k__BackingField : Int32 ()
+    method set__NeighborAffinity_k__BackingField : Void (Int32)
+    method get__NeighborLastProactiveGiftDay_k__BackingField : Int32 ()
+    method set__NeighborLastProactiveGiftDay_k__BackingField : Void (Int32)
+    method get__NeighborAffinitySeeded_k__BackingField : Boolean ()
+    method set__NeighborAffinitySeeded_k__BackingField : Void (Boolean)
+    method get__StrangerTradeActiveLastDealDay_k__BackingField : Int32 ()
+    method set__StrangerTradeActiveLastDealDay_k__BackingField : Void (Int32)
+    method get__StrangerTradeDroneDepartSec_k__BackingField : Int32 ()
+    method set__StrangerTradeDroneDepartSec_k__BackingField : Void (Int32)
+    method get__StrangerTradeDroneReturnSec_k__BackingField : Int32 ()
+    method set__StrangerTradeDroneReturnSec_k__BackingField : Void (Int32)
+    method get__StrangerTradeDroneCargoJson_k__BackingField : String ()
+    method set__StrangerTradeDroneCargoJson_k__BackingField : Void (String)
+    method get__StrangerTradeDroneOwnerId_k__BackingField : Int64 ()
+    method set__StrangerTradeDroneOwnerId_k__BackingField : Void (Int64)
+    method get__StrangerTradeActiveDealCountToday_k__BackingField : Int32 ()
+    method set__StrangerTradeActiveDealCountToday_k__BackingField : Void (Int32)
+    method get__GossipLastPushedDay_k__BackingField : Int32 ()
+    method set__GossipLastPushedDay_k__BackingField : Void (Int32)
+    method get__NeighborPendingDeathEventId_k__BackingField : Int32 ()
+    method set__NeighborPendingDeathEventId_k__BackingField : Void (Int32)
+    method get__NeighborCrisisFiredIdxList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__NeighborCrisisFiredIdxList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__NeighborRescueTriggerDay_k__BackingField : Int32 ()
+    method set__NeighborRescueTriggerDay_k__BackingField : Void (Int32)
+    method get__NeighborActiveRescueLineId_k__BackingField : Int32 ()
+    method set__NeighborActiveRescueLineId_k__BackingField : Void (Int32)
+    method get__PhoneSMSNpcReplyQueue_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSNpcReplyTask> ()
+    method set__PhoneSMSNpcReplyQueue_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSNpcReplyTask>)
+    method get__LoanSharkCompromiseTier_k__BackingField : Int32 ()
+    method set__LoanSharkCompromiseTier_k__BackingField : Void (Int32)
+    method get__LoanSharkFedCount_k__BackingField : Int32 ()
+    method set__LoanSharkFedCount_k__BackingField : Void (Int32)
+    method get__LoanSharkCompromiseDay_k__BackingField : Int32 ()
+    method set__LoanSharkCompromiseDay_k__BackingField : Void (Int32)
+    method get__StrangerTradeDroneTripType_k__BackingField : Int32 ()
+    method set__StrangerTradeDroneTripType_k__BackingField : Void (Int32)
+    method get__StrangerTradeDroneEncounterDone_k__BackingField : Boolean ()
+    method set__StrangerTradeDroneEncounterDone_k__BackingField : Void (Boolean)
+    method get__VehicleTrunkItems_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set__VehicleTrunkItems_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get__DoorBoxItems_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set__DoorBoxItems_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get__GossipTodayPushDay_k__BackingField : Int32 ()
+    method set__GossipTodayPushDay_k__BackingField : Void (Int32)
+    method get__GossipMorningTopic_k__BackingField : Int32 ()
+    method set__GossipMorningTopic_k__BackingField : Void (Int32)
+    method get__GossipEveningTopic_k__BackingField : Int32 ()
+    method set__GossipEveningTopic_k__BackingField : Void (Int32)
+    method get__GossipDrawnTopicIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__GossipDrawnTopicIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__GossipSpokeTopicIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__GossipSpokeTopicIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__GroupAnger_k__BackingField : Int32 ()
+    method set__GroupAnger_k__BackingField : Void (Int32)
+    method get__GossipLastRaidDay_k__BackingField : Int32 ()
+    method set__GossipLastRaidDay_k__BackingField : Void (Int32)
+    method get__NeighborCrisisActiveIndex_k__BackingField : Int32 ()
+    method set__NeighborCrisisActiveIndex_k__BackingField : Void (Int32)
+    method get__NeighborCrisisRequiredCategory_k__BackingField : Int32 ()
+    method set__NeighborCrisisRequiredCategory_k__BackingField : Void (Int32)
+    method get__NeighborCrisisDeadlineDay_k__BackingField : Int32 ()
+    method set__NeighborCrisisDeadlineDay_k__BackingField : Void (Int32)
+    method get__NeighborLastCrisisDay_k__BackingField : Int32 ()
+    method set__NeighborLastCrisisDay_k__BackingField : Void (Int32)
+    method get__NeighborLastReturnSmsStamp_k__BackingField : Int32 ()
+    method set__NeighborLastReturnSmsStamp_k__BackingField : Void (Int32)
+    method get__StrangerTradeNpcStockJson_k__BackingField : String ()
+    method set__StrangerTradeNpcStockJson_k__BackingField : Void (String)
+    method get__StrangerTradeDroneIsCharity_k__BackingField : Boolean ()
+    method set__StrangerTradeDroneIsCharity_k__BackingField : Void (Boolean)
+    method get__PhoneSMSQueuePlanDay_k__BackingField : Int32 ()
+    method set__PhoneSMSQueuePlanDay_k__BackingField : Void (Int32)
+    method get__PhoneSMSQueuePlan_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSQueuePlanEntry> ()
+    method set__PhoneSMSQueuePlan_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.PhoneSMSQueuePlanEntry>)
+    method get__DoorBoxItems2_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set__DoorBoxItems2_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get__BuildShopStockSnapshot_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>> ()
+    method set__BuildShopStockSnapshot_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>>)
+    method get__PendingDaySettlement_k__BackingField : Boolean ()
+    method set__PendingDaySettlement_k__BackingField : Void (Boolean)
+    method get__PendingSettlement_Day_k__BackingField : Int32 ()
+    method set__PendingSettlement_Day_k__BackingField : Void (Int32)
+    method get__PendingSettlement_HistoryMaxDay_k__BackingField : Int32 ()
+    method set__PendingSettlement_HistoryMaxDay_k__BackingField : Void (Int32)
+    method get__PendingSettlement_Morale_k__BackingField : Int32 ()
+    method set__PendingSettlement_Morale_k__BackingField : Void (Int32)
+    method get__PendingSettlement_DailyPoints_k__BackingField : Int32 ()
+    method set__PendingSettlement_DailyPoints_k__BackingField : Void (Int32)
+    method get__PendingSettlement_Points_k__BackingField : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set__PendingSettlement_Points_k__BackingField : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get__PendingSettlement_WishCount_k__BackingField : Int32 ()
+    method set__PendingSettlement_WishCount_k__BackingField : Void (Int32)
+    method get__PendingSettlement_SurvivalPlanIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__PendingSettlement_SurvivalPlanIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__IsFaithSettled_k__BackingField : Boolean ()
+    method set__IsFaithSettled_k__BackingField : Void (Boolean)
+    method get__FaithSettledTotal_k__BackingField : Int32 ()
+    method set__FaithSettledTotal_k__BackingField : Void (Int32)
+    method get__FaithSettledStages_k__BackingField : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set__FaithSettledStages_k__BackingField : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get__GameCounterDict_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32> ()
+    method set__GameCounterDict_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32>)
+    method get__FoodPollutionFurnitureIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int64> ()
+    method set__FoodPollutionFurnitureIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int64>)
+    method get__FoodPollutionLastResetDay_k__BackingField : Int32 ()
+    method set__FoodPollutionLastResetDay_k__BackingField : Void (Int32)
+    method get__CityChatPushedStamp_k__BackingField : Int32 ()
+    method set__CityChatPushedStamp_k__BackingField : Void (Int32)
+    method get__SeenProductionRecipeKeys_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__SeenProductionRecipeKeys_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__CraftUnlockedProductionIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__CraftUnlockedProductionIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__CompanionRescueProgress_k__BackingField : Int32 ()
+    method set__CompanionRescueProgress_k__BackingField : Void (Int32)
+    method get__CompanionAffinity_k__BackingField : Int32 ()
+    method set__CompanionAffinity_k__BackingField : Void (Int32)
+    method get__CompanionTodayWishCategories_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__CompanionTodayWishCategories_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__CompanionMilestoneDone_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__CompanionMilestoneDone_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__CompanionAffinityOnceFlags_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__CompanionAffinityOnceFlags_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__CompanionLastRollDay_k__BackingField : Int32 ()
+    method set__CompanionLastRollDay_k__BackingField : Void (Int32)
+    method get__CompanionLastProactiveGiftDay_k__BackingField : Int32 ()
+    method set__CompanionLastProactiveGiftDay_k__BackingField : Void (Int32)
+    method get__CompanionAffinitySeeded_k__BackingField : Boolean ()
+    method set__CompanionAffinitySeeded_k__BackingField : Void (Boolean)
+    method get__CompanionPendingDeathEventId_k__BackingField : Int32 ()
+    method set__CompanionPendingDeathEventId_k__BackingField : Void (Int32)
+    method get__CompanionCrisisFiredIdxList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__CompanionCrisisFiredIdxList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__CompanionRescueTriggerDay_k__BackingField : Int32 ()
+    method set__CompanionRescueTriggerDay_k__BackingField : Void (Int32)
+    method get__CompanionActiveRescueLineId_k__BackingField : Int32 ()
+    method set__CompanionActiveRescueLineId_k__BackingField : Void (Int32)
+    method get__CompanionCrisisActiveIndex_k__BackingField : Int32 ()
+    method set__CompanionCrisisActiveIndex_k__BackingField : Void (Int32)
+    method get__CompanionCrisisRequiredCategory_k__BackingField : Int32 ()
+    method set__CompanionCrisisRequiredCategory_k__BackingField : Void (Int32)
+    method get__CompanionCrisisDeadlineDay_k__BackingField : Int32 ()
+    method set__CompanionCrisisDeadlineDay_k__BackingField : Void (Int32)
+    method get__CompanionLastCrisisDay_k__BackingField : Int32 ()
+    method set__CompanionLastCrisisDay_k__BackingField : Void (Int32)
+    method get__CompanionLastReturnSmsStamp_k__BackingField : Int32 ()
+    method set__CompanionLastReturnSmsStamp_k__BackingField : Void (Int32)
+    method get__GroundLootBatchMap_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.GroundLootEntrySave>> ()
+    method set__GroundLootBatchMap_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.GroundLootEntrySave>>)
+    method get__DossierPayloadJson_k__BackingField : String ()
+    method set__DossierPayloadJson_k__BackingField : Void (String)
+    method get__StrangerSupportJson_k__BackingField : String ()
+    method set__StrangerSupportJson_k__BackingField : Void (String)
+    method get__TowerDefenseSave_k__BackingField : GameCore.HotUpdate.TowerDefenseSaveData ()
+    method set__TowerDefenseSave_k__BackingField : Void (GameCore.HotUpdate.TowerDefenseSaveData)
+    method get__NeighborLastCompanionSmsDay_k__BackingField : Int32 ()
+    method set__NeighborLastCompanionSmsDay_k__BackingField : Void (Int32)
+    method get__CompanionLastCompanionSmsDay_k__BackingField : Int32 ()
+    method set__CompanionLastCompanionSmsDay_k__BackingField : Void (Int32)
+    method get__EndlessSettlementJson_k__BackingField : String ()
+    method set__EndlessSettlementJson_k__BackingField : Void (String)
+    method get__WorkbenchDrawerItems_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave> ()
+    method set__WorkbenchDrawerItems_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ItemSave>)
+    method get__SceneRatCatchCooldownEndHour_k__BackingField : Int32 ()
+    method set__SceneRatCatchCooldownEndHour_k__BackingField : Void (Int32)
+    method get__PurchaseSafetyState_k__BackingField : GameCore.HotUpdate.PurchaseSafetyState ()
+    method set__PurchaseSafetyState_k__BackingField : Void (GameCore.HotUpdate.PurchaseSafetyState)
+    method get__ExploreVisitedList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ExploreVisitedEntry> ()
+    method set__ExploreVisitedList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.ExploreVisitedEntry>)
+    method get__ConsumedWeightTrimmed_k__BackingField : Int64 ()
+    method set__ConsumedWeightTrimmed_k__BackingField : Void (Int64)
+    method get__NeighborNeglectAnchorSeconds_k__BackingField : Int32 ()
+    method set__NeighborNeglectAnchorSeconds_k__BackingField : Void (Int32)
+    method get__NeighborLastSendDay_k__BackingField : Int32 ()
+    method set__NeighborLastSendDay_k__BackingField : Void (Int32)
+    method get__NeighborConsecutiveSendDays_k__BackingField : Int32 ()
+    method set__NeighborConsecutiveSendDays_k__BackingField : Void (Int32)
+    method get__NeighborWishIndex_k__BackingField : Int32 ()
+    method set__NeighborWishIndex_k__BackingField : Void (Int32)
+    method get__NeighborStruggleState_k__BackingField : Int32 ()
+    method set__NeighborStruggleState_k__BackingField : Void (Int32)
+    method get__NeighborStruggleDeadlineSeconds_k__BackingField : Int32 ()
+    method set__NeighborStruggleDeadlineSeconds_k__BackingField : Void (Int32)
+    method get__NeighborStruggleCount_k__BackingField : Int32 ()
+    method set__NeighborStruggleCount_k__BackingField : Void (Int32)
+    method get__NeighborDeathDayBonus_k__BackingField : Int32 ()
+    method set__NeighborDeathDayBonus_k__BackingField : Void (Int32)
+    method get__FoodPollutionCellMap_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int64,Il2CppSystem.Collections.Generic.List`1<Int32>> ()
+    method set__FoodPollutionCellMap_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int64,Il2CppSystem.Collections.Generic.List`1<Int32>>)
+    method get__FoodPollutionLastSpreadHour_k__BackingField : Int32 ()
+    method set__FoodPollutionLastSpreadHour_k__BackingField : Void (Int32)
+    method get__PendingDeathChoice_k__BackingField : Boolean ()
+    method set__PendingDeathChoice_k__BackingField : Void (Boolean)
+    method get__PendingDeath_Day_k__BackingField : Int32 ()
+    method set__PendingDeath_Day_k__BackingField : Void (Int32)
+    method get__PendingDeath_Hour_k__BackingField : Int32 ()
+    method set__PendingDeath_Hour_k__BackingField : Void (Int32)
+    method get__PendingDeath_CauseJson_k__BackingField : String ()
+    method set__PendingDeath_CauseJson_k__BackingField : Void (String)
+    method get__SeenNewSlotNames_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__SeenNewSlotNames_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__FoodPollutionLastShrinkHour_k__BackingField : Int32 ()
+    method set__FoodPollutionLastShrinkHour_k__BackingField : Void (Int32)
+    method get__FoodPollutionCrisisStartDay_k__BackingField : Int32 ()
+    method set__FoodPollutionCrisisStartDay_k__BackingField : Void (Int32)
+    method get__FoodPollutionLastSeedDay_k__BackingField : Int32 ()
+    method set__FoodPollutionLastSeedDay_k__BackingField : Void (Int32)
+    method get__FoodPollutionMinorCabinetId_k__BackingField : Int64 ()
+    method set__FoodPollutionMinorCabinetId_k__BackingField : Void (Int64)
+    method get__LoanSharkAppViewed_k__BackingField : Boolean ()
+    method set__LoanSharkAppViewed_k__BackingField : Void (Boolean)
+    method get__NeighborSurvivalTier_k__BackingField : Int32 ()
+    method set__NeighborSurvivalTier_k__BackingField : Void (Int32)
+    method get__NeighborTierAnchorSeconds_k__BackingField : Int32 ()
+    method set__NeighborTierAnchorSeconds_k__BackingField : Void (Int32)
+    method get__NeighborWishPendingReveal_k__BackingField : Boolean ()
+    method set__NeighborWishPendingReveal_k__BackingField : Void (Boolean)
+    method get__LoanSharkRevengeTier_k__BackingField : Int32 ()
+    method set__LoanSharkRevengeTier_k__BackingField : Void (Int32)
+    method get__LoanSharkRevengeDay_k__BackingField : Int32 ()
+    method set__LoanSharkRevengeDay_k__BackingField : Void (Int32)
+    method get__LoanSharkRevengeCount_k__BackingField : Int32 ()
+    method set__LoanSharkRevengeCount_k__BackingField : Void (Int32)
+    method get__LoanSharkStalkTier_k__BackingField : Int32 ()
+    method set__LoanSharkStalkTier_k__BackingField : Void (Int32)
+    method get__LoanSharkStalkDay_k__BackingField : Int32 ()
+    method set__LoanSharkStalkDay_k__BackingField : Void (Int32)
+    method get__LoanSharkStalkCount_k__BackingField : Int32 ()
+    method set__LoanSharkStalkCount_k__BackingField : Void (Int32)
+    method get__CompanionNeglectAnchorSeconds_k__BackingField : Int32 ()
+    method set__CompanionNeglectAnchorSeconds_k__BackingField : Void (Int32)
+    method get__CompanionSurvivalTier_k__BackingField : Int32 ()
+    method set__CompanionSurvivalTier_k__BackingField : Void (Int32)
+    method get__CompanionTierAnchorSeconds_k__BackingField : Int32 ()
+    method set__CompanionTierAnchorSeconds_k__BackingField : Void (Int32)
+    method get__CompanionWishPendingReveal_k__BackingField : Boolean ()
+    method set__CompanionWishPendingReveal_k__BackingField : Void (Boolean)
+    method get__CompanionStruggleState_k__BackingField : Int32 ()
+    method set__CompanionStruggleState_k__BackingField : Void (Int32)
+    method get__CompanionStruggleDeadlineSeconds_k__BackingField : Int32 ()
+    method set__CompanionStruggleDeadlineSeconds_k__BackingField : Void (Int32)
+    method get__CompanionStruggleCount_k__BackingField : Int32 ()
+    method set__CompanionStruggleCount_k__BackingField : Void (Int32)
+    method get__CompanionLastSendDay_k__BackingField : Int32 ()
+    method set__CompanionLastSendDay_k__BackingField : Void (Int32)
+    method get__CompanionConsecutiveSendDays_k__BackingField : Int32 ()
+    method set__CompanionConsecutiveSendDays_k__BackingField : Void (Int32)
+    method get__CompanionWishIndex_k__BackingField : Int32 ()
+    method set__CompanionWishIndex_k__BackingField : Void (Int32)
+    method get__LoanSharkGnawRemainDamage_k__BackingField : Int32 ()
+    method set__LoanSharkGnawRemainDamage_k__BackingField : Void (Int32)
+    method get__LoanSharkGnawRemainTicks_k__BackingField : Int32 ()
+    method set__LoanSharkGnawRemainTicks_k__BackingField : Void (Int32)
+    method get__LoanSharkGnawNextSeconds_k__BackingField : Int32 ()
+    method set__LoanSharkGnawNextSeconds_k__BackingField : Void (Int32)
+    method get__LoanSharkGnawEventId_k__BackingField : Int32 ()
+    method set__LoanSharkGnawEventId_k__BackingField : Void (Int32)
+    method get__PreDisasterFurniturePurchaseRecords_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__PreDisasterFurniturePurchaseRecords_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get__PhoneMuted_k__BackingField : Boolean ()
+    method set__PhoneMuted_k__BackingField : Void (Boolean)
+    method get__RainedToday_k__BackingField : Boolean ()
+    method set__RainedToday_k__BackingField : Void (Boolean)
+    method get__StrayZombieTodayTriggerCount_k__BackingField : Int32 ()
+    method set__StrayZombieTodayTriggerCount_k__BackingField : Void (Int32)
+    method get__StrayZombieTodayStamp_k__BackingField : Int32 ()
+    method set__StrayZombieTodayStamp_k__BackingField : Void (Int32)
+    method get__StrayZombieCooldownEndHour_k__BackingField : Int32 ()
+    method set__StrayZombieCooldownEndHour_k__BackingField : Void (Int32)
+    method get__QuickActionSlots_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__QuickActionSlots_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__FurnitureFuncLastUseTicks_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int64> ()
+    method set__FurnitureFuncLastUseTicks_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int64>)
+    method get__ActiveShelfDay_k__BackingField : Int32 ()
+    method set__ActiveShelfDay_k__BackingField : Void (Int32)
+    method get__ActiveShelfSnapshots_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String> ()
+    method set__ActiveShelfSnapshots_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String>)
+    method get__PendingEndingChoiceEventId_k__BackingField : Int32 ()
+    method set__PendingEndingChoiceEventId_k__BackingField : Void (Int32)
+    method get__AidPlatformJson_k__BackingField : String ()
+    method set__AidPlatformJson_k__BackingField : Void (String)
+    method get__TruthRecorderJson_k__BackingField : String ()
+    method set__TruthRecorderJson_k__BackingField : Void (String)
+    method get__CampJson_k__BackingField : String ()
+    method set__CampJson_k__BackingField : Void (String)
+    method get__RenovationStyleMap_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32> ()
+    method set__RenovationStyleMap_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<String,Int32>)
+    method get__ActiveShelfStock_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String> ()
+    method set__ActiveShelfStock_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,String>)
+    method get__ActiveShelfRestockDay_k__BackingField : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set__ActiveShelfRestockDay_k__BackingField : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get__EndlessExploreTripDay_k__BackingField : Int32 ()
+    method set__EndlessExploreTripDay_k__BackingField : Void (Int32)
+    method get__EndlessExploreTripCount_k__BackingField : Int32 ()
+    method set__EndlessExploreTripCount_k__BackingField : Void (Int32)
+    method get__StrangerTradeAcceptCount_k__BackingField : Int32 ()
+    method set__StrangerTradeAcceptCount_k__BackingField : Void (Int32)
+    method get__CasualStateJson_k__BackingField : String ()
+    method set__CasualStateJson_k__BackingField : Void (String)
+    method get__LightPropSaveList_k__BackingField : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.LightPropSaveData> ()
+    method set__LightPropSaveList_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.LightPropSaveData>)
+    method get__SurvivalPlanShownIds_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__SurvivalPlanShownIds_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__SurvivalPlanShownBatchSizes_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__SurvivalPlanShownBatchSizes_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__DayDescriptionLog_Community_k__BackingField : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__DayDescriptionLog_Community_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__DayDescriptionLog_CommunityLang_k__BackingField : String ()
+    method set__DayDescriptionLog_CommunityLang_k__BackingField : Void (String)
+    method get__SurvivalPlanPinnedId_k__BackingField : Int32 ()
+    method set__SurvivalPlanPinnedId_k__BackingField : Void (Int32)
+    method get__SurvivalPlanPinnedSlot_k__BackingField : Int32 ()
+    method set__SurvivalPlanPinnedSlot_k__BackingField : Void (Int32)
+    method get__DoorBoxRobotTakeOn_k__BackingField : Boolean ()
+    method set__DoorBoxRobotTakeOn_k__BackingField : Void (Boolean)
+TYPE GameCore.HotUpdate.MsgRecKey
+    field value__ : Int32
+    field C2S_AllCharactersKeyArray : GameCore.HotUpdate.MsgRecKey
+    field S2C_SelectCharacter : GameCore.HotUpdate.MsgRecKey
+    field C2S_CharacterBaseConfig : GameCore.HotUpdate.MsgRecKey
+    field C2S_SkillListInfo : GameCore.HotUpdate.MsgRecKey
+    field C2S_ReportAttrInfo : GameCore.HotUpdate.MsgRecKey
+    field S2C_ChangeAttr : GameCore.HotUpdate.MsgRecKey
+    field C2S_ReportBuffInfo : GameCore.HotUpdate.MsgRecKey
+    field S2C_RemoveBuff : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddBuff : GameCore.HotUpdate.MsgRecKey
+    field C2S_ReportAuraInfo : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddAura : GameCore.HotUpdate.MsgRecKey
+    field S2C_RemoveAura : GameCore.HotUpdate.MsgRecKey
+    field C2S_ReportPassiveSkillInfo : GameCore.HotUpdate.MsgRecKey
+    field C2S_AddLogs : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddDj : GameCore.HotUpdate.MsgRecKey
+    field C2S_Permissions : GameCore.HotUpdate.MsgRecKey
+    field S2C_Permissions : GameCore.HotUpdate.MsgRecKey
+    field C2S_AddTag : GameCore.HotUpdate.MsgRecKey
+    field C2S_AddSymbol : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddItem : GameCore.HotUpdate.MsgRecKey
+    field S2C_TriggerEvent : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddTalent : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddTag : GameCore.HotUpdate.MsgRecKey
+    field S2C_RemoveTag : GameCore.HotUpdate.MsgRecKey
+    field S2C_ClearStoredPower : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddBagFurniture : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipTimeline : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipToPostDisaster : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetSurvivalPlan : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipToPreDailyPlanning : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipDays : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetWeather : GameCore.HotUpdate.MsgRecKey
+    field S2C_ResetWeather : GameCore.HotUpdate.MsgRecKey
+    field S2C_DispatchAction : GameCore.HotUpdate.MsgRecKey
+    field S2C_ListActionTypes : GameCore.HotUpdate.MsgRecKey
+    field C2S_ActionResult : GameCore.HotUpdate.MsgRecKey
+    field C2S_ActionTypeList : GameCore.HotUpdate.MsgRecKey
+    field S2C_PlayerAction : GameCore.HotUpdate.MsgRecKey
+    field S2C_BreakAgentAction : GameCore.HotUpdate.MsgRecKey
+    field S2C_ClearAgentAction : GameCore.HotUpdate.MsgRecKey
+    field C2S_UIStack : GameCore.HotUpdate.MsgRecKey
+    field S2C_NearbyFurniture : GameCore.HotUpdate.MsgRecKey
+    field C2S_NearbyFurnitureList : GameCore.HotUpdate.MsgRecKey
+    field S2C_ListGameSaves : GameCore.HotUpdate.MsgRecKey
+    field S2C_ListBackups : GameCore.HotUpdate.MsgRecKey
+    field S2C_BackupSave : GameCore.HotUpdate.MsgRecKey
+    field S2C_InjectSave : GameCore.HotUpdate.MsgRecKey
+    field C2S_GameSavesList : GameCore.HotUpdate.MsgRecKey
+    field C2S_BackupsList : GameCore.HotUpdate.MsgRecKey
+    field C2S_BackupResult : GameCore.HotUpdate.MsgRecKey
+    field C2S_InjectResult : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetGameSpeed : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddProficiencyExp : GameCore.HotUpdate.MsgRecKey
+    field S2C_FillFurnitureDurability : GameCore.HotUpdate.MsgRecKey
+    field S2C_BypassEnterExplore : GameCore.HotUpdate.MsgRecKey
+    field S2C_GenerateWish : GameCore.HotUpdate.MsgRecKey
+    field C2S_EnvironmentSnapshot : GameCore.HotUpdate.MsgRecKey
+    field C2S_ActionComplete : GameCore.HotUpdate.MsgRecKey
+    field S2C_DiagnoseConditionSet : GameCore.HotUpdate.MsgRecKey
+    field C2S_ConditionSetDiagnose : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddProficiencyLevel : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipToDisasterImminent : GameCore.HotUpdate.MsgRecKey
+    field S2C_DeliverSMS : GameCore.HotUpdate.MsgRecKey
+    field S2C_AutoConfirmEvents : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipDailySettlement : GameCore.HotUpdate.MsgRecKey
+    field S2C_LockCharacterAttr : GameCore.HotUpdate.MsgRecKey
+    field S2C_LockFurnitureDurability : GameCore.HotUpdate.MsgRecKey
+    field S2C_MarkMetNpc : GameCore.HotUpdate.MsgRecKey
+    field S2C_CodexUnlockAll : GameCore.HotUpdate.MsgRecKey
+    field S2C_CodexClearAll : GameCore.HotUpdate.MsgRecKey
+    field S2C_CodexRandomUnlock : GameCore.HotUpdate.MsgRecKey
+    field S2C_TriggerNeighborMonologue : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddNeighborRescueProgress : GameCore.HotUpdate.MsgRecKey
+    field S2C_TestOldClassTrade : GameCore.HotUpdate.MsgRecKey
+    field S2C_TestPhoneReply : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddNeighborAffinity : GameCore.HotUpdate.MsgRecKey
+    field S2C_ApplyTestSuite : GameCore.HotUpdate.MsgRecKey
+    field C2S_TestSense : GameCore.HotUpdate.MsgRecKey
+    field S2C_TriggerAutoBehavior : GameCore.HotUpdate.MsgRecKey
+    field C2S_ReportAIStatus : GameCore.HotUpdate.MsgRecKey
+    field S2C_AutoCompleteEvents : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipOpeningTimeline : GameCore.HotUpdate.MsgRecKey
+    field S2C_PlayTimeline : GameCore.HotUpdate.MsgRecKey
+    field S2C_QuickInstallFurniture : GameCore.HotUpdate.MsgRecKey
+    field S2C_QuickInstallPreset : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAddGold : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAddCountDownTime : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmReturnAllHomePackages : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmClearMainBag : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRestoreStoryUnread : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAddBurden : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSetLightType : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmQueryHomeSlots : GameCore.HotUpdate.MsgRecKey
+    field C2S_GmHomeSlotsList : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmClearSlotFurniture : GameCore.HotUpdate.MsgRecKey
+    field S2C_AddFaithPoint : GameCore.HotUpdate.MsgRecKey
+    field S2C_UnlockPlayerSelect : GameCore.HotUpdate.MsgRecKey
+    field S2C_SkipOpeningBlackScreen : GameCore.HotUpdate.MsgRecKey
+    field S2C_TriggerDemoTwoEnding : GameCore.HotUpdate.MsgRecKey
+    field S2C_PlayHomeBuildTimelapse : GameCore.HotUpdate.MsgRecKey
+    field S2C_PlayRoomTimelapse : GameCore.HotUpdate.MsgRecKey
+    field S2C_PlayRoomStorageFillTimelapse : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmToggleDateTimeline : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmClearDailyCd : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerWaveStart : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerWaveSetState : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerWaveQuery : GameCore.HotUpdate.MsgRecKey
+    field C2S_GmTowerWaveStatus : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerZombieSpawn : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerZombieKillAll : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerZombieKillOne : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTowerDeviceRemove : GameCore.HotUpdate.MsgRecKey
+    field S2C_RightClickCopyFurnitureId : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRaiseExploreCamera : GameCore.HotUpdate.MsgRecKey
+    field S2C_LockExploreExposure : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSetDebugLogForward : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmFlushPlayModeLog : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmShowZombieDebugText : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRatVisitMark : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmShowEnvDebug : GameCore.HotUpdate.MsgRecKey
+    field S2C_DeleteGameSave : GameCore.HotUpdate.MsgRecKey
+    field S2C_DeleteBackup : GameCore.HotUpdate.MsgRecKey
+    field C2S_DeleteResult : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPlayEndlessBanner : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSpawnSceneRat : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetMinimapMode : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmShowAudioSourceViz : GameCore.HotUpdate.MsgRecKey
+    field S2C_OpenBackupsFolder : GameCore.HotUpdate.MsgRecKey
+    field S2C_GossipForcePush : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetSymbol : GameCore.HotUpdate.MsgRecKey
+    field S2C_SetGroupAnger : GameCore.HotUpdate.MsgRecKey
+    field S2C_AdvanceHours : GameCore.HotUpdate.MsgRecKey
+    field S2C_RebirthSnap : GameCore.HotUpdate.MsgRecKey
+    field S2C_RebirthSetState : GameCore.HotUpdate.MsgRecKey
+    field S2C_RebirthMinor : GameCore.HotUpdate.MsgRecKey
+    field S2C_RebirthOpenChoice : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmShowShadowDebug : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmUnlockAllExploreScenes : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmEndlessWaveStart : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmReviveOnDoorBreak : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmFlashlightTune : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmProbeUiBlock : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmForceDanceRecommend : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmForceGameOver : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSetGameDay : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTriggerSymptomAction : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmNeighborLineProbe : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmEndlessCrisis : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSetGameCounter : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAchievementOps : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAchievementTaboo : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPauseRenderFreezeOff : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmFillReinforceLayer : GameCore.HotUpdate.MsgRecKey
+    field S2C_RebirthRestart : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSimulateKey : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSimulateCheatEvidence : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmLoadingProfiler : GameCore.HotUpdate.MsgRecKey
+    field S2C_ConvertSaveToBytes : GameCore.HotUpdate.MsgRecKey
+    field C2S_ConvertSaveResult : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmStrayZombieSpawn : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPhotoMode : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmStopBg : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmBreakFurnitureShield : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmEnvProbe : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotPlan : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotSpawn : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotTrip : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotBattery : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotMaster : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotStub : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotFakeState : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmNpcGoto : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotBagFill : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotDockInfo : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotContainerSwitch : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmUnlockActiveTradePoints : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmFillStoredPower : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSwitchMainMenuScene : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPlantRobot : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmAidPlatform : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotTalk : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSpeedHotkey : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmRobotModule : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmExploreFreeCamera : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPreSupplyQuery : GameCore.HotUpdate.MsgRecKey
+    field C2S_GmPreSupplyList : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmPreSupplyOp : GameCore.HotUpdate.MsgRecKey
+    field C2S_GmPreSupplyResult : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmShowClickRayProbe : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmCasualDevOverride : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmEnterCasual : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmCasualHome : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmCasualDebug : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmTrainerCrash : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmCommission : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmExploreAutoSearch : GameCore.HotUpdate.MsgRecKey
+    field S2C_GmSkipPrologueAndPreDisaster : GameCore.HotUpdate.MsgRecKey
+TYPE GameCore.HotUpdate.S2C_GmSetGameCounter
+    field NativeFieldInfoPtr__Name_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__Value_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__IsDelta_k__BackingField : IntPtr
+    field NativeMethodInfoPtr_get_Name_Public_get_String_0 : IntPtr
+    field NativeMethodInfoPtr_set_Name_Public_set_Void_String_0 : IntPtr
+    field NativeMethodInfoPtr_get_Value_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_Value_Public_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsDelta_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsDelta_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    method .cctor : Void ()
+    method get_Name : String ()
+    method set_Name : Void (String)
+    method get_Value : Int32 ()
+    method set_Value : Void (Int32)
+    method get_IsDelta : Boolean ()
+    method set_IsDelta : Void (Boolean)
+    method .ctor : Void ()
+    method .ctor : Void (IntPtr)
+    method get__Name_k__BackingField : String ()
+    method set__Name_k__BackingField : Void (String)
+    method get__Value_k__BackingField : Int32 ()
+    method set__Value_k__BackingField : Void (Int32)
+    method get__IsDelta_k__BackingField : Boolean ()
+    method set__IsDelta_k__BackingField : Void (Boolean)
+TYPE GameCore.HotUpdate.Battle.Logic.GameCounter
+    field NativeFieldInfoPtr_KEY_CLUE : IntPtr
+    field NativeFieldInfoPtr_KEY_MARKET_LOOT : IntPtr
+    field NativeFieldInfoPtr_KEY_SCHOOL_LOOT : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_GIFT : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_MET : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_GIFT_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_LETTER_GIVEN : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_SEED : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_FLOWER : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_IVY : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_HARVEST : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_HARVEST_FLOWER : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_HARVEST_VEGFRUIT : IntPtr
+    field NativeFieldInfoPtr_KEY_PLANT_PERFECT : IntPtr
+    field NativeFieldInfoPtr_KEY_COOK_COUNT : IntPtr
+    field NativeFieldInfoPtr_KEY_TRAP_PLACE : IntPtr
+    field NativeFieldInfoPtr_KEY_COOK_MIDNIGHT : IntPtr
+    field NativeFieldInfoPtr_MidnightHourStart : IntPtr
+    field NativeFieldInfoPtr_MidnightHourEnd : IntPtr
+    field NativeFieldInfoPtr_KEY_GROUP_REPLY : IntPtr
+    field NativeFieldInfoPtr_KEY_EXPLORE_POINTS_DISTINCT : IntPtr
+    field NativeFieldInfoPtr_KEY_CRISIS_SURVIVED : IntPtr
+    field NativeFieldInfoPtr_KEY_TALENT_LEARN : IntPtr
+    field NativeFieldInfoPtr_KEY_CRAFT_POT : IntPtr
+    field NativeFieldInfoPtr_KEY_CRAFT_HEATER : IntPtr
+    field NativeFieldInfoPtr_KEY_CRAFT_DISINFECTANT : IntPtr
+    field NativeFieldInfoPtr_KEY_CRAFT_DYED : IntPtr
+    field NativeFieldInfoPtr_KEY_WH_GIFT : IntPtr
+    field NativeFieldInfoPtr_KEY_COMPANION_GIFT2 : IntPtr
+    field NativeFieldInfoPtr_KEY_AID_BASKET : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_PREP_SUPPLY : IntPtr
+    field NativeFieldInfoPtr_KEY_SUPPLY_DELIVERED : IntPtr
+    field NativeFieldInfoPtr_KEY_EXPLORE_TOTAL : IntPtr
+    field NativeFieldInfoPtr_KEY_TRAP_CATCH : IntPtr
+    field NativeFieldInfoPtr_KEY_COOK_PERFECT : IntPtr
+    field NativeFieldInfoPtr_KEY_CRAFT_TOTAL : IntPtr
+    field NativeFieldInfoPtr_KEY_TRADE_STRANGER_PARTNER : IntPtr
+    field NativeFieldInfoPtr_KEY_TRADE_DEAL_COUNT : IntPtr
+    field NativeFieldInfoPtr_KEY_DRONE_FORAGING_COUNT : IntPtr
+    field NativeFieldInfoPtr_KEY_DRONE_FORAGING_RETURN : IntPtr
+    field NativeFieldInfoPtr_KEY_TRADE_DEAL_DAYS_LEGACY : IntPtr
+    field NativeFieldInfoPtr_KEY_DRONE_FORAGING_DAYS_LEGACY : IntPtr
+    field NativeFieldInfoPtr_KEY_TRADE_COUNTER_MIGRATED : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIE_KILL : IntPtr
+    field NativeFieldInfoPtr_KEY_SIEGE_FINAL_KILL : IntPtr
+    field NativeFieldInfoPtr_KEY_WAVE_SURVIVED : IntPtr
+    field NativeFieldInfoPtr_KEY_WAVE_MAX_ZOMBIES : IntPtr
+    field NativeFieldInfoPtr_KEY_TOWERWAVE_ELASTIC_LAST_DMG : IntPtr
+    field NativeFieldInfoPtr_KEY_TVGAME_REWARD_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_MUSIC_MORALE_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_TVGAME_BEST_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_START_PACKAGE_GRANTED : IntPtr
+    field NativeFieldInfoPtr_KEY_START_BAGFURNITURE_GRANTED : IntPtr
+    field NativeFieldInfoPtr_KEY_START_BAGFURNITURE_REGISTERED : IntPtr
+    field NativeFieldInfoPtr_KEY_DANCE_LAST_STAMP : IntPtr
+    field NativeFieldInfoPtr_KEY_DANCE_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_DANCE_COUNT : IntPtr
+    field NativeFieldInfoPtr_KEY_DANCE_CRISIS_END_STAMP : IntPtr
+    field NativeFieldInfoPtr_KEY_DANCE_WISH_STAMP : IntPtr
+    field NativeFieldInfoPtr_KEY_PREDISASTER_SPENT : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_TIER : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_START_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_PHASE : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_POS_X : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_POS_Y : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_POS_Z : IntPtr
+    field NativeFieldInfoPtr_KEY_ZOMBIELURE_FALLBACK : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_PHASE : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_POINT : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_ROUND : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_START_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_STAGE : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_DRONE : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_OFFER_POINT : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_OFFER_DEADLINE : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_LAST_OFFER_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_GRUDGE_SMS : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_MILESTONE_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTER_DISTRICT_SHIELD_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_TERMINAL_CHALLENGE_DAY_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_GRUDGE_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_DAMAGE_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_GIFT_DUE_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_LAST_RETREAT_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_LAST_REFUSE_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_RETREAT_SEC_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_SHELTERAID_RETREAT_ROUND_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_RELIEVED_SEC_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_DEFEND_POINT : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_FALL_TIER_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_HELPED_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_AID_ROUND_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_AID_CALL_SEC_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_AID_CALL_WAVE_PREFIX : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_EVAC_COUNT : IntPtr
+    field NativeFieldInfoPtr_KEY_ENDLESS_SAVED_DAYS_TOTAL : IntPtr
+    field NativeFieldInfoPtr_KEY_FAITH_ROUND_INSTANT : IntPtr
+    field NativeFieldInfoPtr_KEY_SIEGE_DOOR_WINDOW_DAMAGE : IntPtr
+    field NativeFieldInfoPtr_KEY_AIDPLATFORM_DONE : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_BUILD_DELIVER : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_PHASE : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_STAGE : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_SUPPLY_TV : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_BUILD_DUE_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_BLOCK_ITEM : IntPtr
+    field NativeFieldInfoPtr_KEY_CAMP_LEADER : IntPtr
+    field NativeFieldInfoPtr_KEY_HUB_RUN_DUE_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_BUILT : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_LINK_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_POWERED_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_ACCUM_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_SUSTAINED : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_MSG_SEC : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_COMM_MSG_IDX : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_FUEL_SENT : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_BRANCH : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_BEACON_UPGRADED : IntPtr
+    field NativeFieldInfoPtr_KEY_RESCUE_D50_JUDGED : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_BUILD_PHASE : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_SAMPLE_PRODUCT : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_SAMPLE_SEED : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_SAMPLE_PRODUCT_KINDS : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_SAMPLE_SEED_KINDS : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_COLD_CROP_DAY : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_BUILD_DYE : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_REPAINT_TARGET : IntPtr
+    field NativeFieldInfoPtr_KEY_GREENHOUSE_REPAINT_GOT : IntPtr
+    field NativeMethodInfoPtr_get_Cur_Private_Static_get_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_GetCounter_Public_Static_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_GetCounterMaxByPrefix_Public_Static_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_IncCounter_Public_Static_Void_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_SetCounter_Public_Static_Void_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IncCounterOncePerDay_Public_Static_Boolean_String_String_0 : IntPtr
+    field NativeMethodInfoPtr_IsCountedToday_Public_Static_Boolean_String_0 : IntPtr
+    method .cctor : Void ()
+    method get_Cur : GameCore.HotUpdate.SaveChildData ()
+    method GetCounter : Int32 (String)
+    method GetCounterMaxByPrefix : Int32 (String)
+    method IncCounter : Void (String,Int32)
+    method SetCounter : Void (String,Int32)
+    method IncCounterOncePerDay : Boolean (String,String)
+    method IsCountedToday : Boolean (String)
+    method .ctor : Void (IntPtr)
+    method get_KEY_CLUE : String ()
+    method set_KEY_CLUE : Void (String)
+    method get_KEY_MARKET_LOOT : String ()
+    method set_KEY_MARKET_LOOT : Void (String)
+    method get_KEY_SCHOOL_LOOT : String ()
+    method set_KEY_SCHOOL_LOOT : Void (String)
+    method get_KEY_RESCUE_GIFT : String ()
+    method set_KEY_RESCUE_GIFT : Void (String)
+    method get_KEY_RESCUE_MET : String ()
+    method set_KEY_RESCUE_MET : Void (String)
+    method get_KEY_RESCUE_GIFT_DAY : String ()
+    method set_KEY_RESCUE_GIFT_DAY : Void (String)
+    method get_KEY_RESCUE_LETTER_GIVEN : String ()
+    method set_KEY_RESCUE_LETTER_GIVEN : Void (String)
+    method get_KEY_PLANT_SEED : String ()
+    method set_KEY_PLANT_SEED : Void (String)
+    method get_KEY_PLANT_FLOWER : String ()
+    method set_KEY_PLANT_FLOWER : Void (String)
+    method get_KEY_PLANT_IVY : String ()
+    method set_KEY_PLANT_IVY : Void (String)
+    method get_KEY_PLANT_HARVEST : String ()
+    method set_KEY_PLANT_HARVEST : Void (String)
+    method get_KEY_PLANT_HARVEST_FLOWER : String ()
+    method set_KEY_PLANT_HARVEST_FLOWER : Void (String)
+    method get_KEY_PLANT_HARVEST_VEGFRUIT : String ()
+    method set_KEY_PLANT_HARVEST_VEGFRUIT : Void (String)
+    method get_KEY_PLANT_PERFECT : String ()
+    method set_KEY_PLANT_PERFECT : Void (String)
+    method get_KEY_COOK_COUNT : String ()
+    method set_KEY_COOK_COUNT : Void (String)
+    method get_KEY_TRAP_PLACE : String ()
+    method set_KEY_TRAP_PLACE : Void (String)
+    method get_KEY_COOK_MIDNIGHT : String ()
+    method set_KEY_COOK_MIDNIGHT : Void (String)
+    method get_MidnightHourStart : Int32 ()
+    method set_MidnightHourStart : Void (Int32)
+    method get_MidnightHourEnd : Int32 ()
+    method set_MidnightHourEnd : Void (Int32)
+    method get_KEY_GROUP_REPLY : String ()
+    method set_KEY_GROUP_REPLY : Void (String)
+    method get_KEY_EXPLORE_POINTS_DISTINCT : String ()
+    method set_KEY_EXPLORE_POINTS_DISTINCT : Void (String)
+    method get_KEY_CRISIS_SURVIVED : String ()
+    method set_KEY_CRISIS_SURVIVED : Void (String)
+    method get_KEY_TALENT_LEARN : String ()
+    method set_KEY_TALENT_LEARN : Void (String)
+    method get_KEY_CRAFT_POT : String ()
+    method set_KEY_CRAFT_POT : Void (String)
+    method get_KEY_CRAFT_HEATER : String ()
+    method set_KEY_CRAFT_HEATER : Void (String)
+    method get_KEY_CRAFT_DISINFECTANT : String ()
+    method set_KEY_CRAFT_DISINFECTANT : Void (String)
+    method get_KEY_CRAFT_DYED : String ()
+    method set_KEY_CRAFT_DYED : Void (String)
+    method get_KEY_WH_GIFT : String ()
+    method set_KEY_WH_GIFT : Void (String)
+    method get_KEY_COMPANION_GIFT2 : String ()
+    method set_KEY_COMPANION_GIFT2 : Void (String)
+    method get_KEY_AID_BASKET : String ()
+    method set_KEY_AID_BASKET : Void (String)
+    method get_KEY_CAMP_PREP_SUPPLY : String ()
+    method set_KEY_CAMP_PREP_SUPPLY : Void (String)
+    method get_KEY_SUPPLY_DELIVERED : String ()
+    method set_KEY_SUPPLY_DELIVERED : Void (String)
+    method get_KEY_EXPLORE_TOTAL : String ()
+    method set_KEY_EXPLORE_TOTAL : Void (String)
+    method get_KEY_TRAP_CATCH : String ()
+    method set_KEY_TRAP_CATCH : Void (String)
+    method get_KEY_COOK_PERFECT : String ()
+    method set_KEY_COOK_PERFECT : Void (String)
+    method get_KEY_CRAFT_TOTAL : String ()
+    method set_KEY_CRAFT_TOTAL : Void (String)
+    method get_KEY_TRADE_STRANGER_PARTNER : String ()
+    method set_KEY_TRADE_STRANGER_PARTNER : Void (String)
+    method get_KEY_TRADE_DEAL_COUNT : String ()
+    method set_KEY_TRADE_DEAL_COUNT : Void (String)
+    method get_KEY_DRONE_FORAGING_COUNT : String ()
+    method set_KEY_DRONE_FORAGING_COUNT : Void (String)
+    method get_KEY_DRONE_FORAGING_RETURN : String ()
+    method set_KEY_DRONE_FORAGING_RETURN : Void (String)
+    method get_KEY_TRADE_DEAL_DAYS_LEGACY : String ()
+    method set_KEY_TRADE_DEAL_DAYS_LEGACY : Void (String)
+    method get_KEY_DRONE_FORAGING_DAYS_LEGACY : String ()
+    method set_KEY_DRONE_FORAGING_DAYS_LEGACY : Void (String)
+    method get_KEY_TRADE_COUNTER_MIGRATED : String ()
+    method set_KEY_TRADE_COUNTER_MIGRATED : Void (String)
+    method get_KEY_ZOMBIE_KILL : String ()
+    method set_KEY_ZOMBIE_KILL : Void (String)
+    method get_KEY_SIEGE_FINAL_KILL : String ()
+    method set_KEY_SIEGE_FINAL_KILL : Void (String)
+    method get_KEY_WAVE_SURVIVED : String ()
+    method set_KEY_WAVE_SURVIVED : Void (String)
+    method get_KEY_WAVE_MAX_ZOMBIES : String ()
+    method set_KEY_WAVE_MAX_ZOMBIES : Void (String)
+    method get_KEY_TOWERWAVE_ELASTIC_LAST_DMG : String ()
+    method set_KEY_TOWERWAVE_ELASTIC_LAST_DMG : Void (String)
+    method get_KEY_TVGAME_REWARD_DAY : String ()
+    method set_KEY_TVGAME_REWARD_DAY : Void (String)
+    method get_KEY_MUSIC_MORALE_DAY : String ()
+    method set_KEY_MUSIC_MORALE_DAY : Void (String)
+    method get_KEY_TVGAME_BEST_PREFIX : String ()
+    method set_KEY_TVGAME_BEST_PREFIX : Void (String)
+    method get_KEY_START_PACKAGE_GRANTED : String ()
+    method set_KEY_START_PACKAGE_GRANTED : Void (String)
+    method get_KEY_START_BAGFURNITURE_GRANTED : String ()
+    method set_KEY_START_BAGFURNITURE_GRANTED : Void (String)
+    method get_KEY_START_BAGFURNITURE_REGISTERED : String ()
+    method set_KEY_START_BAGFURNITURE_REGISTERED : Void (String)
+    method get_KEY_DANCE_LAST_STAMP : String ()
+    method set_KEY_DANCE_LAST_STAMP : Void (String)
+    method get_KEY_DANCE_DAY : String ()
+    method set_KEY_DANCE_DAY : Void (String)
+    method get_KEY_DANCE_COUNT : String ()
+    method set_KEY_DANCE_COUNT : Void (String)
+    method get_KEY_DANCE_CRISIS_END_STAMP : String ()
+    method set_KEY_DANCE_CRISIS_END_STAMP : Void (String)
+    method get_KEY_DANCE_WISH_STAMP : String ()
+    method set_KEY_DANCE_WISH_STAMP : Void (String)
+    method get_KEY_PREDISASTER_SPENT : String ()
+    method set_KEY_PREDISASTER_SPENT : Void (String)
+    method get_KEY_ZOMBIELURE_TIER : String ()
+    method set_KEY_ZOMBIELURE_TIER : Void (String)
+    method get_KEY_ZOMBIELURE_START_SEC : String ()
+    method set_KEY_ZOMBIELURE_START_SEC : Void (String)
+    method get_KEY_ZOMBIELURE_PHASE : String ()
+    method set_KEY_ZOMBIELURE_PHASE : Void (String)
+    method get_KEY_ZOMBIELURE_POS_X : String ()
+    method set_KEY_ZOMBIELURE_POS_X : Void (String)
+    method get_KEY_ZOMBIELURE_POS_Y : String ()
+    method set_KEY_ZOMBIELURE_POS_Y : Void (String)
+    method get_KEY_ZOMBIELURE_POS_Z : String ()
+    method set_KEY_ZOMBIELURE_POS_Z : Void (String)
+    method get_KEY_ZOMBIELURE_FALLBACK : String ()
+    method set_KEY_ZOMBIELURE_FALLBACK : Void (String)
+    method get_KEY_SHELTERAID_PHASE : String ()
+    method set_KEY_SHELTERAID_PHASE : Void (String)
+    method get_KEY_SHELTERAID_POINT : String ()
+    method set_KEY_SHELTERAID_POINT : Void (String)
+    method get_KEY_SHELTERAID_ROUND : String ()
+    method set_KEY_SHELTERAID_ROUND : Void (String)
+    method get_KEY_SHELTERAID_START_SEC : String ()
+    method set_KEY_SHELTERAID_START_SEC : Void (String)
+    method get_KEY_SHELTERAID_STAGE : String ()
+    method set_KEY_SHELTERAID_STAGE : Void (String)
+    method get_KEY_SHELTERAID_DRONE : String ()
+    method set_KEY_SHELTERAID_DRONE : Void (String)
+    method get_KEY_SHELTERAID_OFFER_POINT : String ()
+    method set_KEY_SHELTERAID_OFFER_POINT : Void (String)
+    method get_KEY_SHELTERAID_OFFER_DEADLINE : String ()
+    method set_KEY_SHELTERAID_OFFER_DEADLINE : Void (String)
+    method get_KEY_SHELTERAID_LAST_OFFER_DAY : String ()
+    method set_KEY_SHELTERAID_LAST_OFFER_DAY : Void (String)
+    method get_KEY_SHELTERAID_GRUDGE_SMS : String ()
+    method set_KEY_SHELTERAID_GRUDGE_SMS : Void (String)
+    method get_KEY_SHELTERAID_MILESTONE_DAY : String ()
+    method set_KEY_SHELTERAID_MILESTONE_DAY : Void (String)
+    method get_KEY_SHELTER_DISTRICT_SHIELD_DAY : String ()
+    method set_KEY_SHELTER_DISTRICT_SHIELD_DAY : Void (String)
+    method get_KEY_TERMINAL_CHALLENGE_DAY_PREFIX : String ()
+    method set_KEY_TERMINAL_CHALLENGE_DAY_PREFIX : Void (String)
+    method get_KEY_SHELTERAID_GRUDGE_SEC : String ()
+    method set_KEY_SHELTERAID_GRUDGE_SEC : Void (String)
+    method get_KEY_SHELTERAID_DAMAGE_PREFIX : String ()
+    method set_KEY_SHELTERAID_DAMAGE_PREFIX : Void (String)
+    method get_KEY_SHELTERAID_GIFT_DUE_SEC : String ()
+    method set_KEY_SHELTERAID_GIFT_DUE_SEC : Void (String)
+    method get_KEY_SHELTERAID_LAST_RETREAT_SEC : String ()
+    method set_KEY_SHELTERAID_LAST_RETREAT_SEC : Void (String)
+    method get_KEY_SHELTERAID_LAST_REFUSE_SEC : String ()
+    method set_KEY_SHELTERAID_LAST_REFUSE_SEC : Void (String)
+    method get_KEY_SHELTERAID_RETREAT_SEC_PREFIX : String ()
+    method set_KEY_SHELTERAID_RETREAT_SEC_PREFIX : Void (String)
+    method get_KEY_SHELTERAID_RETREAT_ROUND_PREFIX : String ()
+    method set_KEY_SHELTERAID_RETREAT_ROUND_PREFIX : Void (String)
+    method get_KEY_ENDLESS_RELIEVED_SEC_PREFIX : String ()
+    method set_KEY_ENDLESS_RELIEVED_SEC_PREFIX : Void (String)
+    method get_KEY_ENDLESS_DEFEND_POINT : String ()
+    method set_KEY_ENDLESS_DEFEND_POINT : Void (String)
+    method get_KEY_ENDLESS_FALL_TIER_PREFIX : String ()
+    method set_KEY_ENDLESS_FALL_TIER_PREFIX : Void (String)
+    method get_KEY_ENDLESS_HELPED_PREFIX : String ()
+    method set_KEY_ENDLESS_HELPED_PREFIX : Void (String)
+    method get_KEY_ENDLESS_AID_ROUND_PREFIX : String ()
+    method set_KEY_ENDLESS_AID_ROUND_PREFIX : Void (String)
+    method get_KEY_ENDLESS_AID_CALL_SEC_PREFIX : String ()
+    method set_KEY_ENDLESS_AID_CALL_SEC_PREFIX : Void (String)
+    method get_KEY_ENDLESS_AID_CALL_WAVE_PREFIX : String ()
+    method set_KEY_ENDLESS_AID_CALL_WAVE_PREFIX : Void (String)
+    method get_KEY_ENDLESS_EVAC_COUNT : String ()
+    method set_KEY_ENDLESS_EVAC_COUNT : Void (String)
+    method get_KEY_ENDLESS_SAVED_DAYS_TOTAL : String ()
+    method set_KEY_ENDLESS_SAVED_DAYS_TOTAL : Void (String)
+    method get_KEY_FAITH_ROUND_INSTANT : String ()
+    method set_KEY_FAITH_ROUND_INSTANT : Void (String)
+    method get_KEY_SIEGE_DOOR_WINDOW_DAMAGE : String ()
+    method set_KEY_SIEGE_DOOR_WINDOW_DAMAGE : Void (String)
+    method get_KEY_AIDPLATFORM_DONE : String ()
+    method set_KEY_AIDPLATFORM_DONE : Void (String)
+    method get_KEY_GREENHOUSE_BUILD_DELIVER : String ()
+    method set_KEY_GREENHOUSE_BUILD_DELIVER : Void (String)
+    method get_KEY_CAMP_PHASE : String ()
+    method set_KEY_CAMP_PHASE : Void (String)
+    method get_KEY_CAMP_STAGE : String ()
+    method set_KEY_CAMP_STAGE : Void (String)
+    method get_KEY_CAMP_SUPPLY_TV : String ()
+    method set_KEY_CAMP_SUPPLY_TV : Void (String)
+    method get_KEY_CAMP_BUILD_DUE_SEC : String ()
+    method set_KEY_CAMP_BUILD_DUE_SEC : Void (String)
+    method get_KEY_CAMP_BLOCK_ITEM : String ()
+    method set_KEY_CAMP_BLOCK_ITEM : Void (String)
+    method get_KEY_CAMP_LEADER : String ()
+    method set_KEY_CAMP_LEADER : Void (String)
+    method get_KEY_HUB_RUN_DUE_SEC : String ()
+    method set_KEY_HUB_RUN_DUE_SEC : Void (String)
+    method get_KEY_RESCUE_COMM_BUILT : String ()
+    method set_KEY_RESCUE_COMM_BUILT : Void (String)
+    method get_KEY_RESCUE_COMM_LINK_SEC : String ()
+    method set_KEY_RESCUE_COMM_LINK_SEC : Void (String)
+    method get_KEY_RESCUE_COMM_POWERED_SEC : String ()
+    method set_KEY_RESCUE_COMM_POWERED_SEC : Void (String)
+    method get_KEY_RESCUE_COMM_ACCUM_SEC : String ()
+    method set_KEY_RESCUE_COMM_ACCUM_SEC : Void (String)
+    method get_KEY_RESCUE_COMM_SUSTAINED : String ()
+    method set_KEY_RESCUE_COMM_SUSTAINED : Void (String)
+    method get_KEY_RESCUE_COMM_MSG_SEC : String ()
+    method set_KEY_RESCUE_COMM_MSG_SEC : Void (String)
+    method get_KEY_RESCUE_COMM_MSG_IDX : String ()
+    method set_KEY_RESCUE_COMM_MSG_IDX : Void (String)
+    method get_KEY_RESCUE_FUEL_SENT : String ()
+    method set_KEY_RESCUE_FUEL_SENT : Void (String)
+    method get_KEY_RESCUE_BRANCH : String ()
+    method set_KEY_RESCUE_BRANCH : Void (String)
+    method get_KEY_RESCUE_BEACON_UPGRADED : String ()
+    method set_KEY_RESCUE_BEACON_UPGRADED : Void (String)
+    method get_KEY_RESCUE_D50_JUDGED : String ()
+    method set_KEY_RESCUE_D50_JUDGED : Void (String)
+    method get_KEY_GREENHOUSE_BUILD_PHASE : String ()
+    method set_KEY_GREENHOUSE_BUILD_PHASE : Void (String)
+    method get_KEY_GREENHOUSE_SAMPLE_PRODUCT : String ()
+    method set_KEY_GREENHOUSE_SAMPLE_PRODUCT : Void (String)
+    method get_KEY_GREENHOUSE_SAMPLE_SEED : String ()
+    method set_KEY_GREENHOUSE_SAMPLE_SEED : Void (String)
+    method get_KEY_GREENHOUSE_SAMPLE_PRODUCT_KINDS : String ()
+    method set_KEY_GREENHOUSE_SAMPLE_PRODUCT_KINDS : Void (String)
+    method get_KEY_GREENHOUSE_SAMPLE_SEED_KINDS : String ()
+    method set_KEY_GREENHOUSE_SAMPLE_SEED_KINDS : Void (String)
+    method get_KEY_GREENHOUSE_COLD_CROP_DAY : String ()
+    method set_KEY_GREENHOUSE_COLD_CROP_DAY : Void (String)
+    method get_KEY_GREENHOUSE_BUILD_DYE : String ()
+    method set_KEY_GREENHOUSE_BUILD_DYE : Void (String)
+    method get_KEY_GREENHOUSE_REPAINT_TARGET : String ()
+    method set_KEY_GREENHOUSE_REPAINT_TARGET : Void (String)
+    method get_KEY_GREENHOUSE_REPAINT_GOT : String ()
+    method set_KEY_GREENHOUSE_REPAINT_GOT : Void (String)

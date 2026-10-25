@@ -1,0 +1,7 @@
+TYPE GameCore.HotUpdate.Battle.Logic.AgentTools
+    field NativeMethodInfoPtr_AddAgentComponent_Public_Static_T_BaseAgent_0 : IntPtr
+    field NativeMethodInfoPtr_GetAgentComponent_Public_Static_T_BaseAgent_0 : IntPtr
+    method .cctor : Void ()
+    method AddAgentComponent : !!0 (GameCore.HotUpdate.Battle.Logic.BaseAgent)
+    method GetAgentComponent : !!0 (GameCore.HotUpdate.Battle.Logic.BaseAgent)
+    method .ctor : Void (IntPtr)

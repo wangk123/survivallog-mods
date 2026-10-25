@@ -42,7 +42,7 @@ public sealed class RoleUnlockPlugin : BasePlugin
     public const string Guid = "com.local.survivallog.roleunlock";
     public const string Name = "RoleUnlock";
     // 跟随套件 version.json，发版时与套件同步（版本号由作者定义）
-    public const string Version = "1.3.8";
+    public const string Version = "1.7.0";
 
     internal static ManualLogSource Log;
 

@@ -1,0 +1,13 @@
+0x02777a70  and al,50h
+0x02777a72  test rcx,rcx
+0x02777a75  jne short 0000000002777AB9h
+0x02777a77  lea r11,[rsp+70h]
+0x02777a7c  mov rbx,[r11+30h]
+0x02777a80  mov rsi,[r11+38h]
+0x02777a84  mov rsp,r11
+0x02777a87  pop r15
+0x02777a89  pop r14
+0x02777a8b  pop r13
+0x02777a8d  pop r12
+0x02777a8f  pop rdi
+0x02777a90  ret

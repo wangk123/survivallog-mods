@@ -39,7 +39,7 @@ public sealed class CabinetEverywherePlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.cabineteverywhere";
     public const string Name = "CabinetEverywhere";
-    public const string Version = "1.3.8";
+    public const string Version = "1.7.0";
 
     internal static ManualLogSource Log;
 

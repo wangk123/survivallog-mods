@@ -2,6 +2,7 @@
 
 > 本文档随源码存放在 mod 自己的文件夹内；**每次迭代改动必须同步更新本文档**（文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json；机制与实证结论长期有效。
+> 验证于 gamekb：`2026-10-23_26157732`（游戏 buildid 26157732 / RuntimeAssets 1.1.19611，实机全绿）
 
 ## 1. 功能定位
 
@@ -48,10 +49,10 @@
 
 | 文件 | 职责 |
 |---|---|
-| `CabinetExpandPlugin.cs` | 入口：配置定义、Rerun、`DiscoverTargets()` 名单发现（自动发现+冷链跳过+黑名单+cfg 套用）、`DiscoverVehicles()` 载具组（Config_Vehicle 枚举+1023 种子+撞号防御）、挂诊断补丁、注入 Ticker |
-| `BagInitDiag`（同文件） | Harmony postfix `BagComponent.OnInit(int)`：读档时列出全部容器实体的 BagConfigId/名称/当前尺寸（DiagOnOpen=true 时）；**always-on 载具打点**——受管载具包实例初始化必打一行（门口袋落地自证），2003（共包改绑候选）单独提示一次 |
-| `CabinetTicker`（同文件） | 5 秒轮询幂等改写；ListOnReady=true 首轮在日志列出全部受管包与尺寸前后（自证+留档原生尺寸）；车表就绪首轮打"载具组补录"名单 |
-| `ViewportFit.cs` | 视口适配守卫（2026-10-16）：修大柜子页签把界面右栏挤出屏幕；详见 §3.1 |
+| `CabinetExpandPlugin.cs` | 入口：配置定义、Rerun、`DiscoverTargets()` 名单发现（自动发现+冷链跳过+黑名单+cfg 套用）、`DiscoverVehicles()` 载具组（Config_Vehicle 枚举+1023 种子+撞号防御）、挂诊断补丁、注入 Ticker。**General.Enabled 启停门**（2026-10-24，ModCenter 启停位）：Bind 最前 + Load 早退（不挂诊断补丁、不启 Ticker/视口守卫、零日志） |
+| `BagInitDiag`（同文件） | Harmony postfix `BagComponent.OnInit(int)`：读档时列出全部容器实体的 BagConfigId/名称/当前尺寸（DiagOnOpen=true 时）；**always-on 载具打点**——受管载具包实例初始化必打一行（门口袋落地自证），2003（共包改绑候选）单独提示一次。首行 General 门：停用即停诊断输出 |
+| `CabinetTicker`（同文件） | 5 秒轮询幂等改写；ListOnReady=true 首轮在日志列出全部受管包与尺寸前后（自证+留档原生尺寸）；车表就绪首轮打"载具组补录"名单。**首行 General.Enabled 门 + `_applied` 单次还原**（2026-10-24）：false=`RestoreAllSizes()`（三组名单重新发现后 ×1 回写共享层 OrigW/H 原值；封顶组不走 CappedRewrite——还原不吃 MaxCols 封顶，材料架原生 20 列回 20）后停写 |
+| `ViewportFit.cs` | 视口适配守卫（2026-10-16）：修大柜子页签把界面右栏挤出屏幕；详见 §3.1。FitTicker 首行 General 总门（2026-10-24）：主开关关=视口脚本立即停注（优先于 UiFit.Enabled），重开后 2s 内恢复巡检 |
 | `ModShared\BagTableRw.cs` | 共享源码（编译进本 dll，本轮未改动——不触发 4 份扩容文档同步） |
 
 ### 3.1 视口适配守卫 ViewportFit（2026-10-16，ViewportProbe 三轮实测驱动）
@@ -66,6 +67,64 @@
 - **LockFit（BrewPanel/DyePanel/RatCage 三页，v14/v15 终版）**：往页面注入【官方锁的纯累计复刻 + 官方 `createViewportFit` 调用】脚本（页面上下文）。根因：官方 `createGridSizeLock` 的 seenCols **有服务端 maxCols 提示时无视历史累计**（`hintC ? max(hintC,cols) : max(seen,cols)`）——这三页提示疑随页签变导致锁失效（烹饪的提示是真·常量最大值所以原生稳定）。复刻版纯累计（`max(seen,cols)`），在页面 message 监听里**同步**重写格子外边距（页面自己的 listener 先注册先执行、我们后写=生效且无闪帧），再调官方 fit。v15 加**初始即最大**：`BootstrapJs` 属性把受管包最大宽高（ManagedMaxW/H，封顶后由 CabinetTicker 每轮刷新）填为 seenC/seenR 初始值 → 打开即最大柜子尺寸、永远恒定（对齐烹饪/工作台）。取舍：站点只连小柜子时也按最大预留留白（与官方页访问过大柜子后的观感相同）。TrapUI 跳过（#app 是 display:contents 无可测根容器）。
 - **MaxCols 宽度封顶（C# 侧，v1.3.4 起）**：材料架 20 列×1.5=30 是全游戏唯一异类，让每个界面多一档缩放。默认封 23（=超大型置物架）后全部柜子页签同宽、缩放统一。实现：PartitionByCap 按"投影宽度>cap"分流，超限包不进共享 RewriteSize（避免每周期 23↔30 来回改写刷日志），走本地 CappedRewrite（NativeW/NativeH 本地缓存原生值，幂等）。
 - **v5~v12 自制锁定机制已全线拆除（2026-10-17，用户四小时实测反馈驱动）**：曾用 min-width 锁复刻官方尺寸锁（根容器/格子/栏位/持久状态/消息中继），五轮翻车，教训沉淀：①测量含被自己写入样式影响的元素=反馈循环（无限缩小）；②className 做锁定键，兄弟共类名则互相污染（酿酒桶三栏全胖、老鼠笼黑块）；③只在"新值>记录"时写样式，页面重开（DOM 重建）后永不恢复；④观测最快 150ms/帧且去重，与用户 60fps 肉眼不可对齐，黑匣子（CEVFBB）只能证伪不能证实。**结论：能走官方机制就不自制；确需自制时，锁定键用结构序号、样式写入要幂等恢复、验证要么逐帧采样要么开 CDP 远程调试。**
+
+### 3.2 滚动范式 v16~v17.5b（2026-10-22~23 试验，**2026-10-23 作者否决全线回退，现行=v15**）
+
+> **结局**：滚动范式经五轮实机翻车（跑飞收缩/交易多列污染/官方锁占位空白/整页宽度缩小/审计补漏）后，作者拍板否决："这个方案否了吧，相关代码等等全部清掉，还是保留之前的方案。" 现行代码=§3.1 的 v15（官方 fit + flex-shrink:0 + 欠缩桥接 + LOCKFIT + MaxCols=23/×1.5），cfg 默认同步还原（UiFit.Mode 键已删，老 cfg 里的残留键会被 BepInEx 忽略无害）。滚动相关代码（BootstrapScroll/tuneWrap/tuneWidth/ensureVueScroll/VUE_SCROLL/诊断日志）与工具（cevf_scroll_*.js）已全部删除；`tools\_srv_scroll_test.js`（通用 WebUI 离线测试服务器）保留。测试包 scrolltest 目录与 zip 已删。
+
+以下为试验记录（留档教训，**代码已不存在**）：
+
+背景：仍有场景因柜子太大溢出；对比 xmod 格子级压缩（不可行：createGridBag 的 step 是构造期闭包常量，事后缩格子必错位）与纯官方自适应（欠缩 bug+锁提示缺陷）后，作者定滚动路线——**改数据不改 UI 的最彻底形态**。cfg 新默认：MaxCols 23→**20**（=官方原生最大宽度，材料架 110009 的 20 列；Player.log 全表实证原生最大即 20）、柜子/冰箱/载具 HeightMult 1.5→**2.0**、新增 `UiFit.Mode`（**Scroll 默认**/Zoom=v15 回退/Off）。Zoom 模式完整保留旧 Bootstrap 常量（回退开关不能是坏的）。
+
+Scroll 模式（`BootstrapScroll`，Root 上下文，通用发现、不再按页维护公式表）：
+- **网格识别**：createGridBag 造的容器带『双轴内联 `repeat(N,Xpx)`』签名，全 iframe 通用发现（TrapUI 仓库格等 ROOTS 外页面自动受益）；另收材料架分行视图 `.rk-host`。**Vue 子树内的网格跳过**（沿祖先查 `__vue_app__` 标记；DOM 手术与 Vue patch 打架——TrapPanel 的网格刻意放在 Vue 根外所以能包，DailyFert/DroneHub/BackpackUI 等留给官方自身缩放兜底）。
+- **滚动 wrapper**：网格外包一层 `max-height:72vh; overflow-y:auto` 的 div——**网格整体平移而非容器内部滚**。决定性依据：官方 `getCursorCell/getGridCoordinates` 换算是 `clientY-rect.top` 且无 scrollTop 项——容器自滚内容平移而盒子不动必错位；外层滚则 rect.top 随滚动变化，逐次取 rect 的换算天然正确。滚轮可用性依据：官方 Codex 图鉴页大量 `overflow-y:auto` 列表。
+- **活矩形（正确性核心）**：覆写网格 `getBoundingClientRect` 返回活代理（每次读属性现取现值）。官方拖拽协调器**起拖时把 rect 缓存进闭包**（webui-bag.js `_bagRects`、BackpackUI `cachedRects`），"拖到一半滚屏再放"用旧值必落错格——活代理让这份缓存天然保鲜。
+- **LockFit 滚动版**：保留 v14 纯累计宽锁（左右外边距占位，宽恒定）+ 官方 createViewportFit 调用（宽度超出才缩；高度已被 wrapper 封顶不再触发纵向 zoom）；v15 的高度锁 dy 拆除。
+- **A 页 shrink0 保留**（小视口官方 fit 量宽防挤压）；**不再写任何 zoom**（v15 欠缩桥接整段删除）。
+- 三关校验：`tools\cevf_scroll_check.js`（语法/无半角双引号/LOCKFIT 页面层正则逐字单反斜杠）。
+
+本轮明确不动：BackpackUI 家柜双栏（Vue 拖拽闭包复杂，官方缩放兜底，待作者实测后定去留）。
+
+**v17 修补（2026-10-22 深夜，作者首轮实测反馈：交易柜子格子小、烹饪/酿酒桶压扁）**：
+- 压扁根因=封顶 72vh 没算官方 fit 的 48px 边距，根容器越线被官方轻缩（k≈0.96）→ **动态封顶** tuneWrap：按页算 预算（视口−官方边距[MARGINS 表/LOCKFIT m]）− 页头页脚（根高−wrapper 高实测），带防跑飞守卫（压一轮根高没降=瓶颈在别的列→回退钉死；下限 300px），改动后 dispatch resize 让官方 fit 自己重算收敛到 k=1。
+- 交易页（Vue）专属滚动化 ensureVueScroll：不动 DOM，给 #tradeBagGrid 的**父容器**写 max-height+overflow（父滚=网格整体平移，官方 y-rect.top 换算成立）+ 网格与 .rack-view 活矩形；样式幂等自查防被 Vue 冲掉；VUE_SCROLL 表（grid/rack/root/margin）。交易拖拽同款起拖缓存 _gridRects 无 scrollTop 项——父滚+活矩形双保险。
+- 页面名正则放宽 `(?:\/|\.)`（v16 整场会话 TradeUI 零日志，疑因 URL 直链 .html 不带斜杠）；新增每 iframe 一次 `:map gN vN rN` 诊断行；vue-skip 改每元素一次防 2s 刷屏。
+
+**v17.1 浏览器实测定稿（2026-10-22 深夜，作者令：改完先 Playwright 自测再交付）**：
+- **实测抓出致命排序 bug**：表（ROOTS/MARGINS 等 var）定义在 IIFE 末尾，而 `pass()` 在开头同步调用——此刻表为 undefined，`ROOTS[page]` 抛异常被吞，**每 2s 的直跑 pass 全部静默失败**（v15/v16 同病：线上全靠首轮注入的 load 钩子闭包延迟触发干活，直跑轮询一直是死代码；v17 的动态封顶恰依赖它）。修=五张表挪到 IIFE 开头。
+- **动态封顶改双向**：不只"超预算压回"，还"没超就撑大"——封顶永远对齐官方预算（视口−边距−实测页头页脚）。实测烹饪 622→679px、酿酒桶 622→727px（边距 24 预算更宽），根高精确=预算、官方缩放恒 k=1。
+- **活矩形拖拽正确性实测铁证**（本地 harness：tools\_srv_scroll_test.js 服务器 + /WebUI 路径映射 + Playwright 1536x864）：官方公式逐字复刻下，起拖缓存对象滚屏 440px 后落点仍指第 17 行；死矩形对照错成第 7 行。
+- 实测覆盖：Cooking（wrap/双向封顶/滚动/活矩形/零高度缩放）、BrewPanel（shrink0+lockfit 宽锁 margins 实写+cap727+零缩放）、TradeUI（正则匹配 .html 路径+网格缺席优雅跳过+重复执行无异常）。未覆盖：ensureVueScroll 真实网格路径（页面无 Unity 数据不渲染，留待实机 :map/:vscroll 日志确认）；harness 里烹饪被官方按宽度缩 0.84 属快照缺图标变宽的假象，游戏内 20 列在官方设计预算内。
+
+**v17.2 跑飞收缩修复（2026-10-22 深夜二轮，作者实机反馈：工作台/交易特别扁、无人机站底部大片空白）**：
+- 实机日志铁证（Player-prev.log）：cap 单调下滑至下限——Cooking 674→300、Brew/Dye 688/687→300、DroneHub 721→689→669→403→383、ToolTable 首轮即 300。根因=**wrapper 无 flex-shrink:0**：高度受限面板（工作台 body=100vh 实证）里 wrapper 被 flex 压缩，而『页头=根高−wrapper 高』的估法随压缩正反馈放大（v2 教训同类：测量含被自己写入样式影响的元素）。空白症状=格子区被压到 300~383px 后面板剩余全是空白。
+- 修三件：①wrapper/交易 host 加 `flex-shrink:0`；②页头（chrome）首测后**冻结**（rec.chrome），断掉测量-写入耦合；③tuneWrap 重写——**固定高度根**（根高≈视口，官方 fit 本就按满屏量、预算分支永远无法满足）只按【父容器可用空间=父内容高−内边距−兄弟高】封顶（colAvailOf，仅对 column/block 父生效防 flex-row 误算）；普通根=预算−冻结页头，父容器真溢出时再夹可用空间。
+- 二轮浏览器实测矩阵（1536×864，全绿）：ToolTable cap682 稳定 8 轮（v17.1 同场景首轮即 300）；Cooking cap679 稳定+活矩形滚屏落点 17→17+小网格无副作用（245px 自然高无滚动条）；DroneHub 双 wrapper 622/430 稳定 8 轮（v17.1 螺旋到 383）；Brew cap727+宽锁+零缩放；TradeUI 同构 mock（.trade 固定高结构）host cap468 稳定+格子原生尺寸不压+活矩形。
+- 测试基建留存：tools\_srv_scroll_test.js（/WebUI/* 路径映射 + harness.html?page=）+ tools\cevf_scroll_extract.js（从 .cs 提取注入脚本）。注意 Playwright 视口会被后续操作重置（1536×864→1440×2369 实测），每次测试前必须重设。
+- BackpackUI 家柜双栏空白（作者截图三左侧）= 官方 syncSlotHeight 对 ×2 高柜的占位行为，本 mod 零接触（日志 BackpackUI:map g0），仍属"本轮不动"边界。
+
+**v17.3/v17.3b/v17.3c 缩放信号收敛（2026-10-23，作者实机复测"交易没变化"后的三轮根治）**：
+- v17.2 实机复盘：ToolTable cap1377/1278（巨大但无害=虚拟分辨率下正常）；TradeUI vcap639 仍只有 5 行——**『根高−wrapper 高=页头』推算在多列面板被其他列污染**（交易页货舱/商品列撑根高全被算成页头）；日志里 Brew/DroneHub 的 cap300/403 实为小列 wrapper 的无害误算。harness mock 结构比真实页简单没暴露此病——**mock 必须忠实复刻多列结构**。
+- v17.3 弃一切自算页头，改**缩放信号收敛**：官方 fit 装不下就写 zoom（vanilla 页 body、交易页 #app）——目标恒为『根高=预算』，cap = wrapH + budget − rootH（绝对值幂等）；k 只做方向闸（<0.995 压 / ≥0.995 且富余撑大，±8px 迟滞）。两道防误压闸：主导列判定（wrapper 不足根高一半不参与）+ 回退守卫（压一轮根高没降=别的列是瓶颈→回退钉死，官方轻微缩放属正当）。忠实 mock 实证两处推导错误：budget/k 会把缩放永久锁住（0.539 十轮不动）；content-box 容器 maxHeight 不含 padding，与 offsetHeight 换算差 30px 持续微抖——写入按 padding/边框补偿、比较用 rec.lastCap 不解析样式。
+- 忠实交易 mock 终测（复刻 head+三列+foot+官方同款 fit 公式）：基线 zoom 0.522（复现"格子小"症状）→ v17.3c **zoom=1.000、格子原生 50px、10 行+滚动、十轮全稳**；右列过高时回退守卫正确保护背包列（zoom 0.956 可接受端点）。回归：ToolTable 682 稳 15 行、Cooking 679 稳+活矩形 17→17。
+- 教训：①多列面板上任何"从总量反推常量"的测量都靠不住，改用系统自己的反馈信号（官方 zoom）做收敛目标；②box 模型差异（content-box maxHeight vs offsetHeight）在像素级收敛公式里必须显式补偿；③函数重名静默覆盖（tuneWraps 重复定义，后定义赢）三关校验不报、只有实测行为异常能暴露——注入脚本加"唯一函数名"断言。
+
+**v17.4 官方锁占位空白修复（2026-10-23，作者给出决定性场景：多柜页签，开过大柜后切小柜，滚到底一大片空白）**：
+- 根因=官方 createGridSizeLock 的下边距占位：见过 24 行大柜后切 12 行小柜，锁在网格下垫 marginBottom=(行数差)×步长 保面板大小——缩放时代它只是面板留白，滚动时代它进了滚动区变成**可滚动的空白**。离线此前测不到：官方锁只在游戏内消息驱动下写边距，harness 无消息（教训：**官方行为要在测试里手工模拟，不能指望它自己跑**）。
+- 修两件：①ensureWrap 时注入 `.__CEVF_SCW > *{margin-bottom:0px !important}` 杀掉滚动容器内的纵向占位；②tuneWrap 写 minHeight=maxHeight（wrapper 定高）——面板切页签稳定性由 wrapper 接管（等效官方锁意图），小柜时空白=面板背景（官方观感）而非滚动内容；stuck 回退时同步清 minHeight。
+- 复现测试（DroneHub 真实页，手工模拟锁垫 552px）：切小柜后 margin 归零、滚动空白=0（滚无可滚）、面板高度 816→816 恒定、小柜 12 行全显无需滚动。
+
+**v17.5 宽度轴（2026-10-23，作者 v17.4 实机截图定案：整页缩小、面板只占屏幕五六成、四周大片空白）**：
+- `:tune0` 诊断钉死规律：单列页酿酒桶 k=1.000 完美；多列页全卡在缩放（工作台 0.385→0.810、无人机站 0.653→0.907、交易 0.444）——高度滚动已起效但**面板宽度超视口**（工作台=20 列柜格 920px+配方列≈1837px > 1488），官方对装不下的唯一手段是整页缩小。高度是我漏掉的第二个轴（同盲区三次：mock 缺列→漏锁垫→漏宽度）。
+- 修=tuneWidth（与纵向同款缩放信号收敛）：k<0.995 且宽度主导（wrapW×2≥rootW）时 wcap=wrapW+budgetW−rootW 封宽（同 stuck 回退守卫、box 补偿、±2 迟滞；只压不撑，自然宽 100% 即上限），wrapper overflow-x:auto，网格横向滚动；活矩形对 clientX-rect.left 同机制保鲜。调用点放在诊断后、纵向逻辑前（纵向各提前返回分支不再跳过宽度处理——首版挂纵向写后曾漏此）。
+- 决定性验证（Cooking 真实页，其官方 fit 离线即跑）：20 列大柜+食谱列 → 第 1 轮 k=0.842（症状复现）→ 第 2 轮起 **k=1.000**、封宽 669px 横向滚动、十轮全稳、**横向滚到底拖拽列判定 17→17**。ToolTable 离线 fit 不跑（消息驱动）宽度轴正确待命，实机自动接管。
+
+**v17.5b 全页面审计（2026-10-23，作者令：不要每次靠他发现问题）**：
+- 审计方法=全 14 个受管页逐个加载真实源码 + **注入官方同款 fit 模拟器**（公式逐字复刻，解决消息驱动页离线缩放不跑的覆盖缺口）+ 每页跑 20×24 大柜收敛矩阵（k≥0.99/稳定/包裹）+ 重点页切柜占位断言。审计器：tools\cevf_scroll_audit.js（清单）+ harness 循环脚本。
+- 首轮结果：13 绿 + **AidDepot k=0.770**——双栏布局（我的仓库栏 955+对方栏 ~950=1937px），网格占 49% 被『主导列≥50%』守卫以 27px 之差拦截。修=宽度主导判定放宽到 40%（wrapW×5≥rootW×2）：宽度封顶破坏性低（横向滚动+stuck 回退兜底），高度守卫维持严格 50% 不变。
+- 复测：**14/14 页 k=1.000**（AidDepot 封宽 506/11 列+横滚，其余无回归）。TrapUI 无官方 fit 属纯滚动包裹（k 断言空真，可接受）。
+- 审计发现的问题在交付前修复——这就是"自检发现、不靠玩家发现"的工作方式，后续此 mod 的 UI 改动一律先跑全页审计矩阵。
 
 铁律：**BackpackUI/TradeUI 永不触碰**（自带 applyViewportFit 且拖拽补偿是私有 `clientX/viewportZoom` 变量，外人设缩放必错位）；B 工具安全性依据=createGridBag 族坐标换算自动除以 `getBodyZoom()`（body 计算缩放），外部设 zoom 天生被补偿。
 
@@ -82,6 +141,7 @@
 
 | 键 | 默认 | 说明 |
 |---|---|---|
+| **General.Enabled** | true | 总开关（2026-10-24，ModCenter 启停位）：false=还原官方原值并停写（含视口守卫同停）；下次启动不加载 |
 | WidthMult | 1.5 | 柜子宽度倍数（AwayFromZero 取整） |
 | HeightMult | 1.5 | 柜子高度倍数（同上） |
 | FridgeWidthMult | 1.5 | 冰箱宽度倍数；1=还原原生 |
@@ -150,6 +210,7 @@ cfg 兼容：老 CabinetExpand cfg 的 ExtraIds/ExcludeIds 键名与语义不变
 - 统一化（2026-10-13，用户反馈"大型置物架反而比小型格子少"驱动）：8 包白名单 → 自动发现+黑名单（柜子 19 进/34 排）；根因=置物架家族只有 110001 被扩反超大型；新增 ListOnReady 首跑名单日志；材料架分行视图实证后保留纳入。
 - 并入冰箱扩容（2026-10-13 同日，用户拍板）：FridgeExpand 退役（源码/发版脚本/安装器组件/文案全撤），冰箱组=全冷链电器包自动发现，FridgeWidth/FridgeHeightMult 独立倍数；单写者原则消除双乘风险类别。
 - 载具组（2026-10-18，用户拍板"只扩载具和家里的购物袋，宽高各×1.5"）：Config_Vehicle 全档 TrunkBagId 自动发现 + 门口袋专用包 1023 种子（包名"SUV后备箱"与门口袋共用，12x10→18x15 已实测生效）；车表随对局加载，就绪首轮补录名单；购物袋数量 2 不扩（§7）。
+- 2026-10-24（T10，ModCenter）：`General.Enabled` 启停门（Bind 最前 + Load 早退 + Ticker 首行 gate + `_applied` 单次还原）。还原=`RestoreAllSizes()`：重新发现三组名单后共享层 RewriteSize ×1 回写（封顶组不走 CappedRewrite，还原不吃 MaxCols 封顶）；ViewportFit FitTicker 首行同款总门（主开关关=视口脚本立即停注）；BagInitDiag 首行同门停诊断。边界（与 BackpackExpand 同源继承）：运行中关闭时名单按**当前 cfg** 重算——先 ExcludeIds 排除某已扩包再热关 Enabled，该包留改写值至下次表重载。
 
 ## 9. 迭代维护清单（改本 mod 时同步更新）
 

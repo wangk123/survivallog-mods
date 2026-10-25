@@ -18,7 +18,7 @@ public sealed class PlanPickPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.planpick";
     public const string Name = "PlanPick";
-    public const string Version = "1.3.8";
+    public const string Version = "1.7.0";
 
     internal static new ManualLogSource Log;
     // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=移除入口按钮停注入（含关悬浮层、

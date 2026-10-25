@@ -7,21 +7,18 @@ using Object = UnityEngine.Object;
 namespace SurvivalLog.CabinetExpand;
 
 /// <summary>
-/// 柜子界面视口适配守卫 v13（2026-10-17 大幅简化——v5~v12 自制锁定机制全线拆除）。
-///
-/// 历史：v4 核心（flex-shrink:0 + 欠缩桥接 + MaxCols 封顶）已验证稳定；v5~v12 试图用自制
-/// min-width 锁复刻官方尺寸锁，五轮翻车（反馈循环/黑块/类名撞键三栏全胖/重开样式丢失），
-/// 教训见记忆 webui-viewport-fit 条目。v13 只保留被验证的部分 + 一处官方机制注入：
+/// 柜子界面视口适配守卫 v15（2026-10-23 滚动范式（v16~v17.5b）经作者实测否决，全线回退本版）。
 ///
 /// - A 页（12 个自带官方适配的页面）：注入『根容器 flex-shrink:0』修复官方测量的封顶盲区
 ///   （大柜子页签时容器被 flex 挤压、右栏顶出屏幕而测量看不见）；欠缩时按官方同公式桥接补写
 ///   （按页照抄官方 margin/heightProp，页面下次重算自然收敛，无争夺）。
 /// - B 页（BrewPanel/DyePanel：官方完全没接适配）：往页面注入官方 createViewportFit 的调用
-///   （页面上下文，webui-bag.js 全局函数）——与 12 个稳定页面同一机制。页面自带官方
-///   createGridSizeLock 外边距占位（v10~v12 期间误判其失效——offsetWidth 不含边距）。
-/// - TrapUI 跳过（#app 是 display:contents 无可测根容器）；BackpackUI/TradeUI 永不触碰
-///   （私有拖拽补偿变量，外人设缩放必错位）。
+///   （页面上下文，webui-bag.js 全局函数）——与 12 个稳定页面同一机制。
+/// - LOCKFIT（BrewPanel/DyePanel/RatCage）：官方锁纯累计复刻 + ManagedMax 初始（打开即最大）。
+/// - TrapUI 跳过（#app 是 display:contents 无可测根容器）；BackpackUI/TradeUI 永不触碰。
 ///
+/// 滚动范式历史与教训（宽度轴遗漏/多列污染/官方锁占位/跑飞收缩五轮翻车）见 DESIGN.md §3.2-3.4
+/// 与记忆 cabinet-ui-viewport-fit——结论：整页缩放（官方机制）与扩容数据的组合以官方行为为准。
 /// 触发：每 2s C# ExecuteJavaScript 巡检 + #iframe-container MutationObserver + iframe load 钩子。
 /// 动作日志 [CEVF] 走 Root console → Player.log（2026-10-16 游戏更新后 Root 转/iframe 不转）。
 /// </summary>
@@ -57,6 +54,9 @@ internal static class ViewportFit
 
         private void Update()
         {
+            // General 总门（2026-10-24，ModCenter 启停位）：主开关关闭即停注（优先于 UiFit.Enabled
+            // ——主门关=整个 mod 停用，视口脚本立即停；重开后 2s 内恢复巡检）。
+            if (CabinetExpandPlugin.Enabled != null && !CabinetExpandPlugin.Enabled.Value) return;
             if (Enabled != null && !Enabled.Value) return;
             _check += Time.deltaTime;
             if (_check < 2f) return;
@@ -97,10 +97,11 @@ internal static class ViewportFit
     }
 
     /// <summary>
-    /// 运行期 Bootstrap 属性 BootstrapJs：把受管包最大宽高（封顶后）填进注入脚本——
+    /// <summary>
+    /// 运行期 Bootstrap 属性：把受管包最大宽高（封顶后）填进注入脚本——
     /// LockFit 页的锁以它为初始值（seenC/seenR 起步于最大），实现『打开即最大柜子尺寸』
     /// （烹饪等页靠服务端真 maxCols 提示原生做到；酿酒桶/老鼠笼的提示不给力，由本 mod 供给）。
-    /// Root 上下文巡检脚本 v14（每 2s 由 C# ExecuteJavaScript 执行）。
+    /// Root 上下文巡检脚本 v14/v15（每 2s 由 C# ExecuteJavaScript 执行）。
     /// A 页：flex-shrink:0 样式 + 欠缩桥接；B 页：注入官方 createViewportFit 调用脚本（页面上下文）。
     /// 只用单引号、无反斜杠、注释禁半角双引号。
     /// </summary>
@@ -113,6 +114,11 @@ internal static class ViewportFit
             return Bootstrap.Replace("var seenC=0,seenR=0;", "var seenC=" + w + ",seenR=" + h + ";");
         }
     }
+
+    /// LockFit 页的锁以它为初始值（seenC/seenR 起步于最大），实现『打开即最大柜子尺寸』
+    /// （烹饪等页靠服务端真 maxCols 提示原生做到；酿酒桶/老鼠笼的提示不给力，由本 mod 供给）。
+    /// A 页：flex-shrink:0 样式 + 欠缩桥接；B 页：注入官方 createViewportFit 调用脚本（页面上下文）。
+    /// </summary>
 
     internal const string Bootstrap = @"
 (function () {

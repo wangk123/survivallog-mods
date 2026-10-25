@@ -50,7 +50,7 @@ public sealed class RobotSpeedPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.robotspeed";
     public const string Name = "RobotSpeed";
-    public const string Version = "1.3.8"; // 由 publish.ps1 随 version.json 同步
+    public const string Version = "1.7.0"; // 由 publish.ps1 随 version.json 同步
 
     internal static ManualLogSource Log;
 

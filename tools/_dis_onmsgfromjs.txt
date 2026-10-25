@@ -1,0 +1,315 @@
+0x02d52d20  mov [rsp+8],rbx
+0x02d52d25  mov [rsp+10h],rsi
+0x02d52d2a  push rdi
+0x02d52d2b  push r14
+0x02d52d2d  push r15
+0x02d52d2f  sub rsp,0D0h
+0x02d52d36  mov rbx,r8
+0x02d52d39  mov rdi,rcx
+0x02d52d3c  cmp byte [rel 5F4BC0Ch],0
+0x02d52d43  jne short 0000000002D52DA0h
+0x02d52d45  lea rcx,[rel 5C2DE88h]
+0x02d52d4c  call 000000000050A950h
+0x02d52d51  lea rcx,[rel 5BD7CB8h]
+0x02d52d58  call 000000000050A950h
+0x02d52d5d  lea rcx,[rel 5C25228h]
+0x02d52d64  call 000000000050A950h
+0x02d52d69  lea rcx,[rel 5C25368h]
+0x02d52d70  call 000000000050A950h
+0x02d52d75  lea rcx,[rel 5BE8300h]
+0x02d52d7c  call 000000000050A950h
+0x02d52d81  lea rcx,[rel 5BBD0E0h]
+0x02d52d88  call 000000000050A950h
+0x02d52d8d  lea rcx,[rel 5C2ADB8h]
+0x02d52d94  call 000000000050A950h
+0x02d52d99  mov byte [rel 5F4BC0Ch],1
+0x02d52da0  xor esi,esi
+0x02d52da2  mov [rsp+48h],rsi
+0x02d52da7  mov [rsp+40h],rsi
+0x02d52dac  test rbx,rbx
+0x02d52daf  je near 0000000002D532CCh
+0x02d52db5  mov rbx,[rbx+10h]
+0x02d52db9  mov [rsp+100h],esi
+0x02d52dc0  mov rax,[rel 5F5D900h]
+0x02d52dc7  mov rcx,[rax+0B8h]
+0x02d52dce  mov rax,[rcx]
+0x02d52dd1  mov [rsp+38h],rax
+0x02d52dd6  mov rcx,[rel 5C25368h]
+0x02d52ddd  cmp [rcx+0E4h],esi
+0x02d52de3  jne short 0000000002D52DEAh
+0x02d52de5  call 000000000050AC30h
+0x02d52dea  mov [rsp+28h],rsi
+0x02d52def  lea rax,[rsp+40h]
+0x02d52df4  mov [rsp+20h],rax
+0x02d52df9  lea r9,[rsp+48h]
+0x02d52dfe  lea r8,[rsp+38h]
+0x02d52e03  lea rdx,[rsp+100h]
+0x02d52e0b  mov rcx,rbx
+0x02d52e0e  call 0000000002EB4A80h  ; GameCore.HotUpdate.ReduxUI.WebUIProtocol$$TryParse
+0x02d52e13  test al,al
+0x02d52e15  je near 0000000002D531ABh
+0x02d52e1b  mov edx,[rsp+100h]
+0x02d52e22  lea ecx,[rdx-1]
+0x02d52e25  test ecx,ecx
+0x02d52e27  je near 0000000002D5310Ah
+0x02d52e2d  sub ecx,1
+0x02d52e30  je near 0000000002D530F5h
+0x02d52e36  cmp ecx,1
+0x02d52e39  je near 0000000002D53042h
+0x02d52e3f  cmp edx,9
+0x02d52e42  jne short 0000000002D52E5Eh
+0x02d52e44  xor r9d,r9d
+0x02d52e47  mov r8,[rsp+40h]
+0x02d52e4c  mov rdx,[rsp+38h]
+0x02d52e51  mov rcx,rdi
+0x02d52e54  call 0000000002D53880h  ; GameCore.HotUpdate.ReduxUI.WebUILayer$$OnSyncRects
+0x02d52e59  jmp 0000000002D531A6h
+0x02d52e5e  cmp edx,0Bh
+0x02d52e61  jne near 0000000002D52FF4h
+0x02d52e67  mov rbx,[rsp+38h]
+0x02d52e6c  cmp byte [rel 5F4BC0Fh],0
+0x02d52e73  jne short 0000000002D52EC4h
+0x02d52e75  lea rcx,[rel 5BA0CC8h]
+0x02d52e7c  call 000000000050A950h
+0x02d52e81  lea rcx,[rel 5C2DE88h]
+0x02d52e88  call 000000000050A950h
+0x02d52e8d  lea rcx,[rel 5BBE600h]
+0x02d52e94  call 000000000050A950h
+0x02d52e99  lea rcx,[rel 5C07710h]
+0x02d52ea0  call 000000000050A950h
+0x02d52ea5  lea rcx,[rel 5C25228h]
+0x02d52eac  call 000000000050A950h
+0x02d52eb1  lea rcx,[rel 5BBD848h]
+0x02d52eb8  call 000000000050A950h
+0x02d52ebd  mov byte [rel 5F4BC0Fh],1
+0x02d52ec4  mov [rsp+30h],rsi
+0x02d52ec9  mov rcx,[rdi+58h]
+0x02d52ecd  test rcx,rcx
+0x02d52ed0  je near 0000000002D532E2h
+0x02d52ed6  mov r9,[rel 5BBE600h]
+0x02d52edd  lea r8,[rsp+30h]
+0x02d52ee2  mov rdx,rbx
+0x02d52ee5  call 000000000234E8F0h  ; System.Collections.Generic.Dictionary<object, object>$$TryGetValue
+0x02d52eea  test al,al
+0x02d52eec  je near 0000000002D531A6h
+0x02d52ef2  mov rax,[rsp+30h]
+0x02d52ef7  test rax,rax
+0x02d52efa  je near 0000000002D532DDh
+0x02d52f00  mov rsi,[rax+48h]
+0x02d52f04  mov rcx,[rel 5F5D950h]
+0x02d52f0b  cmp dword [rcx+0E4h],0
+0x02d52f12  jne short 0000000002D52F19h
+0x02d52f14  call 000000000050AC30h
+0x02d52f19  xor r8d,r8d
+0x02d52f1c  xor edx,edx
+0x02d52f1e  mov rcx,rsi
+0x02d52f21  call 0000000000704310h  ; System.Runtime.CompilerServices.Unsafe$$AreSame<__Il2CppFullySharedGenericType>
+0x02d52f26  test al,al
+0x02d52f28  jne near 0000000002D531A6h
+0x02d52f2e  mov rax,[rel 5C25228h]
+0x02d52f35  cmp dword [rax+0E4h],0
+0x02d52f3c  jne short 0000000002D52F4Dh
+0x02d52f3e  mov rcx,rax
+0x02d52f41  call 000000000050AC30h
+0x02d52f46  mov rax,[rel 5C25228h]
+0x02d52f4d  mov rax,[rax+0B8h]
+0x02d52f54  mov rcx,[rax+68h]
+0x02d52f58  test rcx,rcx
+0x02d52f5b  je near 0000000002D532D8h
+0x02d52f61  mov r8,[rel 5C07710h]
+0x02d52f68  mov rdx,rbx
+0x02d52f6b  call 000000000108EE80h  ; System.Collections.Generic.HashSet<object>$$Contains
+0x02d52f70  mov rdx,rbx
+0x02d52f73  test al,al
+0x02d52f75  jne short 0000000002D52FDFh
+0x02d52f77  xor r8d,r8d
+0x02d52f7a  mov rcx,[rel 5BBD848h]
+0x02d52f81  call 00000000032658A0h  ; System.String$$Concat
+0x02d52f86  mov rbx,rax
+0x02d52f89  mov rcx,[rel 5C2DE88h]
+0x02d52f90  cmp dword [rcx+0E4h],0
+0x02d52f97  jne short 0000000002D52F9Eh
+0x02d52f99  call 000000000050AC30h
+0x02d52f9e  xor edx,edx
+0x02d52fa0  mov rcx,rbx
+0x02d52fa3  call 0000000004168B50h  ; UnityEngine.Debug$$LogError
+0x02d52fa8  mov rcx,[rel 5BA0CC8h]
+0x02d52faf  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x02d52fb4  test rax,rax
+0x02d52fb7  je near 0000000002D531A6h
+0x02d52fbd  mov rdx,[rsp+30h]
+0x02d52fc2  test rdx,rdx
+0x02d52fc5  je near 0000000002D532D2h
+0x02d52fcb  xor r8d,r8d
+0x02d52fce  mov rdx,[rdx+48h]
+0x02d52fd2  mov rcx,rax
+0x02d52fd5  call 0000000002A30610h  ; GameCore.HotUpdate.ReduxUI.ReduxUISystem$$CloseUIByType
+0x02d52fda  jmp 0000000002D531A6h
+0x02d52fdf  xor r9d,r9d
+0x02d52fe2  mov r8,[rsp+30h]
+0x02d52fe7  mov rcx,rdi
+0x02d52fea  call 0000000002D58E70h  ; GameCore.HotUpdate.ReduxUI.WebUILayer$$RetryPersistentPage
+0x02d52fef  jmp 0000000002D531A6h
+0x02d52ff4  mov [rsp+30h],edx
+0x02d52ff8  lea rdx,[rsp+30h]
+0x02d52ffd  mov rcx,[rel 5F5D8B8h]
+0x02d53004  call 0000000000509C60h
+0x02d53009  xor r8d,r8d
+0x02d5300c  mov rdx,rax
+0x02d5300f  mov rcx,[rel 5C2ADB8h]
+0x02d53016  call 0000000003268920h  ; System.String$$Format
+0x02d5301b  mov rbx,rax
+0x02d5301e  mov rcx,[rel 5C2DE88h]
+0x02d53025  cmp dword [rcx+0E4h],0
+0x02d5302c  jne short 0000000002D53033h
+0x02d5302e  call 000000000050AC30h
+0x02d53033  xor edx,edx
+0x02d53035  mov rcx,rbx
+0x02d53038  call 0000000004169390h  ; UnityEngine.Debug$$LogWarning
+0x02d5303d  jmp 0000000002D531A6h
+0x02d53042  mov rbx,[rsp+38h]
+0x02d53047  mov r14,[rsp+48h]
+0x02d5304c  mov r15,[rsp+40h]
+0x02d53051  cmp byte [rel 5F4BC10h],0
+0x02d53058  jne short 0000000002D53085h
+0x02d5305a  lea rcx,[rel 5C2DE88h]
+0x02d53061  call 000000000050A950h
+0x02d53066  lea rcx,[rel 5BBE600h]
+0x02d5306d  call 000000000050A950h
+0x02d53072  lea rcx,[rel 5C25640h]
+0x02d53079  call 000000000050A950h
+0x02d5307e  mov byte [rel 5F4BC10h],1
+0x02d53085  mov [rsp+30h],rsi
+0x02d5308a  mov rcx,[rdi+58h]
+0x02d5308e  test rcx,rcx
+0x02d53091  je near 0000000002D532ECh
+0x02d53097  mov r9,[rel 5BBE600h]
+0x02d5309e  lea r8,[rsp+30h]
+0x02d530a3  mov rdx,rbx
+0x02d530a6  call 000000000234E8F0h  ; System.Collections.Generic.Dictionary<object, object>$$TryGetValue
+0x02d530ab  test al,al
+0x02d530ad  jne short 0000000002D530C9h
+0x02d530af  xor r8d,r8d
+0x02d530b2  mov rdx,rbx
+0x02d530b5  mov rcx,[rel 5C25640h]
+0x02d530bc  call 00000000032658A0h  ; System.String$$Concat
+0x02d530c1  mov rbx,rax
+0x02d530c4  jmp 0000000002D5301Eh
+0x02d530c9  mov rcx,[rsp+30h]
+0x02d530ce  test rcx,rcx
+0x02d530d1  je near 0000000002D532E7h
+0x02d530d7  mov r9,[rcx]
+0x02d530da  mov rax,[r9+258h]
+0x02d530e1  mov r9,[r9+260h]
+0x02d530e8  mov r8,r15
+0x02d530eb  mov rdx,r14
+0x02d530ee  call rax
+0x02d530f0  jmp 0000000002D531A6h
+0x02d530f5  xor r8d,r8d
+0x02d530f8  mov rdx,[rsp+38h]
+0x02d530fd  mov rcx,rdi
+0x02d53100  call 0000000002D535B0h  ; GameCore.HotUpdate.ReduxUI.WebUILayer$$OnPageReady
+0x02d53105  jmp 0000000002D531A6h
+0x02d5310a  cmp byte [rel 5F4BC0Dh],0
+0x02d53111  jne short 0000000002D53126h
+0x02d53113  lea rcx,[rel 5B743A0h]
+0x02d5311a  call 000000000050A950h
+0x02d5311f  mov byte [rel 5F4BC0Dh],1
+0x02d53126  xorps xmm0,xmm0
+0x02d53129  movups [rsp+60h],xmm0
+0x02d5312e  movups [rsp+70h],xmm0
+0x02d53133  movups [rsp+80h],xmm0
+0x02d5313b  movups [rsp+90h],xmm0
+0x02d53143  xor edx,edx
+0x02d53145  lea rcx,[rsp+0A8h]
+0x02d5314d  call 000000000331A340h  ; System.Runtime.CompilerServices.AsyncVoidMethodBuilder$$Create
+0x02d53152  movups xmm0,[rax]
+0x02d53155  movups [rsp+68h],xmm0
+0x02d5315a  movups xmm1,[rax+10h]
+0x02d5315e  movups [rsp+78h],xmm1
+0x02d53163  xor edx,edx
+0x02d53165  lea rcx,[rsp+68h]
+0x02d5316a  call 0000000000509C80h
+0x02d5316f  mov [rsp+88h],rdi
+0x02d53177  mov rdx,rdi
+0x02d5317a  lea rcx,[rsp+88h]
+0x02d53182  call 0000000000509C80h
+0x02d53187  mov dword [rsp+60h],0FFFFFFFFh
+0x02d5318f  mov r8,[rel 5B743A0h]
+0x02d53196  lea rdx,[rsp+60h]
+0x02d5319b  lea rcx,[rsp+68h]
+0x02d531a0  call 0000000000A14DF0h  ; System.Runtime.CompilerServices.AsyncVoidMethodBuilder$$Start<WebUILayer.<OnRootReady>d__84>
+0x02d531a5  nop
+0x02d531a6  jmp 0000000002D532B3h
+0x02d531ab  mov rcx,[rel 5C25228h]
+0x02d531b2  cmp dword [rcx+0E4h],0
+0x02d531b9  jne short 0000000002D531C0h
+0x02d531bb  call 000000000050AC30h
+0x02d531c0  xor edx,edx
+0x02d531c2  mov rcx,rbx
+0x02d531c5  call 0000000002D5C490h  ; GameCore.HotUpdate.ReduxUI.WebUILayer$$TryReportCheatMessage
+0x02d531ca  xor edx,edx
+0x02d531cc  mov rcx,rbx
+0x02d531cf  call 0000000003269F60h  ; System.String$$IsNullOrEmpty
+0x02d531d4  test al,al
+0x02d531d6  je short 0000000002D531E1h
+0x02d531d8  mov rbx,[rel 5BE8300h]
+0x02d531df  jmp short 0000000002D53209h
+0x02d531e1  test rbx,rbx
+0x02d531e4  je near 0000000002D532F1h
+0x02d531ea  cmp dword [rbx+10h],0C8h
+0x02d531f1  jle short 0000000002D53209h
+0x02d531f3  xor r9d,r9d
+0x02d531f6  xor edx,edx
+0x02d531f8  mov r8d,0C8h
+0x02d531fe  mov rcx,rbx
+0x02d53201  call 000000000326E4D0h  ; System.String$$Substring
+0x02d53206  mov rbx,rax
+0x02d53209  xor r8d,r8d
+0x02d5320c  mov rdx,rbx
+0x02d5320f  mov rcx,[rel 5BBD0E0h]
+0x02d53216  call 00000000032658A0h  ; System.String$$Concat
+0x02d5321b  mov rbx,rax
+0x02d5321e  mov rcx,[rel 5C2DE88h]
+0x02d53225  cmp dword [rcx+0E4h],0
+0x02d5322c  jne short 0000000002D53233h
+0x02d5322e  call 000000000050AC30h
+0x02d53233  xor edx,edx
+0x02d53235  mov rcx,rbx
+0x02d53238  call 0000000004169390h  ; UnityEngine.Debug$$LogWarning
+0x02d5323d  nop
+0x02d5323e  jmp short 0000000002D532B3h
+0x02d53240  mov eax,[rsp+100h]
+0x02d53247  mov [rsp+30h],eax
+0x02d5324b  lea rdx,[rsp+30h]
+0x02d53250  mov rcx,[rel 5F5D8B8h]
+0x02d53257  call 0000000000509C60h
+0x02d5325c  mov rdi,rax
+0x02d5325f  mov rbx,[rsp+38h]
+0x02d53264  lea rcx,[rel 5C131F8h]
+0x02d5326b  call 000000000050A970h
+0x02d53270  mov rcx,rax
+0x02d53273  xor esi,esi
+0x02d53275  mov [rsp+20h],rsi
+0x02d5327a  mov r9,[rsp+50h]
+0x02d5327f  mov r8,rbx
+0x02d53282  mov rdx,rdi
+0x02d53285  call 00000000032687E0h  ; System.String$$Format
+0x02d5328a  mov rbx,rax
+0x02d5328d  lea rcx,[rel 5C2DE88h]
+0x02d53294  call 000000000050A970h
+0x02d53299  cmp [rax+0E4h],esi
+0x02d5329f  jne short 0000000002D532A9h
+0x02d532a1  mov rcx,rax
+0x02d532a4  call 000000000050AC30h
+0x02d532a9  xor edx,edx
+0x02d532ab  mov rcx,rbx
+0x02d532ae  call 0000000004168B50h  ; UnityEngine.Debug$$LogError
+0x02d532b3  lea r11,[rsp+0D0h]
+0x02d532bb  mov rbx,[r11+20h]
+0x02d532bf  mov rsi,[r11+28h]
+0x02d532c3  mov rsp,r11
+0x02d532c6  pop r15
+0x02d532c8  pop r14
+0x02d532ca  pop rdi
+0x02d532cb  ret

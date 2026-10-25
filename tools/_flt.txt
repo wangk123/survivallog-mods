@@ -1,0 +1,5 @@
+TYPE GameCore.HotUpdate.Battle.Logic.FurnitureLootTools
+    field NativeMethodInfoPtr_FillRandomLoot_Public_Static_Int32_Furniture_Int32_Int32_Boolean_AddItemArgs_Int32_Int32_0 : IntPtr
+    method .cctor : Void ()
+    method FillRandomLoot : Int32 (GameCore.HotUpdate.Battle.Logic.Furniture,Int32,Int32,Boolean,GameCore.HotUpdate.Battle.Logic.AddItemArgs,Int32,Int32)
+    method .ctor : Void (IntPtr)

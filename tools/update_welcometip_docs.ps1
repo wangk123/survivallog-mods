@@ -12,7 +12,7 @@ function Set-SrcText($path, $text) {
     [IO.File]::WriteAllText($path, $text, $enc)
 }
 
-$mods = @('BackpackExpand','CabinetExpand','FridgeChill','CabinetEverywhere','CabinetBurden','RobotSpeed','QuickAction','CabinetTagFilter')
+$mods = @('BackpackExpand','CabinetExpand','FridgeChill','CabinetEverywhere','CabinetBurden','RoleUnlock','RobotSpeed','QuickAction','CabinetTagFilter')
 $n = 0
 foreach ($m in $mods) {
     $p = Join-Path $root ("SurvivalLog.$m\DESIGN.md")

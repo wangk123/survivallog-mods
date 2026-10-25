@@ -15,7 +15,7 @@ public sealed class EndlessGuardPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.endlessguard";
     public const string Name = "EndlessGuard";
-    public const string Version = "1.3.8"; // 跟随套件 version.json（作者定号）
+    public const string Version = "1.7.0"; // 跟随套件 version.json（作者定号）
 
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> Enabled;
@@ -81,7 +81,6 @@ internal sealed class GuardTicker : MonoBehaviour
         _acc = 0f;
         _beats++;
         if (EndlessGuardPlugin.Enabled != null && !EndlessGuardPlugin.Enabled.Value) return;   // 总开关关=轮询停（已生效改动保留，重启干净）
-        if (_beats % 30 == 0) EndlessGuardPlugin.Trace("heartbeat tick=" + _beats);   // 60s 心跳：Ticker 存活铁证
         try { ScavengePlans.Tick(); } catch (Exception e) { EndlessGuardPlugin.Trace("ticker ScavengePlans: " + e.Message); }
     }
 }

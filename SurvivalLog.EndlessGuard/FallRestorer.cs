@@ -112,60 +112,11 @@ internal static class FallRestorer
             }
 
             EndlessGuardPlugin.Trace($"restore：恢复 {restored.Count} 点 [{string.Join(",", restored)}]，剥封印tag {sealStripped}，剥缓刑tag {stripped} 条");
-            DumpDiag(__instance, save, tm);
         }
         catch (System.Exception e)
         {
             EndlessGuardPlugin.Trace("restore 异常（下次读档重试）: " + e.Message);
         }
-    }
-
-    /// <summary>全量诊断（2026-10-25 作者令"一次排查完"）：把沦陷显示可能读的每一份状态全部倒进
-    /// BepInEx/EndlessGuard_diag.txt——名单/每点计数器/营地状态/日程档位/显示天数/全量 tag 清单。
-    /// 定位"三份账清干净仍显示已沦陷"的真源头后即可撤除。</summary>
-    private static void DumpDiag(EndlessManager em, GameCore.HotUpdate.GameSaveData save, TagManager tm)
-    {
-        try
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.Append("=== EndlessGuard 全量诊断 ").Append(System.DateTime.Now.ToString("HH:mm:ss")).Append(" tier=").Append(em.CurrentTier).AppendLine(" ===");
-            var list = save.FallenMapPointIds;
-            sb.Append("[ FallenMapPointIds 名单 ] count=").Append(list == null ? -1 : list.Count).Append(" : ");
-            if (list != null) for (int i = 0; i < list.Count; i++) sb.Append(list[i]).Append(i == list.Count - 1 ? "" : ",");
-            sb.AppendLine();
-            if (tm != null)
-            {
-                var keys = tm.GetTagKeys();
-                sb.Append("[ TagManager 全量 tag ] count=").Append(keys == null ? -1 : keys.Count).AppendLine();
-                if (keys != null) for (int i = 0; i < keys.Count; i++) sb.Append("  ").AppendLine(keys[i]);
-            }
-            sb.AppendLine("[ 每图状态 ] id|name|cat|camp|inList|fallCtr|campState|baseTier|schedTier|dispDay");
-            var cm = SurvivalLog.ModShared.BagTable.Cm();
-            var dict = cm?._Config_MapPoint_Dict;
-            if (dict != null)
-            {
-                var rows = new System.Collections.Generic.SortedList<int, GameCore.HotUpdate.Config_MapPoint>();
-                foreach (var kv in dict) if (kv.Value != null) rows[kv.Key] = kv.Value;
-                foreach (var row in rows.Values)
-                {
-                    var id = row.ID;
-                    bool camp; try { camp = EndlessManager.IsCampMapPoint(id); } catch { camp = true; }
-                    bool inL = false; if (list != null) for (int j = 0; j < list.Count; j++) if (list[j] == id) { inL = true; break; }
-                    int ctr = 0; try { ctr = GameCounter.GetCounter("endless.fall_tier_" + id); } catch { }
-                    int cs = -1; try { cs = em.GetCampState(id); } catch { }
-                    int bt = -1; try { bt = em.GetBaseFallTier(id); } catch { }
-                    int st = -1; try { st = em.GetScheduledFallTier(id); } catch { }
-                    int dd = -1; try { dd = em.GetFallDisplayDay(id); } catch { }
-                    sb.Append("  ").Append(id).Append('|').Append(row.Name_Local).Append('|').Append(row.PointCategory)
-                      .Append('|').Append(camp ? 1 : 0).Append('|').Append(inL ? 1 : 0).Append('|').Append(ctr)
-                      .Append('|').Append(cs).Append('|').Append(bt).Append('|').Append(st).Append('|').Append(dd).AppendLine();
-                }
-            }
-            System.IO.File.AppendAllText(System.IO.Path.Combine(
-                BepInEx.Paths.BepInExRootPath, "EndlessGuard_diag.txt"), sb.ToString());
-            EndlessGuardPlugin.Trace("diag：全量诊断已写入 EndlessGuard_diag.txt");
-        }
-        catch (System.Exception e) { EndlessGuardPlugin.Trace("diag: " + e.Message); }
     }
 
     /// <summary>营地红线细化（2026-10-25 作者验收第三轮+全量诊断定案）：仅已进入撤离剧情链的营地
@@ -256,25 +207,4 @@ internal static class GrantPatch
 
     private static bool Contains(Il2CppSystem.Collections.Generic.List<int> ids, int v)
     { for (int i = 0; i < ids.Count; i++) if (ids[i] == v) return true; return false; }
-
-    /// <summary>终审 dump（读档即触发，零门票）：官方处理完后逐卡 HasActivated + 三图发现等级。</summary>
-    private static void Postfix(SurvivalPlanningComponent __instance)
-    {
-        try
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.Append("持有终审 SaveCache含31606=").Append(ContainsId(__instance?.SaveCache, 31606) ? 1 : 0);
-            sb.Append(" HasActivated=[");
-            int[] ids = { 31601, 31602, 31603, 31604, 31605, 31606, 31607, 31608, 31609, 31610, 31623, 31624, 31625, 31633, 31634, 31635 };
-            for (int i = 0; i < ids.Length; i++) sb.Append(ids[i]).Append(':').Append(__instance != null && SafeHas(__instance, ids[i]) ? 1 : 0).Append(i == ids.Length - 1 ? "" : " ");
-            sb.Append(']');
-            sb.Append(" 等级 1004=").Append(SafeLv(1004)).Append(" 1005=").Append(SafeLv(1005)).Append(" 1002=").Append(SafeLv(1002));
-            EndlessGuardPlugin.Trace(sb.ToString());
-        }
-        catch (System.Exception e) { EndlessGuardPlugin.Trace("持有终审异常: " + e.Message); }
-    }
-
-    private static bool SafeHas(SurvivalPlanningComponent c, int id) { try { return c.HasActivated(id); } catch { return false; } }
-    private static int SafeLv(int map) { try { return ExploreDiscoveryTools.GetDiscoveryLv(map); } catch { return -1; } }
-    private static bool ContainsId(Il2CppSystem.Collections.Generic.List<int> l, int v) { if (l == null) return false; for (int i = 0; i < l.Count; i++) if (l[i] == v) return true; return false; }
 }

@@ -1,0 +1,92 @@
+0x026d7f50  push rdi
+0x026d7f52  sub rsp,80h
+0x026d7f59  cmp byte [rel 5F48DDEh],0
+0x026d7f60  mov rdi,rcx
+0x026d7f63  movaps [rsp+70h],xmm6
+0x026d7f68  movaps xmm6,xmm2
+0x026d7f6b  movaps [rsp+60h],xmm7
+0x026d7f70  movaps xmm7,xmm1
+0x026d7f73  jne short 00000000026D7FB8h
+0x026d7f75  lea rcx,[rel 5C2DE88h]
+0x026d7f7c  call 000000000050A950h
+0x026d7f81  lea rcx,[rel 5C0CF08h]
+0x026d7f88  call 000000000050A950h
+0x026d7f8d  lea rcx,[rel 5BE54E8h]
+0x026d7f94  call 000000000050A950h
+0x026d7f99  lea rcx,[rel 5C22048h]
+0x026d7fa0  call 000000000050A950h
+0x026d7fa5  lea rcx,[rel 5BC68B0h]
+0x026d7fac  call 000000000050A950h
+0x026d7fb1  mov byte [rel 5F48DDEh],1
+0x026d7fb8  cmp qword [rdi+38h],0
+0x026d7fbd  mov [rsp+98h],rbx
+0x026d7fc5  je near 00000000026D823Fh
+0x026d7fcb  cmp byte [rdi+30h],0
+0x026d7fcf  je near 00000000026D8113h
+0x026d7fd5  mov [rsp+0A0h],rsi
+0x026d7fdd  cmp byte [rdi+6Dh],0
+0x026d7fe1  je near 00000000026D812Eh
+0x026d7fe7  mov byte [rdi+6Dh],0
+0x026d7feb  mov rcx,[rel 5C22048h]
+0x026d7ff2  cmp dword [rcx+0E4h],0
+0x026d7ff9  jne short 00000000026D8000h
+0x026d7ffb  call 000000000050AC30h
+0x026d8000  xor ecx,ecx
+0x026d8002  call 00000000026CB000h
+0x026d8007  test al,al
+0x026d8009  jne near 00000000026D812Eh
+0x026d800f  cmp [rel 5F48DD4h],al
+0x026d8015  jne short 00000000026D8042h
+0x026d8017  lea rcx,[rel 5BA00C0h]
+0x026d801e  call 000000000050A950h
+0x026d8023  lea rcx,[rel 5C27900h]
+0x026d802a  call 000000000050A950h
+0x026d802f  lea rcx,[rel 5BB10D8h]
+0x026d8036  call 000000000050A950h
+0x026d803b  mov byte [rel 5F48DD4h],1
+0x026d8042  mov rcx,[rel 5BA00C0h]
+0x026d8049  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x026d804e  test rax,rax
+0x026d8051  je near 00000000026D82C3h
+0x026d8057  xor edx,edx
+0x026d8059  mov rcx,rax
+0x026d805c  call 0000000000614F50h  ; Unity.Services.Core.Registration.CorePackageInitializer$$get_ProjectConfig
+0x026d8061  test rax,rax
+0x026d8064  je near 00000000026D810Bh
+0x026d806a  mov rbx,[rax+80h]
+0x026d8071  test rbx,rbx
+0x026d8074  je near 00000000026D810Bh
+0x026d807a  cmp byte [rbx+238h],0
+0x026d8081  je near 00000000026D810Bh
+0x026d8087  mov rcx,[rel 5BB10D8h]
+0x026d808e  mov edi,[rbx+23Ch]
+0x026d8094  cmp dword [rcx+0E4h],0
+0x026d809b  jne short 00000000026D80A2h
+0x026d809d  call 000000000050AC30h
+0x026d80a2  lea edx,[rdi-1]
+0x026d80a5  xor r8d,r8d
+0x026d80a8  mov rcx,rbx
+0x026d80ab  call 00000000028DA840h  ; GameCore.HotUpdate.GameSaveManager$$GetDayDescription
+0x026d80b0  mov rcx,[rel 5C27900h]
+0x026d80b7  mov r9d,[rbx+244h]
+0x026d80be  mov r8d,[rbx+240h]
+0x026d80c5  mov edx,[rbx+23Ch]
+0x026d80cb  mov [rsp+48h],rcx
+0x026d80d0  mov rcx,[rbx+260h]
+0x026d80d7  mov [rsp+40h],rcx
+0x026d80dc  mov ecx,[rbx+258h]
+0x026d80e2  mov [rsp+38h],ecx
+0x026d80e6  mov rcx,[rbx+250h]
+0x026d80ed  mov [rsp+30h],rcx
+0x026d80f2  mov ecx,2721h
+0x026d80f7  mov [rsp+28h],rax
+0x026d80fc  mov eax,[rbx+248h]
+0x026d8102  mov [rsp+20h],eax
+0x026d8106  call 0000000000C24110h  ; GameCore.HotUpdate.EventDispatcherTools$$NotifyGlobal<int, int, int, int, object, object, int, object>
+0x026d810b  mov rsi,[rsp+0A0h]
+0x026d8113  mov rbx,[rsp+98h]
+0x026d811b  movaps xmm6,[rsp+70h]
+0x026d8120  movaps xmm7,[rsp+60h]
+0x026d8125  add rsp,80h
+0x026d812c  pop rdi
+0x026d812d  ret

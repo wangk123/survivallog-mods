@@ -1,0 +1,1904 @@
+TYPE GameCore.HotUpdate.Battle.Logic.BattleLogicWorld
+    field NativeFieldInfoPtr__IsUpdate_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__IsPause_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__lastPauseStack : IntPtr
+    field NativeFieldInfoPtr__pausedElapsed : IntPtr
+    field NativeFieldInfoPtr__pauseWatchdogNextLogAt : IntPtr
+    field NativeFieldInfoPtr_PAUSE_SELF_HEAL_SECONDS : IntPtr
+    field NativeFieldInfoPtr_PAUSE_SELF_HEAL_MODAL_SECONDS : IntPtr
+    field NativeFieldInfoPtr__userUIPauseHolds : IntPtr
+    field NativeFieldInfoPtr__disableResponseActive : IntPtr
+    field NativeFieldInfoPtr_TruthHospitalMapId : IntPtr
+    field NativeFieldInfoPtr_TruthInvestigationTaskCsIds : IntPtr
+    field NativeFieldInfoPtr__IsPlanMode_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CurrentViewFloorId_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__GameModeKey_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___AgentManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___FsmManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___BTEffectManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DirectorManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RandomManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___BtThinkingManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ActionManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ItemManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GameTimeManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DataCollectionManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___WishManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___LoanSharkManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___NeighborBasketReturnManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___StrangerTradeActiveManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___StrangerStockManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___StrangerSupportManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___AidPlatformManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TruthRecorderManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CampManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CasualOrderManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CasualHomeArchiveManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___NeighborRescueManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GirlCompanionManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___WarehouseRescueManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___FoodPollutionManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TowerWaveManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TowerCombatManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TowerDefensePlanBridge_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TowerRingUnlockManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___MolotovManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___LightPropManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___NeighborMonologueManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___NpcCommonManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___FaithManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SymbolManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ProficiencyManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SurvivalResultsManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ConditionSetManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RewardSetManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DynamicEventManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TagManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___FloorMenuBridge_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___AreaUnlockBridge_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DyeUnlockManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SlotOccupantBinder_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___StoryTipsBridge_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PermissionsManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CharacterTalkManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PowerManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PromptTriggerManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___NpcDialogueManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GameOverTriggerManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___LineEndingManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GirlLineEndingManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___WarehouseLineEndingManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GuideTaskManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ExploreManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DisasterNodeManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ToolTableManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___AchievementManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PaperAirplaneManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PhoneSMSManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GossipPushManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GroupAngerManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GroupChatManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GroupGiftManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CityChatPushManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___DropItemManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SceneRatManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___StrayZombieManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___GroundLootManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___FurnitureLootManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___InstallPlanManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SubSlotManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TrapPlanManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___TrapManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___IvyPlanManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RenovationManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___WeatherManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___EndlessManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ChecklistManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PurchaseSafetyManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SearchMarkerManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ExploreSearchStateManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___ShopSignManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___SmartRecommendManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___QuickActionManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PlantChoreBatchManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___CodexManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr_PauseGuardVerboseLog : IntPtr
+    field NativeFieldInfoPtr_PureEndlessBaseProficiencyLv : IntPtr
+    field NativeFieldInfoPtr_PureEndlessInnateBonus : IntPtr
+    field NativeFieldInfoPtr_USER_UI_PAUSE_HOLD_WARN_THRESHOLD : IntPtr
+    field NativeFieldInfoPtr__userUIPauseHoldSpikeReported : IntPtr
+    field NativeFieldInfoPtr___RobotTripProvider_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RobotSortingManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PlantChoreProvider_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___PlantChoreManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RepairChoreProvider_k__BackingField : IntPtr
+    field NativeFieldInfoPtr___RepairChoreManager_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__runClockSeconds : IntPtr
+    field NativeFieldInfoPtr__castingStuckElapsed : IntPtr
+    field NativeFieldInfoPtr__castingStuckNextLogAt : IntPtr
+    field NativeFieldInfoPtr_CASTING_STUCK_FIRST_LOG_SECONDS : IntPtr
+    field NativeFieldInfoPtr_CASTING_STUCK_LOG_INTERVAL_SECONDS : IntPtr
+    field NativeFieldInfoPtr_QUEUE_STUCK_MARGIN_GAME_SECONDS : IntPtr
+    field NativeFieldInfoPtr__queueStuckBtId : IntPtr
+    field NativeFieldInfoPtr__queueStuckWatch : IntPtr
+    field NativeFieldInfoPtr__queueStuckLimit : IntPtr
+    field NativeFieldInfoPtr__queueStuckAge : IntPtr
+    field NativeFieldInfoPtr__queueStuckSinceReport : IntPtr
+    field NativeMethodInfoPtr_get_IsUpdate_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsUpdate_Public_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsPause_Internal_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsPause_Private_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsPlanMode_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsPlanMode_Private_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_CurrentViewFloorId_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CurrentViewFloorId_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_GameModeKey_Public_get_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_set_GameModeKey_Private_set_Void_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_get__AgentManager_Internal_get_AgentManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__AgentManager_Private_set_Void_AgentManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__FsmManager_Internal_get_FsmManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__FsmManager_Private_set_Void_FsmManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__BTEffectManager_Internal_get_BTEffectManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__BTEffectManager_Private_set_Void_BTEffectManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__DirectorManager_Internal_get_DirectorManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DirectorManager_Private_set_Void_DirectorManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__RandomManager_Internal_get_RandomManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__RandomManager_Private_set_Void_RandomManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__BtThinkingManager_Internal_get_BtThinkingManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__BtThinkingManager_Private_set_Void_BtThinkingManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ActionManager_Internal_get_ActionManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ActionManager_Private_set_Void_ActionManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ItemManager_Internal_get_ItemManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ItemManager_Private_set_Void_ItemManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GameTimeManager_Internal_get_GameTimeManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GameTimeManager_Private_set_Void_GameTimeManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__DataCollectionManager_Internal_get_DataCollectionManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DataCollectionManager_Private_set_Void_DataCollectionManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__WishManager_Internal_get_WishManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__WishManager_Private_set_Void_WishManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__LoanSharkManager_Internal_get_LoanSharkManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__LoanSharkManager_Private_set_Void_LoanSharkManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__NeighborBasketReturnManager_Internal_get_NeighborBasketReturnManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__NeighborBasketReturnManager_Private_set_Void_NeighborBasketReturnManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__StrangerTradeActiveManager_Internal_get_StrangerTradeActiveManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__StrangerTradeActiveManager_Private_set_Void_StrangerTradeActiveManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__StrangerStockManager_Internal_get_StrangerStockManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__StrangerStockManager_Private_set_Void_StrangerStockManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__StrangerSupportManager_Internal_get_StrangerSupportManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__StrangerSupportManager_Private_set_Void_StrangerSupportManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__AidPlatformManager_Internal_get_AidPlatformManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__AidPlatformManager_Private_set_Void_AidPlatformManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TruthRecorderManager_Internal_get_TruthRecorderManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TruthRecorderManager_Private_set_Void_TruthRecorderManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CampManager_Internal_get_CampManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CampManager_Private_set_Void_CampManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CasualOrderManager_Internal_get_CasualOrderManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CasualOrderManager_Private_set_Void_CasualOrderManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CasualHomeArchiveManager_Internal_get_CasualHomeArchiveManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CasualHomeArchiveManager_Private_set_Void_CasualHomeArchiveManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__NeighborRescueManager_Internal_get_NeighborRescueManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__NeighborRescueManager_Private_set_Void_NeighborRescueManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GirlCompanionManager_Internal_get_GirlCompanionManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GirlCompanionManager_Private_set_Void_GirlCompanionManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__WarehouseRescueManager_Internal_get_WarehouseRescueManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__WarehouseRescueManager_Private_set_Void_WarehouseRescueManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__FoodPollutionManager_Internal_get_FoodPollutionManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__FoodPollutionManager_Private_set_Void_FoodPollutionManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TowerWaveManager_Internal_get_TowerWaveManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TowerWaveManager_Private_set_Void_TowerWaveManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TowerCombatManager_Internal_get_TowerCombatManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TowerCombatManager_Private_set_Void_TowerCombatManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TowerDefensePlanBridge_Internal_get_TowerDefensePlanBridge_0 : IntPtr
+    field NativeMethodInfoPtr_set__TowerDefensePlanBridge_Private_set_Void_TowerDefensePlanBridge_0 : IntPtr
+    field NativeMethodInfoPtr_get__TowerRingUnlockManager_Internal_get_TowerRingUnlockManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TowerRingUnlockManager_Private_set_Void_TowerRingUnlockManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__MolotovManager_Internal_get_MolotovManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__MolotovManager_Private_set_Void_MolotovManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__LightPropManager_Internal_get_LightPropManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__LightPropManager_Private_set_Void_LightPropManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__NeighborMonologueManager_Internal_get_NeighborMonologueManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__NeighborMonologueManager_Private_set_Void_NeighborMonologueManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__NpcCommonManager_Internal_get_NpcCommonManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__NpcCommonManager_Private_set_Void_NpcCommonManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__FaithManager_Internal_get_FaithManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__FaithManager_Private_set_Void_FaithManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SymbolManager_Internal_get_SymbolManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SymbolManager_Private_set_Void_SymbolManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ProficiencyManager_Internal_get_ProficiencyManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ProficiencyManager_Private_set_Void_ProficiencyManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SurvivalResultsManager_Internal_get_SurvivalResultsManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SurvivalResultsManager_Private_set_Void_SurvivalResultsManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ConditionSetManager_Internal_get_ConditionSetManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ConditionSetManager_Private_set_Void_ConditionSetManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__RewardSetManager_Internal_get_RewardSetManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__RewardSetManager_Private_set_Void_RewardSetManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__DynamicEventManager_Internal_get_DynamicEventManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DynamicEventManager_Private_set_Void_DynamicEventManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TagManager_Internal_get_TagManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TagManager_Private_set_Void_TagManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__FloorMenuBridge_Internal_get_FloorMenuBridge_0 : IntPtr
+    field NativeMethodInfoPtr_set__FloorMenuBridge_Private_set_Void_FloorMenuBridge_0 : IntPtr
+    field NativeMethodInfoPtr_get__AreaUnlockBridge_Internal_get_AreaUnlockBridge_0 : IntPtr
+    field NativeMethodInfoPtr_set__AreaUnlockBridge_Private_set_Void_AreaUnlockBridge_0 : IntPtr
+    field NativeMethodInfoPtr_get__DyeUnlockManager_Internal_get_DyeUnlockManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DyeUnlockManager_Private_set_Void_DyeUnlockManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SlotOccupantBinder_Internal_get_SlotOccupantBinder_0 : IntPtr
+    field NativeMethodInfoPtr_set__SlotOccupantBinder_Private_set_Void_SlotOccupantBinder_0 : IntPtr
+    field NativeMethodInfoPtr_get__StoryTipsBridge_Internal_get_StoryTipsBridge_0 : IntPtr
+    field NativeMethodInfoPtr_set__StoryTipsBridge_Private_set_Void_StoryTipsBridge_0 : IntPtr
+    field NativeMethodInfoPtr_get__PermissionsManager_Internal_get_PermissionsManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PermissionsManager_Private_set_Void_PermissionsManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CharacterTalkManager_Internal_get_CharacterTalkManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CharacterTalkManager_Private_set_Void_CharacterTalkManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PowerManager_Internal_get_PowerManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PowerManager_Private_set_Void_PowerManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PromptTriggerManager_Internal_get_PromptTriggerManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PromptTriggerManager_Private_set_Void_PromptTriggerManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__NpcDialogueManager_Internal_get_NpcDialogueManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__NpcDialogueManager_Private_set_Void_NpcDialogueManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GameOverTriggerManager_Internal_get_GameOverTriggerManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GameOverTriggerManager_Private_set_Void_GameOverTriggerManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__LineEndingManager_Internal_get_LineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__LineEndingManager_Private_set_Void_LineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GirlLineEndingManager_Internal_get_GirlLineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GirlLineEndingManager_Private_set_Void_GirlLineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__WarehouseLineEndingManager_Internal_get_WarehouseLineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__WarehouseLineEndingManager_Private_set_Void_WarehouseLineEndingManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GuideTaskManager_Internal_get_GuideTaskManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GuideTaskManager_Private_set_Void_GuideTaskManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ExploreManager_Internal_get_ExploreManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ExploreManager_Private_set_Void_ExploreManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__DisasterNodeManager_Internal_get_DisasterNodeManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DisasterNodeManager_Private_set_Void_DisasterNodeManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ToolTableManager_Internal_get_ToolTableManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ToolTableManager_Private_set_Void_ToolTableManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__AchievementManager_Internal_get_AchievementManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__AchievementManager_Private_set_Void_AchievementManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PaperAirplaneManager_Internal_get_PaperAirplaneManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PaperAirplaneManager_Private_set_Void_PaperAirplaneManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PhoneSMSManager_Internal_get_PhoneSMSManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PhoneSMSManager_Private_set_Void_PhoneSMSManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GossipPushManager_Internal_get_GossipPushManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GossipPushManager_Private_set_Void_GossipPushManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GroupAngerManager_Internal_get_GroupAngerManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GroupAngerManager_Private_set_Void_GroupAngerManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GroupChatManager_Internal_get_GroupChatManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GroupChatManager_Private_set_Void_GroupChatManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GroupGiftManager_Internal_get_GroupGiftManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GroupGiftManager_Private_set_Void_GroupGiftManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CityChatPushManager_Internal_get_CityChatPushManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CityChatPushManager_Private_set_Void_CityChatPushManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__DropItemManager_Internal_get_DropItemManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__DropItemManager_Private_set_Void_DropItemManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SceneRatManager_Internal_get_SceneRatManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SceneRatManager_Private_set_Void_SceneRatManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__StrayZombieManager_Internal_get_StrayZombieManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__StrayZombieManager_Private_set_Void_StrayZombieManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__GroundLootManager_Internal_get_GroundLootManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__GroundLootManager_Private_set_Void_GroundLootManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__FurnitureLootManager_Internal_get_FurnitureLootManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__FurnitureLootManager_Private_set_Void_FurnitureLootManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__InstallPlanManager_Internal_get_InstallPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__InstallPlanManager_Private_set_Void_InstallPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SubSlotManager_Internal_get_SubSlotManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SubSlotManager_Private_set_Void_SubSlotManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TrapPlanManager_Internal_get_TrapPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TrapPlanManager_Private_set_Void_TrapPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__TrapManager_Internal_get_TrapManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__TrapManager_Private_set_Void_TrapManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__IvyPlanManager_Internal_get_IvyPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__IvyPlanManager_Private_set_Void_IvyPlanManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__RenovationManager_Internal_get_RenovationManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__RenovationManager_Private_set_Void_RenovationManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__WeatherManager_Internal_get_WeatherManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__WeatherManager_Private_set_Void_WeatherManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__EndlessManager_Internal_get_EndlessManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__EndlessManager_Private_set_Void_EndlessManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ChecklistManager_Internal_get_ChecklistManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ChecklistManager_Private_set_Void_ChecklistManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PurchaseSafetyManager_Internal_get_PurchaseSafetyManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PurchaseSafetyManager_Private_set_Void_PurchaseSafetyManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SearchMarkerManager_Internal_get_SearchMarkerManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SearchMarkerManager_Private_set_Void_SearchMarkerManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ExploreSearchStateManager_Internal_get_ExploreSearchStateManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ExploreSearchStateManager_Private_set_Void_ExploreSearchStateManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__ShopSignManager_Internal_get_ShopSignManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__ShopSignManager_Private_set_Void_ShopSignManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__SmartRecommendManager_Internal_get_SmartRecommendManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__SmartRecommendManager_Private_set_Void_SmartRecommendManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__QuickActionManager_Internal_get_QuickActionManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__QuickActionManager_Private_set_Void_QuickActionManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PlantChoreBatchManager_Internal_get_PlantChoreBatchManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PlantChoreBatchManager_Private_set_Void_PlantChoreBatchManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__CodexManager_Internal_get_CodexManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__CodexManager_Private_set_Void_CodexManager_0 : IntPtr
+    field NativeMethodInfoPtr_Initialize_Public_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_GetLoadingRes_Public_UniTask_Dictionary_2_String_PreLoaderData_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyEndingRuleVersionTag_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_StartBattle_Public_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyPendingFullLoadBuff_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyChallengeSetup_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyChallengeBuff_Private_Static_Void_BuffComponent_Int64_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyChallengeRewardSet_Private_Void_Int32_Int64_String_0 : IntPtr
+    field NativeMethodInfoPtr_GetPlanningEffectRatioFromSave_Private_Static_Single_GameSaveData_String_0 : IntPtr
+    field NativeMethodInfoPtr_InjectRebirthNotebooks_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_OnUIOpened_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_EndBattle_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_SaveGame_Public_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_HasAnySavedAgent_Private_Static_Boolean_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_HasAnySavedItem_Private_Static_Boolean_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_SaveGameInternal_Private_Void_SaveChildData_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnUpdateAction_Public_Virtual_Final_New_Void_Single_Single_0 : IntPtr
+    field NativeMethodInfoPtr_OnPause_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnResume_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_IsLeadingRoleSleeping_Private_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_IsLeadingRoleJumpTrapped_Private_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_IsInLegitPauseModal_Private_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_OnUserUIPauseHoldBegin_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnUserUIPauseHoldEnd_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnDisableResponseChanged_Private_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyInitProficiency_Private_Void_ProficiencyType_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnEnterPlanMode_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnExitPlanMode_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnDestroy_Protected_Virtual_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnEventRegister_Public_Virtual_Final_New_Void_EventDispatcher_0 : IntPtr
+    field NativeMethodInfoPtr_OnRequestFurnitureSelectData_Private_Void_Int64_Int64_Int32_Vector3_Int64_Vector3_Quaternion_0 : IntPtr
+    field NativeMethodInfoPtr_OnRequestOpenMapFromUI_Private_Void_WorldStateType_0 : IntPtr
+    field NativeMethodInfoPtr_GetUnlockedMapPointIds_Public_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnMapJumpRequest_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCurrentBehaviorInterruptible_Private_Boolean_LeadingRole_0 : IntPtr
+    field NativeMethodInfoPtr_OnFloorMoveRequest_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnViewFloorChanged_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnCrossFloorActionRequest_Private_Void_Int32_Int64_Vector3_Quaternion_0 : IntPtr
+    field NativeMethodInfoPtr_OnCrossFloorPlanActionRequest_Private_Void_Int32_Int32_Int64_Vector3_Quaternion_0 : IntPtr
+    field NativeMethodInfoPtr_OnCrossFloorPlanActionRequestAtFront_Private_Void_Int32_Int32_Int64_Vector3_Quaternion_0 : IntPtr
+    field NativeMethodInfoPtr_DispatchPlanAction_Private_Void_Int32_Int32_Int64_Vector3_Quaternion_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_OnCrossFloorMainActionsRequest_Private_Void_Int32_Il2CppStructArray_1_Int32_Int64_Vector3_Quaternion_0 : IntPtr
+    field NativeMethodInfoPtr_OnUseItemFromFurnitureRequest_Private_Void_Int64_Int32_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_OnRequestInitialState_Private_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_RejectUnreachableCrossFloorClick_Private_Static_Boolean_BaseAgent_Int32_Vector3_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyPureEndlessInitProficiency_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_ResetUserUIPauseHolds_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TryWarnUserUIPauseHoldSpike_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_get__RobotTripProvider_Internal_get_IRobotTripProvider_0 : IntPtr
+    field NativeMethodInfoPtr_set__RobotTripProvider_Internal_set_Void_IRobotTripProvider_0 : IntPtr
+    field NativeMethodInfoPtr_get__RobotSortingManager_Internal_get_RobotSortingManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__RobotSortingManager_Private_set_Void_RobotSortingManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__PlantChoreProvider_Internal_get_IPlantChoreProvider_0 : IntPtr
+    field NativeMethodInfoPtr_set__PlantChoreProvider_Internal_set_Void_IPlantChoreProvider_0 : IntPtr
+    field NativeMethodInfoPtr_get__PlantChoreManager_Internal_get_PlantChoreManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__PlantChoreManager_Private_set_Void_PlantChoreManager_0 : IntPtr
+    field NativeMethodInfoPtr_get__RepairChoreProvider_Internal_get_IRepairChoreProvider_0 : IntPtr
+    field NativeMethodInfoPtr_set__RepairChoreProvider_Internal_set_Void_IRepairChoreProvider_0 : IntPtr
+    field NativeMethodInfoPtr_get__RepairChoreManager_Internal_get_RepairChoreManager_0 : IntPtr
+    field NativeMethodInfoPtr_set__RepairChoreManager_Private_set_Void_RepairChoreManager_0 : IntPtr
+    field NativeMethodInfoPtr_get_RunClockSeconds_Internal_get_Single_0 : IntPtr
+    field NativeMethodInfoPtr_AdvanceRunClock_Private_Void_Single_0 : IntPtr
+    field NativeMethodInfoPtr_UpdateCastingStuckWatchdog_Private_Void_Single_0 : IntPtr
+    field NativeMethodInfoPtr_ResetCastingStuckWatchdog_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCastingStuckReport_Private_String_Int64_AgentStateComponent_AgentActionSource_AgentAction_0 : IntPtr
+    field NativeMethodInfoPtr_UpdateQueueStuckWatchdog_Private_Void_Single_Single_0 : IntPtr
+    field NativeMethodInfoPtr_ResetQueueStuckWatchdog_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_BuildQueueStuckReport_Private_String_Int64_AgentActionSource_AgentAction_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Internal_Static_Void_AgentSave_byref___c__DisplayClass393_0_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_0_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_1_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_2_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_3_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_4_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_5_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_6_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_7_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_8_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_9_Private_Void_ItemDataDto_0 : IntPtr
+    field NativeMethodInfoPtr__OnEventRegister_b__415_10_Private_Void_Int64_0 : IntPtr
+    method .cctor : Void ()
+    method get_IsUpdate : Boolean ()
+    method set_IsUpdate : Void (Boolean)
+    method get_IsPause : Boolean ()
+    method set_IsPause : Void (Boolean)
+    method get_IsPlanMode : Boolean ()
+    method set_IsPlanMode : Void (Boolean)
+    method get_CurrentViewFloorId : Int32 ()
+    method set_CurrentViewFloorId : Void (Int32)
+    method get_GameModeKey : GameCore.HotUpdate.GameMode ()
+    method set_GameModeKey : Void (GameCore.HotUpdate.GameMode)
+    method get__AgentManager : GameCore.HotUpdate.Battle.Logic.AgentManager ()
+    method set__AgentManager : Void (GameCore.HotUpdate.Battle.Logic.AgentManager)
+    method get__FsmManager : GameCore.HotUpdate.Battle.Logic.FsmManager ()
+    method set__FsmManager : Void (GameCore.HotUpdate.Battle.Logic.FsmManager)
+    method get__BTEffectManager : GameCore.HotUpdate.Battle.Logic.BTEffectManager ()
+    method set__BTEffectManager : Void (GameCore.HotUpdate.Battle.Logic.BTEffectManager)
+    method get__DirectorManager : GameCore.HotUpdate.Battle.Logic.DirectorManager ()
+    method set__DirectorManager : Void (GameCore.HotUpdate.Battle.Logic.DirectorManager)
+    method get__RandomManager : GameCore.HotUpdate.Battle.Logic.RandomManager ()
+    method set__RandomManager : Void (GameCore.HotUpdate.Battle.Logic.RandomManager)
+    method get__BtThinkingManager : GameCore.HotUpdate.Battle.Logic.BtThinkingManager ()
+    method set__BtThinkingManager : Void (GameCore.HotUpdate.Battle.Logic.BtThinkingManager)
+    method get__ActionManager : GameCore.HotUpdate.Battle.Logic.ActionManager ()
+    method set__ActionManager : Void (GameCore.HotUpdate.Battle.Logic.ActionManager)
+    method get__ItemManager : GameCore.HotUpdate.Battle.Logic.ItemManager ()
+    method set__ItemManager : Void (GameCore.HotUpdate.Battle.Logic.ItemManager)
+    method get__GameTimeManager : GameCore.HotUpdate.Battle.Logic.GameTimeManager ()
+    method set__GameTimeManager : Void (GameCore.HotUpdate.Battle.Logic.GameTimeManager)
+    method get__DataCollectionManager : GameCore.HotUpdate.Battle.Logic.DataCollectionManager ()
+    method set__DataCollectionManager : Void (GameCore.HotUpdate.Battle.Logic.DataCollectionManager)
+    method get__WishManager : GameCore.HotUpdate.Battle.Logic.WishManager ()
+    method set__WishManager : Void (GameCore.HotUpdate.Battle.Logic.WishManager)
+    method get__LoanSharkManager : GameCore.HotUpdate.Battle.Logic.LoanSharkManager ()
+    method set__LoanSharkManager : Void (GameCore.HotUpdate.Battle.Logic.LoanSharkManager)
+    method get__NeighborBasketReturnManager : GameCore.HotUpdate.Battle.Logic.NeighborBasketReturnManager ()
+    method set__NeighborBasketReturnManager : Void (GameCore.HotUpdate.Battle.Logic.NeighborBasketReturnManager)
+    method get__StrangerTradeActiveManager : GameCore.HotUpdate.Battle.Logic.StrangerTradeActiveManager ()
+    method set__StrangerTradeActiveManager : Void (GameCore.HotUpdate.Battle.Logic.StrangerTradeActiveManager)
+    method get__StrangerStockManager : GameCore.HotUpdate.Battle.Logic.StrangerStockManager ()
+    method set__StrangerStockManager : Void (GameCore.HotUpdate.Battle.Logic.StrangerStockManager)
+    method get__StrangerSupportManager : GameCore.HotUpdate.Battle.Logic.StrangerSupportManager ()
+    method set__StrangerSupportManager : Void (GameCore.HotUpdate.Battle.Logic.StrangerSupportManager)
+    method get__AidPlatformManager : GameCore.HotUpdate.Battle.Logic.AidPlatformManager ()
+    method set__AidPlatformManager : Void (GameCore.HotUpdate.Battle.Logic.AidPlatformManager)
+    method get__TruthRecorderManager : GameCore.HotUpdate.Battle.Logic.TruthRecorderManager ()
+    method set__TruthRecorderManager : Void (GameCore.HotUpdate.Battle.Logic.TruthRecorderManager)
+    method get__CampManager : GameCore.HotUpdate.Battle.Logic.CampManager ()
+    method set__CampManager : Void (GameCore.HotUpdate.Battle.Logic.CampManager)
+    method get__CasualOrderManager : GameCore.HotUpdate.Battle.Logic.CasualOrderManager ()
+    method set__CasualOrderManager : Void (GameCore.HotUpdate.Battle.Logic.CasualOrderManager)
+    method get__CasualHomeArchiveManager : GameCore.HotUpdate.Battle.Logic.CasualHomeArchiveManager ()
+    method set__CasualHomeArchiveManager : Void (GameCore.HotUpdate.Battle.Logic.CasualHomeArchiveManager)
+    method get__NeighborRescueManager : GameCore.HotUpdate.Battle.Logic.NeighborRescueManager ()
+    method set__NeighborRescueManager : Void (GameCore.HotUpdate.Battle.Logic.NeighborRescueManager)
+    method get__GirlCompanionManager : GameCore.HotUpdate.Battle.Logic.GirlCompanionManager ()
+    method set__GirlCompanionManager : Void (GameCore.HotUpdate.Battle.Logic.GirlCompanionManager)
+    method get__WarehouseRescueManager : GameCore.HotUpdate.Battle.Logic.WarehouseRescueManager ()
+    method set__WarehouseRescueManager : Void (GameCore.HotUpdate.Battle.Logic.WarehouseRescueManager)
+    method get__FoodPollutionManager : GameCore.HotUpdate.Battle.Logic.FoodPollutionManager ()
+    method set__FoodPollutionManager : Void (GameCore.HotUpdate.Battle.Logic.FoodPollutionManager)
+    method get__TowerWaveManager : GameCore.HotUpdate.Battle.Logic.TowerWaveManager ()
+    method set__TowerWaveManager : Void (GameCore.HotUpdate.Battle.Logic.TowerWaveManager)
+    method get__TowerCombatManager : GameCore.HotUpdate.Battle.Logic.TowerCombatManager ()
+    method set__TowerCombatManager : Void (GameCore.HotUpdate.Battle.Logic.TowerCombatManager)
+    method get__TowerDefensePlanBridge : GameCore.HotUpdate.Battle.Logic.TowerDefensePlanBridge ()
+    method set__TowerDefensePlanBridge : Void (GameCore.HotUpdate.Battle.Logic.TowerDefensePlanBridge)
+    method get__TowerRingUnlockManager : GameCore.HotUpdate.Battle.Logic.TowerRingUnlockManager ()
+    method set__TowerRingUnlockManager : Void (GameCore.HotUpdate.Battle.Logic.TowerRingUnlockManager)
+    method get__MolotovManager : GameCore.HotUpdate.Battle.Logic.MolotovManager ()
+    method set__MolotovManager : Void (GameCore.HotUpdate.Battle.Logic.MolotovManager)
+    method get__LightPropManager : GameCore.HotUpdate.Battle.Logic.LightPropManager ()
+    method set__LightPropManager : Void (GameCore.HotUpdate.Battle.Logic.LightPropManager)
+    method get__NeighborMonologueManager : GameCore.HotUpdate.Battle.Logic.NeighborMonologueManager ()
+    method set__NeighborMonologueManager : Void (GameCore.HotUpdate.Battle.Logic.NeighborMonologueManager)
+    method get__NpcCommonManager : GameCore.HotUpdate.Battle.Logic.NpcCommonManager ()
+    method set__NpcCommonManager : Void (GameCore.HotUpdate.Battle.Logic.NpcCommonManager)
+    method get__FaithManager : GameCore.HotUpdate.Battle.Logic.FaithManager ()
+    method set__FaithManager : Void (GameCore.HotUpdate.Battle.Logic.FaithManager)
+    method get__SymbolManager : GameCore.HotUpdate.Battle.Logic.SymbolManager ()
+    method set__SymbolManager : Void (GameCore.HotUpdate.Battle.Logic.SymbolManager)
+    method get__ProficiencyManager : GameCore.HotUpdate.Battle.Logic.ProficiencyManager ()
+    method set__ProficiencyManager : Void (GameCore.HotUpdate.Battle.Logic.ProficiencyManager)
+    method get__SurvivalResultsManager : GameCore.HotUpdate.Battle.Logic.SurvivalResultsManager ()
+    method set__SurvivalResultsManager : Void (GameCore.HotUpdate.Battle.Logic.SurvivalResultsManager)
+    method get__ConditionSetManager : GameCore.HotUpdate.Battle.Logic.ConditionSetManager ()
+    method set__ConditionSetManager : Void (GameCore.HotUpdate.Battle.Logic.ConditionSetManager)
+    method get__RewardSetManager : GameCore.HotUpdate.Battle.Logic.RewardSetManager ()
+    method set__RewardSetManager : Void (GameCore.HotUpdate.Battle.Logic.RewardSetManager)
+    method get__DynamicEventManager : GameCore.HotUpdate.Battle.Logic.DynamicEventManager ()
+    method set__DynamicEventManager : Void (GameCore.HotUpdate.Battle.Logic.DynamicEventManager)
+    method get__TagManager : GameCore.HotUpdate.Battle.Logic.TagManager ()
+    method set__TagManager : Void (GameCore.HotUpdate.Battle.Logic.TagManager)
+    method get__FloorMenuBridge : GameCore.HotUpdate.Battle.Logic.FloorMenuBridge ()
+    method set__FloorMenuBridge : Void (GameCore.HotUpdate.Battle.Logic.FloorMenuBridge)
+    method get__AreaUnlockBridge : GameCore.HotUpdate.Battle.Logic.AreaUnlockBridge ()
+    method set__AreaUnlockBridge : Void (GameCore.HotUpdate.Battle.Logic.AreaUnlockBridge)
+    method get__DyeUnlockManager : GameCore.HotUpdate.Battle.Logic.DyeUnlockManager ()
+    method set__DyeUnlockManager : Void (GameCore.HotUpdate.Battle.Logic.DyeUnlockManager)
+    method get__SlotOccupantBinder : GameCore.HotUpdate.Battle.Logic.SlotOccupantBinder ()
+    method set__SlotOccupantBinder : Void (GameCore.HotUpdate.Battle.Logic.SlotOccupantBinder)
+    method get__StoryTipsBridge : GameCore.HotUpdate.Battle.Logic.StoryTipsBridge ()
+    method set__StoryTipsBridge : Void (GameCore.HotUpdate.Battle.Logic.StoryTipsBridge)
+    method get__PermissionsManager : GameCore.HotUpdate.Battle.Logic.PermissionsManager ()
+    method set__PermissionsManager : Void (GameCore.HotUpdate.Battle.Logic.PermissionsManager)
+    method get__CharacterTalkManager : GameCore.HotUpdate.Battle.Logic.CharacterTalkManager ()
+    method set__CharacterTalkManager : Void (GameCore.HotUpdate.Battle.Logic.CharacterTalkManager)
+    method get__PowerManager : GameCore.HotUpdate.Battle.Logic.PowerManager ()
+    method set__PowerManager : Void (GameCore.HotUpdate.Battle.Logic.PowerManager)
+    method get__PromptTriggerManager : GameCore.HotUpdate.Battle.Logic.PromptTriggerManager ()
+    method set__PromptTriggerManager : Void (GameCore.HotUpdate.Battle.Logic.PromptTriggerManager)
+    method get__NpcDialogueManager : GameCore.HotUpdate.Battle.Logic.NpcDialogueManager ()
+    method set__NpcDialogueManager : Void (GameCore.HotUpdate.Battle.Logic.NpcDialogueManager)
+    method get__GameOverTriggerManager : GameCore.HotUpdate.Battle.Logic.GameOverTriggerManager ()
+    method set__GameOverTriggerManager : Void (GameCore.HotUpdate.Battle.Logic.GameOverTriggerManager)
+    method get__LineEndingManager : GameCore.HotUpdate.Battle.Logic.LineEndingManager ()
+    method set__LineEndingManager : Void (GameCore.HotUpdate.Battle.Logic.LineEndingManager)
+    method get__GirlLineEndingManager : GameCore.HotUpdate.Battle.Logic.GirlLineEndingManager ()
+    method set__GirlLineEndingManager : Void (GameCore.HotUpdate.Battle.Logic.GirlLineEndingManager)
+    method get__WarehouseLineEndingManager : GameCore.HotUpdate.Battle.Logic.WarehouseLineEndingManager ()
+    method set__WarehouseLineEndingManager : Void (GameCore.HotUpdate.Battle.Logic.WarehouseLineEndingManager)
+    method get__GuideTaskManager : GameCore.HotUpdate.Battle.Logic.GuideTaskManager ()
+    method set__GuideTaskManager : Void (GameCore.HotUpdate.Battle.Logic.GuideTaskManager)
+    method get__ExploreManager : GameCore.HotUpdate.Battle.Logic.ExploreManager ()
+    method set__ExploreManager : Void (GameCore.HotUpdate.Battle.Logic.ExploreManager)
+    method get__DisasterNodeManager : GameCore.HotUpdate.Battle.Logic.DisasterNodeManager ()
+    method set__DisasterNodeManager : Void (GameCore.HotUpdate.Battle.Logic.DisasterNodeManager)
+    method get__ToolTableManager : GameCore.HotUpdate.Battle.Logic.ToolTableManager ()
+    method set__ToolTableManager : Void (GameCore.HotUpdate.Battle.Logic.ToolTableManager)
+    method get__AchievementManager : GameCore.HotUpdate.Battle.Logic.AchievementManager ()
+    method set__AchievementManager : Void (GameCore.HotUpdate.Battle.Logic.AchievementManager)
+    method get__PaperAirplaneManager : GameCore.HotUpdate.Battle.Logic.PaperAirplaneManager ()
+    method set__PaperAirplaneManager : Void (GameCore.HotUpdate.Battle.Logic.PaperAirplaneManager)
+    method get__PhoneSMSManager : GameCore.HotUpdate.Battle.Logic.PhoneSMSManager ()
+    method set__PhoneSMSManager : Void (GameCore.HotUpdate.Battle.Logic.PhoneSMSManager)
+    method get__GossipPushManager : GameCore.HotUpdate.Battle.Logic.GossipPushManager ()
+    method set__GossipPushManager : Void (GameCore.HotUpdate.Battle.Logic.GossipPushManager)
+    method get__GroupAngerManager : GameCore.HotUpdate.Battle.Logic.GroupAngerManager ()
+    method set__GroupAngerManager : Void (GameCore.HotUpdate.Battle.Logic.GroupAngerManager)
+    method get__GroupChatManager : GameCore.HotUpdate.Battle.Logic.GroupChatManager ()
+    method set__GroupChatManager : Void (GameCore.HotUpdate.Battle.Logic.GroupChatManager)
+    method get__GroupGiftManager : GameCore.HotUpdate.Battle.Logic.GroupGiftManager ()
+    method set__GroupGiftManager : Void (GameCore.HotUpdate.Battle.Logic.GroupGiftManager)
+    method get__CityChatPushManager : GameCore.HotUpdate.Battle.Logic.CityChatPushManager ()
+    method set__CityChatPushManager : Void (GameCore.HotUpdate.Battle.Logic.CityChatPushManager)
+    method get__DropItemManager : GameCore.HotUpdate.Battle.Logic.DropItemManager ()
+    method set__DropItemManager : Void (GameCore.HotUpdate.Battle.Logic.DropItemManager)
+    method get__SceneRatManager : GameCore.HotUpdate.Battle.Logic.SceneRatManager ()
+    method set__SceneRatManager : Void (GameCore.HotUpdate.Battle.Logic.SceneRatManager)
+    method get__StrayZombieManager : GameCore.HotUpdate.Battle.Logic.StrayZombieManager ()
+    method set__StrayZombieManager : Void (GameCore.HotUpdate.Battle.Logic.StrayZombieManager)
+    method get__GroundLootManager : GameCore.HotUpdate.Battle.Logic.GroundLootManager ()
+    method set__GroundLootManager : Void (GameCore.HotUpdate.Battle.Logic.GroundLootManager)
+    method get__FurnitureLootManager : GameCore.HotUpdate.Battle.Logic.FurnitureLootManager ()
+    method set__FurnitureLootManager : Void (GameCore.HotUpdate.Battle.Logic.FurnitureLootManager)
+    method get__InstallPlanManager : GameCore.HotUpdate.Battle.Logic.InstallPlanManager ()
+    method set__InstallPlanManager : Void (GameCore.HotUpdate.Battle.Logic.InstallPlanManager)
+    method get__SubSlotManager : GameCore.HotUpdate.Battle.Logic.SubSlotManager ()
+    method set__SubSlotManager : Void (GameCore.HotUpdate.Battle.Logic.SubSlotManager)
+    method get__TrapPlanManager : GameCore.HotUpdate.Battle.Logic.TrapPlanManager ()
+    method set__TrapPlanManager : Void (GameCore.HotUpdate.Battle.Logic.TrapPlanManager)
+    method get__TrapManager : GameCore.HotUpdate.Battle.Logic.TrapManager ()
+    method set__TrapManager : Void (GameCore.HotUpdate.Battle.Logic.TrapManager)
+    method get__IvyPlanManager : GameCore.HotUpdate.Battle.Logic.IvyPlanManager ()
+    method set__IvyPlanManager : Void (GameCore.HotUpdate.Battle.Logic.IvyPlanManager)
+    method get__RenovationManager : GameCore.HotUpdate.Battle.Logic.RenovationManager ()
+    method set__RenovationManager : Void (GameCore.HotUpdate.Battle.Logic.RenovationManager)
+    method get__WeatherManager : GameCore.HotUpdate.Battle.Logic.WeatherManager ()
+    method set__WeatherManager : Void (GameCore.HotUpdate.Battle.Logic.WeatherManager)
+    method get__EndlessManager : GameCore.HotUpdate.Battle.Logic.EndlessManager ()
+    method set__EndlessManager : Void (GameCore.HotUpdate.Battle.Logic.EndlessManager)
+    method get__ChecklistManager : GameCore.HotUpdate.Battle.Logic.ChecklistManager ()
+    method set__ChecklistManager : Void (GameCore.HotUpdate.Battle.Logic.ChecklistManager)
+    method get__PurchaseSafetyManager : GameCore.HotUpdate.Battle.Logic.PurchaseSafetyManager ()
+    method set__PurchaseSafetyManager : Void (GameCore.HotUpdate.Battle.Logic.PurchaseSafetyManager)
+    method get__SearchMarkerManager : GameCore.HotUpdate.Battle.Logic.SearchMarkerManager ()
+    method set__SearchMarkerManager : Void (GameCore.HotUpdate.Battle.Logic.SearchMarkerManager)
+    method get__ExploreSearchStateManager : GameCore.HotUpdate.Battle.Logic.ExploreSearchStateManager ()
+    method set__ExploreSearchStateManager : Void (GameCore.HotUpdate.Battle.Logic.ExploreSearchStateManager)
+    method get__ShopSignManager : GameCore.HotUpdate.Battle.Logic.ShopSignManager ()
+    method set__ShopSignManager : Void (GameCore.HotUpdate.Battle.Logic.ShopSignManager)
+    method get__SmartRecommendManager : GameCore.HotUpdate.SmartRecommendManager ()
+    method set__SmartRecommendManager : Void (GameCore.HotUpdate.SmartRecommendManager)
+    method get__QuickActionManager : GameCore.HotUpdate.Battle.Logic.QuickActionManager ()
+    method set__QuickActionManager : Void (GameCore.HotUpdate.Battle.Logic.QuickActionManager)
+    method get__PlantChoreBatchManager : GameCore.HotUpdate.Battle.Logic.PlantChoreBatchManager ()
+    method set__PlantChoreBatchManager : Void (GameCore.HotUpdate.Battle.Logic.PlantChoreBatchManager)
+    method get__CodexManager : GameCore.HotUpdate.Battle.Logic.CodexManager ()
+    method set__CodexManager : Void (GameCore.HotUpdate.Battle.Logic.CodexManager)
+    method Initialize : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method GetLoadingRes : Cysharp.Threading.Tasks.UniTask (Il2CppSystem.Collections.Generic.Dictionary`2<String,GameCore.HotUpdate.Battle.PreLoaderData>,GameCore.HotUpdate.GameSaveData)
+    method ApplyEndingRuleVersionTag : Void (GameCore.HotUpdate.GameSaveData)
+    method StartBattle : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method ApplyPendingFullLoadBuff : Void (GameCore.HotUpdate.GameSaveData)
+    method ApplyChallengeSetup : Void (GameCore.HotUpdate.GameSaveData)
+    method ApplyChallengeBuff : Void (GameCore.HotUpdate.Battle.Logic.BuffComponent,Int64,Int32,String)
+    method ApplyChallengeRewardSet : Void (Int32,Int64,String)
+    method GetPlanningEffectRatioFromSave : Single (GameCore.HotUpdate.GameSaveData,String)
+    method InjectRebirthNotebooks : Void (GameCore.HotUpdate.GameSaveData)
+    method OnUIOpened : Void ()
+    method EndBattle : Void ()
+    method SaveGame : Void (GameCore.HotUpdate.GameSaveData)
+    method HasAnySavedAgent : Boolean (GameCore.HotUpdate.SaveChildData)
+    method HasAnySavedItem : Boolean (GameCore.HotUpdate.SaveChildData)
+    method SaveGameInternal : Void (GameCore.HotUpdate.SaveChildData,Int32)
+    method OnUpdateAction : Void (Single,Single)
+    method OnPause : Void ()
+    method OnResume : Void ()
+    method IsLeadingRoleSleeping : Boolean ()
+    method IsLeadingRoleJumpTrapped : Boolean ()
+    method IsInLegitPauseModal : Boolean ()
+    method OnUserUIPauseHoldBegin : Void ()
+    method OnUserUIPauseHoldEnd : Void ()
+    method OnDisableResponseChanged : Void (Boolean)
+    method ApplyInitProficiency : Void (GameCore.HotUpdate.ProficiencyType,Int32)
+    method OnEnterPlanMode : Void ()
+    method OnExitPlanMode : Void ()
+    method OnDestroy : Void ()
+    method OnEventRegister : Void (GameCore.HotUpdate.EventDispatcher)
+    method OnRequestFurnitureSelectData : Void (Int64,Int64,Int32,UnityEngine.Vector3,Int64,UnityEngine.Vector3,UnityEngine.Quaternion)
+    method OnRequestOpenMapFromUI : Void (GameCore.HotUpdate.WorldStateType)
+    method GetUnlockedMapPointIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method OnMapJumpRequest : Void (Int32)
+    method IsCurrentBehaviorInterruptible : Boolean (GameCore.HotUpdate.Battle.Logic.LeadingRole)
+    method OnFloorMoveRequest : Void (Int32)
+    method OnViewFloorChanged : Void (Int32)
+    method OnCrossFloorActionRequest : Void (Int32,Int64,UnityEngine.Vector3,UnityEngine.Quaternion)
+    method OnCrossFloorPlanActionRequest : Void (Int32,Int32,Int64,UnityEngine.Vector3,UnityEngine.Quaternion)
+    method OnCrossFloorPlanActionRequestAtFront : Void (Int32,Int32,Int64,UnityEngine.Vector3,UnityEngine.Quaternion)
+    method DispatchPlanAction : Void (Int32,Int32,Int64,UnityEngine.Vector3,UnityEngine.Quaternion,Boolean)
+    method OnCrossFloorMainActionsRequest : Void (Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>,Int64,UnityEngine.Vector3,UnityEngine.Quaternion)
+    method OnUseItemFromFurnitureRequest : Void (Int64,Int32,Int64)
+    method OnRequestInitialState : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method RejectUnreachableCrossFloorClick : Boolean (GameCore.HotUpdate.Battle.Logic.BaseAgent,Int32,UnityEngine.Vector3)
+    method ApplyPureEndlessInitProficiency : Void (GameCore.HotUpdate.GameSaveData)
+    method ResetUserUIPauseHolds : Void ()
+    method TryWarnUserUIPauseHoldSpike : Void ()
+    method get__RobotTripProvider : GameCore.HotUpdate.Battle.Logic.IRobotTripProvider ()
+    method set__RobotTripProvider : Void (GameCore.HotUpdate.Battle.Logic.IRobotTripProvider)
+    method get__RobotSortingManager : GameCore.HotUpdate.Battle.Logic.RobotSortingManager ()
+    method set__RobotSortingManager : Void (GameCore.HotUpdate.Battle.Logic.RobotSortingManager)
+    method get__PlantChoreProvider : GameCore.HotUpdate.Battle.Logic.IPlantChoreProvider ()
+    method set__PlantChoreProvider : Void (GameCore.HotUpdate.Battle.Logic.IPlantChoreProvider)
+    method get__PlantChoreManager : GameCore.HotUpdate.Battle.Logic.PlantChoreManager ()
+    method set__PlantChoreManager : Void (GameCore.HotUpdate.Battle.Logic.PlantChoreManager)
+    method get__RepairChoreProvider : GameCore.HotUpdate.Battle.Logic.IRepairChoreProvider ()
+    method set__RepairChoreProvider : Void (GameCore.HotUpdate.Battle.Logic.IRepairChoreProvider)
+    method get__RepairChoreManager : GameCore.HotUpdate.Battle.Logic.RepairChoreManager ()
+    method set__RepairChoreManager : Void (GameCore.HotUpdate.Battle.Logic.RepairChoreManager)
+    method get_RunClockSeconds : Single ()
+    method AdvanceRunClock : Void (Single)
+    method UpdateCastingStuckWatchdog : Void (Single)
+    method ResetCastingStuckWatchdog : Void ()
+    method BuildCastingStuckReport : String (Int64,GameCore.HotUpdate.Battle.Logic.AgentStateComponent,GameCore.HotUpdate.Battle.Logic.AgentActionSource,GameCore.HotUpdate.Battle.Logic.AgentAction)
+    method UpdateQueueStuckWatchdog : Void (Single,Single)
+    method ResetQueueStuckWatchdog : Void ()
+    method BuildQueueStuckReport : String (Int64,GameCore.HotUpdate.Battle.Logic.AgentActionSource,GameCore.HotUpdate.Battle.Logic.AgentAction)
+    method .ctor : Void ()
+    method Method_Internal_Static_Void_AgentSave_byref___c__DisplayClass393_0_0 : Void (GameCore.HotUpdate.AgentSave,__c__DisplayClass393_0&)
+    method _OnEventRegister_b__415_0 : Void (Int32)
+    method _OnEventRegister_b__415_1 : Void ()
+    method _OnEventRegister_b__415_2 : Void ()
+    method _OnEventRegister_b__415_3 : Void ()
+    method _OnEventRegister_b__415_4 : Void ()
+    method _OnEventRegister_b__415_5 : Void (Int32)
+    method _OnEventRegister_b__415_6 : Void (Int32)
+    method _OnEventRegister_b__415_7 : Void (Int32,Int32)
+    method _OnEventRegister_b__415_8 : Void (Int32)
+    method _OnEventRegister_b__415_9 : Void (GameCore.HotUpdate.ItemDataDto)
+    method _OnEventRegister_b__415_10 : Void (Int64)
+    method .ctor : Void (IntPtr)
+    method get__IsUpdate_k__BackingField : Boolean ()
+    method set__IsUpdate_k__BackingField : Void (Boolean)
+    method get__IsPause_k__BackingField : Boolean ()
+    method set__IsPause_k__BackingField : Void (Boolean)
+    method get__lastPauseStack : String ()
+    method set__lastPauseStack : Void (String)
+    method get__pausedElapsed : Single ()
+    method set__pausedElapsed : Void (Single)
+    method get__pauseWatchdogNextLogAt : Single ()
+    method set__pauseWatchdogNextLogAt : Void (Single)
+    method get_PAUSE_SELF_HEAL_SECONDS : Single ()
+    method set_PAUSE_SELF_HEAL_SECONDS : Void (Single)
+    method get_PAUSE_SELF_HEAL_MODAL_SECONDS : Single ()
+    method set_PAUSE_SELF_HEAL_MODAL_SECONDS : Void (Single)
+    method get__userUIPauseHolds : Int32 ()
+    method set__userUIPauseHolds : Void (Int32)
+    method get__disableResponseActive : Boolean ()
+    method set__disableResponseActive : Void (Boolean)
+    method get_TruthHospitalMapId : Int32 ()
+    method set_TruthHospitalMapId : Void (Int32)
+    method get_TruthInvestigationTaskCsIds : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_TruthInvestigationTaskCsIds : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__IsPlanMode_k__BackingField : Boolean ()
+    method set__IsPlanMode_k__BackingField : Void (Boolean)
+    method get__CurrentViewFloorId_k__BackingField : Int32 ()
+    method set__CurrentViewFloorId_k__BackingField : Void (Int32)
+    method get__GameModeKey_k__BackingField : GameCore.HotUpdate.GameMode ()
+    method set__GameModeKey_k__BackingField : Void (GameCore.HotUpdate.GameMode)
+    method get___AgentManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.AgentManager ()
+    method set___AgentManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.AgentManager)
+    method get___FsmManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.FsmManager ()
+    method set___FsmManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.FsmManager)
+    method get___BTEffectManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.BTEffectManager ()
+    method set___BTEffectManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.BTEffectManager)
+    method get___DirectorManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DirectorManager ()
+    method set___DirectorManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DirectorManager)
+    method get___RandomManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.RandomManager ()
+    method set___RandomManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.RandomManager)
+    method get___BtThinkingManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.BtThinkingManager ()
+    method set___BtThinkingManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.BtThinkingManager)
+    method get___ActionManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ActionManager ()
+    method set___ActionManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ActionManager)
+    method get___ItemManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ItemManager ()
+    method set___ItemManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ItemManager)
+    method get___GameTimeManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GameTimeManager ()
+    method set___GameTimeManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GameTimeManager)
+    method get___DataCollectionManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DataCollectionManager ()
+    method set___DataCollectionManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DataCollectionManager)
+    method get___WishManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.WishManager ()
+    method set___WishManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.WishManager)
+    method get___LoanSharkManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.LoanSharkManager ()
+    method set___LoanSharkManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.LoanSharkManager)
+    method get___NeighborBasketReturnManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.NeighborBasketReturnManager ()
+    method set___NeighborBasketReturnManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.NeighborBasketReturnManager)
+    method get___StrangerTradeActiveManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.StrangerTradeActiveManager ()
+    method set___StrangerTradeActiveManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.StrangerTradeActiveManager)
+    method get___StrangerStockManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.StrangerStockManager ()
+    method set___StrangerStockManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.StrangerStockManager)
+    method get___StrangerSupportManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.StrangerSupportManager ()
+    method set___StrangerSupportManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.StrangerSupportManager)
+    method get___AidPlatformManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.AidPlatformManager ()
+    method set___AidPlatformManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.AidPlatformManager)
+    method get___TruthRecorderManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TruthRecorderManager ()
+    method set___TruthRecorderManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TruthRecorderManager)
+    method get___CampManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CampManager ()
+    method set___CampManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CampManager)
+    method get___CasualOrderManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CasualOrderManager ()
+    method set___CasualOrderManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CasualOrderManager)
+    method get___CasualHomeArchiveManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CasualHomeArchiveManager ()
+    method set___CasualHomeArchiveManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CasualHomeArchiveManager)
+    method get___NeighborRescueManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.NeighborRescueManager ()
+    method set___NeighborRescueManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.NeighborRescueManager)
+    method get___GirlCompanionManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GirlCompanionManager ()
+    method set___GirlCompanionManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GirlCompanionManager)
+    method get___WarehouseRescueManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.WarehouseRescueManager ()
+    method set___WarehouseRescueManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.WarehouseRescueManager)
+    method get___FoodPollutionManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.FoodPollutionManager ()
+    method set___FoodPollutionManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.FoodPollutionManager)
+    method get___TowerWaveManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TowerWaveManager ()
+    method set___TowerWaveManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TowerWaveManager)
+    method get___TowerCombatManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TowerCombatManager ()
+    method set___TowerCombatManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TowerCombatManager)
+    method get___TowerDefensePlanBridge_k__BackingField : GameCore.HotUpdate.Battle.Logic.TowerDefensePlanBridge ()
+    method set___TowerDefensePlanBridge_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TowerDefensePlanBridge)
+    method get___TowerRingUnlockManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TowerRingUnlockManager ()
+    method set___TowerRingUnlockManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TowerRingUnlockManager)
+    method get___MolotovManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.MolotovManager ()
+    method set___MolotovManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.MolotovManager)
+    method get___LightPropManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.LightPropManager ()
+    method set___LightPropManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.LightPropManager)
+    method get___NeighborMonologueManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.NeighborMonologueManager ()
+    method set___NeighborMonologueManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.NeighborMonologueManager)
+    method get___NpcCommonManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.NpcCommonManager ()
+    method set___NpcCommonManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.NpcCommonManager)
+    method get___FaithManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.FaithManager ()
+    method set___FaithManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.FaithManager)
+    method get___SymbolManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.SymbolManager ()
+    method set___SymbolManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SymbolManager)
+    method get___ProficiencyManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ProficiencyManager ()
+    method set___ProficiencyManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ProficiencyManager)
+    method get___SurvivalResultsManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.SurvivalResultsManager ()
+    method set___SurvivalResultsManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SurvivalResultsManager)
+    method get___ConditionSetManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ConditionSetManager ()
+    method set___ConditionSetManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ConditionSetManager)
+    method get___RewardSetManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.RewardSetManager ()
+    method set___RewardSetManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.RewardSetManager)
+    method get___DynamicEventManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DynamicEventManager ()
+    method set___DynamicEventManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DynamicEventManager)
+    method get___TagManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TagManager ()
+    method set___TagManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TagManager)
+    method get___FloorMenuBridge_k__BackingField : GameCore.HotUpdate.Battle.Logic.FloorMenuBridge ()
+    method set___FloorMenuBridge_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.FloorMenuBridge)
+    method get___AreaUnlockBridge_k__BackingField : GameCore.HotUpdate.Battle.Logic.AreaUnlockBridge ()
+    method set___AreaUnlockBridge_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.AreaUnlockBridge)
+    method get___DyeUnlockManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DyeUnlockManager ()
+    method set___DyeUnlockManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DyeUnlockManager)
+    method get___SlotOccupantBinder_k__BackingField : GameCore.HotUpdate.Battle.Logic.SlotOccupantBinder ()
+    method set___SlotOccupantBinder_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SlotOccupantBinder)
+    method get___StoryTipsBridge_k__BackingField : GameCore.HotUpdate.Battle.Logic.StoryTipsBridge ()
+    method set___StoryTipsBridge_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.StoryTipsBridge)
+    method get___PermissionsManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PermissionsManager ()
+    method set___PermissionsManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PermissionsManager)
+    method get___CharacterTalkManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CharacterTalkManager ()
+    method set___CharacterTalkManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CharacterTalkManager)
+    method get___PowerManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PowerManager ()
+    method set___PowerManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PowerManager)
+    method get___PromptTriggerManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PromptTriggerManager ()
+    method set___PromptTriggerManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PromptTriggerManager)
+    method get___NpcDialogueManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.NpcDialogueManager ()
+    method set___NpcDialogueManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.NpcDialogueManager)
+    method get___GameOverTriggerManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GameOverTriggerManager ()
+    method set___GameOverTriggerManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GameOverTriggerManager)
+    method get___LineEndingManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.LineEndingManager ()
+    method set___LineEndingManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.LineEndingManager)
+    method get___GirlLineEndingManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GirlLineEndingManager ()
+    method set___GirlLineEndingManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GirlLineEndingManager)
+    method get___WarehouseLineEndingManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.WarehouseLineEndingManager ()
+    method set___WarehouseLineEndingManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.WarehouseLineEndingManager)
+    method get___GuideTaskManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GuideTaskManager ()
+    method set___GuideTaskManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GuideTaskManager)
+    method get___ExploreManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ExploreManager ()
+    method set___ExploreManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ExploreManager)
+    method get___DisasterNodeManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DisasterNodeManager ()
+    method set___DisasterNodeManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DisasterNodeManager)
+    method get___ToolTableManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ToolTableManager ()
+    method set___ToolTableManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ToolTableManager)
+    method get___AchievementManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.AchievementManager ()
+    method set___AchievementManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.AchievementManager)
+    method get___PaperAirplaneManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PaperAirplaneManager ()
+    method set___PaperAirplaneManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PaperAirplaneManager)
+    method get___PhoneSMSManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PhoneSMSManager ()
+    method set___PhoneSMSManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PhoneSMSManager)
+    method get___GossipPushManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GossipPushManager ()
+    method set___GossipPushManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GossipPushManager)
+    method get___GroupAngerManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GroupAngerManager ()
+    method set___GroupAngerManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GroupAngerManager)
+    method get___GroupChatManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GroupChatManager ()
+    method set___GroupChatManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GroupChatManager)
+    method get___GroupGiftManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GroupGiftManager ()
+    method set___GroupGiftManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GroupGiftManager)
+    method get___CityChatPushManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CityChatPushManager ()
+    method set___CityChatPushManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CityChatPushManager)
+    method get___DropItemManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.DropItemManager ()
+    method set___DropItemManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.DropItemManager)
+    method get___SceneRatManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.SceneRatManager ()
+    method set___SceneRatManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SceneRatManager)
+    method get___StrayZombieManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.StrayZombieManager ()
+    method set___StrayZombieManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.StrayZombieManager)
+    method get___GroundLootManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.GroundLootManager ()
+    method set___GroundLootManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.GroundLootManager)
+    method get___FurnitureLootManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.FurnitureLootManager ()
+    method set___FurnitureLootManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.FurnitureLootManager)
+    method get___InstallPlanManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.InstallPlanManager ()
+    method set___InstallPlanManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.InstallPlanManager)
+    method get___SubSlotManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.SubSlotManager ()
+    method set___SubSlotManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SubSlotManager)
+    method get___TrapPlanManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TrapPlanManager ()
+    method set___TrapPlanManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TrapPlanManager)
+    method get___TrapManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.TrapManager ()
+    method set___TrapManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.TrapManager)
+    method get___IvyPlanManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.IvyPlanManager ()
+    method set___IvyPlanManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.IvyPlanManager)
+    method get___RenovationManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.RenovationManager ()
+    method set___RenovationManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.RenovationManager)
+    method get___WeatherManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.WeatherManager ()
+    method set___WeatherManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.WeatherManager)
+    method get___EndlessManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.EndlessManager ()
+    method set___EndlessManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.EndlessManager)
+    method get___ChecklistManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ChecklistManager ()
+    method set___ChecklistManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ChecklistManager)
+    method get___PurchaseSafetyManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PurchaseSafetyManager ()
+    method set___PurchaseSafetyManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PurchaseSafetyManager)
+    method get___SearchMarkerManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.SearchMarkerManager ()
+    method set___SearchMarkerManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.SearchMarkerManager)
+    method get___ExploreSearchStateManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ExploreSearchStateManager ()
+    method set___ExploreSearchStateManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ExploreSearchStateManager)
+    method get___ShopSignManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.ShopSignManager ()
+    method set___ShopSignManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.ShopSignManager)
+    method get___SmartRecommendManager_k__BackingField : GameCore.HotUpdate.SmartRecommendManager ()
+    method set___SmartRecommendManager_k__BackingField : Void (GameCore.HotUpdate.SmartRecommendManager)
+    method get___QuickActionManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.QuickActionManager ()
+    method set___QuickActionManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.QuickActionManager)
+    method get___PlantChoreBatchManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PlantChoreBatchManager ()
+    method set___PlantChoreBatchManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PlantChoreBatchManager)
+    method get___CodexManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.CodexManager ()
+    method set___CodexManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.CodexManager)
+    method get_PauseGuardVerboseLog : Boolean ()
+    method set_PauseGuardVerboseLog : Void (Boolean)
+    method get_PureEndlessBaseProficiencyLv : Int32 ()
+    method set_PureEndlessBaseProficiencyLv : Void (Int32)
+    method get_PureEndlessInnateBonus : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.ValueTuple`3<Int32,GameCore.HotUpdate.ProficiencyType,Int32>> ()
+    method set_PureEndlessInnateBonus : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.ValueTuple`3<Int32,GameCore.HotUpdate.ProficiencyType,Int32>>)
+    method get_USER_UI_PAUSE_HOLD_WARN_THRESHOLD : Int32 ()
+    method set_USER_UI_PAUSE_HOLD_WARN_THRESHOLD : Void (Int32)
+    method get__userUIPauseHoldSpikeReported : Boolean ()
+    method set__userUIPauseHoldSpikeReported : Void (Boolean)
+    method get___RobotTripProvider_k__BackingField : GameCore.HotUpdate.Battle.Logic.IRobotTripProvider ()
+    method set___RobotTripProvider_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.IRobotTripProvider)
+    method get___RobotSortingManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.RobotSortingManager ()
+    method set___RobotSortingManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.RobotSortingManager)
+    method get___PlantChoreProvider_k__BackingField : GameCore.HotUpdate.Battle.Logic.IPlantChoreProvider ()
+    method set___PlantChoreProvider_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.IPlantChoreProvider)
+    method get___PlantChoreManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.PlantChoreManager ()
+    method set___PlantChoreManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.PlantChoreManager)
+    method get___RepairChoreProvider_k__BackingField : GameCore.HotUpdate.Battle.Logic.IRepairChoreProvider ()
+    method set___RepairChoreProvider_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.IRepairChoreProvider)
+    method get___RepairChoreManager_k__BackingField : GameCore.HotUpdate.Battle.Logic.RepairChoreManager ()
+    method set___RepairChoreManager_k__BackingField : Void (GameCore.HotUpdate.Battle.Logic.RepairChoreManager)
+    method get__runClockSeconds : Double ()
+    method set__runClockSeconds : Void (Double)
+    method get__castingStuckElapsed : Single ()
+    method set__castingStuckElapsed : Void (Single)
+    method get__castingStuckNextLogAt : Single ()
+    method set__castingStuckNextLogAt : Void (Single)
+    method get_CASTING_STUCK_FIRST_LOG_SECONDS : Single ()
+    method set_CASTING_STUCK_FIRST_LOG_SECONDS : Void (Single)
+    method get_CASTING_STUCK_LOG_INTERVAL_SECONDS : Single ()
+    method set_CASTING_STUCK_LOG_INTERVAL_SECONDS : Void (Single)
+    method get_QUEUE_STUCK_MARGIN_GAME_SECONDS : Single ()
+    method set_QUEUE_STUCK_MARGIN_GAME_SECONDS : Void (Single)
+    method get__queueStuckBtId : Int64 ()
+    method set__queueStuckBtId : Void (Int64)
+    method get__queueStuckWatch : Boolean ()
+    method set__queueStuckWatch : Void (Boolean)
+    method get__queueStuckLimit : Single ()
+    method set__queueStuckLimit : Void (Single)
+    method get__queueStuckAge : Single ()
+    method set__queueStuckAge : Void (Single)
+    method get__queueStuckSinceReport : Single ()
+    method set__queueStuckSinceReport : Void (Single)
+TYPE GameCore.HotUpdate.Battle.Logic.DifficultyTools
+    field NativeFieldInfoPtr_StandardLevel : IntPtr
+    field NativeFieldInfoPtr_WeatherAnchorDays : IntPtr
+    field NativeFieldInfoPtr_WeatherUpgradeMap : IntPtr
+    field NativeFieldInfoPtr_WeatherDowngradeMap : IntPtr
+    field NativeFieldInfoPtr_WeatherToSunnyMap : IntPtr
+    field NativeFieldInfoPtr_SunnyRollSalt : IntPtr
+    field NativeFieldInfoPtr_DailyRollHour : IntPtr
+    field NativeFieldInfoPtr_SeverityRollSalt : IntPtr
+    field NativeFieldInfoPtr_MoneyGranularity : IntPtr
+    field NativeFieldInfoPtr_CrawlerZombieTypes : IntPtr
+    field NativeMethodInfoPtr_GetLevel_Public_Static_Int32_DifficultyParamType_0 : IntPtr
+    field NativeMethodInfoPtr_GetValue1_Public_Static_Single_DifficultyParamType_0 : IntPtr
+    field NativeMethodInfoPtr_GetValue2_Public_Static_Single_DifficultyParamType_0 : IntPtr
+    field NativeMethodInfoPtr_GetValue3_Public_Static_Single_DifficultyParamType_0 : IntPtr
+    field NativeMethodInfoPtr_GetValue4_Public_Static_Single_DifficultyParamType_0 : IntPtr
+    field NativeMethodInfoPtr_ScaleCountDownBase_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRoundBaseCountDownSeconds_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetPreDisasterTimeScale_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_ScaleInitMoney_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRiotThresholdHour_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetSatietyAutoDelDelta_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetMoraleTargetDelta_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetVitalityAutoAddDelta_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetVitalityItemAddDelta_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetZombieAttackMul_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetZombieHpAndCountMul_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_IsCrawlerZombieType_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCrawlerCountMul_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyWeatherDifficulty_Public_Static_Int32_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_Roll_Private_Static_Single_Int32_Int32_UInt32_0 : IntPtr
+    field NativeMethodInfoPtr_GetWeatherToSunnyRate_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_RollExploreLootCopies_Public_Static_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_GetParamConfig_Private_Static_Config_DifficultyParam_DifficultyParamType_0 : IntPtr
+    method .cctor : Void ()
+    method GetLevel : Int32 (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method GetValue1 : Single (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method GetValue2 : Single (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method GetValue3 : Single (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method GetValue4 : Single (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method ScaleCountDownBase : Int32 (Int32)
+    method GetRoundBaseCountDownSeconds : Int32 ()
+    method GetPreDisasterTimeScale : Single ()
+    method ScaleInitMoney : Int32 (Int32)
+    method GetRiotThresholdHour : Single ()
+    method GetSatietyAutoDelDelta : Single ()
+    method GetMoraleTargetDelta : Int32 ()
+    method GetVitalityAutoAddDelta : Single ()
+    method GetVitalityItemAddDelta : Single ()
+    method GetZombieAttackMul : Single ()
+    method GetZombieHpAndCountMul : Single ()
+    method IsCrawlerZombieType : Boolean (Int32)
+    method GetCrawlerCountMul : Single ()
+    method ApplyWeatherDifficulty : Int32 (Int32,Int32,Int32)
+    method Roll : Single (Int32,Int32,UInt32)
+    method GetWeatherToSunnyRate : Single ()
+    method RollExploreLootCopies : Int32 (Boolean)
+    method GetParamConfig : GameCore.HotUpdate.Config_DifficultyParam (GameCore.HotUpdate.Battle.Logic.DifficultyParamType)
+    method .ctor : Void (IntPtr)
+    method get_StandardLevel : Int32 ()
+    method set_StandardLevel : Void (Int32)
+    method get_WeatherAnchorDays : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method set_WeatherAnchorDays : Void (Il2CppSystem.Collections.Generic.HashSet`1<Int32>)
+    method get_WeatherUpgradeMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_WeatherUpgradeMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_WeatherDowngradeMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_WeatherDowngradeMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_WeatherToSunnyMap : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_WeatherToSunnyMap : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_SunnyRollSalt : UInt32 ()
+    method set_SunnyRollSalt : Void (UInt32)
+    method get_DailyRollHour : Int32 ()
+    method set_DailyRollHour : Void (Int32)
+    method get_SeverityRollSalt : UInt32 ()
+    method set_SeverityRollSalt : Void (UInt32)
+    method get_MoneyGranularity : Int32 ()
+    method set_MoneyGranularity : Void (Int32)
+    method get_CrawlerZombieTypes : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method set_CrawlerZombieTypes : Void (Il2CppSystem.Collections.Generic.HashSet`1<Int32>)
+TYPE GameCore.HotUpdate.Battle.Logic.EndlessManager
+    field NativeFieldInfoPtr__endlessStartDay : IntPtr
+    field NativeFieldInfoPtr__isStoryEndless : IntPtr
+    field NativeFieldInfoPtr__tierDayOffset : IntPtr
+    field NativeFieldInfoPtr__tierList : IntPtr
+    field NativeFieldInfoPtr__weatherPoolCache : IntPtr
+    field NativeFieldInfoPtr__waveStartAbsHour : IntPtr
+    field NativeFieldInfoPtr__ruleVersion : IntPtr
+    field NativeFieldInfoPtr__pendingTierBannerType : IntPtr
+    field NativeFieldInfoPtr__pendingTierBannerTier : IntPtr
+    field NativeFieldInfoPtr__pendingTierBannerText : IntPtr
+    field NativeFieldInfoPtr__bestSnapshotPending : IntPtr
+    field NativeFieldInfoPtr__bestSnapshotPlayerId : IntPtr
+    field NativeFieldInfoPtr__IsActive_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CurrentTier_k__BackingField : IntPtr
+    field NativeFieldInfoPtr_WaveWarnAheadHours : IntPtr
+    field NativeFieldInfoPtr_PreFinalFiredTagPrefix : IntPtr
+    field NativeFieldInfoPtr_FallAnnounceTradePointCategory : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFERRED_FALL_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_REPRIEVE_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFEND_PLEDGE : IntPtr
+    field NativeFieldInfoPtr_TAG_AID_REQUEST_ACTIVE : IntPtr
+    field NativeFieldInfoPtr_AidRequestEventsByMapPoint : IntPtr
+    field NativeFieldInfoPtr_PerPointFallLegacy : IntPtr
+    field NativeFieldInfoPtr_FallLegacyEventByMapPoint : IntPtr
+    field NativeFieldInfoPtr_TAG_ALL_TRADE_FALLEN : IntPtr
+    field NativeFieldInfoPtr_TradePointCategoryValue : IntPtr
+    field NativeFieldInfoPtr__aidReconcilePending : IntPtr
+    field NativeFieldInfoPtr_AID_RETREAT_TIMEOUT_SECONDS : IntPtr
+    field NativeFieldInfoPtr_AID_RETREAT_TICK_MAX_DELTA : IntPtr
+    field NativeFieldInfoPtr__aidRetreatingIds : IntPtr
+    field NativeFieldInfoPtr__aidRetreatTickHooked : IntPtr
+    field NativeFieldInfoPtr_AidRejectInactive : IntPtr
+    field NativeFieldInfoPtr_AidRejectNotCamp : IntPtr
+    field NativeFieldInfoPtr_AidRejectNotAvailable : IntPtr
+    field NativeFieldInfoPtr_AidRejectNoTarget : IntPtr
+    field NativeFieldInfoPtr_AidStageCleared : IntPtr
+    field NativeFieldInfoPtr_AidStageSent : IntPtr
+    field NativeFieldInfoPtr_AidStageActing : IntPtr
+    field NativeFieldInfoPtr_AidStageDone : IntPtr
+    field NativeFieldInfoPtr__aidJobs : IntPtr
+    field NativeFieldInfoPtr__aidDoneMapPointsThisWave : IntPtr
+    field NativeFieldInfoPtr__aidRetreatLastTickTime : IntPtr
+    field NativeFieldInfoPtr_AID_JOB_TICK_SECONDS : IntPtr
+    field NativeFieldInfoPtr_CampAidEventsByRound : IntPtr
+    field NativeFieldInfoPtr_TAG_CAMP_AID_FIRED_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_TRADE_ACTIVE_UNLOCK : IntPtr
+    field NativeFieldInfoPtr_TAG_AID_CALL_SEEN_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFEND_PLEDGE_QUEUE_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFEND_ARMED_PREFIX : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFEND_FIGHT_PREFIX : IntPtr
+    field NativeFieldInfoPtr_CampAidRound2CountMul : IntPtr
+    field NativeFieldInfoPtr_CampAidFinalCountMul : IntPtr
+    field NativeFieldInfoPtr_CampStateNone : IntPtr
+    field NativeFieldInfoPtr_CampStateStable : IntPtr
+    field NativeFieldInfoPtr_CampStateStrained : IntPtr
+    field NativeFieldInfoPtr_CampStateCrisis : IntPtr
+    field NativeFieldInfoPtr_CampStateDefendReady : IntPtr
+    field NativeFieldInfoPtr_CampStateEvacuated : IntPtr
+    field NativeFieldInfoPtr_CampStateLost : IntPtr
+    field NativeFieldInfoPtr_CampMapPoints : IntPtr
+    field NativeFieldInfoPtr_EarlyCampMapPoints : IntPtr
+    field NativeFieldInfoPtr_CampAidRoundMaxEarly : IntPtr
+    field NativeFieldInfoPtr_CampAidRoundMaxLate : IntPtr
+    field NativeFieldInfoPtr_CampFarewellEventByMapPoint : IntPtr
+    field NativeFieldInfoPtr_CampEvacLegacyEventByMapPoint : IntPtr
+    field NativeFieldInfoPtr_TAG_CAMP_FAREWELL_PREFIX : IntPtr
+    field NativeFieldInfoPtr_CampEvacBannerType : IntPtr
+    field NativeFieldInfoPtr__campEvacBannerNames : IntPtr
+    field NativeFieldInfoPtr__isCasual : IntPtr
+    field NativeFieldInfoPtr__casualTier : IntPtr
+    field NativeFieldInfoPtr__casualHudReadyPending : IntPtr
+    field NativeFieldInfoPtr__casualExploreWorld : IntPtr
+    field NativeFieldInfoPtr__casualBrokenLogged : IntPtr
+    field NativeFieldInfoPtr_Key_CasualNightRaidHour : IntPtr
+    field NativeFieldInfoPtr_Key_CasualPeakWaveTemplates : IntPtr
+    field NativeFieldInfoPtr_CasualNightRaidHourDefault : IntPtr
+    field NativeFieldInfoPtr_Key_CasualDayWaveHour : IntPtr
+    field NativeFieldInfoPtr_CasualDayWaveHourDefault : IntPtr
+    field NativeFieldInfoPtr_CasualFallbackWaveHours : IntPtr
+    field NativeFieldInfoPtr_CasualWaveHistoryMax : IntPtr
+    field NativeFieldInfoPtr_CasualPeakKindWaves : IntPtr
+    field NativeFieldInfoPtr_CasualPeakKindAid : IntPtr
+    field NativeFieldInfoPtr_CasualFallbackWaveEventIds : IntPtr
+    field NativeFieldInfoPtr_Key_CasualWaveRewardSetIds : IntPtr
+    field NativeFieldInfoPtr_Key_CasualWaveLootGroupIds : IntPtr
+    field NativeFieldInfoPtr_Key_CasualAlertLootBonus : IntPtr
+    field NativeFieldInfoPtr_Key_CasualAlertLootGroupIds : IntPtr
+    field NativeFieldInfoPtr_Key_CasualAlertLootCounts : IntPtr
+    field NativeFieldInfoPtr_CasualAlertLootBonusDefault : IntPtr
+    field NativeFieldInfoPtr_CasualAlertLootCountDefault : IntPtr
+    field NativeFieldInfoPtr_CasualAlertListSeparators : IntPtr
+    field NativeFieldInfoPtr_CasualEventXunFirst : IntPtr
+    field NativeFieldInfoPtr_CasualEventXunLast : IntPtr
+    field NativeFieldInfoPtr_CasualPeakXun : IntPtr
+    field NativeFieldInfoPtr_CasualAlertForTwoEvents : IntPtr
+    field NativeFieldInfoPtr_CrisisStatePlanned : IntPtr
+    field NativeFieldInfoPtr_CrisisStateRunning : IntPtr
+    field NativeFieldInfoPtr_CrisisStateClosed : IntPtr
+    field NativeFieldInfoPtr_BannerTypeCrisisCombo : IntPtr
+    field NativeFieldInfoPtr_BannerTypeCrisisForecast : IntPtr
+    field NativeFieldInfoPtr_CrisisDrawSeedMul : IntPtr
+    field NativeFieldInfoPtr__crisisPoolCache : IntPtr
+    field NativeFieldInfoPtr_TAG_EXPLORE_DEFER_PREFIX : IntPtr
+    field NativeFieldInfoPtr_EffectName_EndlessFallDefer : IntPtr
+    field NativeFieldInfoPtr_TAG_OFFICE_OPEN : IntPtr
+    field NativeFieldInfoPtr_ExploreFallPointCategory : IntPtr
+    field NativeFieldInfoPtr_ExploreFallCountdownDays : IntPtr
+    field NativeFieldInfoPtr_TAG_DEFEND_PLEDGE_ARMED : IntPtr
+    field NativeFieldInfoPtr__prepPostPending : IntPtr
+    field NativeFieldInfoPtr__prepPostRecordId : IntPtr
+    field NativeFieldInfoPtr_DefendPhaseNone : IntPtr
+    field NativeFieldInfoPtr_DefendPhaseAsk : IntPtr
+    field NativeFieldInfoPtr_DefendPhasePledged : IntPtr
+    field NativeFieldInfoPtr_DefendPhaseFighting : IntPtr
+    field NativeFieldInfoPtr_DefendRequestEventByMapPoint : IntPtr
+    field NativeFieldInfoPtr_DefendAcceptEventByMapPoint : IntPtr
+    field NativeMethodInfoPtr_get_IsActive_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_set_IsActive_Private_set_Void_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_get_CurrentTier_Public_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CurrentTier_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnEventRegister_Public_Virtual_Final_New_Void_EventDispatcher_0 : IntPtr
+    field NativeMethodInfoPtr_OnGameTimeStart_Private_Void_Single_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnBattleReady_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Initialize_Public_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_PushBestSnapshot_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnDayChanged_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnHourChanged_Public_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickWaveSchedule_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_UsesDayPattern_Private_Boolean_Config_EndlessTier_0 : IntPtr
+    field NativeMethodInfoPtr_TierHasAnyWave_Private_Boolean_Config_EndlessTier_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveDayTemplateId_Private_Int32_Config_EndlessTier_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetActiveWaveMaxHours_Private_Static_Single_TowerWaveManager_0 : IntPtr
+    field NativeMethodInfoPtr_TryBuildEndlessWaveConfig_Private_Boolean_Config_EndlessTier_Int32_Int32_byref_WaveRuntimeConfig_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyEarlyWaveHpCut_Private_Void_WaveRuntimeConfig_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetEndlessTalentRatio_Private_Static_Single_String_0 : IntPtr
+    field NativeMethodInfoPtr_MaxWaveKind_Private_Static_Int32_List_1_Config_TowerWave_0 : IntPtr
+    field NativeMethodInfoPtr_PushHudStatus_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFirePreFinalEvent_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FindNextWaveOpenAbsHour_Private_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetWeatherForHour_Public_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetWeatherSwitchHour_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RollWeatherFromPool_Public_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTierConfig_Private_Config_EndlessTier_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CalcTierDayOffset_Private_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTierDay_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetEndlessDay_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDronePowerMul_Public_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetTierForDay_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ShowTierBanner_Private_Void_Int32_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_FlushPendingTierBanner_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveTierForSettlement_Public_Int32_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_RecomputeTier_Private_Void_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyFallenMapPoints_Private_String_Int32_Int32_Boolean_byref_String_0 : IntPtr
+    field NativeMethodInfoPtr_FallMapPoint_Private_Boolean_GameSaveData_TagManager_Int32_Int32_byref_String_Boolean_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_IsFallAnnounceable_Private_Static_Boolean_Config_MapPoint_0 : IntPtr
+    field NativeMethodInfoPtr_DeferredFallTag_Private_Static_String_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryParseDeferredFallTag_Private_Static_Boolean_String_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasDeferredFall_Private_Static_Boolean_TagManager_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TakeDeferredFallsUpToTier_Private_Static_List_1_Int32_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidRequestEventIds_Public_Il2CppStructArray_1_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryConsumeReprieve_Private_Static_Boolean_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasDefendPledge_Private_Static_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_ClearDefendPledge_Private_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TrySealTradeAccess_Private_Static_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_LoadCaches_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ReconcileFallenAidRequests_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_CancelAidRequestsOfFallenPoint_Private_Static_Void_DynamicEventManager_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnAidResultDeferDayRequest_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FindMapPointByAidResultEvent_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidResultDeferDay_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnAidDelivered_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasReprieveApplied_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnRequestCampAid_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnWaveStateChangedForAidHint_Private_Void_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RejectAidCall_Private_Void_Int32_Int32_String_0 : IntPtr
+    field NativeMethodInfoPtr_CountRetreatableWaveZombies_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CollectRetreatCandidates_Private_Int32_TowerWaveManager_List_1_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_PlanAidRetreatCount_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RetreatWaveZombiesForAid_Private_Int32_TowerWaveManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BeginAidRetreat_Private_Boolean_AgentManager_TowerWaveManager_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_HookAidRetreatTick_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnWaveHudSyncForAidRetreat_Private_Void_Int32_Int32_Int32_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickAidJobs_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_RunAidRetreatBatch_Private_Void_AidRetreatJob_TowerWaveManager_0 : IntPtr
+    field NativeMethodInfoPtr_FinishAidJob_Private_Void_AidRetreatJob_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AbortAidJobsOnWaveEnd_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ClearAidDoneMapPointsThisWave_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ClearAidCalled_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ClearAidCallWaveMarks_Private_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TickAidRetreatTimeout_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_FlushAidRetreatOnWaveEnd_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_MarkAidCalled_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ShowAidRetreatBanner_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AidCallSeenTag_Private_Static_String_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CampAidFiredTag_Private_Static_String_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampAidEventId_Public_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetActiveCampAidEventId_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampAidEventIds_Private_Static_Il2CppStructArray_1_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AdvanceCampAidRound_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCampEvacuating_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CampReprieveStillDefers_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCampSchedule_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickAidSchedule_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasUnansweredAidCall_Private_Static_Boolean_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_MarkAidCallAnswered_Private_Static_Void_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFireCampAidRequest_Private_Static_Boolean_TagManager_DynamicEventManager_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResetCampAidCounter_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCampUnlocked_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DefendPledgeQueueTag_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DefendArmedTag_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DefendFightTag_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_EnqueueDefendPledge_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_PeekDefendPledgePoint_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DequeueDefendPledgePoint_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetArmedDefendPoint_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CollectDefendFightPoints_Private_Static_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampDefendCountMul_Private_Static_Single_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ReconcileCampAidRounds_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_MigrateLegacyDefendPledge_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_IsCampMapPoint_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsCampSystemActive_Private_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_GetHelpedCount_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsHelped_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_MarkCampHelped_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidRound_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidRoundMax_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsFinalAidRound_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCampFallen_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasPendingAidRequest_Private_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampState_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsDefendReadyThisWave_Private_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidCallCooldownDaysLeft_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CanCallAid_Public_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CanCallAidNow_Public_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampDailyPoints_Public_Int32_byref_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampDailyPoints_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCampDailyContributorCount_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCampContributingToday_Private_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAliveCampCount_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetHelpedAliveCampCount_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CampFarewellTag_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnCampEvacuated_Private_Void_Int32_String_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_FlushCampEvacBanners_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_RecordCampSavedDays_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCampFarewell_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResetCasualRuntime_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_MarkCasualExploreWorld_Private_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_IsCasualDirectorHalted_Private_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_InitCasualRuntime_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_PrepareCasualOnInitialize_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RegisterCasualEvents_Private_Void_EventDispatcher_0 : IntPtr
+    field NativeMethodInfoPtr_FlushCasualHudOnReady_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnCasualRequestHudSnapshot_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_PushCasualHudReadOnly_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_PushCasualHudNow_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_OnCasualDayChanged_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnCasualHourChanged_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualSeasonDaysSafe_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualDayNow_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualGlobalXun_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualSeasonOf_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualDayInSeason_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualXunInSeason_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualPhaseOfXun_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualSeasonPhase_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualSeasonPhase_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCasualWaveDay_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualNextWaveDay_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryResolveCasualWaveDay_Private_Static_Boolean_Int32_byref_Int32_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFindCasualNextWave_Private_Static_Boolean_Int32_Boolean_byref_Int32_byref_Int32_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveCasualWaveType_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualWaveSeed_Private_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualWaveTypeOfOrdinal_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualHash_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasCasualWaveRecord_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetLastCasualWaveRecord_Private_Static_CasualWaveRecord_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualWaveClockHour_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCasualWaveOpen_Private_Void_TowerWaveManager_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryBuildCasualWaveConfig_Private_Boolean_Int32_Int32_Int32_byref_WaveRuntimeConfig_byref_Int32_byref_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualPeakWaveTemplate_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ForecastCasualWave_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ForecastCasualPeak_Private_Static_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_PushCasualHudStatus_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCasualHudData_Private_CasualHudData_Int32_Boolean_Boolean_Boolean_Int32_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FillCasualCalendar_Private_Static_Void_List_1_CasualCalendarXun_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualAlertForXun_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualAlertNow_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyCasualPendingAlert_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnCasualRequestSetAlert_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnCasualWaveResult_Public_Void_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCasualXunClearedLossless_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualActiveWaveAlert_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetCasualWaveReward_Private_Static_Boolean_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualWaveLootBonus_Public_Static_Single_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetCasualAlertLoot_Public_Static_Boolean_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryReadCasualAlertInt_Private_Static_Boolean_String_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetCasualHoursToNextWave_Public_Boolean_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_EnsureCasualSeasonPlan_Private_Void_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_DrawCasualPeakKind_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualPeakKindForSeason_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_PlanCasualSeasonEvents_Private_Void_CasualSeasonState_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualSeasonSeed_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CasualRoll_Private_Static_Int32_Int32_byref_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FindCasualPoolRowByEvent_Private_Static_Config_EndlessCrisisPool_List_1_Config_EndlessCrisisPool_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_PruneCasualEventBag_Private_Static_Void_List_1_Int32_List_1_Config_EndlessCrisisPool_0 : IntPtr
+    field NativeMethodInfoPtr_TakeCasualEventFromBag_Private_Config_EndlessCrisisPool_CasualSeasonState_List_1_Config_EndlessCrisisPool_List_1_Int32_Boolean_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FindCasualBagIndex_Private_Static_Int32_CasualSeasonState_List_1_Config_EndlessCrisisPool_List_1_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_IsCasualEventRowUsable_Private_Static_Boolean_Config_EndlessCrisisPool_0 : IntPtr
+    field NativeMethodInfoPtr_RefillCasualEventBag_Private_Static_Void_CasualSeasonState_List_1_Config_EndlessCrisisPool_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryPickCasualEventStart_Private_Static_Boolean_Int32_byref_Int32_Int32_Int32_Int32_Boolean_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCasualSeasonEvents_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResetCasualEventCounters_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ReconcileCasualSeasonEvents_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ForecastCasualSeasonEvents_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasOpenCasualSeasonEvent_Private_Static_Boolean_List_1_CasualPlannedEvent_0 : IntPtr
+    field NativeMethodInfoPtr_CloseCasualSeasonEvents_Private_Static_Void_List_1_CasualPlannedEvent_0 : IntPtr
+    field NativeMethodInfoPtr_FindCasualSeasonWeatherPool_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCasualSupplyDueSeason_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCasualSupply_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_LoadCrisisCache_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_GetCrisisRecords_Private_List_1_EndlessCrisisSave_0 : IntPtr
+    field NativeMethodInfoPtr_TickCrisisClose_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCrisisDraw_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CreateCrisisRecord_Private_EndlessCrisisSave_List_1_EndlessCrisisSave_Config_EndlessCrisisPool_Config_Crisis_Int32_Byte_0 : IntPtr
+    field NativeMethodInfoPtr_FindCrisisPoolRow_Private_Config_EndlessCrisisPool_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCrisisRowBusy_Private_Static_Boolean_List_1_EndlessCrisisSave_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsMinGapSatisfied_Private_Static_Boolean_List_1_EndlessCrisisSave_Config_EndlessCrisisPool_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCrisisSelfResolved_Private_Static_Boolean_EndlessCrisisSave_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TickCrisisDeliver_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryShowComboBanner_Private_Void_List_1_EndlessCrisisSave_EndlessCrisisSave_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveComboName_Private_String_EndlessCrisisSave_EndlessCrisisSave_0 : IntPtr
+    field NativeMethodInfoPtr_FindCrisisWeatherPool_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_FindWeatherMixPool_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsCrisisStartDay_Private_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ExploreDeferTag_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryConsumeExploreDefer_Private_Static_Boolean_TagManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_EnsureStoryEndlessOfficeUnlocked_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_IsExploreFallPoint_Private_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildExploreFallCountdown_Public_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveExploreFallTier_Private_Static_Int32_TagManager_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GmStartWaveByTier_Public_String_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GmStartCrisis_Public_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GmCloseCrisis_Public_String_0 : IntPtr
+    field NativeMethodInfoPtr_ArmPledgeReinforce_Private_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TickPledgeReinforce_Private_Void_TowerWaveManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResolvePledgeReinforceTemplateId_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ArmPrepRecordPost_Private_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_TryFillPrepRecordPost_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_GetDefendRequestEventId_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDefendAcceptEventId_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetAidRequestEventId_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDefendPhase_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetNextPledgeWave_Public_Boolean_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRelievedSeconds_Public_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetBaseFallTier_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetScheduledFallTier_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTierEnterDisplayDay_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetFallDisplayDay_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnTagsChangedForTradeMap_Private_Void_List_1_String_0 : IntPtr
+    field NativeMethodInfoPtr_TickDefendRelief_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetWaveReward_Public_Boolean_Int32_Int32_byref_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnDestroy_Public_Virtual_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    method .cctor : Void ()
+    method get_IsActive : Boolean ()
+    method set_IsActive : Void (Boolean)
+    method get_CurrentTier : Int32 ()
+    method set_CurrentTier : Void (Int32)
+    method OnEventRegister : Void (GameCore.HotUpdate.EventDispatcher)
+    method OnGameTimeStart : Void (Single,Int32,Int32)
+    method OnBattleReady : Void ()
+    method Initialize : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method PushBestSnapshot : Void (Int32)
+    method OnDayChanged : Void (Int32)
+    method OnHourChanged : Void (Int32,Int32)
+    method TickWaveSchedule : Void (Int32,Int32)
+    method UsesDayPattern : Boolean (GameCore.HotUpdate.Config_EndlessTier)
+    method TierHasAnyWave : Boolean (GameCore.HotUpdate.Config_EndlessTier)
+    method ResolveDayTemplateId : Int32 (GameCore.HotUpdate.Config_EndlessTier,Int32)
+    method GetActiveWaveMaxHours : Single (GameCore.HotUpdate.Battle.Logic.TowerWaveManager)
+    method TryBuildEndlessWaveConfig : Boolean (GameCore.HotUpdate.Config_EndlessTier,Int32,Int32,WaveRuntimeConfig&)
+    method ApplyEarlyWaveHpCut : Void (WaveRuntimeConfig,Int32)
+    method GetEndlessTalentRatio : Single (String)
+    method MaxWaveKind : Int32 (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_TowerWave>)
+    method PushHudStatus : Void (Int32,Int32)
+    method TryFirePreFinalEvent : Void (Int32)
+    method FindNextWaveOpenAbsHour : Int32 (Int32,Int32)
+    method GetWeatherForHour : Int32 (Int32,Int32)
+    method GetWeatherSwitchHour : Int32 (Int32)
+    method RollWeatherFromPool : Int32 (Int32,Int32)
+    method GetTierConfig : GameCore.HotUpdate.Config_EndlessTier (Int32)
+    method CalcTierDayOffset : Int32 ()
+    method GetTierDay : Int32 (Int32)
+    method GetEndlessDay : Int32 (Int32)
+    method GetDronePowerMul : Single ()
+    method GetTierForDay : Int32 (Int32)
+    method ShowTierBanner : Void (Int32,Int32,String)
+    method FlushPendingTierBanner : Void ()
+    method ResolveTierForSettlement : Int32 (GameCore.HotUpdate.GameSaveData)
+    method RecomputeTier : Void (Int32,Boolean)
+    method ApplyFallenMapPoints : String (Int32,Int32,Boolean,String&)
+    method FallMapPoint : Boolean (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.Battle.Logic.TagManager,Int32,Int32,String&,Boolean,Boolean)
+    method IsFallAnnounceable : Boolean (GameCore.HotUpdate.Config_MapPoint)
+    method DeferredFallTag : String (Int32,Int32)
+    method TryParseDeferredFallTag : Boolean (String,Int32&,Int32&)
+    method HasDeferredFall : Boolean (GameCore.HotUpdate.Battle.Logic.TagManager,Int32,Int32)
+    method TakeDeferredFallsUpToTier : Il2CppSystem.Collections.Generic.List`1<Int32> (GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method GetAidRequestEventIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> (Int32)
+    method TryConsumeReprieve : Boolean (GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method HasDefendPledge : Boolean ()
+    method ClearDefendPledge : Void ()
+    method TrySealTradeAccess : Void (GameCore.HotUpdate.GameSaveData)
+    method LoadCaches : Void ()
+    method ReconcileFallenAidRequests : Void ()
+    method CancelAidRequestsOfFallenPoint : Void (GameCore.HotUpdate.Battle.Logic.DynamicEventManager,GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method OnAidResultDeferDayRequest : Void (Int32)
+    method FindMapPointByAidResultEvent : Int32 (Int32)
+    method GetAidResultDeferDay : Int32 (Int32)
+    method OnAidDelivered : Void (Int32,Int32)
+    method HasReprieveApplied : Boolean (Int32)
+    method OnRequestCampAid : Void (Int32)
+    method OnWaveStateChangedForAidHint : Void (Int32,Int32,Int32)
+    method RejectAidCall : Void (Int32,Int32,String)
+    method CountRetreatableWaveZombies : Int32 ()
+    method CollectRetreatCandidates : Int32 (GameCore.HotUpdate.Battle.Logic.TowerWaveManager,Il2CppSystem.Collections.Generic.List`1<Int64>)
+    method PlanAidRetreatCount : Int32 (Int32)
+    method RetreatWaveZombiesForAid : Int32 (GameCore.HotUpdate.Battle.Logic.TowerWaveManager,Int32)
+    method BeginAidRetreat : Boolean (GameCore.HotUpdate.Battle.Logic.AgentManager,GameCore.HotUpdate.Battle.Logic.TowerWaveManager,Int64)
+    method HookAidRetreatTick : Void ()
+    method OnWaveHudSyncForAidRetreat : Void (Int32,Int32,Int32,Int32,Int32,Int32)
+    method TickAidJobs : Void ()
+    method RunAidRetreatBatch : Void (AidRetreatJob,GameCore.HotUpdate.Battle.Logic.TowerWaveManager)
+    method FinishAidJob : Void (AidRetreatJob,Int32)
+    method AbortAidJobsOnWaveEnd : Void ()
+    method ClearAidDoneMapPointsThisWave : Void ()
+    method ClearAidCalled : Void (Int32)
+    method ClearAidCallWaveMarks : Void ()
+    method TickAidRetreatTimeout : Void ()
+    method FlushAidRetreatOnWaveEnd : Void ()
+    method MarkAidCalled : Void (Int32)
+    method ShowAidRetreatBanner : Void (Int32,Int32)
+    method AidCallSeenTag : String (Int32,Int32)
+    method CampAidFiredTag : String (Int32,Int32)
+    method GetCampAidEventId : Int32 (Int32,Int32)
+    method GetActiveCampAidEventId : Int32 (Int32)
+    method GetCampAidEventIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> (Int32)
+    method AdvanceCampAidRound : Void (Int32)
+    method IsCampEvacuating : Boolean (Int32)
+    method CampReprieveStillDefers : Boolean (Int32)
+    method TickCampSchedule : Void (Int32)
+    method TickAidSchedule : Void (Int32)
+    method HasUnansweredAidCall : Boolean (GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method MarkAidCallAnswered : Void (GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method TryFireCampAidRequest : Boolean (GameCore.HotUpdate.Battle.Logic.TagManager,GameCore.HotUpdate.Battle.Logic.DynamicEventManager,Int32,Int32)
+    method ResetCampAidCounter : Void (Int32)
+    method IsCampUnlocked : Boolean (Int32)
+    method DefendPledgeQueueTag : String (Int32)
+    method DefendArmedTag : String (Int32)
+    method DefendFightTag : String (Int32)
+    method EnqueueDefendPledge : Void (Int32)
+    method PeekDefendPledgePoint : Int32 ()
+    method DequeueDefendPledgePoint : Int32 ()
+    method GetArmedDefendPoint : Int32 ()
+    method CollectDefendFightPoints : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method GetCampDefendCountMul : Single (Int32)
+    method ReconcileCampAidRounds : Void ()
+    method MigrateLegacyDefendPledge : Void ()
+    method IsCampMapPoint : Boolean (Int32)
+    method get_IsCampSystemActive : Boolean ()
+    method GetHelpedCount : Int32 (Int32)
+    method IsHelped : Boolean (Int32)
+    method MarkCampHelped : Void (Int32)
+    method GetAidRound : Int32 (Int32)
+    method GetAidRoundMax : Int32 (Int32)
+    method IsFinalAidRound : Boolean (Int32)
+    method IsCampFallen : Boolean (Int32)
+    method HasPendingAidRequest : Boolean (Int32)
+    method GetCampState : Int32 (Int32)
+    method IsDefendReadyThisWave : Boolean (Int32)
+    method GetAidCallCooldownDaysLeft : Int32 (Int32)
+    method CanCallAid : Boolean (Int32)
+    method CanCallAidNow : Boolean (Int32)
+    method GetCampDailyPoints : Int32 (Il2CppSystem.Collections.Generic.List`1<Int32>&)
+    method GetCampDailyPoints : Int32 ()
+    method GetCampDailyContributorCount : Int32 ()
+    method IsCampContributingToday : Boolean (Int32)
+    method GetAliveCampCount : Int32 ()
+    method GetHelpedAliveCampCount : Int32 ()
+    method CampFarewellTag : String (Int32)
+    method OnCampEvacuated : Void (Int32,String,Int32,Boolean)
+    method FlushCampEvacBanners : Void ()
+    method RecordCampSavedDays : Void (Int32,Int32)
+    method TickCampFarewell : Void (Int32)
+    method ResetCasualRuntime : Void ()
+    method MarkCasualExploreWorld : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method IsCasualDirectorHalted : Boolean ()
+    method InitCasualRuntime : Void (GameCore.HotUpdate.GameSaveData)
+    method PrepareCasualOnInitialize : Void (Int32)
+    method RegisterCasualEvents : Void (GameCore.HotUpdate.EventDispatcher)
+    method FlushCasualHudOnReady : Void ()
+    method OnCasualRequestHudSnapshot : Void ()
+    method PushCasualHudReadOnly : Void ()
+    method PushCasualHudNow : Void ()
+    method OnCasualDayChanged : Void (Int32)
+    method OnCasualHourChanged : Void (Int32,Int32)
+    method CasualSeasonDaysSafe : Int32 ()
+    method GetCasualDayNow : Int32 ()
+    method CasualGlobalXun : Int32 (Int32)
+    method CasualSeasonOf : Int32 (Int32)
+    method CasualDayInSeason : Int32 (Int32)
+    method CasualXunInSeason : Int32 (Int32)
+    method CasualPhaseOfXun : Int32 (Int32)
+    method GetCasualSeasonPhase : Int32 (Int32)
+    method GetCasualSeasonPhase : Int32 ()
+    method IsCasualWaveDay : Boolean (Int32)
+    method GetCasualNextWaveDay : Int32 ()
+    method TryResolveCasualWaveDay : Boolean (Int32,Int32&,Int32&,Int32&)
+    method TryFindCasualNextWave : Boolean (Int32,Boolean,Int32&,Int32&,Int32&,Int32&)
+    method ResolveCasualWaveType : Int32 (Int32,Int32)
+    method CasualWaveSeed : Int32 ()
+    method CasualWaveTypeOfOrdinal : Int32 (Int32,Int32)
+    method CasualHash : Int32 (Int32,Int32)
+    method HasCasualWaveRecord : Boolean (Int32)
+    method GetLastCasualWaveRecord : GameCore.HotUpdate.CasualWaveRecord ()
+    method GetCasualWaveClockHour : Int32 (Int32)
+    method TickCasualWaveOpen : Void (GameCore.HotUpdate.Battle.Logic.TowerWaveManager,Int32,Int32,Int32)
+    method TryBuildCasualWaveConfig : Boolean (Int32,Int32,Int32,WaveRuntimeConfig&,Int32&,Boolean&)
+    method GetCasualPeakWaveTemplate : Int32 (Int32,Int32)
+    method ForecastCasualWave : Void (Int32)
+    method ForecastCasualPeak : Void (Int32,Int32)
+    method PushCasualHudStatus : Void (Int32,Int32)
+    method BuildCasualHudData : GameCore.HotUpdate.CasualHudData (Int32,Boolean,Boolean,Boolean,Int32,Int32,Int32,Int32)
+    method FillCasualCalendar : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CasualCalendarXun>,Int32)
+    method GetCasualAlertForXun : Int32 (Int32)
+    method GetCasualAlertNow : Int32 ()
+    method ApplyCasualPendingAlert : Void (Int32)
+    method OnCasualRequestSetAlert : Void (Int32)
+    method OnCasualWaveResult : Void (Boolean,Int32)
+    method IsCasualXunClearedLossless : Boolean (Int32)
+    method GetCasualActiveWaveAlert : Int32 ()
+    method TryGetCasualWaveReward : Boolean (Int32&,Int32&)
+    method GetCasualWaveLootBonus : Single ()
+    method TryGetCasualAlertLoot : Boolean (Int32&,Int32&)
+    method TryReadCasualAlertInt : Boolean (String,Int32,Int32&)
+    method TryGetCasualHoursToNextWave : Boolean (Int32&)
+    method EnsureCasualSeasonPlan : Void (Int32,Boolean)
+    method DrawCasualPeakKind : Int32 (Int32)
+    method GetCasualPeakKindForSeason : Int32 (Int32)
+    method PlanCasualSeasonEvents : Void (GameCore.HotUpdate.CasualSeasonState,Int32,Int32)
+    method CasualSeasonSeed : Int32 (Int32,Int32)
+    method CasualRoll : Int32 (Int32,Int32&,Int32)
+    method FindCasualPoolRowByEvent : GameCore.HotUpdate.Config_EndlessCrisisPool (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>,Int32)
+    method PruneCasualEventBag : Void (Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>)
+    method TakeCasualEventFromBag : GameCore.HotUpdate.Config_EndlessCrisisPool (GameCore.HotUpdate.CasualSeasonState,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>,Il2CppSystem.Collections.Generic.List`1<Int32>,Boolean,Int32,Int32&)
+    method FindCasualBagIndex : Int32 (GameCore.HotUpdate.CasualSeasonState,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>,Il2CppSystem.Collections.Generic.List`1<Int32>,Boolean)
+    method IsCasualEventRowUsable : Boolean (GameCore.HotUpdate.Config_EndlessCrisisPool)
+    method RefillCasualEventBag : Void (GameCore.HotUpdate.CasualSeasonState,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>,Int32,Int32&)
+    method TryPickCasualEventStart : Boolean (Int32,Int32&,Int32,Int32,Int32,Boolean,Int32,Int32&)
+    method TickCasualSeasonEvents : Void (Int32,Int32)
+    method ResetCasualEventCounters : Void (Int32)
+    method ReconcileCasualSeasonEvents : Void (Int32)
+    method ForecastCasualSeasonEvents : Void (Int32)
+    method HasOpenCasualSeasonEvent : Boolean (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CasualPlannedEvent>)
+    method CloseCasualSeasonEvents : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.CasualPlannedEvent>)
+    method FindCasualSeasonWeatherPool : Int32 (Int32)
+    method GetCasualSupplyDueSeason : Int32 (Int32)
+    method TickCasualSupply : Void (Int32)
+    method LoadCrisisCache : Void ()
+    method GetCrisisRecords : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EndlessCrisisSave> ()
+    method TickCrisisClose : Void (Int32)
+    method TickCrisisDraw : Void (Int32)
+    method CreateCrisisRecord : GameCore.HotUpdate.EndlessCrisisSave (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EndlessCrisisSave>,GameCore.HotUpdate.Config_EndlessCrisisPool,GameCore.HotUpdate.Config_Crisis,Int32,Byte)
+    method FindCrisisPoolRow : GameCore.HotUpdate.Config_EndlessCrisisPool (Int32)
+    method IsCrisisRowBusy : Boolean (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EndlessCrisisSave>,Int32)
+    method IsMinGapSatisfied : Boolean (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EndlessCrisisSave>,GameCore.HotUpdate.Config_EndlessCrisisPool,Int32)
+    method IsCrisisSelfResolved : Boolean (GameCore.HotUpdate.EndlessCrisisSave,Int32)
+    method TickCrisisDeliver : Void (Int32,Int32)
+    method TryShowComboBanner : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.EndlessCrisisSave>,GameCore.HotUpdate.EndlessCrisisSave)
+    method ResolveComboName : String (GameCore.HotUpdate.EndlessCrisisSave,GameCore.HotUpdate.EndlessCrisisSave)
+    method FindCrisisWeatherPool : Int32 (Int32)
+    method FindWeatherMixPool : Int32 (Int32,Int32)
+    method IsCrisisStartDay : Boolean (Int32)
+    method ExploreDeferTag : String (Int32)
+    method TryConsumeExploreDefer : Boolean (GameCore.HotUpdate.Battle.Logic.TagManager,Int32)
+    method EnsureStoryEndlessOfficeUnlocked : Void ()
+    method IsExploreFallPoint : Boolean (Int32)
+    method BuildExploreFallCountdown : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method ResolveExploreFallTier : Int32 (GameCore.HotUpdate.Battle.Logic.TagManager,Int32,Int32)
+    method GmStartWaveByTier : String (Int32,Int32)
+    method GmStartCrisis : String (Int32)
+    method GmCloseCrisis : String ()
+    method ArmPledgeReinforce : Void ()
+    method TickPledgeReinforce : Void (GameCore.HotUpdate.Battle.Logic.TowerWaveManager,Int32)
+    method ResolvePledgeReinforceTemplateId : Int32 (Int32)
+    method ArmPrepRecordPost : Void (GameCore.HotUpdate.GameSaveData)
+    method TryFillPrepRecordPost : Void ()
+    method GetDefendRequestEventId : Int32 (Int32)
+    method GetDefendAcceptEventId : Int32 (Int32)
+    method GetAidRequestEventId : Int32 (Int32)
+    method GetDefendPhase : Int32 (Int32)
+    method TryGetNextPledgeWave : Boolean (Int32&,Int32&)
+    method GetRelievedSeconds : Int32 (Int32)
+    method GetBaseFallTier : Int32 (Int32)
+    method GetScheduledFallTier : Int32 (Int32)
+    method GetTierEnterDisplayDay : Int32 (Int32)
+    method GetFallDisplayDay : Int32 (Int32)
+    method OnTagsChangedForTradeMap : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method TickDefendRelief : Void ()
+    method TryGetWaveReward : Boolean (Int32,Int32,Int32&,Int32&)
+    method OnDestroy : Void ()
+    method .ctor : Void ()
+    method .ctor : Void (IntPtr)
+    method get__endlessStartDay : Int32 ()
+    method set__endlessStartDay : Void (Int32)
+    method get__isStoryEndless : Boolean ()
+    method set__isStoryEndless : Void (Boolean)
+    method get__tierDayOffset : Int32 ()
+    method set__tierDayOffset : Void (Int32)
+    method get__tierList : Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessTier> ()
+    method set__tierList : Void (Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessTier>)
+    method get__weatherPoolCache : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.ValueTuple`2<Int32,Int32>>> ()
+    method set__weatherPoolCache : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.ValueTuple`2<Int32,Int32>>>)
+    method get__waveStartAbsHour : Int32 ()
+    method set__waveStartAbsHour : Void (Int32)
+    method get__ruleVersion : Int32 ()
+    method set__ruleVersion : Void (Int32)
+    method get__pendingTierBannerType : Int32 ()
+    method set__pendingTierBannerType : Void (Int32)
+    method get__pendingTierBannerTier : Int32 ()
+    method set__pendingTierBannerTier : Void (Int32)
+    method get__pendingTierBannerText : String ()
+    method set__pendingTierBannerText : Void (String)
+    method get__bestSnapshotPending : Boolean ()
+    method set__bestSnapshotPending : Void (Boolean)
+    method get__bestSnapshotPlayerId : Int32 ()
+    method set__bestSnapshotPlayerId : Void (Int32)
+    method get__IsActive_k__BackingField : Boolean ()
+    method set__IsActive_k__BackingField : Void (Boolean)
+    method get__CurrentTier_k__BackingField : Int32 ()
+    method set__CurrentTier_k__BackingField : Void (Int32)
+    method get_WaveWarnAheadHours : Int32 ()
+    method set_WaveWarnAheadHours : Void (Int32)
+    method get_PreFinalFiredTagPrefix : String ()
+    method set_PreFinalFiredTagPrefix : Void (String)
+    method get_FallAnnounceTradePointCategory : Int32 ()
+    method set_FallAnnounceTradePointCategory : Void (Int32)
+    method get_TAG_DEFERRED_FALL_PREFIX : String ()
+    method set_TAG_DEFERRED_FALL_PREFIX : Void (String)
+    method get_TAG_REPRIEVE_PREFIX : String ()
+    method set_TAG_REPRIEVE_PREFIX : Void (String)
+    method get_TAG_DEFEND_PLEDGE : String ()
+    method set_TAG_DEFEND_PLEDGE : Void (String)
+    method get_TAG_AID_REQUEST_ACTIVE : String ()
+    method set_TAG_AID_REQUEST_ACTIVE : Void (String)
+    method get_AidRequestEventsByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>> ()
+    method set_AidRequestEventsByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>>)
+    method get_PerPointFallLegacy : Boolean ()
+    method set_PerPointFallLegacy : Void (Boolean)
+    method get_FallLegacyEventByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_FallLegacyEventByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_TAG_ALL_TRADE_FALLEN : String ()
+    method set_TAG_ALL_TRADE_FALLEN : Void (String)
+    method get_TradePointCategoryValue : Int32 ()
+    method set_TradePointCategoryValue : Void (Int32)
+    method get__aidReconcilePending : Boolean ()
+    method set__aidReconcilePending : Void (Boolean)
+    method get_AID_RETREAT_TIMEOUT_SECONDS : Single ()
+    method set_AID_RETREAT_TIMEOUT_SECONDS : Void (Single)
+    method get_AID_RETREAT_TICK_MAX_DELTA : Single ()
+    method set_AID_RETREAT_TICK_MAX_DELTA : Void (Single)
+    method get__aidRetreatingIds : Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.ValueTuple`2<Int64,Single>> ()
+    method set__aidRetreatingIds : Void (Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.ValueTuple`2<Int64,Single>>)
+    method get__aidRetreatTickHooked : Boolean ()
+    method set__aidRetreatTickHooked : Void (Boolean)
+    method get_AidRejectInactive : Int32 ()
+    method set_AidRejectInactive : Void (Int32)
+    method get_AidRejectNotCamp : Int32 ()
+    method set_AidRejectNotCamp : Void (Int32)
+    method get_AidRejectNotAvailable : Int32 ()
+    method set_AidRejectNotAvailable : Void (Int32)
+    method get_AidRejectNoTarget : Int32 ()
+    method set_AidRejectNoTarget : Void (Int32)
+    method get_AidStageCleared : Int32 ()
+    method set_AidStageCleared : Void (Int32)
+    method get_AidStageSent : Int32 ()
+    method set_AidStageSent : Void (Int32)
+    method get_AidStageActing : Int32 ()
+    method set_AidStageActing : Void (Int32)
+    method get_AidStageDone : Int32 ()
+    method set_AidStageDone : Void (Int32)
+    method get__aidJobs : Il2CppSystem.Collections.Generic.List`1<AidRetreatJob> ()
+    method set__aidJobs : Void (Il2CppSystem.Collections.Generic.List`1<AidRetreatJob>)
+    method get__aidDoneMapPointsThisWave : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__aidDoneMapPointsThisWave : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get__aidRetreatLastTickTime : Single ()
+    method set__aidRetreatLastTickTime : Void (Single)
+    method get_AID_JOB_TICK_SECONDS : Single ()
+    method set_AID_JOB_TICK_SECONDS : Void (Single)
+    method get_CampAidEventsByRound : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>> ()
+    method set_CampAidEventsByRound : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>>)
+    method get_TAG_CAMP_AID_FIRED_PREFIX : String ()
+    method set_TAG_CAMP_AID_FIRED_PREFIX : Void (String)
+    method get_TAG_TRADE_ACTIVE_UNLOCK : String ()
+    method set_TAG_TRADE_ACTIVE_UNLOCK : Void (String)
+    method get_TAG_AID_CALL_SEEN_PREFIX : String ()
+    method set_TAG_AID_CALL_SEEN_PREFIX : Void (String)
+    method get_TAG_DEFEND_PLEDGE_QUEUE_PREFIX : String ()
+    method set_TAG_DEFEND_PLEDGE_QUEUE_PREFIX : Void (String)
+    method get_TAG_DEFEND_ARMED_PREFIX : String ()
+    method set_TAG_DEFEND_ARMED_PREFIX : Void (String)
+    method get_TAG_DEFEND_FIGHT_PREFIX : String ()
+    method set_TAG_DEFEND_FIGHT_PREFIX : Void (String)
+    method get_CampAidRound2CountMul : Single ()
+    method set_CampAidRound2CountMul : Void (Single)
+    method get_CampAidFinalCountMul : Single ()
+    method set_CampAidFinalCountMul : Void (Single)
+    method get_CampStateNone : Int32 ()
+    method set_CampStateNone : Void (Int32)
+    method get_CampStateStable : Int32 ()
+    method set_CampStateStable : Void (Int32)
+    method get_CampStateStrained : Int32 ()
+    method set_CampStateStrained : Void (Int32)
+    method get_CampStateCrisis : Int32 ()
+    method set_CampStateCrisis : Void (Int32)
+    method get_CampStateDefendReady : Int32 ()
+    method set_CampStateDefendReady : Void (Int32)
+    method get_CampStateEvacuated : Int32 ()
+    method set_CampStateEvacuated : Void (Int32)
+    method get_CampStateLost : Int32 ()
+    method set_CampStateLost : Void (Int32)
+    method get_CampMapPoints : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_CampMapPoints : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_EarlyCampMapPoints : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method set_EarlyCampMapPoints : Void (Il2CppSystem.Collections.Generic.HashSet`1<Int32>)
+    method get_CampAidRoundMaxEarly : Int32 ()
+    method set_CampAidRoundMaxEarly : Void (Int32)
+    method get_CampAidRoundMaxLate : Int32 ()
+    method set_CampAidRoundMaxLate : Void (Int32)
+    method get_CampFarewellEventByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_CampFarewellEventByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_CampEvacLegacyEventByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_CampEvacLegacyEventByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_TAG_CAMP_FAREWELL_PREFIX : String ()
+    method set_TAG_CAMP_FAREWELL_PREFIX : Void (String)
+    method get_CampEvacBannerType : Int32 ()
+    method set_CampEvacBannerType : Void (Int32)
+    method get__campEvacBannerNames : Il2CppSystem.Collections.Generic.List`1<String> ()
+    method set__campEvacBannerNames : Void (Il2CppSystem.Collections.Generic.List`1<String>)
+    method get__isCasual : Boolean ()
+    method set__isCasual : Void (Boolean)
+    method get__casualTier : Int32 ()
+    method set__casualTier : Void (Int32)
+    method get__casualHudReadyPending : Boolean ()
+    method set__casualHudReadyPending : Void (Boolean)
+    method get__casualExploreWorld : Boolean ()
+    method set__casualExploreWorld : Void (Boolean)
+    method get__casualBrokenLogged : Boolean ()
+    method set__casualBrokenLogged : Void (Boolean)
+    method get_Key_CasualNightRaidHour : String ()
+    method set_Key_CasualNightRaidHour : Void (String)
+    method get_Key_CasualPeakWaveTemplates : String ()
+    method set_Key_CasualPeakWaveTemplates : Void (String)
+    method get_CasualNightRaidHourDefault : Int32 ()
+    method set_CasualNightRaidHourDefault : Void (Int32)
+    method get_Key_CasualDayWaveHour : String ()
+    method set_Key_CasualDayWaveHour : Void (String)
+    method get_CasualDayWaveHourDefault : Int32 ()
+    method set_CasualDayWaveHourDefault : Void (Int32)
+    method get_CasualFallbackWaveHours : Single ()
+    method set_CasualFallbackWaveHours : Void (Single)
+    method get_CasualWaveHistoryMax : Int32 ()
+    method set_CasualWaveHistoryMax : Void (Int32)
+    method get_CasualPeakKindWaves : Int32 ()
+    method set_CasualPeakKindWaves : Void (Int32)
+    method get_CasualPeakKindAid : Int32 ()
+    method set_CasualPeakKindAid : Void (Int32)
+    method get_CasualFallbackWaveEventIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_CasualFallbackWaveEventIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_Key_CasualWaveRewardSetIds : String ()
+    method set_Key_CasualWaveRewardSetIds : Void (String)
+    method get_Key_CasualWaveLootGroupIds : String ()
+    method set_Key_CasualWaveLootGroupIds : Void (String)
+    method get_Key_CasualAlertLootBonus : String ()
+    method set_Key_CasualAlertLootBonus : Void (String)
+    method get_Key_CasualAlertLootGroupIds : String ()
+    method set_Key_CasualAlertLootGroupIds : Void (String)
+    method get_Key_CasualAlertLootCounts : String ()
+    method set_Key_CasualAlertLootCounts : Void (String)
+    method get_CasualAlertLootBonusDefault : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Single> ()
+    method set_CasualAlertLootBonusDefault : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Single>)
+    method get_CasualAlertLootCountDefault : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_CasualAlertLootCountDefault : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_CasualAlertListSeparators : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Char> ()
+    method set_CasualAlertListSeparators : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Char>)
+    method get_CasualEventXunFirst : Int32 ()
+    method set_CasualEventXunFirst : Void (Int32)
+    method get_CasualEventXunLast : Int32 ()
+    method set_CasualEventXunLast : Void (Int32)
+    method get_CasualPeakXun : Int32 ()
+    method set_CasualPeakXun : Void (Int32)
+    method get_CasualAlertForTwoEvents : Int32 ()
+    method set_CasualAlertForTwoEvents : Void (Int32)
+    method get_CrisisStatePlanned : Byte ()
+    method set_CrisisStatePlanned : Void (Byte)
+    method get_CrisisStateRunning : Byte ()
+    method set_CrisisStateRunning : Void (Byte)
+    method get_CrisisStateClosed : Byte ()
+    method set_CrisisStateClosed : Void (Byte)
+    method get_BannerTypeCrisisCombo : Int32 ()
+    method set_BannerTypeCrisisCombo : Void (Int32)
+    method get_BannerTypeCrisisForecast : Int32 ()
+    method set_BannerTypeCrisisForecast : Void (Int32)
+    method get_CrisisDrawSeedMul : Int32 ()
+    method set_CrisisDrawSeedMul : Void (Int32)
+    method get__crisisPoolCache : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>> ()
+    method set__crisisPoolCache : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppSystem.Collections.Generic.List`1<GameCore.HotUpdate.Config_EndlessCrisisPool>>)
+    method get_TAG_EXPLORE_DEFER_PREFIX : String ()
+    method set_TAG_EXPLORE_DEFER_PREFIX : Void (String)
+    method get_EffectName_EndlessFallDefer : String ()
+    method set_EffectName_EndlessFallDefer : Void (String)
+    method get_TAG_OFFICE_OPEN : String ()
+    method set_TAG_OFFICE_OPEN : Void (String)
+    method get_ExploreFallPointCategory : Int32 ()
+    method set_ExploreFallPointCategory : Void (Int32)
+    method get_ExploreFallCountdownDays : Int32 ()
+    method set_ExploreFallCountdownDays : Void (Int32)
+    method get_TAG_DEFEND_PLEDGE_ARMED : String ()
+    method set_TAG_DEFEND_PLEDGE_ARMED : Void (String)
+    method get__prepPostPending : Boolean ()
+    method set__prepPostPending : Void (Boolean)
+    method get__prepPostRecordId : Int64 ()
+    method set__prepPostRecordId : Void (Int64)
+    method get_DefendPhaseNone : Int32 ()
+    method set_DefendPhaseNone : Void (Int32)
+    method get_DefendPhaseAsk : Int32 ()
+    method set_DefendPhaseAsk : Void (Int32)
+    method get_DefendPhasePledged : Int32 ()
+    method set_DefendPhasePledged : Void (Int32)
+    method get_DefendPhaseFighting : Int32 ()
+    method set_DefendPhaseFighting : Void (Int32)
+    method get_DefendRequestEventByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_DefendRequestEventByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method get_DefendAcceptEventByMapPoint : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32> ()
+    method set_DefendAcceptEventByMapPoint : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+TYPE GameCore.HotUpdate.Battle.Logic.TradeMapStatusTools
+    field NativeFieldInfoPtr_TradePointCategory : IntPtr
+    field NativeFieldInfoPtr_ShelterOfferWindowHours : IntPtr
+    field NativeMethodInfoPtr_Build_Public_Static_Dictionary_2_Int32_TradePointStatus_Dictionary_2_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFillAid_Private_Static_Boolean_TradePointStatus_Config_MapPoint_Dictionary_2_Int32_Int32_EndlessManager_DynamicEventManager_0 : IntPtr
+    field NativeMethodInfoPtr_TryFillEndlessDefend_Private_Static_Boolean_TradePointStatus_Config_MapPoint_EndlessManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFillShelterDefend_Private_Static_Boolean_TradePointStatus_Config_MapPoint_DynamicEventManager_0 : IntPtr
+    field NativeMethodInfoPtr_RescueResultText_Private_Static_String_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryFillRelieved_Private_Static_Void_TradePointStatus_Config_MapPoint_EndlessManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RescueCountText_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AddDeferRow_Private_Static_Void_List_1_Dictionary_2_String_Object_EndlessManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_MergeCampBase_Private_Static_Void_TradePointStatus_EndlessManager_Config_MapPoint_Boolean_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CampStateText_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCampRows_Private_Static_List_1_Dictionary_2_String_Object_Config_MapPoint_Int32_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CampDailyPointText_Private_Static_String_Int32_Int32_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCallAid_Private_Static_Dictionary_2_String_Object_EndlessManager_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCampHeader_Public_Static_String_0 : IntPtr
+    field NativeMethodInfoPtr_BuildShelterSmsHint_Public_Static_String_0 : IntPtr
+    field NativeMethodInfoPtr_MergeIntoDetail_Private_Static_String_String_String_List_1_Dictionary_2_String_Object_Dictionary_2_String_Object_String_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_AddFallRows_Private_Static_Void_List_1_Dictionary_2_String_Object_EndlessManager_Int32_String_String_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_TryPledgeWaveInHours_Private_Static_Boolean_EndlessManager_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_UrgencyByRemain_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CeilHours_Private_Static_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RemainText_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AgoText_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CategoryName_Private_Static_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_Loc_Private_Static_String_String_0 : IntPtr
+    field NativeMethodInfoPtr_Fmt_Private_Static_String_String_Il2CppReferenceArray_1_Object_0 : IntPtr
+    field NativeMethodInfoPtr_Row_Private_Static_Dictionary_2_String_Object_String_String_Single_0 : IntPtr
+    field NativeMethodInfoPtr_Detail_Private_Static_String_String_String_String_String_Int32_String_List_1_String_Int32_List_1_Dictionary_2_String_Object_String_Dictionary_2_String_Object_String_String_Boolean_0 : IntPtr
+    method .cctor : Void ()
+    method Build : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,GameCore.HotUpdate.StrangerTrade.TradePointStatus> (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>)
+    method TryFillAid : Boolean (GameCore.HotUpdate.StrangerTrade.TradePointStatus,GameCore.HotUpdate.Config_MapPoint,Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Int32>,GameCore.HotUpdate.Battle.Logic.EndlessManager,GameCore.HotUpdate.Battle.Logic.DynamicEventManager)
+    method TryFillEndlessDefend : Boolean (GameCore.HotUpdate.StrangerTrade.TradePointStatus,GameCore.HotUpdate.Config_MapPoint,GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32)
+    method TryFillShelterDefend : Boolean (GameCore.HotUpdate.StrangerTrade.TradePointStatus,GameCore.HotUpdate.Config_MapPoint,GameCore.HotUpdate.Battle.Logic.DynamicEventManager)
+    method RescueResultText : String (Int32,Int32)
+    method TryFillRelieved : Void (GameCore.HotUpdate.StrangerTrade.TradePointStatus,GameCore.HotUpdate.Config_MapPoint,GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32)
+    method RescueCountText : String (Int32)
+    method AddDeferRow : Void (Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>>,GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32)
+    method MergeCampBase : Void (GameCore.HotUpdate.StrangerTrade.TradePointStatus,GameCore.HotUpdate.Battle.Logic.EndlessManager,GameCore.HotUpdate.Config_MapPoint,Boolean,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method CampStateText : String (Int32)
+    method BuildCampRows : Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>> (GameCore.HotUpdate.Config_MapPoint,Int32,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method CampDailyPointText : String (Int32,Int32,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method BuildCallAid : Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object> (GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32,Int32)
+    method BuildCampHeader : String ()
+    method BuildShelterSmsHint : String ()
+    method MergeIntoDetail : String (String,String,Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>>,Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>,String,Boolean)
+    method AddFallRows : Void (Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>>,GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32,String,String,Boolean)
+    method TryPledgeWaveInHours : Boolean (GameCore.HotUpdate.Battle.Logic.EndlessManager,Int32,Int32&)
+    method UrgencyByRemain : Int32 (Int32,Int32)
+    method CeilHours : Int32 (Int32)
+    method RemainText : String (Int32)
+    method AgoText : String (Int32)
+    method CategoryName : String (Int32)
+    method Loc : String (String)
+    method Fmt : String (String,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Object>)
+    method Row : Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object> (String,String,Single)
+    method Detail : String (String,String,String,String,Int32,String,Il2CppSystem.Collections.Generic.List`1<String>,Int32,Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>>,String,Il2CppSystem.Collections.Generic.Dictionary`2<String,Il2CppSystem.Object>,String,String,Boolean)
+    method Fmt : String (String,Il2CppSystem.Object[])
+    method .ctor : Void (IntPtr)
+    method get_TradePointCategory : Int32 ()
+    method set_TradePointCategory : Void (Int32)
+    method get_ShelterOfferWindowHours : Int32 ()
+    method set_ShelterOfferWindowHours : Void (Int32)

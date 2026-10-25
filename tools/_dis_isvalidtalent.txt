@@ -1,0 +1,131 @@
+0x0301d2c0  mov [rsp+18h],rbp
+0x0301d2c5  push rsi
+0x0301d2c6  sub rsp,30h
+0x0301d2ca  cmp byte [rel 5F4CE5Fh],0
+0x0301d2d1  mov esi,edx
+0x0301d2d3  mov rbp,rcx
+0x0301d2d6  jne short 000000000301D333h
+0x0301d2d8  lea rcx,[rel 5BA00C0h]
+0x0301d2df  call 000000000050A950h
+0x0301d2e4  lea rcx,[rel 5B9F5E8h]
+0x0301d2eb  call 000000000050A950h
+0x0301d2f0  lea rcx,[rel 5B9E3E0h]
+0x0301d2f7  call 000000000050A950h
+0x0301d2fc  lea rcx,[rel 5BB0970h]
+0x0301d303  call 000000000050A950h
+0x0301d308  lea rcx,[rel 5C1FE98h]
+0x0301d30f  call 000000000050A950h
+0x0301d314  lea rcx,[rel 5C213D8h]
+0x0301d31b  call 000000000050A950h
+0x0301d320  lea rcx,[rel 5BDEED8h]
+0x0301d327  call 000000000050A950h
+0x0301d32c  mov byte [rel 5F4CE5Fh],1
+0x0301d333  mov rcx,[rel 5B9F5E8h]
+0x0301d33a  mov [rsp+40h],rbx
+0x0301d33f  mov [rsp+48h],rdi
+0x0301d344  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x0301d349  test rax,rax
+0x0301d34c  je near 000000000301D501h
+0x0301d352  xor r8d,r8d
+0x0301d355  mov edx,esi
+0x0301d357  mov rcx,rax
+0x0301d35a  call 0000000002F728E0h  ; GameCore.HotUpdate.ConfigManager$$Get_Config_Talent
+0x0301d35f  mov rbx,rax
+0x0301d362  test rax,rax
+0x0301d365  je near 000000000301D4FDh
+0x0301d36b  cmp dword [rax+1Ch],0
+0x0301d36f  je near 000000000301D4FDh
+0x0301d375  mov rcx,[rel 5BB0970h]
+0x0301d37c  mov edi,[rax+20h]
+0x0301d37f  cmp dword [rcx+0E4h],0
+0x0301d386  jne short 000000000301D38Dh
+0x0301d388  call 000000000050AC30h
+0x0301d38d  xor edx,edx
+0x0301d38f  mov ecx,edi
+0x0301d391  call 00000000025D9650h  ; GameCore.HotUpdate.GameKey$$IsRowBlockedInDemoTwo
+0x0301d396  test al,al
+0x0301d398  jne near 000000000301D4FDh
+0x0301d39e  mov rcx,[rel 5BB0970h]
+0x0301d3a5  mov edi,[rbx+24h]
+0x0301d3a8  cmp dword [rcx+0E4h],0
+0x0301d3af  jne short 000000000301D3B6h
+0x0301d3b1  call 000000000050AC30h
+0x0301d3b6  xor edx,edx
+0x0301d3b8  mov ecx,edi
+0x0301d3ba  call 00000000025D96C0h  ; GameCore.HotUpdate.GameKey$$IsRowBlockedInEndless
+0x0301d3bf  test al,al
+0x0301d3c1  jne near 000000000301D4FDh
+0x0301d3c7  cmp dword [rbx+24h],6
+0x0301d3cb  jne short 000000000301D3F1h
+0x0301d3cd  mov rcx,[rel 5BB0970h]
+0x0301d3d4  cmp dword [rcx+0E4h],0
+0x0301d3db  jne short 000000000301D3E2h
+0x0301d3dd  call 000000000050AC30h
+0x0301d3e2  xor ecx,ecx
+0x0301d3e4  call 0000000002643880h  ; GameCore.HotUpdate.GameKey$$get_IsPureEndlessActive
+0x0301d3e9  test al,al
+0x0301d3eb  jne near 000000000301D4FDh
+0x0301d3f1  cmp qword [rbx+90h],0
+0x0301d3f9  je short 000000000301D45Ah
+0x0301d3fb  mov rax,[rbx+90h]
+0x0301d402  cmp dword [rax+18h],0
+0x0301d406  jle short 000000000301D45Ah
+0x0301d408  mov rcx,[rel 5BA00C0h]
+0x0301d40f  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x0301d414  test rax,rax
+0x0301d417  je near 000000000301D501h
+0x0301d41d  xor edx,edx
+0x0301d41f  mov rcx,rax
+0x0301d422  call 0000000000614F50h  ; Unity.Services.Core.Registration.CorePackageInitializer$$get_ProjectConfig
+0x0301d427  test rax,rax
+0x0301d42a  je near 000000000301D501h
+0x0301d430  mov rcx,[rbx+90h]
+0x0301d437  test rcx,rcx
+0x0301d43a  je near 000000000301D501h
+0x0301d440  mov r8,[rel 5C1FE98h]
+0x0301d447  mov edx,[rax+0B0h]
+0x0301d44d  call 00000000012E68A0h  ; System.Collections.Generic.List<int>$$Contains
+0x0301d452  test al,al
+0x0301d454  je near 000000000301D4FDh
+0x0301d45a  cmp byte [rbx+4Ch],0
+0x0301d45e  jne short 000000000301D47Fh
+0x0301d460  mov rcx,[rbp+40h]
+0x0301d464  test rcx,rcx
+0x0301d467  je near 000000000301D501h
+0x0301d46d  mov r8,[rel 5C1FE98h]
+0x0301d474  mov edx,esi
+0x0301d476  call 00000000012E68A0h  ; System.Collections.Generic.List<int>$$Contains
+0x0301d47b  test al,al
+0x0301d47d  jne short 000000000301D4FDh
+0x0301d47f  mov rcx,[rel 5BDEED8h]
+0x0301d486  cmp dword [rcx+0E4h],0
+0x0301d48d  jne short 000000000301D494h
+0x0301d48f  call 000000000050AC30h
+0x0301d494  xor edx,edx
+0x0301d496  mov rcx,rbx
+0x0301d499  call 000000000301CE90h  ; GameCore.HotUpdate.Battle.Logic.SurvivalPlanningComponent$$IsRecipeCardAlreadyLearned
+0x0301d49e  test al,al
+0x0301d4a0  jne short 000000000301D4FDh
+0x0301d4a2  cmp dword [rbx+88h],0
+0x0301d4a9  jle short 000000000301D4E6h
+0x0301d4ab  mov rcx,[rel 5B9E3E0h]
+0x0301d4b2  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x0301d4b7  test rax,rax
+0x0301d4ba  je short 000000000301D4E6h
+0x0301d4bc  mov rcx,[rax+168h]
+0x0301d4c3  test rcx,rcx
+0x0301d4c6  je short 000000000301D4E6h
+0x0301d4c8  mov edx,[rbx+88h]
+0x0301d4ce  xor r9d,r9d
+0x0301d4d1  xor r8d,r8d
+0x0301d4d4  mov qword [rsp+20h],0
+0x0301d4dd  call 00000000031A07A0h  ; GameCore.HotUpdate.Battle.Logic.ConditionSetManager$$CheckConditionSet
+0x0301d4e2  test al,al
+0x0301d4e4  je short 000000000301D4FDh
+0x0301d4e6  mov al,1
+0x0301d4e8  mov rdi,[rsp+48h]
+0x0301d4ed  mov rbx,[rsp+40h]
+0x0301d4f2  mov rbp,[rsp+50h]
+0x0301d4f7  add rsp,30h
+0x0301d4fb  pop rsi
+0x0301d4fc  ret

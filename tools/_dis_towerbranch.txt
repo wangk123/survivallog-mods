@@ -1,0 +1,35 @@
+0x0284382b  mov rcx,[rel 5B72008h]
+0x02843832  xor edx,edx
+0x02843834  call 0000000002945050h  ; GameCore.HotUpdate.ChallengeBlockRules$$IsBlocked
+0x02843839  test al,al
+0x0284383b  jne near 00000000028438D5h
+0x02843841  mov rcx,[rel 5B9E3E0h]
+0x02843848  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x0284384d  mov rcx,[rel 5B9F5E8h]
+0x02843854  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x02843859  test rax,rax
+0x0284385c  je near 0000000002843917h
+0x02843862  mov edx,[rdi+10h]
+0x02843865  xor r8d,r8d
+0x02843868  mov rcx,rax
+0x0284386b  call 0000000002F655D0h  ; GameCore.HotUpdate.ConfigManager$$GetDefenseRequiredLevelForRecipe
+0x02843870  mov rcx,[rel 5B9E3E0h]
+0x02843877  mov edi,eax
+0x02843879  call 0000000002045330h  ; GameCore.HotUpdate.BaseSingleton<object>$$get_Instance
+0x0284387e  test rax,rax
+0x02843881  je near 0000000002843917h
+0x02843887  mov rcx,[rax+158h]
+0x0284388e  test rcx,rcx
+0x02843891  je short 00000000028438B9h
+0x02843893  xor r8d,r8d
+0x02843896  mov edx,6
+0x0284389b  call 00000000027B25F0h  ; GameCore.HotUpdate.Battle.Logic.ProficiencyManager$$GetLevel
+0x028438a0  mov rsi,[rsp+30h]
+0x028438a5  mov ebx,eax
+0x028438a7  xor eax,eax
+0x028438a9  cmp ebx,edi
+0x028438ab  setl al
+0x028438ae  mov rbx,[rsp+38h]
+0x028438b3  add rsp,20h
+0x028438b7  pop rdi
+0x028438b8  ret

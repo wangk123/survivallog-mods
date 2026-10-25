@@ -1,0 +1,116 @@
+0x02f655d0  mov [rsp+10h],rbx
+0x02f655d5  mov [rsp+18h],rsi
+0x02f655da  push rdi
+0x02f655db  push r12
+0x02f655dd  push r13
+0x02f655df  push r14
+0x02f655e1  push r15
+0x02f655e3  sub rsp,60h
+0x02f655e7  mov r12d,edx
+0x02f655ea  mov r15,rcx
+0x02f655ed  cmp byte [rel 5F4C9A6h],0
+0x02f655f4  jne short 0000000002F65645h
+0x02f655f6  lea rcx,[rel 5C109B0h]
+0x02f655fd  call 000000000050A950h
+0x02f65602  lea rcx,[rel 5BA02C8h]
+0x02f65609  call 000000000050A950h
+0x02f6560e  lea rcx,[rel 5BA0400h]
+0x02f65615  call 000000000050A950h
+0x02f6561a  lea rcx,[rel 5BA0530h]
+0x02f65621  call 000000000050A950h
+0x02f65626  lea rcx,[rel 5C1FE98h]
+0x02f6562d  call 000000000050A950h
+0x02f65632  lea rcx,[rel 5B819E8h]
+0x02f65639  call 000000000050A950h
+0x02f6563e  mov byte [rel 5F4C9A6h],1
+0x02f65645  cmp qword [r15+130h],0
+0x02f6564d  je near 0000000002F6579Eh
+0x02f65653  xor esi,esi
+0x02f65655  mov [rsp+0A8h],esi
+0x02f6565c  xor r14b,r14b
+0x02f6565f  mov [rsp+90h],r14b
+0x02f65667  mov rdx,[rel 5C109B0h]
+0x02f6566e  mov rcx,[r15+130h]
+0x02f65675  call 00000000022307B0h  ; System.Collections.Generic.Dictionary<TypeManager.LookupFlags, NativeList<SystemTypeIndex>>$$System.Collections.Generic.IReadOnlyDictionary<TKey,TValue>.get_Values
+0x02f6567a  test rax,rax
+0x02f6567d  je near 0000000002F657C0h
+0x02f65683  mov r8,[rel 5B819E8h]
+0x02f6568a  mov rdx,rax
+0x02f6568d  lea rcx,[rsp+28h]
+0x02f65692  call 00000000011EE640h  ; System.Collections.Generic.Dictionary.ValueCollection<TypeManager.LookupFlags, NativeList<SystemTypeIndex>>$$GetEnumerator
+0x02f65697  movups xmm0,[rsp+28h]
+0x02f6569c  movups [rsp+40h],xmm0
+0x02f656a1  movsd xmm1,[rsp+38h]
+0x02f656a7  movsd [rsp+50h],xmm1
+0x02f656ad  mov [rsp+28h],rsi
+0x02f656b2  lea rbx,[rsp+40h]
+0x02f656b7  mov [rsp+30h],rbx
+0x02f656bc  mov r13d,1
+0x02f656c2  mov rdx,[rel 5BA0400h]
+0x02f656c9  lea rcx,[rsp+40h]
+0x02f656ce  call 000000000247E5E0h  ; System.Collections.Generic.Dictionary.ValueCollection.Enumerator<StyleSheetCache.SheetHandleKey, object>$$MoveNext
+0x02f656d3  test al,al
+0x02f656d5  je short 0000000002F6574Eh
+0x02f656d7  mov rdi,[rsp+50h]
+0x02f656dc  test rdi,rdi
+0x02f656df  je short 0000000002F656C2h
+0x02f656e1  cmp qword [rdi+78h],0
+0x02f656e6  je short 0000000002F6570Dh
+0x02f656e8  mov r8,[rel 5C1FE98h]
+0x02f656ef  mov edx,r12d
+0x02f656f2  mov rcx,[rdi+78h]
+0x02f656f6  call 00000000012E68A0h  ; System.Collections.Generic.List<int>$$Contains
+0x02f656fb  movzx r14d,r14b
+0x02f656ff  test al,al
+0x02f65701  cmovne r14d,r13d
+0x02f65705  mov [rsp+90h],r14b
+0x02f6570d  xor r8d,r8d
+0x02f65710  mov rdx,rdi
+0x02f65713  mov rcx,r15
+0x02f65716  call 0000000002F65840h  ; GameCore.HotUpdate.ConfigManager$$GetDefenseUnlockRecipes
+0x02f6571b  test rax,rax
+0x02f6571e  je short 0000000002F656C2h
+0x02f65720  mov r8,[rel 5C1FE98h]
+0x02f65727  mov edx,r12d
+0x02f6572a  mov rcx,rax
+0x02f6572d  call 00000000012E68A0h  ; System.Collections.Generic.List<int>$$Contains
+0x02f65732  test al,al
+0x02f65734  je short 0000000002F656C2h
+0x02f65736  test esi,esi
+0x02f65738  je short 0000000002F6573Fh
+0x02f6573a  cmp [rdi+10h],esi
+0x02f6573d  jge short 0000000002F656C2h
+0x02f6573f  mov esi,[rdi+10h]
+0x02f65742  mov [rsp+0A8h],esi
+0x02f65749  jmp 0000000002F656C2h
+0x02f6574e  mov rdx,[rel 5BA02C8h]
+0x02f65755  mov rcx,rbx
+0x02f65758  call 000000000060EAA0h  ; Unity.Services.Core.Telemetry.Internal.Metrics$$Unity.Services.Core.Telemetry.Internal.IMetrics.SendSumMetric
+0x02f6575d  jmp short 0000000002F6578Ah
+0x02f6575f  mov rdx,[rel 5BA02C8h]
+0x02f65766  mov rcx,[rsp+30h]
+0x02f6576b  call 000000000060EAA0h  ; Unity.Services.Core.Telemetry.Internal.Metrics$$Unity.Services.Core.Telemetry.Internal.IMetrics.SendSumMetric
+0x02f65770  mov rcx,[rsp+28h]
+0x02f65775  test rcx,rcx
+0x02f65778  jne short 0000000002F657BAh
+0x02f6577a  mov esi,[rsp+0A8h]
+0x02f65781  movzx r14d,byte [rsp+90h]
+0x02f6578a  test esi,esi
+0x02f6578c  jg short 0000000002F6579Ah
+0x02f6578e  test r14b,r14b
+0x02f65791  je short 0000000002F6579Eh
+0x02f65793  mov eax,7FFFFFFFh
+0x02f65798  jmp short 0000000002F657A0h
+0x02f6579a  mov eax,esi
+0x02f6579c  jmp short 0000000002F657A0h
+0x02f6579e  xor eax,eax
+0x02f657a0  lea r11,[rsp+60h]
+0x02f657a5  mov rbx,[r11+38h]
+0x02f657a9  mov rsi,[r11+40h]
+0x02f657ad  mov rsp,r11
+0x02f657b0  pop r15
+0x02f657b2  pop r14
+0x02f657b4  pop r13
+0x02f657b6  pop r12
+0x02f657b8  pop rdi
+0x02f657b9  ret

@@ -1,5 +1,5 @@
 ﻿; 生存日志 MOD 安装器（Inno Setup 7）
-; 基座必装（NextButtonClick 校验强制），7 个 MOD 自选（推荐类型默认勾选，可自由增减），至少选一个。
+; 基座必装（NextButtonClick 校验强制），12 个 MOD 自选（推荐类型默认勾选，可自由增减），至少选一个。
 ; 文件源全部指向 release\ 下的正式版本目录。
 
 #define MyAppName "生存日志 MOD"
@@ -50,10 +50,11 @@ Name: "custom"; Description: "自选安装"; Flags: iscustom
 [Components]
 Name: "base"; Description: "MOD 框架基座（必装，不装它任何 MOD 都不生效）"; Types: recommended full custom
 Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2倍面积），负重×2"; Types: recommended full custom
-Name: "mod_cabinet"; Description: "柜子扩容：家里全部柜子（置物架/柜子/金属柜/工具柜/床头柜/衣柜等）+冰箱格子宽高各×1.5，新增柜子/冰箱自动跟上（原冰箱扩容已并入）"; Types: recommended full custom
+Name: "mod_cabinet"; Description: "柜子容量：家里全部柜子按 小/中/大/特大 四档统一调到固定宽×高（默认14x10~20x16，逐档可改），13 个常用包独立微调、任意柜可个性化定值，改值热生效（原「柜子扩容」百分比版已废弃，由本组件取代）"; Types: recommended full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
 Name: "mod_cabaccess"; Description: "储藏柜直达（直达+智能视图+筛选）：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料；按界面场景视图（食物/材料）自动收窄页签，或下拉按标签筛选柜子页签（原「柜子标签筛选」mod 已并入本组件）"; Types: recommended full custom
 Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
+Name: "mod_roleunlock"; Description: "角色专属解锁：藤蔓种子全角色可发现（含种植/护盾），燃烧瓶等防御配方四角色互通（各自防御等级门槛照旧）"; Types: recommended full custom
 Name: "mod_robotspeed"; Description: "机器人提速：修理/整理/种植机器人不再比手动慢（动作对齐手速+移速/充电/续航翻倍+三台货舱扩容；不含插槽与模块）"; Types: recommended full custom
 Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
 Name: "mod_quick\qa_item"; Description: "物品使用：吃/喝/品尝/吞咽/药品 → 0.5秒（约2750条）"; Types: recommended full custom
@@ -61,6 +62,10 @@ Name: "mod_quick\qa_misc"; Description: "杂项交互：搜查/撬锁/翻找/开
 Name: "mod_quick\qa_maint"; Description: "房屋维护：布置/安装/移动/拆除陷阱、安装家具 → 0.5秒（约78条）"; Types: recommended full custom
 Name: "mod_quick\qa_furn"; Description: "家具功能：拆封包裹/种植/烹饪/升级大门/改装 → 0.5秒（约900条）"; Types: recommended full custom
 Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/运动/洗澡/空调吹风 → 0.5秒（约173条）"; Types: recommended full custom
+Name: "mod_center"; Description: "MOD 管理中心：主菜单与游戏内 ESC 菜单各加入口，面板集中开关/调参本套件各 MOD（含第三方 MOD 通用页与重启级禁用），替代逐个手改 cfg 文件"; Types: recommended full custom
+Name: "mod_endless"; Description: "无尽守卫（囤鼠桃园）：无尽模式新沦陷全拦+已沦陷交易点/探险图读档复活+倒计时清空，另加 11 条后期拾遗规划（超市/医院/学校，D100 起）防野外资源枯竭"; Types: recommended full custom
+Name: "mod_planpick"; Description: "自选规划：生存规划三选一页加「自选规划」入口，全部规划可搜可买（非今日候选默认两倍价可调），告别等不到想要的三张"; Types: recommended full custom
+Name: "mod_predisaster"; Description: "灾前加速：把官方灾后五键倍速条（暂停/慢速/原速/二倍/三倍）搬到灾前，按钮+快捷键(~1234)变速，走游戏自带换档通道"; Types: recommended full custom
 
 [InstallDelete]
 ; 安装前预清理：先移除本项目全部插件（无论本次是否勾选），再安装所选组件——
@@ -69,12 +74,18 @@ Name: "mod_quick\qa_fun"; Description: "娱乐锻炼：看书/听音乐/按摩/�
 ; 唯一例外=旧柜子标签筛选 cfg——该 mod 已并入储藏柜直达，cfg 永久失效，见下）。
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetSize.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeExpand.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.QuickAction.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.RoleUnlock.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.ModCenter.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.EndlessGuard.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.PlanPick.dll"
+Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.PreDisasterSpeed.dll"
 Type: files; Name: "{app}\BepInEx\plugins\SurvivalLog.CabinetTagFilter.dll"
 Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
 ; 旧独立筛选 mod 的 cfg（合并后插件已不存在，此 cfg 永久失效——清掉防误导；
@@ -82,12 +93,18 @@ Type: files; Name: "{app}\BepInEx\config\quickaction.boot.ini"
 Type: files; Name: "{app}\BepInEx\config\com.local.survivallog.cabinettagfilter.cfg"
 Type: files; Name: "{app}\MOD说明\背包扩容.md"
 Type: files; Name: "{app}\MOD说明\柜子扩容.md"
+Type: files; Name: "{app}\MOD说明\柜子容量.md"
 Type: files; Name: "{app}\MOD说明\冰箱扩容.md"
 Type: files; Name: "{app}\MOD说明\冰箱保鲜.md"
 Type: files; Name: "{app}\MOD说明\动作提速.md"
 Type: files; Name: "{app}\MOD说明\储藏柜直达.md"
 Type: files; Name: "{app}\MOD说明\柜子负重解放.md"
+Type: files; Name: "{app}\MOD说明\角色专属解锁.md"
 Type: files; Name: "{app}\MOD说明\机器人提速.md"
+Type: files; Name: "{app}\MOD说明\MOD管理中心.md"
+Type: files; Name: "{app}\MOD说明\无尽守卫.md"
+Type: files; Name: "{app}\MOD说明\自选规划.md"
+Type: files; Name: "{app}\MOD说明\灾前加速.md"
 Type: files; Name: "{app}\MOD说明\柜子标签筛选.md"
 Type: dirifempty; Name: "{app}\MOD说明"
 
@@ -110,9 +127,9 @@ Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#Suit
 Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.backpackexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "背包扩容.md"; Flags: ignoreversion
 ; ---- 柜子扩容 ----
-Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子扩容.md"; Flags: ignoreversion
+; ---- 柜子容量（v1.7.0 起取代柜子扩容；cfg 不预置：首跑按代码默认生成） ----
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetSize.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子容量.md"; Flags: ignoreversion
 ; ---- 冰箱扩容已并入柜子扩容（2026-10-13）：此处只保留升级清理（InstallDelete 区的旧 dll/说明文件） ----
 ; ---- 冰箱保鲜 ----
 Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
@@ -126,6 +143,10 @@ Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
+; ---- 角色专属解锁 ----
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RoleUnlock.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\BepInEx\config\com.local.survivallog.roleunlock.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "角色专属解锁.md"; Flags: ignoreversion
 ; ---- 机器人提速（cfg 不预置：首跑按代码默认生成完整中文注释配置） ----
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "机器人提速.md"; Flags: ignoreversion
@@ -133,6 +154,18 @@ Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteV
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.QuickAction.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "动作提速.md"; Flags: ignoreversion
+; ---- MOD 管理中心（cfg 不预置：首跑按代码默认生成） ----
+Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.ModCenter.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "MOD管理中心.md"; Flags: ignoreversion
+; ---- 无尽守卫（cfg 不预置：首跑按代码默认生成） ----
+Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.EndlessGuard.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "无尽守卫.md"; Flags: ignoreversion
+; ---- 自选规划（cfg 不预置：首跑按代码默认生成） ----
+Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.PlanPick.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "自选规划.md"; Flags: ignoreversion
+; ---- 灾前加速（cfg 不预置：首跑按代码默认生成） ----
+Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.PreDisasterSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "灾前加速.md"; Flags: ignoreversion
 
 ; 抖音名片（仅向导期署名展示用，dontcopy 不落地安装目录）
 Source: "assets\douyin_night_card.bmp"; DestDir: "{tmp}"; Flags: dontcopy
@@ -387,8 +420,13 @@ begin
             WizardIsComponentSelected('mod_chill') or
             WizardIsComponentSelected('mod_cabaccess') or
             WizardIsComponentSelected('mod_cabburden') or
+            WizardIsComponentSelected('mod_roleunlock') or
             WizardIsComponentSelected('mod_quick') or
-            WizardIsComponentSelected('mod_robotspeed')) then
+            WizardIsComponentSelected('mod_robotspeed') or
+            WizardIsComponentSelected('mod_center') or
+            WizardIsComponentSelected('mod_endless') or
+            WizardIsComponentSelected('mod_planpick') or
+            WizardIsComponentSelected('mod_predisaster')) then
     begin
       MsgBox('基座之外至少需要选择一个 MOD（也可以全选）。', mbError, MB_OK);
       Result := False;

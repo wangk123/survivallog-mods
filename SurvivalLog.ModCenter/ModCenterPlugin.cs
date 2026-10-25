@@ -25,7 +25,7 @@ public sealed class ModCenterPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.modcenter";
     public const string Name = "ModCenter";
-    public const string Version = "1.3.8"; // 跟随套件 version.json（作者定号）
+    public const string Version = "1.7.0"; // 跟随套件 version.json（作者定号）
 
     public static ModCenterPlugin Instance { get; private set; }
 

@@ -1,0 +1,275 @@
+TYPE GameCore.HotUpdate.Battle.Logic.SurvivalPlanningComponent
+    field NativeFieldInfoPtr__SaveCache_k__BackingField : IntPtr
+    field NativeFieldInfoPtr_ExploreScopedTalentIds : IntPtr
+    field NativeFieldInfoPtr_PlanEndlessMode_BlockInPureEndless : IntPtr
+    field NativeFieldInfoPtr_FullLoadTalentIds : IntPtr
+    field NativeFieldInfoPtr_BagGridTalentIds : IntPtr
+    field NativeFieldInfoPtr_BagGridBagIdsByInitialBag : IntPtr
+    field NativeFieldInfoPtr_DrawerGridTalentIds : IntPtr
+    field NativeFieldInfoPtr_DrawerGridBagIds : IntPtr
+    field NativeFieldInfoPtr_TrapStoreGridTalentIds : IntPtr
+    field NativeFieldInfoPtr_TrapStoreGridBagIds : IntPtr
+    field NativeFieldInfoPtr_PlanSlotCount : IntPtr
+    field NativeFieldInfoPtr_PinnedFreeSlotCount : IntPtr
+    field NativeFieldInfoPtr_UnlockCraftRecipeEffect : IntPtr
+    field NativeFieldInfoPtr_StrangerShelfTalentId : IntPtr
+    field NativeFieldInfoPtr_StrangerShelfKindBonus : IntPtr
+    field NativeMethodInfoPtr_get_SaveCache_Private_get_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SaveCache_Private_set_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsExploreScopedTalent_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsFullLoadTalent_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsGridExpandTalent_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetGridLevel_Private_Int32_Il2CppStructArray_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetDrawerBagId_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTrapStoreBagId_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ApplyBagGridExpansion_Public_Void_BagComponent_0 : IntPtr
+    field NativeMethodInfoPtr_GetGridChainMaxSize_Public_Static_Vector2Int_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetBagSize_Private_Static_Vector2Int_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_SyncGridExpansionAfterBuy_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_GetFullLoadBuffId_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_HasActivated_Public_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnInitBuffs_Public_Void_AgentSave_BuffComponent_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_LoadGame_Public_Virtual_Final_New_Void_AgentSave_Dictionary_2_Int64_Int64_0 : IntPtr
+    field NativeMethodInfoPtr_AddBuff_Public_Void_BuffComponent_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AddExploreScopedBuffs_Public_Void_BuffComponent_0 : IntPtr
+    field NativeMethodInfoPtr_RemoveExploreScopedBuffs_Public_Void_BuffComponent_0 : IntPtr
+    field NativeMethodInfoPtr_RemoveBuff_Public_Void_BuffComponent_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_SaveGame_Public_Virtual_Final_New_Void_AgentSave_0 : IntPtr
+    field NativeMethodInfoPtr_GetRandomSurvivalPlanIds_Public_List_1_Int32_Int32_ICollection_1_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRandomSurvivalPlanIds_Public_List_1_Int32_Int32_List_1_Int32_List_1_Int32_ICollection_1_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRandomIdsFromGroup_Private_List_1_Int32_Int32_Int32_Int32_List_1_Int32_List_1_Int32_List_1_Int32_ICollection_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRandomIdsFromGroup_Private_List_1_Int32_Int32_Int32_Int32_List_1_Int32_ICollection_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DrawByWeight_Private_Void_List_1_Int32_List_1_Int32_Int32_List_1_Int32_RandomManager_0 : IntPtr
+    field NativeMethodInfoPtr_GetRandomIdByWeight_Private_Int32_List_1_Int32_List_1_Int32_RandomManager_0 : IntPtr
+    field NativeMethodInfoPtr_IsValidTalentId_Private_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_NotifySurvivalPlanningUpdate_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_CanKeepPinnedPlan_Public_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_DrawWithPinnedPlan_Private_List_1_Int32_Config_DailyRandom_Int32_Int32_Int32_Boolean_List_1_Int32_List_1_Int32_ICollection_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildPinnedGroupPlan_Private_Static_Void_Config_DailyRandom_List_1_Int32_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CollectSlotGroups_Private_Static_Void_Config_DailyRandom_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetPlanGroupSlotDensity_Private_Static_Dictionary_2_Int32_Single_0 : IntPtr
+    field NativeMethodInfoPtr_GetFrequency_Private_Static_Single_Dictionary_2_Int32_Single_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsRecipeCardAlreadyLearned_Private_Static_Boolean_Config_Talent_0 : IntPtr
+    field NativeMethodInfoPtr_IsRecipeCraftable_Private_Static_Boolean_String_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RefreshItemTimeScaleIfShelfLifeCard_Private_Static_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_IsShelfLifeEffect_Private_Static_Boolean_String_0 : IntPtr
+    field NativeMethodInfoPtr_IsStrangerShelfTalent_Public_Static_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetStrangerShelfKindBonus_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnDestroy_Public_Virtual_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    method .cctor : Void ()
+    method get_SaveCache : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set_SaveCache : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method IsExploreScopedTalent : Boolean (Int32)
+    method IsFullLoadTalent : Boolean (Int32)
+    method IsGridExpandTalent : Boolean (Int32)
+    method GetGridLevel : Int32 (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method GetDrawerBagId : Int32 ()
+    method GetTrapStoreBagId : Int32 ()
+    method ApplyBagGridExpansion : Void (GameCore.HotUpdate.Battle.Logic.BagComponent)
+    method GetGridChainMaxSize : UnityEngine.Vector2Int (Int32)
+    method GetBagSize : UnityEngine.Vector2Int (Int32)
+    method SyncGridExpansionAfterBuy : Void ()
+    method GetFullLoadBuffId : Int32 ()
+    method HasActivated : Boolean (Int32)
+    method OnInitBuffs : Void (GameCore.HotUpdate.AgentSave,GameCore.HotUpdate.Battle.Logic.BuffComponent,Boolean)
+    method LoadGame : Void (GameCore.HotUpdate.AgentSave,Il2CppSystem.Collections.Generic.Dictionary`2<Int64,Int64>)
+    method AddBuff : Void (GameCore.HotUpdate.Battle.Logic.BuffComponent,Int32)
+    method AddExploreScopedBuffs : Void (GameCore.HotUpdate.Battle.Logic.BuffComponent)
+    method RemoveExploreScopedBuffs : Void (GameCore.HotUpdate.Battle.Logic.BuffComponent)
+    method RemoveBuff : Void (GameCore.HotUpdate.Battle.Logic.BuffComponent,Int32)
+    method SaveGame : Void (GameCore.HotUpdate.AgentSave)
+    method GetRandomSurvivalPlanIds : Il2CppSystem.Collections.Generic.List`1<Int32> (Int32,Il2CppSystem.Collections.Generic.ICollection`1<Int32>,Int32,Int32)
+    method GetRandomSurvivalPlanIds : Il2CppSystem.Collections.Generic.List`1<Int32> (Int32,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.ICollection`1<Int32>,Int32,Int32)
+    method GetRandomIdsFromGroup : Il2CppSystem.Collections.Generic.List`1<Int32> (Int32,Int32,Int32,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.ICollection`1<Int32>)
+    method GetRandomIdsFromGroup : Il2CppSystem.Collections.Generic.List`1<Int32> (Int32,Int32,Int32,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.ICollection`1<Int32>)
+    method DrawByWeight : Void (Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,Int32,Il2CppSystem.Collections.Generic.List`1<Int32>,GameCore.HotUpdate.Battle.Logic.RandomManager)
+    method GetRandomIdByWeight : Int32 (Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,GameCore.HotUpdate.Battle.Logic.RandomManager)
+    method IsValidTalentId : Boolean (Int32)
+    method NotifySurvivalPlanningUpdate : Void ()
+    method CanKeepPinnedPlan : Boolean (Int32)
+    method DrawWithPinnedPlan : Il2CppSystem.Collections.Generic.List`1<Int32> (GameCore.HotUpdate.Config_DailyRandom,Int32,Int32,Int32,Boolean,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.ICollection`1<Int32>)
+    method BuildPinnedGroupPlan : Void (GameCore.HotUpdate.Config_DailyRandom,Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method CollectSlotGroups : Void (GameCore.HotUpdate.Config_DailyRandom,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method GetPlanGroupSlotDensity : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Single> ()
+    method GetFrequency : Single (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Single>,Int32)
+    method IsRecipeCardAlreadyLearned : Boolean (GameCore.HotUpdate.Config_Talent)
+    method IsRecipeCraftable : Boolean (String,Int32)
+    method RefreshItemTimeScaleIfShelfLifeCard : Void (Int32)
+    method IsShelfLifeEffect : Boolean (String)
+    method IsStrangerShelfTalent : Boolean (Int32)
+    method GetStrangerShelfKindBonus : Int32 ()
+    method OnDestroy : Void ()
+    method .ctor : Void ()
+    method .ctor : Void (IntPtr)
+    method get__SaveCache_k__BackingField : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__SaveCache_k__BackingField : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_ExploreScopedTalentIds : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method set_ExploreScopedTalentIds : Void (Il2CppSystem.Collections.Generic.HashSet`1<Int32>)
+    method get_PlanEndlessMode_BlockInPureEndless : Int32 ()
+    method set_PlanEndlessMode_BlockInPureEndless : Void (Int32)
+    method get_FullLoadTalentIds : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method set_FullLoadTalentIds : Void (Il2CppSystem.Collections.Generic.HashSet`1<Int32>)
+    method get_BagGridTalentIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_BagGridTalentIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_BagGridBagIdsByInitialBag : Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>> ()
+    method set_BagGridBagIdsByInitialBag : Void (Il2CppSystem.Collections.Generic.Dictionary`2<Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>>)
+    method get_DrawerGridTalentIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_DrawerGridTalentIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_DrawerGridBagIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_DrawerGridBagIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_TrapStoreGridTalentIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_TrapStoreGridTalentIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_TrapStoreGridBagIds : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set_TrapStoreGridBagIds : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get_PlanSlotCount : Int32 ()
+    method set_PlanSlotCount : Void (Int32)
+    method get_PinnedFreeSlotCount : Int32 ()
+    method set_PinnedFreeSlotCount : Void (Int32)
+    method get_UnlockCraftRecipeEffect : String ()
+    method set_UnlockCraftRecipeEffect : Void (String)
+    method get_StrangerShelfTalentId : Int32 ()
+    method set_StrangerShelfTalentId : Void (Int32)
+    method get_StrangerShelfKindBonus : Int32 ()
+    method set_StrangerShelfKindBonus : Void (Int32)
+TYPE GameCore.HotUpdate.Battle.Logic.SurvivalResultsManager
+    field NativeFieldInfoPtr__SurvivalPoint_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__TotalPoints_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__CachedFaithPoints_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__DayCachePoint_k__BackingField : IntPtr
+    field NativeFieldInfoPtr__campRewardSnapshotTaken : IntPtr
+    field NativeFieldInfoPtr__campRewardSnapshotPoints : IntPtr
+    field NativeFieldInfoPtr__campRewardSnapshotText : IntPtr
+    field NativeFieldInfoPtr_CampContributorNameMax : IntPtr
+    field NativeFieldInfoPtr_CampContributorSeparator : IntPtr
+    field NativeFieldInfoPtr__allyContributorBuf : IntPtr
+    field NativeFieldInfoPtr_AllyContributorNameMax : IntPtr
+    field NativeFieldInfoPtr_Key_PlanShownCooldownTimes : IntPtr
+    field NativeFieldInfoPtr_DefaultPlanShownCooldownTimes : IntPtr
+    field NativeFieldInfoPtr__planShownBatches : IntPtr
+    field NativeFieldInfoPtr__pinnedPlanId : IntPtr
+    field NativeFieldInfoPtr__pinnedPlanSlot : IntPtr
+    field NativeMethodInfoPtr_get_SurvivalPoint_Private_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_SurvivalPoint_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_TotalPoints_Private_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_TotalPoints_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetSurvivalPoint_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTotalPoints_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_CachedFaithPoints_Private_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_CachedFaithPoints_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DayCachePoint_Private_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_set_DayCachePoint_Private_set_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnEventRegister_Public_Virtual_Final_New_Void_EventDispatcher_0 : IntPtr
+    field NativeMethodInfoPtr_Initialize_Public_Void_GameSaveData_GameMode_0 : IntPtr
+    field NativeMethodInfoPtr_SaveGame_Public_Void_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_LoadGame_Public_Void_GameSaveData_0 : IntPtr
+    field NativeMethodInfoPtr_SnapshotCampDailyReward_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ClearCampDailyRewardSnapshot_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_SettleDailySurvivalPoints_Public_ValueTuple_4_Int32_Int32_Il2CppStructArray_1_Int32_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildCampContributorsText_Private_Static_String_List_1_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveCampName_Private_Static_String_ConfigManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_BuildAllyContributorsText_Private_Static_String_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ResolveContactName_Private_Static_String_ConfigManager_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AddCachedFaithPoints_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AddDayCachePoint_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetTodayCompletedWishCount_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnBuySurvivalPlan_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_OnRefreshSurvivalPlans_Private_Void_List_1_Int32_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetRefreshCost_Private_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AddSurvivalPoint_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TrySpendSurvivalPoint_Public_Boolean_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetPlanShownCooldownTimes_Public_Static_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetPlanCooldownIds_Public_HashSet_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_RecordPlanShown_Public_Void_List_1_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_LoadPlanCooldown_Private_Void_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_TrimPlanShownBatches_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_SavePlanCooldown_Private_Void_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_GetPinnedPlanSlot_Public_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TakeValidPinnedPlanId_Public_Int32_SurvivalPlanningComponent_0 : IntPtr
+    field NativeMethodInfoPtr_OnPinSurvivalPlan_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ReleasePlanPinIfBought_Private_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_SetPinnedPlan_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_NotifyPlanPinChanged_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_LoadPlanPin_Private_Void_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_SavePlanPin_Private_Void_SaveChildData_0 : IntPtr
+    field NativeMethodInfoPtr_OnDestroy_Public_Virtual_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    method .cctor : Void ()
+    method get_SurvivalPoint : Int32 ()
+    method set_SurvivalPoint : Void (Int32)
+    method get_TotalPoints : Int32 ()
+    method set_TotalPoints : Void (Int32)
+    method GetSurvivalPoint : Int32 ()
+    method GetTotalPoints : Int32 ()
+    method get_CachedFaithPoints : Int32 ()
+    method set_CachedFaithPoints : Void (Int32)
+    method get_DayCachePoint : Int32 ()
+    method set_DayCachePoint : Void (Int32)
+    method OnEventRegister : Void (GameCore.HotUpdate.EventDispatcher)
+    method Initialize : Void (GameCore.HotUpdate.GameSaveData,GameCore.HotUpdate.GameMode)
+    method SaveGame : Void (GameCore.HotUpdate.SaveChildData)
+    method LoadGame : Void (GameCore.HotUpdate.GameSaveData)
+    method SnapshotCampDailyReward : Void ()
+    method ClearCampDailyRewardSnapshot : Void ()
+    method SettleDailySurvivalPoints : Il2CppSystem.ValueTuple`4<Int32,Int32,Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>,Int32> (Int32,Int32)
+    method BuildCampContributorsText : String (Il2CppSystem.Collections.Generic.List`1<Int32>,Int32)
+    method ResolveCampName : String (GameCore.HotUpdate.ConfigManager,Int32)
+    method BuildAllyContributorsText : String (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method ResolveContactName : String (GameCore.HotUpdate.ConfigManager,Int32)
+    method AddCachedFaithPoints : Void (Int32)
+    method AddDayCachePoint : Void (Int32)
+    method GetTodayCompletedWishCount : Int32 (Int32)
+    method OnBuySurvivalPlan : Void (Int32)
+    method OnRefreshSurvivalPlans : Void (Il2CppSystem.Collections.Generic.List`1<Int32>,Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method GetRefreshCost : Int32 ()
+    method AddSurvivalPoint : Void (Int32)
+    method TrySpendSurvivalPoint : Boolean (Int32)
+    method GetPlanShownCooldownTimes : Int32 ()
+    method GetPlanCooldownIds : Il2CppSystem.Collections.Generic.HashSet`1<Int32> ()
+    method RecordPlanShown : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method LoadPlanCooldown : Void (GameCore.HotUpdate.SaveChildData)
+    method TrimPlanShownBatches : Void ()
+    method SavePlanCooldown : Void (GameCore.HotUpdate.SaveChildData)
+    method GetPinnedPlanSlot : Int32 ()
+    method TakeValidPinnedPlanId : Int32 (GameCore.HotUpdate.Battle.Logic.SurvivalPlanningComponent)
+    method OnPinSurvivalPlan : Void (Int32,Int32)
+    method ReleasePlanPinIfBought : Void (Int32)
+    method SetPinnedPlan : Void (Int32,Int32)
+    method NotifyPlanPinChanged : Void ()
+    method LoadPlanPin : Void (GameCore.HotUpdate.SaveChildData)
+    method SavePlanPin : Void (GameCore.HotUpdate.SaveChildData)
+    method OnDestroy : Void ()
+    method .ctor : Void ()
+    method .ctor : Void (IntPtr)
+    method get__SurvivalPoint_k__BackingField : Int32 ()
+    method set__SurvivalPoint_k__BackingField : Void (Int32)
+    method get__TotalPoints_k__BackingField : Int32 ()
+    method set__TotalPoints_k__BackingField : Void (Int32)
+    method get__CachedFaithPoints_k__BackingField : Int32 ()
+    method set__CachedFaithPoints_k__BackingField : Void (Int32)
+    method get__DayCachePoint_k__BackingField : Int32 ()
+    method set__DayCachePoint_k__BackingField : Void (Int32)
+    method get__campRewardSnapshotTaken : Boolean ()
+    method set__campRewardSnapshotTaken : Void (Boolean)
+    method get__campRewardSnapshotPoints : Int32 ()
+    method set__campRewardSnapshotPoints : Void (Int32)
+    method get__campRewardSnapshotText : String ()
+    method set__campRewardSnapshotText : Void (String)
+    method get_CampContributorNameMax : Int32 ()
+    method set_CampContributorNameMax : Void (Int32)
+    method get_CampContributorSeparator : String ()
+    method set_CampContributorSeparator : Void (String)
+    method get__allyContributorBuf : Il2CppSystem.Collections.Generic.List`1<Int32> ()
+    method set__allyContributorBuf : Void (Il2CppSystem.Collections.Generic.List`1<Int32>)
+    method get_AllyContributorNameMax : Int32 ()
+    method set_AllyContributorNameMax : Void (Int32)
+    method get_Key_PlanShownCooldownTimes : String ()
+    method set_Key_PlanShownCooldownTimes : Void (String)
+    method get_DefaultPlanShownCooldownTimes : Int32 ()
+    method set_DefaultPlanShownCooldownTimes : Void (Int32)
+    method get__planShownBatches : Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.List`1<Int32>> ()
+    method set__planShownBatches : Void (Il2CppSystem.Collections.Generic.List`1<Il2CppSystem.Collections.Generic.List`1<Int32>>)
+    method get__pinnedPlanId : Int32 ()
+    method set__pinnedPlanId : Void (Int32)
+    method get__pinnedPlanSlot : Int32 ()
+    method set__pinnedPlanSlot : Void (Int32)

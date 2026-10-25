@@ -21,7 +21,7 @@ public sealed class CabinetSizePlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.cabinetsize";
     public const string Name = "CabinetSize";
-    public const string Version = "1.3.8"; // 跟随套件 version.json（版本号由作者定义）
+    public const string Version = "1.7.0"; // 跟随套件 version.json（版本号由作者定义）
 
     internal static ManualLogSource Log;
     internal static volatile bool Rerun = true;

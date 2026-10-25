@@ -1,0 +1,53 @@
+0x02f65840  push rdi
+0x02f65842  sub rsp,20h
+0x02f65846  cmp byte [rel 5F4C9A4h],0
+0x02f6584d  mov rdi,rdx
+0x02f65850  jne short 0000000002F6587Dh
+0x02f65852  lea rcx,[rel 5BFED20h]
+0x02f65859  call 000000000050A950h
+0x02f6585e  lea rcx,[rel 5C213D8h]
+0x02f65865  call 000000000050A950h
+0x02f6586a  lea rcx,[rel 5C21518h]
+0x02f65871  call 000000000050A950h
+0x02f65876  mov byte [rel 5F4C9A4h],1
+0x02f6587d  mov [rsp+30h],rbx
+0x02f65882  test rdi,rdi
+0x02f65885  je near 0000000002F65920h
+0x02f6588b  mov rcx,[rel 5BFED20h]
+0x02f65892  cmp dword [rcx+0E4h],0
+0x02f65899  jne short 0000000002F658A0h
+0x02f6589b  call 000000000050AC30h
+0x02f658a0  xor ecx,ecx
+0x02f658a2  call 0000000002F64ED0h  ; GameCore.HotUpdate.ConfigManager$$GetCurrentPlayerSelectId
+0x02f658a7  sub eax,1
+0x02f658aa  je short 0000000002F658D6h
+0x02f658ac  sub eax,1
+0x02f658af  je short 0000000002F658CDh
+0x02f658b1  sub eax,1
+0x02f658b4  je short 0000000002F658C4h
+0x02f658b6  cmp eax,1
+0x02f658b9  jne short 0000000002F65911h
+0x02f658bb  mov rbx,[rdi+98h]
+0x02f658c2  jmp short 0000000002F658DDh
+0x02f658c4  mov rbx,[rdi+90h]
+0x02f658cb  jmp short 0000000002F658DDh
+0x02f658cd  mov rbx,[rdi+88h]
+0x02f658d4  jmp short 0000000002F658DDh
+0x02f658d6  mov rbx,[rdi+80h]
+0x02f658dd  test rbx,rbx
+0x02f658e0  je short 0000000002F65911h
+0x02f658e2  cmp dword [rbx+18h],0
+0x02f658e6  je short 0000000002F65911h
+0x02f658e8  cmp dword [rbx+18h],1
+0x02f658ec  jne short 0000000002F65903h
+0x02f658ee  mov r8,[rel 5C21518h]
+0x02f658f5  xor edx,edx
+0x02f658f7  mov rcx,rbx
+0x02f658fa  call 00000000012BB550h  ; System.Collections.Generic.List<RegexCharClass.SingleRange>$$get_Item
+0x02f658ff  test eax,eax
+0x02f65901  je short 0000000002F65920h
+0x02f65903  mov rax,rbx
+0x02f65906  mov rbx,[rsp+30h]
+0x02f6590b  add rsp,20h
+0x02f6590f  pop rdi
+0x02f65910  ret

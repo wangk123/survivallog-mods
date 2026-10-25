@@ -1,0 +1,200 @@
+0x02f5f840  mov [rsp+10h],rbx
+0x02f5f845  mov [rsp+18h],rsi
+0x02f5f84a  push rdi
+0x02f5f84b  push r14
+0x02f5f84d  push r15
+0x02f5f84f  sub rsp,40h
+0x02f5f853  mov r14,rcx
+0x02f5f856  cmp byte [rel 5F4C9A7h],0
+0x02f5f85d  jne short 0000000002F5F8BAh
+0x02f5f85f  lea rcx,[rel 5BB0970h]
+0x02f5f866  call 000000000050A950h
+0x02f5f86b  lea rcx,[rel 5BCF828h]
+0x02f5f872  call 000000000050A950h
+0x02f5f877  lea rcx,[rel 5BF17D8h]
+0x02f5f87e  call 000000000050A950h
+0x02f5f883  lea rcx,[rel 5BFD708h]
+0x02f5f88a  call 000000000050A950h
+0x02f5f88f  lea rcx,[rel 5BD18A8h]
+0x02f5f896  call 000000000050A950h
+0x02f5f89b  lea rcx,[rel 5C213D8h]
+0x02f5f8a2  call 000000000050A950h
+0x02f5f8a7  lea rcx,[rel 5C21518h]
+0x02f5f8ae  call 000000000050A950h
+0x02f5f8b3  mov byte [rel 5F4C9A7h],1
+0x02f5f8ba  cmp byte [rel 5F4C923h],0
+0x02f5f8c1  jne short 0000000002F5F8D6h
+0x02f5f8c3  lea rcx,[rel 5C17168h]
+0x02f5f8ca  call 000000000050A950h
+0x02f5f8cf  mov byte [rel 5F4C923h],1
+0x02f5f8d6  mov rcx,[r14+2B8h]
+0x02f5f8dd  test rcx,rcx
+0x02f5f8e0  je near 0000000002F5FB8Fh
+0x02f5f8e6  mov rdx,[rel 5C17168h]
+0x02f5f8ed  call 00000000022307B0h  ; System.Collections.Generic.Dictionary<TypeManager.LookupFlags, NativeList<SystemTypeIndex>>$$System.Collections.Generic.IReadOnlyDictionary<TKey,TValue>.get_Values
+0x02f5f8f2  mov rbx,rax
+0x02f5f8f5  test rax,rax
+0x02f5f8f8  je near 0000000002F5FB8Fh
+0x02f5f8fe  mov r9,[rel 5BF17D8h]
+0x02f5f905  mov r10,[rax]
+0x02f5f908  xor r15d,r15d
+0x02f5f90b  movzx ecx,r15w
+0x02f5f90f  movzx edx,word [r10+12Eh]
+0x02f5f917  cmp r15w,dx
+0x02f5f91b  jae short 0000000002F5F948h
+0x02f5f91d  mov r8,[r10+0B0h]
+0x02f5f924  nop dword [rax]
+0x02f5f928  nop dword [rax+rax]
+0x02f5f930  movzx eax,cx
+0x02f5f933  add rax,rax
+0x02f5f936  cmp [r8+rax*8],r9
+0x02f5f93a  je near 0000000002F5FAEFh
+0x02f5f940  inc cx
+0x02f5f943  cmp cx,dx
+0x02f5f946  jb short 0000000002F5F930h
+0x02f5f948  xor r8d,r8d
+0x02f5f94b  mov rdx,r9
+0x02f5f94e  mov rcx,rbx
+0x02f5f951  call 00000000004FD4E0h
+0x02f5f956  mov r8,[rax]
+0x02f5f959  mov rdx,[rax+8]
+0x02f5f95d  mov rcx,rbx
+0x02f5f960  call r8
+0x02f5f963  mov [rsp+60h],rax
+0x02f5f968  mov [rsp+28h],r15
+0x02f5f96d  lea rax,[rsp+60h]
+0x02f5f972  mov [rsp+30h],rax
+0x02f5f977  nop word [rax+rax]
+0x02f5f980  mov rbx,[rsp+60h]
+0x02f5f985  test rbx,rbx
+0x02f5f988  je near 0000000002F5FBB0h
+0x02f5f98e  mov r9,[rel 5BD18A8h]
+0x02f5f995  mov r10,[rbx]
+0x02f5f998  movzx ecx,r15w
+0x02f5f99c  movzx edx,word [r10+12Eh]
+0x02f5f9a4  cmp r15w,dx
+0x02f5f9a8  jae short 0000000002F5F9D8h
+0x02f5f9aa  mov r8,[r10+0B0h]
+0x02f5f9b1  nop dword [rax]
+0x02f5f9b5  nop word [rax+rax]
+0x02f5f9c0  movzx eax,cx
+0x02f5f9c3  add rax,rax
+0x02f5f9c6  cmp [r8+rax*8],r9
+0x02f5f9ca  je near 0000000002F5FB0Ch
+0x02f5f9d0  inc cx
+0x02f5f9d3  cmp cx,dx
+0x02f5f9d6  jb short 0000000002F5F9C0h
+0x02f5f9d8  xor r8d,r8d
+0x02f5f9db  mov rdx,r9
+0x02f5f9de  mov rcx,rbx
+0x02f5f9e1  call 00000000004FD4E0h
+0x02f5f9e6  mov rdx,rax
+0x02f5f9e9  mov rax,[rdx]
+0x02f5f9ec  mov rdx,[rdx+8]
+0x02f5f9f0  mov rcx,rbx
+0x02f5f9f3  call rax
+0x02f5f9f5  test al,al
+0x02f5f9f7  je near 0000000002F5FB6Fh
+0x02f5f9fd  mov rbx,[rsp+60h]
+0x02f5fa02  test rbx,rbx
+0x02f5fa05  je near 0000000002F5FBABh
+0x02f5fa0b  mov r9,[rel 5BFD708h]
+0x02f5fa12  mov r10,[rbx]
+0x02f5fa15  movzx ecx,r15w
+0x02f5fa19  movzx edx,word [r10+12Eh]
+0x02f5fa21  cmp r15w,dx
+0x02f5fa25  jae short 0000000002F5FA48h
+0x02f5fa27  mov r8,[r10+0B0h]
+0x02f5fa2e  xchg ax,ax
+0x02f5fa30  movzx eax,cx
+0x02f5fa33  add rax,rax
+0x02f5fa36  cmp [r8+rax*8],r9
+0x02f5fa3a  je near 0000000002F5FB2Ah
+0x02f5fa40  inc cx
+0x02f5fa43  cmp cx,dx
+0x02f5fa46  jb short 0000000002F5FA30h
+0x02f5fa48  xor r8d,r8d
+0x02f5fa4b  mov rdx,r9
+0x02f5fa4e  mov rcx,rbx
+0x02f5fa51  call 00000000004FD4E0h
+0x02f5fa56  mov rdx,rax
+0x02f5fa59  mov rax,[rdx]
+0x02f5fa5c  mov rdx,[rdx+8]
+0x02f5fa60  mov rcx,rbx
+0x02f5fa63  call rax
+0x02f5fa65  mov rdi,rax
+0x02f5fa68  test rax,rax
+0x02f5fa6b  je near 0000000002F5F980h
+0x02f5fa71  cmp byte [rax+2Ch],0
+0x02f5fa75  je near 0000000002F5F980h
+0x02f5fa7b  cmp qword [rax+38h],0
+0x02f5fa80  je near 0000000002F5F980h
+0x02f5fa86  mov rax,[rax+38h]
+0x02f5fa8a  cmp dword [rax+18h],0
+0x02f5fa8e  je near 0000000002F5F980h
+0x02f5fa94  mov ebx,r15d
+0x02f5fa97  nop word [rax+rax]
+0x02f5faa0  mov rax,[rdi+38h]
+0x02f5faa4  test rax,rax
+0x02f5faa7  je near 0000000002F5FBA5h
+0x02f5faad  cmp ebx,[rax+18h]
+0x02f5fab0  jge near 0000000002F5F980h
+0x02f5fab6  mov r8,[rel 5C21518h]
+0x02f5fabd  mov edx,ebx
+0x02f5fabf  mov rcx,rax
+0x02f5fac2  call 00000000012BB550h  ; System.Collections.Generic.List<RegexCharClass.SingleRange>$$get_Item
+0x02f5fac7  mov esi,eax
+0x02f5fac9  mov rcx,[rel 5BB0970h]
+0x02f5fad0  cmp dword [rcx+0E4h],0
+0x02f5fad7  jne short 0000000002F5FADEh
+0x02f5fad9  call 000000000050AC30h
+0x02f5fade  xor edx,edx
+0x02f5fae0  mov ecx,esi
+0x02f5fae2  call 00000000025D98B0h  ; GameCore.HotUpdate.GameKey$$IsThrowableItem
+0x02f5fae7  test al,al
+0x02f5fae9  jne short 0000000002F5FB48h
+0x02f5faeb  inc ebx
+0x02f5faed  jmp short 0000000002F5FAA0h
+0x02f5faef  movzx ecx,cx
+0x02f5faf2  add rcx,rcx
+0x02f5faf5  movsxd rax,[r8+rcx*8+8]
+0x02f5fafa  shl rax,4
+0x02f5fafe  add rax,138h
+0x02f5fb04  add rax,r10
+0x02f5fb07  jmp 0000000002F5F956h
+0x02f5fb0c  movzx ecx,cx
+0x02f5fb0f  add rcx,rcx
+0x02f5fb12  movsxd rdx,[r8+rcx*8+8]
+0x02f5fb17  shl rdx,4
+0x02f5fb1b  add rdx,138h
+0x02f5fb22  add rdx,r10
+0x02f5fb25  jmp 0000000002F5F9E9h
+0x02f5fb2a  movzx ecx,cx
+0x02f5fb2d  add rcx,rcx
+0x02f5fb30  movsxd rdx,[r8+rcx*8+8]
+0x02f5fb35  shl rdx,4
+0x02f5fb39  add rdx,138h
+0x02f5fb40  add rdx,r10
+0x02f5fb43  jmp 0000000002F5FA59h
+0x02f5fb48  xor r8d,r8d
+0x02f5fb4b  mov edx,[rdi+10h]
+0x02f5fb4e  mov rcx,r14
+0x02f5fb51  call 0000000002F655D0h  ; GameCore.HotUpdate.ConfigManager$$GetDefenseRequiredLevelForRecipe
+0x02f5fb56  cmp eax,7FFFFFFFh
+0x02f5fb5b  je near 0000000002F5F980h
+0x02f5fb61  lea rcx,[rsp+30h]
+0x02f5fb66  call 0000000000679BF0h
+0x02f5fb6b  mov al,1
+0x02f5fb6d  jmp short 0000000002F5FB91h
+0x02f5fb6f  lea rcx,[rsp+30h]
+0x02f5fb74  call 0000000000679BF0h
+0x02f5fb79  jmp short 0000000002F5FB8Fh
+0x02f5fb7b  lea rcx,[rsp+30h]
+0x02f5fb80  call 0000000000679BF0h
+0x02f5fb85  mov rcx,[rsp+28h]
+0x02f5fb8a  test rcx,rcx
+0x02f5fb8d  jne short 0000000002F5FBB6h
+0x02f5fb8f  xor al,al
+0x02f5fb91  mov rbx,[rsp+68h]
+0x02f5fb96  mov rsi,[rsp+70h]
+0x02f5fb9b  add rsp,40h

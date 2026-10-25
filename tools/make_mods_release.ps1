@@ -40,12 +40,20 @@ Compress-Archive -Path (Join-Path $base '*') -DestinationPath $baseZip -Compress
 # ---------- One package per mod ----------
 $mods = @(
     @{ Name='BackpackExpand'; Readme='readme_backpack.md' },
-    @{ Name='CabinetExpand';  Readme='readme_cabinet.md'  },
+    @{ Name='CabinetSize';    Readme='readme_cabinetsize.md' },
     @{ Name='FridgeChill';    Readme='readme_chill.md'    },
     @{ Name='CabinetEverywhere'; Readme='readme_cabaccess.md' },
     @{ Name='CabinetBurden';    Readme='readme_cabburden.md' },
-    @{ Name='RobotSpeed';       Readme='readme_robotspeed.md' }
+    @{ Name='RoleUnlock';       Readme='readme_roleunlock.md' },
+    @{ Name='RobotSpeed';       Readme='readme_robotspeed.md' },
+    @{ Name='ModCenter';        Readme='readme_modcenter.md' },
+    @{ Name='EndlessGuard';     Readme='readme_endlessguard.md' },
+    @{ Name='PlanPick';         Readme='readme_planpick.md' },
+    @{ Name='PreDisasterSpeed'; Readme='readme_predisasterspeed.md' }
 )
+# cfg 不预置名单（v1.7.0 起）：这些 mod 的发布包不带本机 cfg——首跑按代码默认生成
+# 全中文注释配置；也避免本机实验值（如 EndlessGuard 补授名单/CabinetSize 个性化清单）混进发布包
+$noCfgMods = @('ModCenter','EndlessGuard','PlanPick','PreDisasterSpeed','CabinetSize')
 foreach ($m in $mods) {
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
     if (-not (Test-Path $dll)) { throw ('build missing: ' + $dll) }
@@ -65,9 +73,10 @@ foreach ($m in $mods) {
     Copy-Item $dll (Join-Path $pkg 'BepInEx\plugins') -Force
 
     # 预置配置：从本机运行时 cfg 复制，并把关键值归一为发布默认（不带走本机实验值）
+    # （$noCfgMods 名单内的 mod 不带 cfg：首跑按代码默认生成）
     $cfgName = 'com.local.survivallog.' + $m.Name.ToLower() + '.cfg'
     $srcCfg = Join-Path $game ('BepInEx\config\' + $cfgName)
-    if (Test-Path $srcCfg) {
+    if ($noCfgMods -notcontains $m.Name -and (Test-Path $srcCfg)) {
         $dstCfg = Join-Path $pkg ('BepInEx\config\' + $cfgName)
         Copy-Item $srcCfg $dstCfg -Force
         $txt = [System.IO.File]::ReadAllText($dstCfg, [System.Text.Encoding]::UTF8)
@@ -84,6 +93,15 @@ foreach ($m in $mods) {
             $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$',   '${1}1000'
             $txt = $txt -replace '(?m)^(IncludeBagIds\s*=\s).*$', '${1}'
             # ExcludeBagIds 本身就是发布默认值（3,4），保留
+        }
+        # RoleUnlock：全部布尔键归一为发布默认 true（终版六键，aedc790 定稿：SkipDefenseGate 已删、花种 Def=true）
+        if ($m.Name -eq 'RoleUnlock') {
+            $txt = $txt -replace '(?m)^(Enabled\s*=\s).*$',              '${1}true'
+            $txt = $txt -replace '(?m)^(UnlockVine\s*=\s).*$',           '${1}true'
+            $txt = $txt -replace '(?m)^(UnlockFlowerSeeds\s*=\s).*$',    '${1}true'
+            $txt = $txt -replace '(?m)^(ShareDefenseRecipes\s*=\s).*$',  '${1}true'
+            $txt = $txt -replace '(?m)^(ClearPool\s*=\s).*$',            '${1}true'
+            $txt = $txt -replace '(?m)^(VaseRecipe\s*=\s).*$',           '${1}true'
         }
         # RobotSpeed：中文键归一为发布默认（除系数开关外全部翻倍；
         # 插槽/模块相关键已随功能移除（作者定版 2026-10-13），老 cfg 残留键由 BepInEx 忽略）
@@ -150,6 +168,8 @@ foreach ($m in $mods) {
 
 Write-Host '=== Release contents ==='
 Get-ChildItem $relRoot -Directory -Filter 'SurvivalLog.*_v*' | ForEach-Object {
+    # 目录有而 zip 无（如作者 be788test 测试目录）只列出不计大小——EAP=Stop 下 Get-Item 缺文件即炸流水线
+    if (-not (Test-Path ($_.FullName + '.zip'))) { Write-Host ($_.Name + '  -> (无 zip，跳过)'); return }
     $z = [math]::Round((Get-Item ($_.FullName + '.zip')).Length/1MB, 2)
     Write-Host ($_.Name + '  -> zip ' + $z + ' MB')
 }

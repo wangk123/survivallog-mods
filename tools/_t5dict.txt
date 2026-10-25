@@ -1,0 +1,460 @@
+TYPE Il2CppSystem.Collections.Concurrent.ConcurrentDictionary`2
+    field NativeFieldInfoPtr__tables : IntPtr
+    field NativeFieldInfoPtr__comparer : IntPtr
+    field NativeFieldInfoPtr__growLockArray : IntPtr
+    field NativeFieldInfoPtr__budget : IntPtr
+    field NativeFieldInfoPtr__serializationArray : IntPtr
+    field NativeFieldInfoPtr__serializationConcurrencyLevel : IntPtr
+    field NativeFieldInfoPtr__serializationCapacity : IntPtr
+    field NativeFieldInfoPtr_s_isValueWriteAtomic : IntPtr
+    field NativeMethodInfoPtr_IsValueWriteAtomic_Private_Static_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_InitializeFromCollection_Private_Void_IEnumerable_1_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Internal_Void_Int32_Int32_Boolean_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_TryAdd_Public_Boolean_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_ContainsKey_Public_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_TryRemove_Public_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryRemoveInternal_Private_Boolean_TKey_byref_TValue_Boolean_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValue_Public_Virtual_Final_New_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValueInternal_Private_Boolean_TKey_Int32_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryUpdateInternal_Private_Boolean_TKey_Int32_TValue_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Clear_Public_Virtual_Final_New_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ToArray_Public_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_CopyToPairs_Private_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CopyToEntries_Private_Void_Il2CppReferenceArray_1_DictionaryEntry_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_CopyToObjects_Private_Void_Il2CppReferenceArray_1_Object_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetEnumerator_Public_Virtual_Final_New_IEnumerator_1_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryAddInternal_Private_Boolean_TKey_Int32_TValue_Boolean_Boolean_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Item_Public_Virtual_Final_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_set_Item_Public_Virtual_Final_New_set_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_ThrowKeyNotFoundException_Private_Static_Void_Object_0 : IntPtr
+    field NativeMethodInfoPtr_ThrowKeyNullException_Private_Static_Void_0 : IntPtr
+    field NativeMethodInfoPtr_get_Count_Public_Virtual_Final_New_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetCountInternal_Private_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetOrAdd_Public_TValue_TKey_Func_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_GetOrAdd_Public_TValue_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_AddOrUpdate_Public_TValue_TKey_Func_2_TKey_TValue_Func_3_TKey_TValue_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_IsEmpty_Public_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Keys_Public_Virtual_Final_New_get_ICollection_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Values_Public_Virtual_Final_New_get_ICollection_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IEnumerable_GetEnumerator_Private_Virtual_Final_New_IEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Add_Private_Virtual_Final_New_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Contains_Private_Virtual_Final_New_Boolean_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_GetEnumerator_Private_Virtual_Final_New_IDictionaryEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsFixedSize_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsReadOnly_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Keys_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Remove_Private_Virtual_Final_New_Void_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Values_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Item_Private_Virtual_Final_New_get_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_set_Item_Private_Virtual_Final_New_set_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_CopyTo_Private_Virtual_Final_New_Void_Array_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_IsSynchronized_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_SyncRoot_Private_Virtual_Final_New_get_Object_0 : IntPtr
+    field NativeMethodInfoPtr_GrowTable_Private_Void_Tables_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_GetBucket_Private_Static_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetBucketAndLockNo_Private_Static_Void_Int32_byref_Int32_byref_Int32_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_DefaultConcurrencyLevel_Private_Static_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AcquireAllLocks_Private_Void_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_AcquireLocks_Private_Void_Int32_Int32_byref_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_ReleaseLocks_Private_Void_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetKeys_Private_ReadOnlyCollection_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_GetValues_Private_ReadOnlyCollection_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_OnSerializing_Private_Void_StreamingContext_0 : IntPtr
+    field NativeMethodInfoPtr_OnSerialized_Private_Void_StreamingContext_0 : IntPtr
+    field NativeMethodInfoPtr_OnDeserialized_Private_Void_StreamingContext_0 : IntPtr
+    method .cctor : Void ()
+    method IsValueWriteAtomic : Boolean ()
+    method .ctor : Void ()
+    method .ctor : Void (Int32,Int32)
+    method .ctor : Void (Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method InitializeFromCollection : Void (Il2CppSystem.Collections.Generic.IEnumerable`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>)
+    method .ctor : Void (Int32,Int32,Boolean,Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method TryAdd : Boolean (!0,!1)
+    method ContainsKey : Boolean (!0)
+    method TryRemove : Boolean (!0,!1&)
+    method TryRemoveInternal : Boolean (!0,!1&,Boolean,!1)
+    method TryGetValue : Boolean (!0,!1&)
+    method TryGetValueInternal : Boolean (!0,Int32,!1&)
+    method TryUpdateInternal : Boolean (!0,Int32,!1,!1)
+    method Clear : Void ()
+    method Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>,Int32)
+    method ToArray : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>> ()
+    method CopyToPairs : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>,Int32)
+    method CopyToEntries : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.DictionaryEntry>,Int32)
+    method CopyToObjects : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Object>,Int32)
+    method GetEnumerator : Il2CppSystem.Collections.Generic.IEnumerator`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>> ()
+    method TryAddInternal : Boolean (!0,Int32,!1,Boolean,Boolean,!1&)
+    method get_Item : !1 (!0)
+    method set_Item : Void (!0,!1)
+    method ThrowKeyNotFoundException : Void (Il2CppSystem.Object)
+    method ThrowKeyNullException : Void ()
+    method get_Count : Int32 ()
+    method GetCountInternal : Int32 ()
+    method GetOrAdd : !1 (!0,Il2CppSystem.Func`2<!0,!1>)
+    method GetOrAdd : !1 (!0,!1)
+    method AddOrUpdate : !1 (!0,Il2CppSystem.Func`2<!0,!1>,Il2CppSystem.Func`3<!0,!1,!1>)
+    method get_IsEmpty : Boolean ()
+    method Method_Private_Virtual_Final_New_Void_TKey_TValue_0 : Void (!0,!1)
+    method Method_Private_Virtual_Final_New_Boolean_TKey_0 : Boolean (!0)
+    method get_Keys : Il2CppSystem.Collections.Generic.ICollection`1<!0> ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!0> ()
+    method get_Values : Il2CppSystem.Collections.Generic.ICollection`1<!1> ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!1> ()
+    method Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : Void (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_get_Boolean_0 : Boolean ()
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method System_Collections_IEnumerable_GetEnumerator : Il2CppSystem.Collections.IEnumerator ()
+    method System_Collections_IDictionary_Add : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method System_Collections_IDictionary_Contains : Boolean (Il2CppSystem.Object)
+    method System_Collections_IDictionary_GetEnumerator : Il2CppSystem.Collections.IDictionaryEnumerator ()
+    method System_Collections_IDictionary_get_IsFixedSize : Boolean ()
+    method System_Collections_IDictionary_get_IsReadOnly : Boolean ()
+    method System_Collections_IDictionary_get_Keys : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_Remove : Void (Il2CppSystem.Object)
+    method System_Collections_IDictionary_get_Values : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_get_Item : Il2CppSystem.Object (Il2CppSystem.Object)
+    method System_Collections_IDictionary_set_Item : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method System_Collections_ICollection_CopyTo : Void (Il2CppSystem.Array,Int32)
+    method System_Collections_ICollection_get_IsSynchronized : Boolean ()
+    method System_Collections_ICollection_get_SyncRoot : Il2CppSystem.Object ()
+    method GrowTable : Void (Tables<!0,!1>)
+    method GetBucket : Int32 (Int32,Int32)
+    method GetBucketAndLockNo : Void (Int32,Int32&,Int32&,Int32,Int32)
+    method get_DefaultConcurrencyLevel : Int32 ()
+    method AcquireAllLocks : Void (Int32&)
+    method AcquireLocks : Void (Int32,Int32,Int32&)
+    method ReleaseLocks : Void (Int32,Int32)
+    method GetKeys : Il2CppSystem.Collections.ObjectModel.ReadOnlyCollection`1<!0> ()
+    method GetValues : Il2CppSystem.Collections.ObjectModel.ReadOnlyCollection`1<!1> ()
+    method OnSerializing : Void (Il2CppSystem.Runtime.Serialization.StreamingContext)
+    method OnSerialized : Void (Il2CppSystem.Runtime.Serialization.StreamingContext)
+    method OnDeserialized : Void (Il2CppSystem.Runtime.Serialization.StreamingContext)
+    method .ctor : Void (IntPtr)
+    method get__tables : Tables<!0,!1> ()
+    method set__tables : Void (Tables<!0,!1>)
+    method get__comparer : Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0> ()
+    method set__comparer : Void (Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method get__growLockArray : Boolean ()
+    method set__growLockArray : Void (Boolean)
+    method get__budget : Int32 ()
+    method set__budget : Void (Int32)
+    method get__serializationArray : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>> ()
+    method set__serializationArray : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>)
+    method get__serializationConcurrencyLevel : Int32 ()
+    method set__serializationConcurrencyLevel : Void (Int32)
+    method get__serializationCapacity : Int32 ()
+    method set__serializationCapacity : Void (Int32)
+    method get_s_isValueWriteAtomic : Boolean ()
+    method set_s_isValueWriteAtomic : Void (Boolean)
+TYPE Il2CppSystem.Collections.ObjectModel.ReadOnlyDictionary`2
+    field NativeFieldInfoPtr_m_dictionary : IntPtr
+    field NativeFieldInfoPtr__syncRoot : IntPtr
+    field NativeFieldInfoPtr__keys : IntPtr
+    field NativeFieldInfoPtr__values : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_IDictionary_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Keys_Public_get_KeyCollection_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Values_Public_get_ValueCollection_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_ContainsKey_Public_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_ICollection_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValue_Public_Virtual_Final_New_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_ICollection_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Item_Public_Virtual_Final_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_set_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Count_Public_Virtual_Final_New_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_GetEnumerator_Public_Virtual_Final_New_IEnumerator_1_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IEnumerable_GetEnumerator_Private_Virtual_Final_New_IEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_IsCompatibleKey_Private_Static_Boolean_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Add_Private_Virtual_Final_New_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Clear_Private_Virtual_Final_New_Void_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Contains_Private_Virtual_Final_New_Boolean_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_GetEnumerator_Private_Virtual_Final_New_IDictionaryEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsFixedSize_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsReadOnly_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Keys_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Remove_Private_Virtual_Final_New_Void_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Values_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Item_Private_Virtual_Final_New_get_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_set_Item_Private_Virtual_Final_New_set_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_CopyTo_Private_Virtual_Final_New_Void_Array_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_IsSynchronized_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_SyncRoot_Private_Virtual_Final_New_get_Object_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : IntPtr
+    method .cctor : Void ()
+    method .ctor : Void (Il2CppSystem.Collections.Generic.IDictionary`2<!0,!1>)
+    method get_Keys : KeyCollection<!0,!1> ()
+    method get_Values : ValueCollection<!0,!1> ()
+    method ContainsKey : Boolean (!0)
+    method Method_Private_Virtual_Final_New_get_ICollection_1_TKey_0 : Il2CppSystem.Collections.Generic.ICollection`1<!0> ()
+    method TryGetValue : Boolean (!0,!1&)
+    method Method_Private_Virtual_Final_New_get_ICollection_1_TValue_0 : Il2CppSystem.Collections.Generic.ICollection`1<!1> ()
+    method get_Item : !1 (!0)
+    method Method_Private_Virtual_Final_New_Void_TKey_TValue_0 : Void (!0,!1)
+    method Method_Private_Virtual_Final_New_Boolean_TKey_0 : Boolean (!0)
+    method Method_Private_Virtual_Final_New_get_TValue_TKey_0 : !1 (!0)
+    method Method_Private_Virtual_Final_New_set_Void_TKey_TValue_0 : Void (!0,!1)
+    method get_Count : Int32 ()
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>,Int32)
+    method Method_Private_Virtual_Final_New_get_Boolean_0 : Boolean ()
+    method Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : Void (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_Void_0 : Void ()
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method GetEnumerator : Il2CppSystem.Collections.Generic.IEnumerator`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>> ()
+    method System_Collections_IEnumerable_GetEnumerator : Il2CppSystem.Collections.IEnumerator ()
+    method IsCompatibleKey : Boolean (Il2CppSystem.Object)
+    method System_Collections_IDictionary_Add : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method System_Collections_IDictionary_Clear : Void ()
+    method System_Collections_IDictionary_Contains : Boolean (Il2CppSystem.Object)
+    method System_Collections_IDictionary_GetEnumerator : Il2CppSystem.Collections.IDictionaryEnumerator ()
+    method System_Collections_IDictionary_get_IsFixedSize : Boolean ()
+    method System_Collections_IDictionary_get_IsReadOnly : Boolean ()
+    method System_Collections_IDictionary_get_Keys : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_Remove : Void (Il2CppSystem.Object)
+    method System_Collections_IDictionary_get_Values : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_get_Item : Il2CppSystem.Object (Il2CppSystem.Object)
+    method System_Collections_IDictionary_set_Item : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method System_Collections_ICollection_CopyTo : Void (Il2CppSystem.Array,Int32)
+    method System_Collections_ICollection_get_IsSynchronized : Boolean ()
+    method System_Collections_ICollection_get_SyncRoot : Il2CppSystem.Object ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!0> ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!1> ()
+    method .ctor : Void (IntPtr)
+    method get_m_dictionary : Il2CppSystem.Collections.Generic.IDictionary`2<!0,!1> ()
+    method set_m_dictionary : Void (Il2CppSystem.Collections.Generic.IDictionary`2<!0,!1>)
+    method get__syncRoot : Il2CppSystem.Object ()
+    method set__syncRoot : Void (Il2CppSystem.Object)
+    method get__keys : KeyCollection<!0,!1> ()
+    method set__keys : Void (KeyCollection<!0,!1>)
+    method get__values : ValueCollection<!0,!1> ()
+    method set__values : Void (ValueCollection<!0,!1>)
+TYPE Il2CppSystem.Collections.Generic.Dictionary`2
+    field NativeFieldInfoPtr__buckets : IntPtr
+    field NativeFieldInfoPtr__entries : IntPtr
+    field NativeFieldInfoPtr__count : IntPtr
+    field NativeFieldInfoPtr__freeList : IntPtr
+    field NativeFieldInfoPtr__freeCount : IntPtr
+    field NativeFieldInfoPtr__version : IntPtr
+    field NativeFieldInfoPtr__comparer : IntPtr
+    field NativeFieldInfoPtr__keys : IntPtr
+    field NativeFieldInfoPtr__values : IntPtr
+    field NativeFieldInfoPtr__syncRoot : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_Int32_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_IDictionary_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_IDictionary_2_TKey_TValue_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Protected_Void_SerializationInfo_StreamingContext_0 : IntPtr
+    field NativeMethodInfoPtr_get_Count_Public_Virtual_Final_New_get_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_get_Keys_Public_get_KeyCollection_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_ICollection_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Values_Public_get_ValueCollection_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_ICollection_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Item_Public_Virtual_Final_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_set_Item_Public_Virtual_Final_New_set_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Add_Public_Virtual_Final_New_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : IntPtr
+    field NativeMethodInfoPtr_Clear_Public_Virtual_Final_New_Void_0 : IntPtr
+    field NativeMethodInfoPtr_ContainsKey_Public_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_ContainsValue_Public_Boolean_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_CopyTo_Private_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_GetEnumerator_Public_Enumerator_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_IEnumerator_1_KeyValuePair_2_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_GetObjectData_Public_Virtual_New_Void_SerializationInfo_StreamingContext_0 : IntPtr
+    field NativeMethodInfoPtr_FindEntry_Private_Int32_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Initialize_Private_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_TryInsert_Private_Boolean_TKey_TValue_InsertionBehavior_0 : IntPtr
+    field NativeMethodInfoPtr_OnDeserialization_Public_Virtual_New_Void_Object_0 : IntPtr
+    field NativeMethodInfoPtr_Resize_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_Resize_Private_Void_Int32_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_Remove_Public_Virtual_Final_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Remove_Public_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValue_Public_Virtual_Final_New_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_TryAdd_Public_Boolean_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_CopyTo_Private_Virtual_Final_New_Void_Array_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IEnumerable_GetEnumerator_Private_Virtual_Final_New_IEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_EnsureCapacity_Public_Int32_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_IsSynchronized_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_ICollection_get_SyncRoot_Private_Virtual_Final_New_get_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsFixedSize_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_IsReadOnly_Private_Virtual_Final_New_get_Boolean_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Keys_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Values_Private_Virtual_Final_New_get_ICollection_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_get_Item_Private_Virtual_Final_New_get_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_set_Item_Private_Virtual_Final_New_set_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_IsCompatibleKey_Private_Static_Boolean_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Add_Private_Virtual_Final_New_Void_Object_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Contains_Private_Virtual_Final_New_Boolean_Object_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_GetEnumerator_Private_Virtual_Final_New_IDictionaryEnumerator_0 : IntPtr
+    field NativeMethodInfoPtr_System_Collections_IDictionary_Remove_Private_Virtual_Final_New_Void_Object_0 : IntPtr
+    method .cctor : Void ()
+    method .ctor : Void ()
+    method .ctor : Void (Int32)
+    method .ctor : Void (Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method .ctor : Void (Int32,Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method .ctor : Void (Il2CppSystem.Collections.Generic.IDictionary`2<!0,!1>)
+    method .ctor : Void (Il2CppSystem.Collections.Generic.IDictionary`2<!0,!1>,Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method .ctor : Void (Il2CppSystem.Runtime.Serialization.SerializationInfo,Il2CppSystem.Runtime.Serialization.StreamingContext)
+    method get_Count : Int32 ()
+    method get_Keys : KeyCollection<!0,!1> ()
+    method Method_Private_Virtual_Final_New_get_ICollection_1_TKey_0 : Il2CppSystem.Collections.Generic.ICollection`1<!0> ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TKey_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!0> ()
+    method get_Values : ValueCollection<!0,!1> ()
+    method Method_Private_Virtual_Final_New_get_ICollection_1_TValue_0 : Il2CppSystem.Collections.Generic.ICollection`1<!1> ()
+    method Method_Private_Virtual_Final_New_get_IEnumerable_1_TValue_0 : Il2CppSystem.Collections.Generic.IEnumerable`1<!1> ()
+    method get_Item : !1 (!0)
+    method set_Item : Void (!0,!1)
+    method Add : Void (!0,!1)
+    method Method_Private_Virtual_Final_New_Void_KeyValuePair_2_TKey_TValue_0 : Void (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_0 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Method_Private_Virtual_Final_New_Boolean_KeyValuePair_2_TKey_TValue_1 : Boolean (Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>)
+    method Clear : Void ()
+    method ContainsKey : Boolean (!0)
+    method ContainsValue : Boolean (!1)
+    method CopyTo : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>,Int32)
+    method GetEnumerator : Enumerator<!0,!1> ()
+    method Method_Private_Virtual_Final_New_IEnumerator_1_KeyValuePair_2_TKey_TValue_0 : Il2CppSystem.Collections.Generic.IEnumerator`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>> ()
+    method GetObjectData : Void (Il2CppSystem.Runtime.Serialization.SerializationInfo,Il2CppSystem.Runtime.Serialization.StreamingContext)
+    method FindEntry : Int32 (!0)
+    method Initialize : Int32 (Int32)
+    method TryInsert : Boolean (!0,!1,Il2CppSystem.Collections.Generic.InsertionBehavior)
+    method OnDeserialization : Void (Il2CppSystem.Object)
+    method Resize : Void ()
+    method Resize : Void (Int32,Boolean)
+    method Remove : Boolean (!0)
+    method Remove : Boolean (!0,!1&)
+    method TryGetValue : Boolean (!0,!1&)
+    method TryAdd : Boolean (!0,!1)
+    method Method_Private_Virtual_Final_New_get_Boolean_0 : Boolean ()
+    method Method_Private_Virtual_Final_New_Void_Il2CppReferenceArray_1_KeyValuePair_2_TKey_TValue_Int32_0 : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Il2CppSystem.Collections.Generic.KeyValuePair`2<!0,!1>>,Int32)
+    method System_Collections_ICollection_CopyTo : Void (Il2CppSystem.Array,Int32)
+    method System_Collections_IEnumerable_GetEnumerator : Il2CppSystem.Collections.IEnumerator ()
+    method EnsureCapacity : Int32 (Int32)
+    method System_Collections_ICollection_get_IsSynchronized : Boolean ()
+    method System_Collections_ICollection_get_SyncRoot : Il2CppSystem.Object ()
+    method System_Collections_IDictionary_get_IsFixedSize : Boolean ()
+    method System_Collections_IDictionary_get_IsReadOnly : Boolean ()
+    method System_Collections_IDictionary_get_Keys : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_get_Values : Il2CppSystem.Collections.ICollection ()
+    method System_Collections_IDictionary_get_Item : Il2CppSystem.Object (Il2CppSystem.Object)
+    method System_Collections_IDictionary_set_Item : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method IsCompatibleKey : Boolean (Il2CppSystem.Object)
+    method System_Collections_IDictionary_Add : Void (Il2CppSystem.Object,Il2CppSystem.Object)
+    method System_Collections_IDictionary_Contains : Boolean (Il2CppSystem.Object)
+    method System_Collections_IDictionary_GetEnumerator : Il2CppSystem.Collections.IDictionaryEnumerator ()
+    method System_Collections_IDictionary_Remove : Void (Il2CppSystem.Object)
+    method .ctor : Void (IntPtr)
+    method get__buckets : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32> ()
+    method set__buckets : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray`1<Int32>)
+    method get__entries : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Entry<!0,!1>> ()
+    method set__entries : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Entry<!0,!1>>)
+    method get__count : Int32 ()
+    method set__count : Void (Int32)
+    method get__freeList : Int32 ()
+    method set__freeList : Void (Int32)
+    method get__freeCount : Int32 ()
+    method set__freeCount : Void (Int32)
+    method get__version : Int32 ()
+    method set__version : Void (Int32)
+    method get__comparer : Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0> ()
+    method set__comparer : Void (Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method get__keys : KeyCollection<!0,!1> ()
+    method set__keys : Void (KeyCollection<!0,!1>)
+    method get__values : ValueCollection<!0,!1> ()
+    method set__values : Void (ValueCollection<!0,!1>)
+    method get__syncRoot : Il2CppSystem.Object ()
+    method set__syncRoot : Void (Il2CppSystem.Object)
+TYPE Il2CppSystem.Collections.Generic.IDictionary`2
+    field NativeMethodInfoPtr_get_Item_Public_Abstract_Virtual_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_set_Item_Public_Abstract_Virtual_New_set_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Keys_Public_Abstract_Virtual_New_get_ICollection_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Values_Public_Abstract_Virtual_New_get_ICollection_1_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_ContainsKey_Public_Abstract_Virtual_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Add_Public_Abstract_Virtual_New_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Remove_Public_Abstract_Virtual_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValue_Public_Abstract_Virtual_New_Boolean_TKey_byref_TValue_0 : IntPtr
+    method .cctor : Void ()
+    method get_Item : !1 (!0)
+    method set_Item : Void (!0,!1)
+    method get_Keys : Il2CppSystem.Collections.Generic.ICollection`1<!0> ()
+    method get_Values : Il2CppSystem.Collections.Generic.ICollection`1<!1> ()
+    method ContainsKey : Boolean (!0)
+    method Add : Void (!0,!1)
+    method Remove : Boolean (!0)
+    method TryGetValue : Boolean (!0,!1&)
+    method .ctor : Void (IntPtr)
+TYPE Il2CppSystem.Collections.Generic.IReadOnlyDictionary`2
+    field NativeMethodInfoPtr_ContainsKey_Public_Abstract_Virtual_New_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_TryGetValue_Public_Abstract_Virtual_New_Boolean_TKey_byref_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_get_Item_Public_Abstract_Virtual_New_get_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Keys_Public_Abstract_Virtual_New_get_IEnumerable_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_get_Values_Public_Abstract_Virtual_New_get_IEnumerable_1_TValue_0 : IntPtr
+    method .cctor : Void ()
+    method ContainsKey : Boolean (!0)
+    method TryGetValue : Boolean (!0,!1&)
+    method get_Item : !1 (!0)
+    method get_Keys : Il2CppSystem.Collections.Generic.IEnumerable`1<!0> ()
+    method get_Values : Il2CppSystem.Collections.Generic.IEnumerable`1<!1> ()
+    method .ctor : Void (IntPtr)
+TYPE Il2CppSystem.Collections.Generic.LowLevelDictionary`2
+    field NativeFieldInfoPtr__buckets : IntPtr
+    field NativeFieldInfoPtr__numEntries : IntPtr
+    field NativeFieldInfoPtr__version : IntPtr
+    field NativeFieldInfoPtr__comparer : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_0 : IntPtr
+    field NativeMethodInfoPtr__ctor_Public_Void_Int32_IEqualityComparer_1_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_set_Item_Public_set_Void_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_Clear_Public_Void_Int32_0 : IntPtr
+    field NativeMethodInfoPtr_Remove_Public_Boolean_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_Find_Private_Entry_TKey_TValue_TKey_0 : IntPtr
+    field NativeMethodInfoPtr_UncheckedAdd_Private_Entry_TKey_TValue_TKey_TValue_0 : IntPtr
+    field NativeMethodInfoPtr_ExpandBuckets_Private_Void_0 : IntPtr
+    field NativeMethodInfoPtr_GetBucket_Private_Int32_TKey_Int32_0 : IntPtr
+    method .cctor : Void ()
+    method .ctor : Void ()
+    method .ctor : Void (Int32,Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)
+    method set_Item : Void (!0,!1)
+    method Clear : Void (Int32)
+    method Remove : Boolean (!0)
+    method Find : Entry<!0,!1> (!0)
+    method UncheckedAdd : Entry<!0,!1> (!0,!1)
+    method ExpandBuckets : Void ()
+    method GetBucket : Int32 (!0,Int32)
+    method .ctor : Void (IntPtr)
+    method get__buckets : Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Entry<!0,!1>> ()
+    method set__buckets : Void (Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray`1<Entry<!0,!1>>)
+    method get__numEntries : Int32 ()
+    method set__numEntries : Void (Int32)
+    method get__version : Int32 ()
+    method set__version : Void (Int32)
+    method get__comparer : Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0> ()
+    method set__comparer : Void (Il2CppSystem.Collections.Generic.IEqualityComparer`1<!0>)

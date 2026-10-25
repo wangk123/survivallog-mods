@@ -38,6 +38,10 @@ namespace SurvivalLog.CabinetExpand;
 /// DoorBoxMaxCount=2 深度固化（存档 schema 就是 DoorBoxItems/DoorBoxItems2 两个字段），
 /// 不加袋子数，扩格子即达成"每个袋子装更多"。溢出行为实证：到家卸货 TryMoveBagAll
 /// 能装多少装多少，装不下的留在后备箱不丢失。
+///
+/// General.Enabled 总开关（2026-10-24，ModCenter 启停位）：false=三组名单全部按原值缓存
+/// 回写 ×1（共享层 OrigW/H；封顶组不走 CappedRewrite——还原不吃 MaxCols 封顶）并停写，
+/// 视口守卫（ViewportFit）同停；下次启动不加载（不挂诊断补丁、不启 Ticker）。
 /// </summary>
 [BepInPlugin(Guid, Name, Version)]
 public sealed class CabinetExpandPlugin : BasePlugin
@@ -45,10 +49,12 @@ public sealed class CabinetExpandPlugin : BasePlugin
     public const string Guid = "com.local.survivallog.cabinetexpand";
     public const string Name = "CabinetExpand";
     // 跟随套件 version.json，发版时同步（版本号由作者定义）
-    public const string Version = "1.3.8";
+    public const string Version = "1.7.0";
 
     internal static ManualLogSource Log;
 
+    // General.Enabled 总开关（ModCenter 启停位，2026-10-24）：false=还原官方原值并停写
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<float> WidthMult;
     internal static ConfigEntry<float> HeightMult;
     internal static ConfigEntry<float> FridgeWidthMult;
@@ -104,6 +110,8 @@ public sealed class CabinetExpandPlugin : BasePlugin
     public override void Load()
     {
         Log = base.Log;
+        // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方原值并停写；下次启动不加载。");
         WidthMult = Config.Bind("Expand", "WidthMult", 1.5f, "柜子宽度倍数（四舍五入取整）。");
         HeightMult = Config.Bind("Expand", "HeightMult", 1.5f, "柜子高度倍数（四舍五入取整）。");
         FridgeWidthMult = Config.Bind("Expand", "FridgeWidthMult", 1.5f,
@@ -130,6 +138,7 @@ public sealed class CabinetExpandPlugin : BasePlugin
             "读档时在日志列出全部容器的 BagConfigId（确认名单用，平时关闭防刷屏）。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
+        Enabled.SettingChanged += reload;
         WidthMult.SettingChanged += reload;
         HeightMult.SettingChanged += reload;
         FridgeWidthMult.SettingChanged += reload;
@@ -139,6 +148,10 @@ public sealed class CabinetExpandPlugin : BasePlugin
         MaxCols.SettingChanged += reload;
         ExtraIds.SettingChanged += reload;
         ExcludeIds.SettingChanged += reload;
+
+        // General.Enabled=false：不挂诊断补丁、不启 Ticker/视口守卫、零日志
+        //（表值本会话从未改过；下次启动不加载）
+        if (!Enabled.Value) return;
 
         try
         {
@@ -426,6 +439,8 @@ internal static class BagInitDiag
     [HarmonyPatch(typeof(GameCore.HotUpdate.Battle.Logic.BagComponent), "OnInit")]
     private static void Postfix(GameCore.HotUpdate.Battle.Logic.BagComponent __instance, int bagConfigId)
     {
+        // General 总门（2026-10-24）：停用即停诊断输出（补丁可能挂于停用前，纯读无副作用）
+        if (CabinetExpandPlugin.Enabled != null && !CabinetExpandPlugin.Enabled.Value) return;
         try
         {
             var managed = CabinetExpandPlugin.ManagedVehicleBags;
@@ -490,6 +505,26 @@ internal sealed class CabinetTicker : MonoBehaviour
 
     public void Update()
     {
+        // General.Enabled 总开关：false=立即把本会话已扩的包尺寸按原值缓存回写并停写（视口
+        // 守卫同帧停注——见 ViewportFit.FitTicker 首行同款 gate）。Load 阶段 false 时 Ticker
+        // 不会创建，本分支覆盖运行中被关闭（ModCenter 写 cfg 热生效）。
+        if (CabinetExpandPlugin.Enabled != null && !CabinetExpandPlugin.Enabled.Value)
+        {
+            if (_applied)
+            {
+                var rl = new List<string>();
+                if (RestoreAllSizes(rl, out var changed)) // 表未就绪返回 false，下一帧重试
+                {
+                    _applied = false;
+                    CabinetExpandPlugin.Log.LogInfo("[CabinetExpand] General.Enabled=false：已还原官方原值并停写" +
+                        (changed > 0 ? $"（回写 {changed} 处）" : "（表已在原值）"));
+                    for (int i = 0; i < rl.Count && i < 30; i++)
+                        CabinetExpandPlugin.Log.LogInfo("[CabinetExpand] " + rl[i]);
+                }
+            }
+            return;
+        }
+
         // 持续轮询幂等改写（同 BackpackExpand：防读档/切场景配置表重载覆盖）
         _check += Time.deltaTime;
         var due = CabinetExpandPlugin.Rerun || _check >= 5f;
@@ -522,6 +557,7 @@ internal sealed class CabinetTicker : MonoBehaviour
             cabinetsNormal, CabinetExpandPlugin.WidthMult.Value, CabinetExpandPlugin.HeightMult.Value,
             CabinetExpandPlugin.Verbose.Value || listAll);
         if (scanned1 < 0) { CabinetExpandPlugin.Rerun = true; return; }
+        _applied = true; // 已按当前配置落笔（后续组同轮完成；General.Enabled 关闭时据此触发还原）
         lines.AddRange(lines1);
 
         var (scanned2, changed2, lines2) = BagTable.RewriteSize(
@@ -581,4 +617,31 @@ internal sealed class CabinetTicker : MonoBehaviour
     private float _check;
     private bool _announced;
     private bool _vehListed;
+    // General.Enabled 门：本轮会话是否已按配置落笔过（false 化时据此触发一次性还原）
+    private bool _applied;
+
+    /// <summary>
+    /// General.Enabled=false 还原（2026-10-24）：重新发现柜子/冰箱/载具三组名单，全部按 ×1
+    /// 回写原值——复用共享层 OrigW/H 缓存（Math.Round(orig×1)=orig 精确回写，RewriteSize 内含
+    /// _bagSizeSet 失效）。封顶组不走 CappedRewrite——还原不吃 MaxCols 封顶（材料架原生 20 列
+    /// 必须回 20，用户把 MaxCols 调小于原生也不能吃进还原）。表未就绪返回 false（调用方下一帧
+    /// 重试）；名单按当前 cfg 重算（与 BackpackExpand 同边界：先 ExcludeIds 再热关的包不在
+    /// 还原面，见 DESIGN 迭代清单）。
+    /// </summary>
+    private static bool RestoreAllSizes(List<string> lines, out int changedOut)
+    {
+        changedOut = 0;
+        var (cabinets, fridges) = CabinetExpandPlugin.DiscoverTargets(null);
+        if (cabinets == null) return false;
+        var vehicles = CabinetExpandPlugin.DiscoverVehicles(cabinets, fridges, null, out _);
+        foreach (var set in new[] { cabinets, fridges, vehicles })
+        {
+            if (set == null || set.Count == 0) continue;
+            var (scanned, changed, ls) = BagTable.RewriteSize(set, 1f, 1f, false);
+            if (scanned < 0) return false;
+            changedOut += changed;
+            lines.AddRange(ls);
+        }
+        return true;
+    }
 }

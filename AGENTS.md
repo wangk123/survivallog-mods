@@ -18,6 +18,7 @@
 11. **改 mod 必须同步该 mod 的 `DESIGN.md`**（每份末尾有迭代维护清单）；**改挂钩点（Harmony 目标/表字段/字节签名）必须同步 `tools/gamekb/moddeps.json`**。
 12. **实证优先**：不猜先查（反汇编/读源码/运行时探针），方案确认后再动手，最小侵入。
 13. **外部工具装卸可能拆注入链**（2026-10-24 xmod 卸载实锤拆了 winhttp/dotnet/BepInEx core，见 docs/03 环境事故节）：任何 xmod/修改器/loader 安装或卸载后、以及"mod 全部失效"时，先验三件套——根目录 `winhttp.dll`+`doorstop_config.ini`、`dotnet\` 有货、`BepInEx\core` 有 dll；被拆即重跑套件安装器（勿 /SILENT）。
+14. **N网通道确认门**：向 Nexus Mods 推送发版前必须经作者显式触发/确认（publish.ps1 出完 GitHub Release 后不得自动推 N网）；API key 本地单源 `tools/secrets/`（gitignore 已锚定）绝不入库。详见 `docs/08`。
 
 ## 二、环境与路径（本机开发环境）
 
@@ -61,6 +62,7 @@ powershell -File tools/publish.ps1
 
 **发版**（docs/05）：
 作者在 version.json 定号 → CHANGELOG 补该版小节 → `publish.ps1`（校验→构建→打包→安装器→回归→打 tag→GitHub Release 仅说明）。
+N网通道在此之后另走 docs/08 确认门：**必须作者显式触发/确认才推送**。
 
 ## 五、文档地图
 
@@ -72,6 +74,7 @@ powershell -File tools/publish.ps1
 | `docs/04/05` | 版本历史 / 版本管理与发版机制（渠道分工） |
 | `docs/06-WebUI调试通道与源码地图.md` | DevTools 9222 白盒调试、WebUI 源码位置 |
 | `docs/07-游戏资料库gamekb.md` | gamekb 设计与机制（同步流程/探针规格/依赖核对） |
+| `docs/08-N网自动发版与更新.md` | N网 Upload API 发版通道（确认门/API key 红线/常表） |
 | `SurvivalLog.<Mod>\DESIGN.md` | 各 mod 设计文档（含迭代维护清单） |
 | `ModShared\README.md` | 共享源码（防盗署名气泡接线规则） |
 | `tools/gamekb/README.md` | gamekb 工具集用法 |
