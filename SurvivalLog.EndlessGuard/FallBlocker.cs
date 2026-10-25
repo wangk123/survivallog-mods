@@ -28,7 +28,7 @@ internal static class FallBlocker
 
     private static bool Prefix()
     {
-        if (!EndlessGuardPlugin.PreventNewFalls.Value) return true; // 开关关=官方原行为
+        if (!EndlessGuardPlugin.PreventNewFalls.Value || !EndlessGuardPlugin.Enabled.Value) return true; // 开关关/总开关关=官方原行为
         BlockedCount++;
         if (BlockedCount == 1 || BlockedCount % 10 == 0)
             EndlessGuardPlugin.Trace("FallBlocker：已拦截 " + BlockedCount + " 次沦陷（累计）");

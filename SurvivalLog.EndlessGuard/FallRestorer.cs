@@ -25,6 +25,7 @@ internal static class FallRestorer
         try
         {
             if (__instance == null || __0 == null) return;
+            if (EndlessGuardPlugin.Enabled != null && !EndlessGuardPlugin.Enabled.Value) return;   // 总开关关=还原官方（不做恢复与剥tag）
             if (__instance.IsActive != true) return;   // 非无尽档空跑（IsActive 公共属性）
             var save = __0;
             var list = save.FallenMapPointIds;

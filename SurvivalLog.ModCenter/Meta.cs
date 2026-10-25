@@ -363,6 +363,44 @@ internal static class Meta
             Name = "灾前加速", En = "PreDisasterSpeed",
             Desc = "灾变倒计时前的官方速度条增强（热键变档 + 真三倍校正）。仅支持启用/停用。",
             Groups = { } // 仅启停（顶部开关即全部，映射 General.Enabled；TrueThreeX/Hotkeys 不暴露）
+        },
+        new MetaMod
+        {
+            Guid = "com.local.survivallog.endlessguard",
+            Name = "囤鼠桃园", En = "EndlessGuard",
+            Desc = "无尽模式永不沦陷：拦新沦陷 + 恢复已沦陷的交易点/探险图/营地 + 抹掉沦陷倒计时；附 11 条拾遗扩展规划（D100-D300）。",
+            Groups =
+            {
+                new MetaGroup
+                {
+                    Title = "沦陷防护",
+                    Items =
+                    {
+                        new MetaItem
+                        {
+                            Section = "Fall", Key = "PreventNewFalls", Label = "拦截新沦陷", Badge = "now", Type = "bool", Def = true,
+                            Note = "关闭即恢复官方沦陷调度（阶段点名表还原需重启）"
+                        },
+                        new MetaItem
+                        {
+                            Section = "Fall", Key = "RestoreFallenPoints", Label = "恢复已沦陷点位", Badge = "reload", Type = "bool", Def = true,
+                            Note = "读档时恢复交易点/探险图/营地（走过撤离剧情的营地除外）；物资份数始终按官方探索物资难度"
+                        }
+                    }
+                },
+                new MetaGroup
+                {
+                    Title = "生存规划扩展",
+                    Items =
+                    {
+                        new MetaItem
+                        {
+                            Section = "Plans", Key = "ExtendScavengePlans", Label = "拾遗扩展 11 条", Badge = "reboot", Type = "bool", Def = true,
+                            Note = "超市拾遗·六~十/医院踏勘·三~五/学校摸排·三~五（D100-D300 每 20 天一条）；关闭后重启生效，本局已注入内容保留"
+                        }
+                    }
+                }
+            }
         }
     };
 

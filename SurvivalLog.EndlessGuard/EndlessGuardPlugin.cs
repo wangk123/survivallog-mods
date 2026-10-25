@@ -18,16 +18,20 @@ public sealed class EndlessGuardPlugin : BasePlugin
     public const string Version = "1.3.8"; // 跟随套件 version.json（作者定号）
 
     internal static ManualLogSource Log;
+    internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<bool> PreventNewFalls;
     internal static ConfigEntry<bool> RestoreFallenPoints;
     internal static ConfigEntry<bool> ExtendScavengePlans;
+    internal static ConfigEntry<int> GrantPlanId;
 
     public override void Load()
     {
         Log = base.Log;
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=全部功能还原官方（本局已生效的改动保留，重启后完全干净）。");
         PreventNewFalls = Config.Bind("Fall", "PreventNewFalls", true, "拦截全部新沦陷（三模式通吃）。");
         RestoreFallenPoints = Config.Bind("Fall", "RestoreFallenPoints", true, "读档后恢复已沦陷的交易点/探险图（营地按剧情链状态区分；恢复例程幂等）。");
         ExtendScavengePlans = Config.Bind("Plans", "ExtendScavengePlans", true, "注入 11 条拾遗扩展规划（超市·六~十/医院·三~五/学校·三~五，D100-D300）+ 洞察注册表 + 篮子/降档。");
+        GrantPlanId = Config.Bind("Plans", "GrantPlanId", 0, "补授：因注入窗口事故丢失持有的新规划卡 id（如 31606=超市拾遗·六）。设值后进档一次即写入持有名单（不扣点），补完自动清零。0=关闭。");
 
         // 逐类挂载+异常隔离（2026-10-25 事故教训：PatchAll 整包挂载时单个补丁 IL 编译错会炸掉整个
         // Load()——Ticker/loaded 行全没执行，"补丁在跑轮询全无"的残废态。逐类隔离后坏一个不连坐）。
@@ -45,8 +49,8 @@ public sealed class EndlessGuardPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<GuardTicker>();
 
-        Trace("loaded：cfg=" + PreventNewFalls.Value + "," + RestoreFallenPoints.Value + "," + ExtendScavengePlans.Value);
-        Log.LogInfo("[EndlessGuard] loaded（拦沦陷/恢复/剥tag/规划扩展）");
+        Trace("loaded：cfg=" + Enabled.Value + "," + PreventNewFalls.Value + "," + RestoreFallenPoints.Value + "," + ExtendScavengePlans.Value);
+        Log.LogInfo("[EndlessGuard] 囤鼠桃园 loaded（拦沦陷/恢复/剥tag/规划扩展）");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
 
@@ -74,6 +78,7 @@ internal sealed class GuardTicker : MonoBehaviour
         if (_acc < 2f) return;
         _acc = 0f;
         _beats++;
+        if (EndlessGuardPlugin.Enabled != null && !EndlessGuardPlugin.Enabled.Value) return;   // 总开关关=轮询停（已生效改动保留，重启干净）
         if (_beats % 30 == 0) EndlessGuardPlugin.Trace("heartbeat tick=" + _beats);   // 60s 心跳：Ticker 存活铁证
         try { ScavengePlans.Tick(); } catch (Exception e) { EndlessGuardPlugin.Trace("ticker ScavengePlans: " + e.Message); }
     }
