@@ -235,17 +235,12 @@ internal static class Meta
             {
                 new MetaGroup
                 {
-                    Title = "藤蔓角色",
+                    Title = "藤蔓与花种子",
                     Items =
                     {
-                        new MetaItem { Section = "Vine", Key = "UnlockVine", Label = "解锁藤蔓角色", Badge = "now", Type = "bool", Def = true },
-                        new MetaItem
-                        {
-                            Section = "Vine", Key = "SkipDefenseGate", Label = "藤蔓免防御等级门槛",
-                            Badge = "now", Type = "bool", Def = false,
-                            Note = "开启后跳过官方解锁藤蔓所需的防御等级条件"
-                        },
-                        new MetaItem { Section = "Vine", Key = "UnlockFlowerSeeds", Label = "解锁藤蔓专属花种子", Badge = "now", Type = "bool", Def = false }
+                        new MetaItem { Section = "Vine", Key = "UnlockVine", Label = "解锁藤蔓（爬山虎）", Badge = "now", Type = "bool", Def = true },
+                        // SkipDefenseGate 已随 2026-10-24 作者定案从插件移除（藤蔓种子防御门槛永远保留官方规则），注册表同步删除
+                        new MetaItem { Section = "Vine", Key = "UnlockFlowerSeeds", Label = "解锁花种子", Badge = "now", Type = "bool", Def = true }
                     }
                 },
                 new MetaGroup

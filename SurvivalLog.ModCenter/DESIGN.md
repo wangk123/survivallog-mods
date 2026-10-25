@@ -712,3 +712,5 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
 - 2026-10-24 任务 4：反射桥 API 实证。`ModCenterPlugin.cs` 增 `Debug.Probe` cfg 门控 +
   `BridgeProbe` 三拍探针（枚举→Config→Value 写→热生效验表→还原落盘）；结论固化 §4。
   探针代码常驻为诊断功能（默认关）。
+
+- **2026-10-24（同步 RoleUnlock 配置变更）**：Meta.cs 注册表删 Vine.SkipDefenseGate 项（插件侧已移除该开关）、UnlockFlowerSeeds Def 改 true、组名"藤蔓角色"→"藤蔓与花种子"、标签"解锁藤蔓角色"→"解锁藤蔓（爬山虎）"、"解锁藤蔓专属花种子"→"解锁花种子"（花种子是大学生专属非藤蔓专属，原标签有误）。
