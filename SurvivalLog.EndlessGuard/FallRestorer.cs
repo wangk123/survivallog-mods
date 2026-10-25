@@ -208,25 +208,28 @@ internal static class GrantPatch
         AccessTools.Method(typeof(SurvivalPlanningComponent), "OnInitBuffs",
             new[] { typeof(GameCore.HotUpdate.AgentSave), typeof(BuffComponent), typeof(bool) });
 
-    private static void Prefix(SurvivalPlanningComponent __instance)
+    /// <summary>补授目标（2026-10-25 反汇编定案）：AgentSave.SurvivalPlanningActiveIds（+0x138）才是
+    /// 官方 OnInitBuffs 的激活源与持久化本体（组件 SaveCache 是另一份非权威列表——第一版补授写错地方即
+    /// "写入成功但激活/持久化全无"的根因）。写这里：官方循环直接激活 + 存档自然落盘。</summary>
+    private static void Prefix(GameCore.HotUpdate.AgentSave __0)
     {
         try
         {
             int grant = EndlessGuardPlugin.GrantPlanId == null ? 0 : EndlessGuardPlugin.GrantPlanId.Value;
             if (grant == 0) return;
-            var cache = __instance?.SaveCache;
-            if (cache == null) return;
+            var ids = __0?.SurvivalPlanningActiveIds;
+            if (ids == null) return;
             bool owned = false;
-            for (int i = 0; i < cache.Count; i++) if (cache[i] == grant) { owned = true; break; }
+            for (int i = 0; i < ids.Count; i++) if (ids[i] == grant) { owned = true; break; }
             if (owned)
             {
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有（确认持久化成功）");
-                EndlessGuardPlugin.GrantPlanId.Value = 0;   // 只在确认已持有时清零：防"写完即清但存档未落盘"丢补授
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有（存档确认）");
+                EndlessGuardPlugin.GrantPlanId.Value = 0;   // 只在确认已持有时清零
             }
             else
             {
-                cache.Add(grant);
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入持有名单（OnInitBuffs prefix，本次加载即激活；cfg保留至下轮确认）");
+                ids.Add(grant);
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入 AgentSave.SurvivalPlanningActiveIds（官方激活源，本次加载即激活+随存档落盘）");
             }
         }
         catch (System.Exception e) { EndlessGuardPlugin.Trace("补授异常: " + e.Message); }
