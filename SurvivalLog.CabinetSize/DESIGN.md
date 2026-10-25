@@ -9,7 +9,8 @@
 **数值型**调整家里的柜子容量：全部"家里的柜子"按 小/中/大/特大 四档统一调到固定宽×高（**PresetV2，作者 2026-10-25 实测定稿：小 14x10 / 中 16x12 / 大 18x14 / 特大 20x16**），不再用百分比倍数。
 
 - **13 个常用包**（置物架家族 5 + 冰箱 4 + 载具 3 + 工具柜 10007）为 **BepInEx 绑定显式条目**（v4 起绑定制，cfg 节 `[Bag.<id>]`），独立可调，ModCenter 反射桥直达；
-- **其余家里的柜子**自动按档位规则生效（cfg 不列出条目），玩家想单独改某柜时手动加 `[Bag.<id>]` 节覆盖——**这是两组柜子的唯一区别**（用户拍板 2026-10-24）；
+- **其余家里的柜子**自动按档位规则生效（cfg 不列出条目），玩家想单独改某柜时走**个性化清单**（面板"个性化修改"块）或手动加 `[Bag.<id>]` 节覆盖；
+- **个性化清单 `Global.BagOverrides`**（v4.1/T20，作者令"补个性化功能，类似动作加速"）：`"id:WxH,id:WxH"` 整串——任意 BagId（含黑名单柜）单独定宽高，**优先级最高**（覆盖 13 包显式与档位），id 注入受管集绕过黑名单（旧 ExtraIds 语义的回魂）；
 - **全局上限**（默认 20x16）：任何条目（默认或自定义）超出即夹到上限，确保不超出屏幕、不变形；
 - **General.Enabled 总开关**（v4 补齐，ModCenter 启停位）：false=热关还原官方原值并停写，下次启动不加载；
 - **弃用自研视口适配**（ViewportFit 全部代码不迁移），完全采用游戏官方原生自适应；
@@ -22,7 +23,7 @@
 继承 CabinetExpand 的已验证机制（改写层 / 轮询 / 发现），替换其值解析模型：
 
 - **改写层**（复用 `ModShared\BagTableRw.cs`）：改 `ConfigManager._Config_Bag_Dict[id].Size` + `_bagSizeSet` 置 null 重建白名单。
-- **值解析优先级**：13 包绑定键 `[Bag.<id>]`（v4 起 BepInEx 正式条目，`0` = 恢复该包原生，经"不缩水"守卫实现）＞ 玩家自加 `[Bag.<id>]` 文件节 ＞ 档位规则（按**原生格数**分档，见 §5）＞ 夹全局上限（MaxWidth/MaxHeight，`0` = 不封顶）。
+- **值解析优先级**：**个性化清单 `BagOverrides`（最高，任意 id 含黑名单柜）** ＞ 13 包绑定键 `[Bag.<id>]`（v4 起 BepInEx 正式条目，`0` = 恢复该包原生，经"不缩水"守卫实现）＞ 玩家自加 `[Bag.<id>]` 文件节 ＞ 档位规则（按**原生格数**分档，见 §5）＞ 夹全局上限（MaxWidth/MaxHeight，`0` = 不封顶）。个性化 id 在受管集发现末尾注入（`Overrides.Keys` → set.Add，位置在黑名单/ExcludeIds 剔除之后——最显式意图优先，旧 ExtraIds"优先级最高"语义的回归）。
 - **13 包绑定制（v4，2026-10-25）与 BepInEx cfg 机制实证**：部署版 BepInEx（6.0.0-dev.2025.12.31 = 上游 commit 577eba4）的 `ConfigFile.Save()` **不重读磁盘**——未绑定（orphan）节按**加载时**内存快照回写，外部改文件后一旦有绑定键落盘，orphan 节值会被打回加载时值（v3 时代"节间 ;; 注释被挤掉"即同根因，靠 MaintainBagComments 补注释自愈）。把 13 包升级为绑定键后：BepInEx 原生读写（Save 永写内存现值）、ModCenter 反射桥零改造直达、T17 防抖竞态闸天然覆盖；MaintainBagComments 与文本版 EnsureDefaultSections 随之退役删除（说明文案进 Bind 描述=节内 `##` 注释，BepInEx 原生维护）。
 - **受管集发现**（沿用，略去冷链分组）：
   - 家具自动发现：扫 `Config_Furniture` 全部 `BagId>0`（不限 FurnitureType，实测不可靠）；
@@ -62,9 +63,10 @@
 | Bag.&lt;13包id&gt;.Width / Height | 见 §5.1 | **13 包绑定显式值（v4 起 BepInEx 正式条目）**；`0` = 恢复该包原生；玩家自加其他 id 节同格式（走文件监听） |
 | 诊断.ListOnReady | true | 首轮日志列全部受管包与前后值 |
 | 诊断.DiagOnOpen | false | 读档列全部容器 BagConfigId |
-| 全局.ExcludeIds | 空 | 追加排除 BagId（受管集两组都排） |
+| 全局.ExcludeIds | 空 | 追加排除 BagId（受管集两组都排；个性化清单 id 不受此影响） |
+| 全局.BagOverrides | 空 | **个性化清单（T20）**："id:WxH,id:WxH"（如 3002:20x12）——任意柜子单独定宽高，优先级最高、绕过黑名单；面板"个性化修改"块整串读写 |
 
-ModCenter 面板（T19 起）：「通用：档位与上限」10 键 + 「专属修改：常用 12 包」24 键 + 「专属修改：工具柜」2 键——13 包为绑定键，全部走 cfg 反射桥（读写/防抖/T17 闸复用）；Preset（勿手改）/ExcludeIds/Debug.* 不进面板。
+ModCenter 面板（T20 起）：「专属修改：常用 13 包」26 键 →「通用：档位与上限」10 键 →「个性化修改」清单块（BagOvrHost，照动作加速覆盖清单同构：新增柜子 ID/逐行宽高/删除，默认新行 16x12）——展示顺序=专属、通用、个性化（作者拍板）；13 包为绑定键走 cfg 反射桥；Preset（勿手改）/ExcludeIds/Debug.* 不进面板。
 
 ## 5. 默认名单与数值（2026-10-24 拍板；2026-10-25 作者实测定稿=PresetV2）
 
@@ -145,6 +147,7 @@ ModCenter 面板（T19 起）：「通用：档位与上限」10 键 + 「专属
 - **2026-10-25 二次定档 PresetV3**：1004/115000→中、115001→大、115005→特大（冰箱族整体上移）；**载具三项脱离档位独立定值**（1021→12x6、1022→16x8、1023→18x10，作者实测定稿）。v3 未发布，115000 升中与载具定值均并入 v3 终表（无迁移链风险）。1023 双容器共用一包的现状与拆分代价见对话记录（作者知悉，维持共用）。
 - **2026-10-25 T17 跨 mod 竞态修复（ApplyHotKeys 陈旧文件闸）**：ModCenter 面板写 Tier/Global 键走防抖落盘（首写起 3s），第二条写落在上一条落盘与本 mod 文件监听之间时，ApplyHotKeys 会把旧盘值当"记事本热改"赋回 entry，第二次调整静默丢失（T17 回归夹具实锤：写 15→还原 14，Poll 用盘上 15 覆盖内存 14，落盘后 cfg 恒 15）。修复：reload 处理器记录 _lastBindChangeUtc（SettingChanged 沿），ApplyHotKeys 前置闸"文件 mtime < 最近内存赋值时刻 → 跳过"（盘值落后于内存）；玩家记事本热改（mtime 晚于一切内存赋值）不受影响。
 - **2026-10-25 v4 绑定制（作者令：12 包+工具柜入面板、工具柜单独一块、档位归通用组）**：①工具柜 10007 加入显式清单（PresetV4=13 包，默认 14x10=小档值，升级零行为变化）；②13 包 `[Bag.<id>]` 节由孤儿节升级为 **BepInEx 绑定键**（BagBindings）——动因=实证部署版 BepInEx `ConfigFile.Save()` 不重读磁盘、orphan 节按加载时快照回写（外部写会被打回；上游 commit 577eba4 源码核实），绑定制对 13 包根除且 ModCenter 反射桥零改造直达；③MigratePreset 改条目制（比内存值，对 BepInEx 重写免疫）；④MaintainBagComments 与文本版 EnsureDefaultSections 退役删除（说明文案进 Bind 描述=节内 ## 注释）；⑤ApplyHotKeys 热改表扩到 13 包绑定键；⑥补 `General.Enabled` 总开关（此前未 Bind，ModCenter 启停被拒——T17 时代已知缺口闭合）：Bind 最前+Load 早退+Ticker 首行 gate+`_applied` 单次还原（RestoreAll）。
+- **2026-10-25 v4.1/T20 个性化清单（作者复盘"记错了之前没有个性化"+令补做，模式照动作加速覆盖清单）**：①面板块归并定稿=专属（13 包一块，工具柜不再单列）→通用→个性化，作者定序；②`Global.BagOverrides`（"id:WxH" 逗号串）：ParseOverrides/RefreshOverrides（每轮 Ticker 缓存比对）+Resolve 最高优先级+受管集末尾注入（绕黑名单，ExtraIds 语义回魂）；③ModCenter 侧 BagOvrHost 同构 OvrHost（快照 bagOvr:[{id,w,h}]、整串序列化提交、FindItem 补搜宿主项）；④面板全部数值输入框去原生加减钮（type=text numbox + data-num 清洗，作者令"只允许输入数字"）。
 - 取代 CabinetExpand（2026-10-02~2026-10-23，v1.3.x）：倍数引擎/自动发现统一化/冰箱并入/载具组/ViewportFit v15 的历史与教训见其 DESIGN.md（留档不删）。
 
 ## 11. 迭代维护清单（改本 mod 时同步更新）

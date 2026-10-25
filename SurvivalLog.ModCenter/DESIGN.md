@@ -601,6 +601,22 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   live 联动项**：联动渲染仍由合成快照覆盖、TrySet 联动写机器保留但无条目命中；夹具 `LINKED`
   数组清空（空真）、`backpackDynNote` 断言改 `backpackZeroNote`（首条 note 含"0=恢复官方原值"）、
   默认页断言改两组 3+2 / 5 滑条 5 徽标。
+- 2026-10-25 任务 20（作者令：①工具柜并回"专属"一块不再单列、②展示顺序 专属→通用→个性化、
+  ③补个性化功能"类似动作加速这种设计"、④全部数值输入框去原生加减钮只允许数字）：
+  - Meta 柜子页两组+清单块：`专属修改：常用 13 包`（26 键，工具柜 10007 并入）→`通用：档位与上限`
+    （10 键原样）→`个性化修改`DOM 块（BagOvrHost，非 Meta group）。
+  - **bagOvr 机制（OvrHost 同构）**：`MetaMod.BagOvrHost` 宿主项（柜子容量 Global.BagOverrides，
+    "id:WxH,id:WxH" 整串）→ 快照 `ReadBagOvr` 解析 + `ModInfo.BagOvr:[{id,w,h}]` 序列化 →
+    panel.js `bagOvrHtml/serializeBov/bovCommit`（新增柜子 ID/逐行宽高纯文本框/删除，新行默认
+    16x12）→ 提交走常规 MC_SET（**FindItem 补搜 BagOvrHost**——不补则整串写必被"无登记项"拒）。
+    值语义在对方 mod（Resolve 最高优先级+受管集注入绕黑名单，见其 DESIGN v4.1）。
+  - **numbox 全量化**：ctlHtml 滑条伴生框/ovr 行/bov 行/无范围数值框全部 `type=text
+    class=__mc-numbox inputmode=numeric data-num=int|float`——游戏 WebView 的 number 框带原生
+    加减钮（遮挡/误触，实机 UI 三修·问题3 先例推广到全面板）；wireCfg 输入清洗（int 剥非数字、
+    float 收敛一个小数点，置于 data-act 判定前——清单新增 ID 框同受辖）；CSS numbox 规则必须置于
+    input[type=text] 通用规则之后（同为 text，层叠序否则 flex:1 左对齐吃掉定宽居中）。
+  - 夹具 v5：柜子页 2+1 组 36 项、`numSpinners===0` 全页断言、bagOvr 回路（新增 3002→改宽→删→
+    还原基线）、bov/tier/bag 三回路组索引随新序换位（专属=0/通用=1）。
 - 2026-10-25 任务 19（作者令：柜子容量页三组重构——12 包+工具柜入面板、工具柜单独一块、
   档位归通用组；**ConfigBridge 零代码改动**）：Meta 柜子页由单组 10 键扩为三组——
   「通用：档位与上限」（原 10 键原样）+「专属修改：常用 12 包」（24 键，`BagW/BagH`

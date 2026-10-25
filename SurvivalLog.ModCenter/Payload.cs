@@ -57,6 +57,7 @@ public sealed class ModInfo
     public int? Tier;    // 第三方接入档（任务 15）：null/省略 = Tier 0 通用页；1 = 清单定制页（fixture/面板判别）
     public List<GroupInfo> Groups = new();
     public List<OvrInfo> Ovr; // 仅动作加速挂（其他.Overrides 解析结果）；null 不输出该字段
+    public List<BagOvrInfo> BagOvr; // 仅柜子容量挂（个性化 Global.BagOverrides 解析结果，T20）；null 不输出该字段
 
     internal void Write(StringBuilder sb)
     {
@@ -83,6 +84,18 @@ public sealed class ModInfo
                 if (i > 0) sb.Append(',');
                 sb.Append("{\"id\":").Append(Ovr[i].Id.ToString(CultureInfo.InvariantCulture))
                   .Append(",\"ms\":").Append(Ovr[i].Ms.ToString(CultureInfo.InvariantCulture)).Append('}');
+            }
+            sb.Append(']');
+        }
+        if (BagOvr != null) // T20：柜子容量个性化清单（{id,w,h}；面板 bagOvrHtml 消费）
+        {
+            sb.Append(",\"bagOvr\":[");
+            for (var i = 0; i < BagOvr.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append("{\"id\":").Append(BagOvr[i].Id.ToString(CultureInfo.InvariantCulture))
+                  .Append(",\"w\":").Append(BagOvr[i].W.ToString(CultureInfo.InvariantCulture))
+                  .Append(",\"h\":").Append(BagOvr[i].H.ToString(CultureInfo.InvariantCulture)).Append('}');
             }
             sb.Append(']');
         }
@@ -166,6 +179,14 @@ public sealed class OvrInfo
 {
     public int Id; // 动作 ID
     public int Ms; // 毫秒
+}
+
+/// <summary>柜子容量个性化清单行（T20）：id=BagId，w/h=宽高（"id:WxH" 序列化）。</summary>
+public sealed class BagOvrInfo
+{
+    public int Id;
+    public int W;
+    public int H;
 }
 
 /// <summary>手写 JSON 片段工具（转义 + 不变文化数字）。</summary>

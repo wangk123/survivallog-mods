@@ -10,9 +10,10 @@
 //
 // Modes (LIVE game via steam://, CDP 9222 up):
 //   node tools/mc_fixture.js menu       (default) Main-menu phase:
-//        layout + 9-page reconciliation (cabinet page = CabinetSize v4 three
-//        groups since T19: general tiers / 12-bag explicit / tool cabinet),
-//        snapshot-vs-disk cfg consistency for all 9 suite mods, PlanPick
+//        layout + 9-page reconciliation (cabinet page = CabinetSize v5 since T20:
+//        dedicated 13-pack group first / general tiers second / personalization
+//        bagOvr DOM block, all numeric boxes type=text numboxes), snapshot-vs-disk
+//        cfg consistency for all 10 suite mods, PlanPick
 //        Cost reflection range, select-shape via synthetic snapshot (UiFit gone in
 //        v3), no-range numeric number-box-only (Fix R1), t15/t16 slices (SKIP
 //        without throwaway targets), tp group (SKIP on machines without
@@ -20,8 +21,8 @@
 //        slider + throttle burst, bool, side toggle (PDS), cabinetsize
 //        toggle (v4 binds General.Enabled: accepted + hot-off restore, T19),
 //        backpack cap-note + (formerly linked pair, now none),
-//        cabinet tier write round-trip + bag-explicit write round-trip (T19),
-//        ovr round-trip, close via X.
+//        cabinet tier write round-trip + bag-explicit write round-trip (T19)
+//        + personalization bagOvr round-trip (T20), ovr round-trip, close via X.
 //   node tools/mc_fixture.js toggle     T13 hot-restore suite (MC_EVIDENCE
 //        multi-table snapshots; needs all suite cfgs Enabled=true; restores them).
 //   node tools/mc_fixture.js loadgame   click "continue" (or "new game") and wait
@@ -82,9 +83,9 @@ const Z = {
   gMs: '\u5206\u7c7b\u8017\u65f6\uff08\u6beb\u79d2\uff0c0=\u5b98\u65b9\u539f\u503c\uff09',
   gVine: '\u85e4\u8513\u4e0e\u82b1\u79cd\u5b50', gPlan: '\u914d\u65b9\u4e0e\u89c4\u5212', // aedc790: 藤蔓角色 -> 藤蔓与花种子
   gCost: '\u82b1\u8d39', gList: '\u5217\u8868', gRs: '\u673a\u5668\u4eba\u63d0\u901f',
-  gCabGen: '\u901a\u7528\uff1a\u6863\u4f4d\u4e0e\u4e0a\u9650\uff08\u672a\u5355\u72ec\u5217\u51fa\u7684\u67dc\u5b50\u81ea\u52a8\u843d\u6863\uff09', // T19 general group (tiers+caps, ex-T17 single group)
-  gCab12: '\u4e13\u5c5e\u4fee\u6539\uff1a\u5e38\u7528 12 \u5305\uff080=\u6062\u590d\u8be5\u67dc\u539f\u751f\uff09', // T19 12-bag explicit block
-  gCabTool: '\u4e13\u5c5e\u4fee\u6539\uff1a\u5de5\u5177\u67dc\uff08\u72ec\u7acb\u8c03\u6574\uff0c\u4e0d\u968f\u5c0f\u6863\uff1b0=\u6062\u590d\u539f\u751f\uff09', // T19 tool-cabinet dedicated block
+  gCabGen: '\u901a\u7528\uff1a\u6863\u4f4d\u4e0e\u4e0a\u9650\uff08\u672a\u5355\u72ec\u5217\u51fa\u7684\u67dc\u5b50\u81ea\u52a8\u843d\u6863\uff09', // T19 general group (tiers+caps)
+  gCab13: '\u4e13\u5c5e\u4fee\u6539\uff1a\u5e38\u7528 13 \u5305\uff080=\u6062\u590d\u8be5\u67dc\u539f\u751f\uff09', // T20 dedicated block (12 packs + tool cabinet merged)
+  eg: '\u56e4\u9f20\u6843\u56ed', gEgFall: '\u6ca6\u9677\u9632\u62a4', gEgPlan: '\u751f\u5b58\u89c4\u5212\u6269\u5c55', // EndlessGuard (parallel session 3122838 -> suite now 10)
   noCap: '0=\u4e0d\u5c01\u9876', zero: '0=\u6062\u590d\u5b98\u65b9\u539f\u503c', // 0=uncapped (cap-item note fragment)
   moveKey: '\u79fb\u901f\u500d\u7387', secRs: '\u673a\u5668\u4eba\u63d0\u901f',
   flower: '\u89e3\u9501\u85e4\u8513\u4e13\u5c5e\u82b1\u79cd\u5b50',
@@ -329,7 +330,7 @@ async function menuMode() {
     V.closeBtn = layout.closeBtn;
     V.footFourBadges = layout.footBadges === 4;
     V.toastEl = layout.toastEl;
-    V.sideTenRows = layout.sideRows === 10 + layout.tpCount; // 9 suite + self lock + N tp（T14 自适应）
+    V.sideTenRows = layout.sideRows === 11 + layout.tpCount; // 10 suite (EndlessGuard joined, 3122838) + self lock + N tp（T14 自适应）
     V.selfLock = layout.lockRow && layout.lockSw;
     V.tpEmptyHint = layout.tpCount === 0 ? !!layout.tpHint : !layout.tpHint; // 空数组→占位；非空→无占位
     V.threeCats = layout.cats.length === 3
@@ -352,7 +353,7 @@ async function menuMode() {
   // expectations mirror Meta.cs (single source: SurvivalLog.ModCenter/Meta.cs)
   const EXPECT = [
     { name: Z.bp, groups: [{ t: Z.gBpExp, items: 3 }, { t: Z.gBpCap, items: 2 }] },
-    { name: Z.cb, groups: [{ t: Z.gCabGen, items: 10 }, { t: Z.gCab12, items: 24 }, { t: Z.gCabTool, items: 2 }], special: 'cabinetv4' },
+    { name: Z.cb, groups: [{ t: Z.gCab13, items: 26 }, { t: Z.gCabGen, items: 10 }], special: 'cabinetv5' },
     { name: Z.fc, groups: [{ t: Z.gChill, items: 2 }], special: 'fridge' },
     { name: Z.qa, groups: [{ t: Z.gMs, items: 5 }], special: 'ovr' },
     { name: Z.ce, groups: [], special: 'toggleOnly' },
@@ -360,6 +361,7 @@ async function menuMode() {
     { name: Z.rs, groups: [{ t: Z.gRs, items: 7 }], special: 'robot' },
     { name: Z.pp, groups: [{ t: Z.gCost, items: 1 }, { t: Z.gList, items: 2 }], special: 'planpick' },
     { name: Z.pd, groups: [], special: 'toggleOnly' },
+    { name: Z.eg, groups: [{ t: Z.gEgFall, items: 2 }, { t: Z.gEgPlan, items: 1 }], special: 'endless' },
   ];
 
   const clickRow = (guid) => page.evaluate(({ tail, guid }) => {
@@ -408,6 +410,10 @@ async function menuMode() {
             ovrNew: !!one('#__mc_ovr_new'),
             ovrAddBtn: !!one('[data-act="ovr-add"]'),
             ovrRows: q('[data-act="ovr-set"]').length,
+            bovNew: !!one('#__mc_bov_new'),
+            bovAddBtn: !!one('[data-act="bov-add"]'),
+            bovRows: q('[data-act="bov-set"]').length,
+            numSpinners: q('input[type=number]').length, // T20: must be 0 (all numboxes are type=text)
           };
         }
       } catch (e) {}
@@ -431,22 +437,25 @@ async function menuMode() {
     if (exp.groups.length === 0) {
       pass = pass && r.totalItems === 0 && !!r.placeholder && r.placeholder.indexOf(Z.toggleOnly) !== -1;
     } else {
-      // quickaction renders ONE extra DOM group (动作覆盖 ovr block) beyond its Meta groups
-      pass = pass && r.grps.length === exp.groups.length + (exp.special === 'ovr' ? 1 : 0);
+      // quickaction renders ONE extra DOM group (动作覆盖 ovr block) beyond its Meta groups;
+      // T20: cabinet renders ONE extra DOM group (个性化 bagOvr block) beyond its two Meta groups
+      pass = pass && r.grps.length === exp.groups.length + ((exp.special === 'ovr' || exp.special === 'cabinetv5') ? 1 : 0);
       for (let i = 0; i < exp.groups.length && i < r.grps.length; i++)
         pass = pass && r.grps[i].t === exp.groups[i].t && r.grps[i].items === exp.groups[i].items;
     }
-    if (pass && exp.special === 'cabinetv4') {
-      // CabinetSize v4 three-group page (T19): group0 = 10 tier/cap sliders (unchanged
-      // ex-T17 shape), group1 = 24 bag-explicit sliders (12 packs x W/H, Bind keys
-      // Bag.<id>), group2 = 2 tool-cabinet sliders (10007). All int sliders with
-      // Meta-fallback ranges (cap 0..40 width); zero bool/select.
-      pass = r.grps[0].ranges === 10 && r.grps[0].bools === 0 && r.grps[0].selects === 0
-        && r.grps[1].ranges === 24 && r.grps[1].bools === 0
-        && r.grps[2].ranges === 2 && r.grps[2].bools === 0
+    if (pass && exp.special === 'cabinetv5') {
+      // CabinetSize v5 page (T20): group0 = dedicated 26 sliders (13 packs x W/H
+      // incl. tool cabinet 10007 merged), group1 = general 10 tier/cap sliders,
+      // plus ONE extra DOM group = personalization bagOvr block (empty at rest:
+      // add input + button, zero rows). All numeric boxes are type=text numboxes
+      // (no native spinners -- T20 author order); firstRange = Bag.110002.Width 0..40.
+      pass = r.grps[0].ranges === 26 && r.grps[0].bools === 0 && r.grps[0].selects === 0
+        && r.grps[1].ranges === 10 && r.grps[1].bools === 0
         && r.totalItems === 36
         && !!r.firstRange && r.firstRange.min === '0' && r.firstRange.max === '40' && r.firstRange.step === '1'
-        && r.notes.some((n) => n.indexOf(Z.noCap) !== -1);
+        && r.notes.some((n) => n.indexOf(Z.noCap) !== -1)
+        && !!r.bovNew && !!r.bovAddBtn && r.bovRows === 0
+        && r.numSpinners === 0; // T20: zero input[type=number] anywhere on the page
     }
     if (pass && exp.special === 'fridge') pass = r.grps[0].ranges === 2;
     if (pass && exp.special === 'ovr') pass = r.grps.length === 2 && r.ovrNew && r.ovrAddBtn && r.ovrRows === 0;
@@ -455,6 +464,7 @@ async function menuMode() {
     if (pass && exp.special === 'planpick')
       pass = r.grps[0].ranges === 1 && r.grps[0].items === 1 && r.firstRange
         && r.firstRange.min === '100' && r.firstRange.max === '300' && r.firstRange.step === '5';
+    if (pass && exp.special === 'endless') pass = r.totalItems === 3 && r.grps[0].bools === 2 && r.grps[1].bools === 1; // EndlessGuard (3122838)
     V[key] = pass;
   }
 
@@ -915,8 +925,8 @@ async function menuMode() {
         try {
           const d = fs[i].contentDocument;
           if (d && d.location.pathname.indexOf(tail) !== -1) {
-            const t = d.querySelector('#__mc_cfg input[type=text][data-act="set"]');
-            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"]');
+            const t = d.querySelector('#__mc_cfg input[type=text][data-act="set"]:not(.__mc-numbox)');
+            const n = d.querySelector('#__mc_cfg input.__mc-numbox[data-act="set"]');
             return { text: t ? t.value : null, num: n ? n.value : null };
           }
         } catch (e) {}
@@ -935,11 +945,11 @@ async function menuMode() {
         try {
           const d = fs[i].contentDocument;
           if (d && d.location.pathname.indexOf(tail) !== -1) {
-            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"][data-g="0"][data-i="2"]');
+            const n = d.querySelector('#__mc_cfg input.__mc-numbox[data-act="set"][data-g="0"][data-i="2"]');
             const ctl = n ? n.closest('.__mc-ctl') : null;
             return (n && ctl) ? {
               ranges: ctl.querySelectorAll('input[type=range]').length,
-              nums: ctl.querySelectorAll('input[type=number]').length,
+              nums: ctl.querySelectorAll('.__mc-numbox').length,
               value: n.value, min: n.min, max: n.max,
             } : null;
           }
@@ -957,7 +967,7 @@ async function menuMode() {
         try {
           const d = fs[i].contentDocument;
           if (d && d.location.pathname.indexOf(tail) !== -1) {
-            const n = d.querySelector('#__mc_cfg input[type=number][data-act="set"][data-g="0"][data-i="2"]');
+            const n = d.querySelector('#__mc_cfg input.__mc-numbox[data-act="set"][data-g="0"][data-i="2"]');
             if (n) {
               n.value = '500';
               n.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1049,7 +1059,7 @@ async function menuMode() {
           if (!el) return false;
           el.value = String(val);
           el.dispatchEvent(new Event('input', { bubbles: true }));
-          const num = el.parentElement.querySelector('input[type=number]');
+          const num = el.parentElement.querySelector('.__mc-numbox'); // T20: numbox is type=text
           return { ok: true, sibling: num ? num.value : null };
         }
       } catch (e) {}
@@ -1425,11 +1435,12 @@ async function menuMode() {
       && genOff === 'false' && genOn === 'true'; // entry written both ways (T19 gate)
   }
 
-  // ---- interaction 6c: CabinetSize v3 tier write round-trip (hot-apply write face) ----
+  // ---- interaction 6c: CabinetSize tier write round-trip (hot-apply write face) ----
   // Meta cabinet page items are REAL Bind keys since T17: slider write -> MC_SET_OK
   // (badge now) -> value persisted in cabinetsize cfg -> restore. The mod-internal
   // hot-apply (SettingChanged->Rerun->SizeEngine) is CabinetSize's own DESIGN-verified
   // behavior; the bridge contract proven here is shape+receipt+disk+restore.
+  // T20: groups reordered dedicated-first -> tier page is now group 1 (was 0).
   {
     const tierKey = 'Width'; const tierSec = 'Tier.Small';
     const before = stripNonCodeLines(readCfgSection(CB_CFG, tierSec, tierKey));
@@ -1438,7 +1449,7 @@ async function menuMode() {
     await sleep(60);
     const mk6c = await sentMark();
     const evPre6c = await page.evaluate(() => JSON.stringify(window.__mcLastEvent || null));
-    await setRange(0, 2, parseInt(want, 10)); // group 0 item 2 = Tier.Small.Width
+    await setRange(1, 2, parseInt(want, 10)); // group 1 item 2 = Tier.Small.Width (T20 order)
     let ev6c = null;
     const dlE6c = Date.now() + 12000;
     for (;;) {
@@ -1465,7 +1476,7 @@ async function menuMode() {
       && sent6c.key === tierSec + '.' + tierKey && sent6c.value === parseInt(want, 10)
       && ev6c && ev6c.k === tierSec + '.' + tierKey && ev6c.badge === 'now' && after === want);
     // restore author baseline
-    await setRange(0, 2, parseInt(before || '14', 10));
+    await setRange(1, 2, parseInt(before || '14', 10));
     await waitEvent('MC_SET_OK', 12000);
     let back = null;
     const dl6d = Date.now() + 12000;
@@ -1481,10 +1492,10 @@ async function menuMode() {
   }
 
   // ---- interaction 6c2: bag-explicit write round-trip (T19 binding path) ----
-  // Group1 item2 = Bag.110001 Width (medium shelf W). Proves the 13-pack [Bag.<id>]
+  // Group0 item2 = Bag.110001 Width (medium shelf W). Proves the 13-pack [Bag.<id>]
   // BOUND-key path end-to-end: MC_SET full display key "Bag.110001.Width" (dotted
   // section, B3 pre-pass match) -> MC_SET_OK badge now -> value persists in cfg
-  // [Bag.110001] -> restore. Same bridge contract as 6c, different key family.
+  // [Bag.110001] -> restore. T20: dedicated group is now FIRST (was group 1).
   {
     const bagSec = 'Bag.110001'; const bagKey = 'Width';
     const before = stripNonCodeLines(readCfgSection(CB_CFG, bagSec, bagKey));
@@ -1494,7 +1505,7 @@ async function menuMode() {
     await sleep(60);
     const mk = await sentMark();
     const evPre = await page.evaluate(() => JSON.stringify(window.__mcLastEvent || null));
-    await setRange(1, 2, parseInt(want, 10)); // group 1 item 2 = Bag.110001.Width
+    await setRange(0, 2, parseInt(want, 10)); // group 0 item 2 = Bag.110001.Width (T20 order)
     let ev = null;
     const dlE = Date.now() + 12000;
     for (;;) {
@@ -1518,7 +1529,7 @@ async function menuMode() {
       && ev && ev.type === 'MC_SET_OK' && ev.k === bagSec + '.' + bagKey && ev.badge === 'now'
       && after === want);
     // restore author baseline
-    await setRange(1, 2, base);
+    await setRange(0, 2, base);
     await waitEvent('MC_SET_OK', 12000);
     let back = null;
     const dl2 = Date.now() + 12000;
@@ -1531,6 +1542,94 @@ async function menuMode() {
     F.cabBagWrite.back = back;
     V.cabBagWriteOk = V.cabBagWriteOk && back === before;
     F.cabBagBaseline = before;
+  }
+
+  // ---- interaction 6c3: personalization bagOvr round-trip (T20) ----
+  // Add bag 3002 via the ID box -> commit serialized "3002:16x12" to Global.BagOverrides
+  // -> edit width box to 20 (input event, numbox path) -> "3002:20x12" on disk ->
+  // delete row -> back to author baseline. Also asserts the numbox type=text (no
+  // native spinners) across the whole cfg pane.
+  {
+    const bovSec = 'Global'; const bovKey = 'BagOverrides';
+    const before = stripNonCodeLines(readCfgSection(CB_CFG, bovSec, bovKey)) || '';
+    await clickRow(CB_GUID);
+    await sleep(60);
+    const bovAdd = await page.evaluate(() => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1) {
+            const inp = d.getElementById('__mc_bov_new');
+            const btn = d.querySelector('[data-act="bov-add"]');
+            if (!inp || !btn) return { ok: false };
+            inp.value = '3002';
+            btn.click();
+            return { ok: true, spinnerCount: d.querySelectorAll('#__mc_cfg input[type=number]').length };
+          }
+        } catch (e) {}
+      }
+      return { ok: false };
+    });
+    let added = null;
+    const dlA = Date.now() + 12000;
+    for (;;) {
+      added = stripNonCodeLines(readCfgSection(CB_CFG, bovSec, bovKey)) || '';
+      if (added.indexOf('3002:16x12') !== -1) break;
+      if (Date.now() > dlA) break;
+      await sleep(600);
+    }
+    // edit width numbox of row 0 to 20 via input event
+    const wEdit = await page.evaluate(() => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1) {
+            const el = d.querySelector('[data-act="bov-set"][data-idx="0"][data-k="w"]');
+            if (!el) return false;
+            el.value = '20';
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            return el.type;
+          }
+        } catch (e) {}
+      }
+      return false;
+    });
+    let edited = null;
+    const dlEd = Date.now() + 12000;
+    for (;;) {
+      edited = stripNonCodeLines(readCfgSection(CB_CFG, bovSec, bovKey)) || '';
+      if (edited.indexOf('3002:20x12') !== -1) break;
+      if (Date.now() > dlEd) break;
+      await sleep(600);
+    }
+    // delete row 0
+    await page.evaluate(() => {
+      const fs = document.querySelectorAll('#iframe-container iframe');
+      for (let i = 0; i < fs.length; i++) {
+        try {
+          const d = fs[i].contentDocument;
+          if (d && d.location.pathname.indexOf('/UI/MainUI/MainUI.html') !== -1) {
+            const del = d.querySelector('[data-act="bov-del"][data-idx="0"]');
+            if (del) del.click();
+          }
+        } catch (e) {}
+      }
+    });
+    let restored = null;
+    const dlR = Date.now() + 12000;
+    for (;;) {
+      restored = stripNonCodeLines(readCfgSection(CB_CFG, bovSec, bovKey)) || '';
+      if (restored === before) break;
+      if (Date.now() > dlR) break;
+      await sleep(600);
+    }
+    F.cabBov = { before, bovAdd, added, wEdit, edited, restored };
+    V.cabBovWriteOk = !!(bovAdd.ok && added.indexOf('3002:16x12') !== -1
+      && wEdit === 'text' && edited.indexOf('3002:20x12') !== -1
+      && restored === before);
+    V.cabNoSpinners = bovAdd.spinnerCount === 0;
   }
 
   // ---- interaction 7: ovr round-trip ----
@@ -2139,7 +2238,7 @@ async function menuMode() {
     ['0  head title/sub(ver)/close', V.headTitle && V.headSubVer && V.closeBtn],
     ['0  foot 4-badge legend', V.footFourBadges],
     ['0  toast element present', V.toastEl],
-    ['0  side: 9 suite + self lock rows (+N tp)', V.sideTenRows && V.selfLock],
+    ['0  side: 10 suite + self lock rows (+N tp)', V.sideTenRows && V.selfLock],
     ['0  side: tp empty hint consistent with tp count', V.tpEmptyHint],
     ['0  side: 3 category headers', V.threeCats],
     ['0  default page = backpack 2 items 2 ranges', V.defaultPageBackpack],
@@ -2204,6 +2303,8 @@ async function menuMode() {
     ['19 cabinetsize toggle: accepted + cfg General.Enabled written both ways', V.cbToggleAcceptedHotGate],
     ['17 cabinet tier write: shape + now receipt + disk + restore', V.cabTierWriteOk],
     ['19 cabinet bag write: Bag.110001.Width full-key receipt + disk + restore', V.cabBagWriteOk],
+    ['20 personalization bagOvr: add 3002 / w-edit / del round-trip', V.cabBovWriteOk],
+    ['20 numeric boxes: zero input[type=number] (all numbox text)', V.cabNoSpinners],
     ['2  slider MC_SET message shape', V.sliderMsgShape],
     ['2  slider MC_SET_OK receipt', V.sliderOkReceipt],
     ['2  slider sibling number sync', V.sliderSiblingSync],

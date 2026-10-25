@@ -62,6 +62,7 @@ internal static class ConfigBridge
                 mi.Groups.Add(gi);
             }
             if (mm.OvrHost != null) mi.Ovr = ReadOvr(cfg, mm.OvrHost);
+            if (mm.BagOvrHost != null) mi.BagOvr = ReadBagOvr(cfg, mm.BagOvrHost);
             snap.Mods.Add(mi);
         }
         BuildTp(snap); // 任务 14：Tier 0 第三方通用页
@@ -223,6 +224,30 @@ internal static class ConfigBridge
             if (int.TryParse(seg.Substring(0, ix), NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) &&
                 int.TryParse(seg.Substring(ix + 1), NumberStyles.Integer, CultureInfo.InvariantCulture, out var ms))
                 list.Add(new OvrInfo { Id = id, Ms = ms });
+        }
+        return list;
+    }
+
+    /// <summary>bagOvr 清单解析（T20，柜子容量 个性化 Global.BagOverrides）："id:WxH,id:WxH" → [{id,w,h}]。
+    /// 与 CabinetSize SizeEngine.ParseOverrides 同格式同容错（坏条目静默跳过）；写路径=面板整串序列化走常规 TrySet（绑定 string entry）。</summary>
+    private static List<BagOvrInfo> ReadBagOvr(ConfigFile cfg, MetaItem host)
+    {
+        var list = new List<BagOvrInfo>();
+        var s = cfg != null ? Entry(cfg, host.Section, host.Key)?.BoxedValue as string : null;
+        if (string.IsNullOrWhiteSpace(s)) return list;
+        foreach (var part in s.Split(','))
+        {
+            var seg = part.Trim();
+            if (seg.Length == 0) continue;
+            var ix = seg.IndexOf(':');
+            if (ix <= 0) continue;
+            if (!int.TryParse(seg.Substring(0, ix), NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) || id <= 0) continue;
+            var dims = seg.Substring(ix + 1).Trim();
+            var x = dims.IndexOf('x'); if (x < 0) x = dims.IndexOf('X');
+            if (x <= 0) continue;
+            if (!int.TryParse(dims.Substring(0, x), NumberStyles.Integer, CultureInfo.InvariantCulture, out var w) ||
+                !int.TryParse(dims.Substring(x + 1), NumberStyles.Integer, CultureInfo.InvariantCulture, out var h)) continue;
+            list.Add(new BagOvrInfo { Id = id, W = w, H = h });
         }
         return list;
     }
@@ -516,6 +541,7 @@ internal static class ConfigBridge
             foreach (var it in g.Items)
                 if (Match(it, section, key)) return it;
         if (mm.OvrHost != null && Match(mm.OvrHost, section, key)) return mm.OvrHost;
+        if (mm.BagOvrHost != null && Match(mm.BagOvrHost, section, key)) return mm.BagOvrHost; // T20 个性化清单整串写（面板 key=完整展示键 "Global.BagOverrides"，命中 K 分支）
         return null;
     }
 

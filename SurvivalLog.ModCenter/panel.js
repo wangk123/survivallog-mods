@@ -123,7 +123,11 @@
     + '#__mc_overlay input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#e8a33d;margin-top:-4.5px;border:0;}'
     + '#__mc_overlay input[type=range]::-moz-range-track{height:4px;background:#2a2f3d;border-radius:2px;}'
     + '#__mc_overlay input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#e8a33d;border:0;}'
-    + '#__mc_overlay input[type=number]{width:62px;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;font-family:inherit;}'
+    + '#__mc_overlay input[type=text]{flex:1;min-width:0;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 9px;font-size:13px;text-align:left;font-family:inherit;}'
+    /* T20 numbox（纯文本数值框）——必须置于 input[type=text] 通用规则之后且显式压回
+     * flex/对齐（同为 type=text，层叠序否则被通用规则拉伸成 flex:1 左对齐）。 */
+    + '#__mc_overlay .__mc-numbox{flex:0 0 auto;width:62px;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;font-family:inherit;}'
+    + '#__mc_overlay .__mc-bov-lb{font-size:11px;color:#6b7180;flex-shrink:0;}'
     + '#__mc_overlay input[type=text]{flex:1;min-width:0;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 9px;font-size:13px;text-align:left;font-family:inherit;}'
     /* 问题3 后续：ovr 新增框改 type=text 后会被上面通用 text 规则 flex:1 拉伸——
      * 等特异性后位覆盖回紧凑定宽（120px 来自 .__mc-ovr-add input 规则）。 */
@@ -298,12 +302,15 @@
      * 会被滑条钳到 100 显示、一拖即把 500 静默改成 ≤100。无范围/半范围=纯数值框
      * （指南 §二"数值无范围→数值框"），且 min/max 属性仅按实际存在的一端设置，
      * 界外值照实显示；钳制语义不变（clampItem 只按数据侧 min/max 钳）。 */
+    /* T20（作者令：数值输入框一律纯文本、去原生加减钮、只允许数字）：type=text + inputmode=numeric
+     * + data-num=int|float（wireCfg 输入清洗：int 剥非数字、float 再收敛到一个小数点；沿用实机 UI
+     * 三修·问题3 的 ovr-add ID 框同款先例——游戏 WebView 的 number 框带原生加减钮遮挡/误触）。
+     * min/max/step 属性不再需要（浏览器只对 number 生效）；钳制仍走数据侧 clampItem。 */
     var step = (it.st != null) ? it.st : 0.1;
     var hasMin = typeof it.min === 'number', hasMax = typeof it.max === 'number';
-    var num = '<input type="number"'
-      + (hasMin ? ' min="' + it.min + '"' : '')
-      + (hasMax ? ' max="' + it.max + '"' : '')
-      + ' step="' + step + '" value="' + fmt(it.v)
+    var num = '<input type="text" class="__mc-numbox" inputmode="numeric"'
+      + ' data-num="' + (it.t === 'float' ? 'float' : 'int') + '"'
+      + ' value="' + fmt(it.v)
       + '" data-act="set" data-g="' + gi + '" data-i="' + ii + '">';
     if (!hasMin || !hasMax) return num;
     return '<input type="range" min="' + it.min + '" max="' + it.max + '" step="' + step + '" value="' + fmt(it.v)
@@ -346,10 +353,51 @@
           + '</div>'
           + '<div class="__mc-ctl">'
           + '<input type="range" min="0" max="5000" step="50" value="' + ovr[idx].ms + '" data-act="ovr-set" data-idx="' + idx + '">'
-          + '<input type="number" min="0" max="5000" step="50" value="' + ovr[idx].ms + '" data-act="ovr-set" data-idx="' + idx + '">'
+          + '<input type="text" class="__mc-numbox" inputmode="numeric" data-num="int" value="' + ovr[idx].ms + '" data-act="ovr-set" data-idx="' + idx + '">'
           + '</div>'
           + '<div class="__mc-badge __mc-b-now">\u26a1 \u7acb\u5373\u751f\u6548</div>'
           + '<button type="button" class="__mc-del" data-act="ovr-del" data-idx="' + idx + '" title="\u5220\u9664\u6b64\u8986\u76d6">\u2715</button>'
+          + '</div>';
+      }
+    }
+    return h + '</div>';
+  }
+
+  /* ---- T20 个性化柜子清单（柜子容量 Global.BagOverrides ↔ bagOvr:[{id,w,h}]）----
+   * 与动作覆盖清单同构（宿主项整串序列化提交），差异=每行两个纯文本数值框（宽/高，
+   * data-num=int 清洗 + 0..40/0..30 钳制）而非滑条；新增行默认 16x12。 */
+  var BOV_SECTION = 'Global', BOV_KEY = 'BagOverrides';
+  function serializeBov(m) {
+    return (m.bagOvr || []).slice().sort(function (a, b) { return a.id - b.id; })
+      .map(function (o) { return o.id + ':' + o.w + 'x' + o.h; }).join(',');
+  }
+  function bovCommit(m) {
+    window.__mcOutbox.push({ type: 'MC_SET', guid: m.guid, section: BOV_SECTION, key: BOV_SECTION + '.' + BOV_KEY, value: serializeBov(m) });
+  }
+  function bagOvrHtml(m) {
+    var h = '<div class="__mc-grp"><h3>\u4e2a\u6027\u5316\u4fee\u6539\uff1a\u4efb\u610f\u67dc\u5b50\u5355\u72ec\u8c03\uff08\u4f18\u5148\u7ea7\u6700\u9ad8\uff09</h3>'
+      + '<div class="__mc-ovr-add">'
+      + '<input type="text" id="__mc_bov_new" placeholder="\u67dc\u5b50 ID" inputmode="numeric" data-num="int">'
+      + '<button type="button" data-act="bov-add">\uff0b \u65b0\u589e\u67dc\u5b50</button>'
+      + '</div>';
+    var bov = m.bagOvr || [];
+    if (!bov.length) {
+      h += '<div class="__mc-ovr-empty">\u6682\u65e0\u4e2a\u6027\u5316\u6761\u76ee\u3002\u6309 BagId \u65b0\u589e\u4efb\u610f\u67dc\u5b50\uff08\u542b\u7eb8\u7bb1/\u673a\u5668\u69fd\u7b49\u9ed1\u540d\u5355\u67dc\uff09\uff0c\u4f18\u5148\u7ea7\u9ad8\u4e8e\u4e0a\u65b9\u4e13\u5c5e\u4e0e\u901a\u7528\u3002</div>';
+    } else {
+      for (var idx = 0; idx < bov.length; idx++) {
+        h += '<div class="__mc-item">'
+          + '<div class="__mc-info">'
+          + '<div class="__mc-lb">\u67dc\u5b50 #' + bov[idx].id + '</div>'
+          + '<div class="__mc-ck">' + BOV_SECTION + '.' + BOV_KEY + ' \u00b7 ' + bov[idx].id + ':' + bov[idx].w + 'x' + bov[idx].h + '</div>'
+          + '</div>'
+          + '<div class="__mc-ctl">'
+          + '<span class="__mc-bov-lb">\u5bbd</span>'
+          + '<input type="text" class="__mc-numbox" inputmode="numeric" data-num="int" value="' + bov[idx].w + '" data-act="bov-set" data-idx="' + idx + '" data-k="w" title="\u5bbd\u5ea6\uff080..40\uff09">'
+          + '<span class="__mc-bov-lb">\u9ad8</span>'
+          + '<input type="text" class="__mc-numbox" inputmode="numeric" data-num="int" value="' + bov[idx].h + '" data-act="bov-set" data-idx="' + idx + '" data-k="h" title="\u9ad8\u5ea6\uff080..30\uff09">'
+          + '</div>'
+          + '<div class="__mc-badge __mc-b-now">\u26a1 \u7acb\u5373\u751f\u6548</div>'
+          + '<button type="button" class="__mc-del" data-act="bov-del" data-idx="' + idx + '" title="\u5220\u9664\u6b64\u67dc\u5b50">\u2715</button>'
           + '</div>';
       }
     }
@@ -395,6 +443,7 @@
         + '<div class="__mc-ovr-empty">\u8be5 mod \u4ec5\u652f\u6301\u542f\u7528 / \u505c\u7528\uff0c\u65e0\u66b4\u9732\u7684\u914d\u7f6e\u9879\u3002</div></div>';
     }
     if (m.ovr) h += ovrHtml(m);
+    if (m.bagOvr) h += bagOvrHtml(m);
     S.cfg.innerHTML = h;
   }
 
@@ -550,12 +599,49 @@
           ovrCommit(m);
           toast(m.name + ' \u00b7 \u5df2\u5220\u9664\u8986\u76d6 #' + gone, 'now');
         }
+        return;
+      }
+      /* T20 个性化柜子清单：新增 */
+      var badd = t.closest('[data-act="bov-add"]');
+      if (badd) {
+        if (!m.bagOvr) return;
+        var binp = S.cfg.querySelector('#__mc_bov_new');
+        var bid = binp ? parseInt(binp.value, 10) : NaN;
+        if (!isNaN(bid) && bid > 0 && !(m.bagOvr).some(function (o) { return o.id === bid; })) {
+          m.bagOvr.push({ id: bid, w: 16, h: 12 });
+          renderCfg();
+          bovCommit(m);
+          toast(m.name + ' \u00b7 \u65b0\u589e\u67dc\u5b50 #' + bid + '\uff08\u9ed8\u8ba4 16x12\uff0c\u4f18\u5148\u7ea7\u6700\u9ad8\uff09', 'now');
+        }
+        return;
+      }
+      /* T20 个性化柜子清单：删除 */
+      var bdel = t.closest('[data-act="bov-del"]');
+      if (bdel) {
+        if (!m.bagOvr) return;
+        var bidx = +bdel.getAttribute('data-idx');
+        if (bidx >= 0 && bidx < m.bagOvr.length) {
+          var bgone = m.bagOvr[bidx].id;
+          m.bagOvr.splice(bidx, 1);
+          renderCfg();
+          bovCommit(m);
+          toast(m.name + ' \u00b7 \u5df2\u5220\u9664\u67dc\u5b50 #' + bgone + '\uff08\u56de\u843d\u5230\u4e13\u5c5e/\u901a\u7528\uff09', 'now');
+        }
       }
     });
 
     cfg.addEventListener('input', function (e) {
       var el = e.target;
       if (!el.getAttribute) return;
+      /* T20 数值框仅数字清洗（data-num=int|float；type=text 无原生加减钮）：int 剥非数字，
+       * float 容恰一个小数点。放在 data-act 判定之前——清单新增 ID 框（无 data-act）同受辖。 */
+      var dnum = el.getAttribute('data-num');
+      if (dnum) {
+        var sv = (el.value || '').replace(/[^\d.]/g, '');
+        if (dnum === 'int') sv = sv.replace(/\./g, '');
+        else { var sp = sv.split('.'); sv = sp.length > 1 ? sp[0] + '.' + sp.slice(1).join('') : sv; }
+        if (sv !== el.value) el.value = sv;
+      }
       var act = el.getAttribute('data-act');
       if (!act) return;
       var m = curMod();
@@ -578,9 +664,29 @@
         toast(m.name + ' \u00b7 \u8986\u76d6 #' + o.id + ' \u2192 ' + o.ms + 'ms', 'now');
         return;
       }
+      /* T20 个性化柜子清单：宽/高纯文本框（int 清洗已在上；0..40/0..30 钳制） */
+      if (act === 'bov-set') {
+        if (!m.bagOvr) return;
+        var bo = m.bagOvr[+el.getAttribute('data-idx')];
+        if (!bo) return;
+        var bk = el.getAttribute('data-k');
+        var bv = parseFloat(el.value);
+        if (isNaN(bv)) return;
+        bv = Math.round(Math.max(0, Math.min(bk === 'w' ? 40 : 30, bv)));
+        bo[bk] = bv;
+        var bck = el.closest('.__mc-item');
+        if (bck) {
+          var bckEl = bck.querySelector('.__mc-ck');
+          if (bckEl) bckEl.textContent = BOV_SECTION + '.' + BOV_KEY + ' \u00b7 ' + bo.id + ':' + bo.w + 'x' + bo.h;
+        }
+        if (String(bv) !== el.value) el.value = String(bv); // 钳制值回写显示
+        throttleSend('bov' + el.getAttribute('data-idx') + bk, function () { bovCommit(m); });
+        toast(m.name + ' \u00b7 \u67dc\u5b50 #' + bo.id + ' ' + (bk === 'w' ? '\u5bbd' : '\u9ad8') + ' \u2192 ' + bv, 'now');
+        return;
+      }
       if (act !== 'set') return;
       if (el.tagName === 'SELECT') return; // 下拉在 change 提交
-      if (el.type !== 'range' && el.type !== 'number') return;
+      if (el.type !== 'range' && !el.getAttribute('data-num')) return;
       var it = itemOf(m, +el.getAttribute('data-g'), +el.getAttribute('data-i'));
       if (!it) return;
       var v = parseFloat(el.value);
@@ -606,13 +712,14 @@
         it.v = el.value;
         sendSet(m, it, it.v);
         toast(m.name + ' \u00b7 ' + it.l + ' \u2192 ' + el.value, it.b);
+      } else if (el.getAttribute('data-num')) {
+        // T20 numbox（纯文本数值框）：提交时归位显示值（input 阶段已按钳制值发送）
+        el.value = fmt(it.v);
       } else if (el.tagName === 'INPUT' && el.type === 'text') {
         // 任务 14：str 文本框——change（失焦/回车）提交整串，不在逐键 input 发送
         it.v = el.value;
         sendSet(m, it, it.v);
         toast(m.name + ' \u00b7 ' + it.l + ' \u2192 ' + el.value, it.b);
-      } else if (el.type === 'number') {
-        el.value = fmt(it.v); // 提交时归位显示值（input 阶段已按钳制值发送）
       }
     });
   }

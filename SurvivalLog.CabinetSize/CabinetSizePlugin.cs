@@ -35,6 +35,7 @@ public sealed class CabinetSizePlugin : BasePlugin
 
     internal static BepInEx.Configuration.ConfigEntry<int> MaxWidth, MaxHeight, Preset;
     internal static BepInEx.Configuration.ConfigEntry<string> ExcludeIds;
+    internal static BepInEx.Configuration.ConfigEntry<string> BagOverrides;
     internal static BepInEx.Configuration.ConfigEntry<int> SmallW, SmallH, MediumW, MediumH, LargeW, LargeH, XLargeW, XLargeH;
     internal static BepInEx.Configuration.ConfigEntry<bool> ListOnReady, DiagOnOpen;
 
@@ -53,6 +54,9 @@ public sealed class CabinetSizePlugin : BasePlugin
             "柜子高度上限（0=不封顶）。默认 16=当前特大档高度（作者 2026-10-25 实测定稿）。");
         Preset = Config.Bind("Global", "Preset", BagSections.CurrentPreset, "默认值预设版本（勿手改）：mod 升级后未手动调过的条目自动跟新默认值。");
         ExcludeIds = Config.Bind("Global", "ExcludeIds", "", "追加排除的 BagId（逗号分隔）：在默认黑名单之外额外恢复官方原值。");
+        BagOverrides = Config.Bind("Global", "BagOverrides", "",
+            "个性化覆盖清单（id:WxH 逗号分隔，如 3002:20x12）：任意柜子单独定宽高，优先级最高（高于 13 包显式与档位）；" +
+            "对黑名单柜（纸箱/机器槽等）同样生效。改条目即时生效；删行=从清单移除该柜（回落到下一优先级）。");
         SmallW = Config.Bind("Tier.Small", "Width", 14, "小档宽度（原生格数≤60 的柜子自动落此档）。");
         SmallH = Config.Bind("Tier.Small", "Height", 10, "小档高度。");
         MediumW = Config.Bind("Tier.Medium", "Width", 16, "中档宽度（原生格数 61~99）。");
@@ -80,6 +84,7 @@ public sealed class CabinetSizePlugin : BasePlugin
         MaxHeight.SettingChanged += reload;
         Preset.SettingChanged += reload;
         ExcludeIds.SettingChanged += reload;
+        BagOverrides.SettingChanged += reload;
         SmallW.SettingChanged += reload;
         SmallH.SettingChanged += reload;
         MediumW.SettingChanged += reload;
@@ -181,6 +186,7 @@ public sealed class CabinetSizePlugin : BasePlugin
 
             var vehNotes = new List<string>();
             bool vehReady;
+            SizeEngine.RefreshOverrides(); // 个性化清单（BagOverrides）先于受管集发现刷新（发现会注入其 id）
             var ids = SizeEngine.DiscoverManaged(vehNotes, out vehReady);
             if (ids == null) { CabinetSizePlugin.Rerun = true; return; }
 
@@ -198,7 +204,8 @@ public sealed class CabinetSizePlugin : BasePlugin
                 int playerOnly = 0; // 玩家自加节（非 13 绑定包）
                 foreach (var id in BagSections.Entries.Keys)
                     if (!CabinetSizePlugin.BagBindings.ContainsKey(id)) playerOnly++;
-                var summary = $"生效：{ids.Count} 个受管包（显式 {CabinetSizePlugin.BagBindings.Count} 包绑定 + 自加 {playerOnly} 包；"
+                var summary = $"生效：{ids.Count} 个受管包（显式 {CabinetSizePlugin.BagBindings.Count} 包绑定 + 自加 {playerOnly} 包"
+                    + (SizeEngine.Overrides.Count > 0 ? $" + 个性化 {SizeEngine.Overrides.Count} 条" : "") + "；"
                             + $"档位 小{CabinetSizePlugin.SmallW.Value}x{CabinetSizePlugin.SmallH.Value}"
                             + $"/中{CabinetSizePlugin.MediumW.Value}x{CabinetSizePlugin.MediumH.Value}"
                             + $"/大{CabinetSizePlugin.LargeW.Value}x{CabinetSizePlugin.LargeH.Value}"

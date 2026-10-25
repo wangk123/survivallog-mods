@@ -21,7 +21,7 @@ internal static class SizeEngine
         110007, 3001, 2001, 2002, 2004, 10003,          // 纯场景搜刮容器
     };
 
-    /// <summary>受管集：家具自动发现（BagId&gt;0）+ 载具（Config_Vehicle 全档 TrunkBagId + 门口袋 1023）− 黑名单 − cfg ExcludeIds。null=配置表未就绪。</summary>
+    /// <summary>受管集：家具自动发现（BagId&gt;0）+ 载具（Config_Vehicle 全档 TrunkBagId + 门口袋 1023）− 黑名单 − cfg ExcludeIds + 个性化清单 id（最后注入，绕过黑名单——对纸箱/机器槽等同样生效）。null=配置表未就绪。</summary>
     internal static HashSet<int> DiscoverManaged(List<string> notes, out bool vehReady)
     {
         vehReady = false;
@@ -61,7 +61,54 @@ internal static class SizeEngine
 
         foreach (var id in DefaultExcludeIds) set.Remove(id);
         foreach (var id in BagTable.ParseIds(CabinetSizePlugin.ExcludeIds.Value)) set.Remove(id);
+        foreach (var id in Overrides.Keys) set.Add(id); // 个性化清单：最显式意图，最后注入绕过黑名单
         return set;
+    }
+
+    // ── 个性化覆盖清单（BagOverrides，2026-10-25 作者令"补个性化功能，类似动作加速"）──
+
+    /// <summary>个性化清单解析缓存（每轮 Ticker RefreshOverrides 刷新；写入=ModCenter 面板清单块/记事本改 cfg）。</summary>
+    internal static readonly Dictionary<int, (int w, int h)> Overrides = new();
+
+    /// <summary>解析 "id:WxH,id:WxH"（容忍大小写 x/空格；坏条目静默跳过）。</summary>
+    internal static Dictionary<int, (int w, int h)> ParseOverrides(string raw)
+    {
+        var map = new Dictionary<int, (int, int)>();
+        if (string.IsNullOrWhiteSpace(raw)) return map;
+        foreach (var part in raw.Split(','))
+        {
+            var seg = part.Trim();
+            if (seg.Length == 0) continue;
+            var ix = seg.IndexOf(':');
+            if (ix <= 0) continue;
+            if (!int.TryParse(seg.Substring(0, ix), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var id) || id <= 0) continue;
+            var dims = seg.Substring(ix + 1).Trim();
+            var x = dims.IndexOf('x'); if (x < 0) x = dims.IndexOf('X');
+            if (x <= 0) continue;
+            if (!int.TryParse(dims.Substring(0, x), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var w) || w <= 0) continue;
+            if (!int.TryParse(dims.Substring(x + 1), System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out var h) || h <= 0) continue;
+            map[id] = (w, h);
+        }
+        return map;
+    }
+
+    /// <summary>每轮改写前刷新 Overrides（键值未变零开销；面板写 SettingChanged→Rerun 下一轮即拾取）。</summary>
+    internal static void RefreshOverrides()
+    {
+        var raw = CabinetSizePlugin.BagOverrides == null ? "" : CabinetSizePlugin.BagOverrides.Value;
+        var parsed = ParseOverrides(raw);
+        if (parsed.Count == Overrides.Count)
+        {
+            bool same = true;
+            foreach (var kv in parsed)
+                if (!Overrides.TryGetValue(kv.Key, out var cur) || cur != kv.Value) { same = false; break; }
+            if (same) return;
+        }
+        Overrides.Clear();
+        foreach (var kv in parsed) Overrides[kv.Key] = kv.Value;
     }
 
     private static string VehName(GameCore.HotUpdate.Config_Vehicle v)
@@ -82,7 +129,7 @@ internal static class SizeEngine
         return "?";
     }
 
-    // ── 值解析：13 包绑定键 ＞ 玩家自加节 ＞ 原生格数档位 ＞ 不缩水守卫 ＞ 全局夹顶 ──
+    // ── 值解析：个性化覆盖 ＞ 13 包绑定键 ＞ 玩家自加节 ＞ 原生格数档位 ＞ 不缩水守卫 ＞ 全局夹顶 ──
 
     internal static string TierOf(int area) =>
         area <= 60 ? "小" : area <= 99 ? "中" : area <= 149 ? "大" : "特大";
@@ -90,7 +137,8 @@ internal static class SizeEngine
     internal static (int w, int h, string src) Resolve(int id, int nativeW, int nativeH)
     {
         int w, h; string src;
-        if (CabinetSizePlugin.BagBindings.TryGetValue(id, out var bb)) { w = bb.W.Value; h = bb.H.Value; src = "cfg显式"; }
+        if (Overrides.TryGetValue(id, out var ov)) { w = ov.w; h = ov.h; src = "个性化"; }
+        else if (CabinetSizePlugin.BagBindings.TryGetValue(id, out var bb)) { w = bb.W.Value; h = bb.H.Value; src = "cfg显式"; }
         else if (BagSections.Entries.TryGetValue(id, out var e)) { w = e.w; h = e.h; src = "cfg自加"; }
         else
         {
