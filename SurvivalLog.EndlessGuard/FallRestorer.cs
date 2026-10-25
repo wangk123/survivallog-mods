@@ -231,4 +231,25 @@ internal static class GrantPatch
         }
         catch (System.Exception e) { EndlessGuardPlugin.Trace("补授异常: " + e.Message); }
     }
+
+    /// <summary>终审 dump（读档即触发，零门票）：官方处理完后逐卡 HasActivated + 三图发现等级。</summary>
+    private static void Postfix(SurvivalPlanningComponent __instance)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("持有终审 SaveCache含31606=").Append(ContainsId(__instance?.SaveCache, 31606) ? 1 : 0);
+            sb.Append(" HasActivated=[");
+            int[] ids = { 31601, 31602, 31603, 31604, 31605, 31606, 31607, 31608, 31609, 31610, 31623, 31624, 31625, 31633, 31634, 31635 };
+            for (int i = 0; i < ids.Length; i++) sb.Append(ids[i]).Append(':').Append(__instance != null && SafeHas(__instance, ids[i]) ? 1 : 0).Append(i == ids.Length - 1 ? "" : " ");
+            sb.Append(']');
+            sb.Append(" 等级 1004=").Append(SafeLv(1004)).Append(" 1005=").Append(SafeLv(1005)).Append(" 1002=").Append(SafeLv(1002));
+            EndlessGuardPlugin.Trace(sb.ToString());
+        }
+        catch (System.Exception e) { EndlessGuardPlugin.Trace("持有终审异常: " + e.Message); }
+    }
+
+    private static bool SafeHas(SurvivalPlanningComponent c, int id) { try { return c.HasActivated(id); } catch { return false; } }
+    private static int SafeLv(int map) { try { return ExploreDiscoveryTools.GetDiscoveryLv(map); } catch { return -1; } }
+    private static bool ContainsId(Il2CppSystem.Collections.Generic.List<int> l, int v) { if (l == null) return false; for (int i = 0; i < l.Count; i++) if (l[i] == v) return true; return false; }
 }
