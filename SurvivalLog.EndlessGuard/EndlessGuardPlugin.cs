@@ -56,16 +56,23 @@ public sealed class EndlessGuardPlugin : BasePlugin
     }
 }
 
-/// <summary>2s 轮询：表注入与注册表追加在 Cm() 就绪后执行（早于 PlanPick 目录构建=首次开规划页）。</summary>
+/// <summary>2s 轮询：表注入与注册表追加在 Cm() 就绪后执行（早于 PlanPick 目录构建=首次开规划页）。
+/// Update 必须 public + 双构造器（RoleUnlock RoleTicker 实证模式：interop 注入类的引擎回调
+/// 只桥接 public 生命周期方法——2026-10-25 探针实锤 private 版在场景切换后停止回调，
+/// "每2s复查"全链哑火即买卡后追加波不生效的根因）。心跳行进 trace 供存活自证。</summary>
 internal sealed class GuardTicker : MonoBehaviour
 {
     private float _acc;
+    private int _beats;
     public GuardTicker(IntPtr p) : base(p) { }
-    private void Update()
+    public GuardTicker() { }
+    public void Update()
     {
         _acc += UnityEngine.Time.unscaledDeltaTime;
         if (_acc < 2f) return;
         _acc = 0f;
+        _beats++;
+        if (_beats % 30 == 0) EndlessGuardPlugin.Trace("heartbeat tick=" + _beats);   // 60s 心跳：Ticker 存活铁证
         try { ScavengePlans.Tick(); } catch (Exception e) { EndlessGuardPlugin.Trace("ticker ScavengePlans: " + e.Message); }
     }
 }
