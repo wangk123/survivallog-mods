@@ -12,7 +12,7 @@
 1. **永不沦陷**（PreventNewFalls）：拦掉唯一沦陷执行点，三模式（纯无尽/剧情无尽/休闲）通吃；
 2. **旧档恢复**（RestoreFallenPoints）：已沦陷的交易点/探险图一次清账复活（营地除外）；
 3. **倒计时清场**（StripPendingFallTags）：剥掉缓刑 tag，地图上的沦陷倒计时不再挂着；
-4. **生存规划扩展**（ExtendScavengePlans）：注入 11 条拾遗系列新条目（超市拾遗·六~十 / 医院踏勘·三~五 / 学校摸排·三~五），D100-D300 每 20 天一条——**内容层**扩池解锁新物品、**数量层**完全采用官方"探索物资"难度机制按已购卡数抬高丰度，给无尽后期持续供给 + 生存点回收（全买 494 点）。
+4. **生存规划扩展**（ExtendScavengePlans）：注入 11 条拾遗系列新条目（超市拾遗·六~十 / 医院踏勘·三~五 / 学校摸排·三~五），D100-D300 每 20 天一条——**内容层**扩池解锁新物品（物资份数完全按官方"探索物资"难度，2026-10-25 作者定案撤数量层），给无尽后期持续供给 + 生存点回收（全买 494 点）。
 
 配合逻辑：功能 1-3 保供给线（有图可去），功能 4 保产出线（去了有货、越买越富、点数有处花）。
 
@@ -109,23 +109,13 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 - 每级都有实解锁（无空档）；份数：日常类 ×2、大件肉 ×1，落表逐件定。
 - 仍封印留白（明示）：学校尖叫鸡（原Lv7）、学校医务室应急药品（原Lv9，医院侧同款 Lv3 已可出）。
 
-#### 2.5.4 数量层：完全采用官方探索物资难度机制（v5 定稿）
+#### 2.5.4 数量层：已撤除（2026-10-25 作者定案）
 
-> 作者定稿（2026-10-24）："采用官方的方案……有个探索物资的选项，按照这个配置来决定刷新的物资是否丰富。"
+> 作者定案："RichnessStep 按官方的默认难度来就行……这俩配置不要，放出来别人也看不懂。"
 
-- **公式：每件物资期望份数 = 存档探索物资档位值 + 0.3 × 该图已购新拾遗卡数**（步长可配 `RichnessStep` 默认 0.3）。
-- 实现 = Harmony postfix `RollExploreLootCopies`（官方函数本体，逐件摇份数）——**地面/柜子/追加波三路自动全部生效，零私有刷新逻辑**。
-- 对账（每件期望份数）：
-
-| 存档难度 | 原版 | 超市买满·十（+1.5） | 医院/学校买满·五（+0.9） |
-|---|---|---|---|
-| 极少 0.5 | 0.5 | 2.0 | 1.4 |
-| 稀少 0.75 | 0.75 | 2.25 | 1.65 |
-| 标准 1.0 | 1.0 | 2.5 | 1.9 |
-| 丰富 1.3 | 1.3 | 2.8 | 2.2 |
-
-特性：硬核档（稀少/极少）买满卡能富回来（后期投资定位）；丰富档买满≈每件 3 份。
-- **砍掉项**（设计过程否决，勿复活）：自造"锚点+2/级、每点抽取+1/2级、刷新周期 5→2 天、每柜 LootRandomCount 加成"等私有曲线——数量丰富度一律走官方档位值+卡加成公式。
+- **物资份数完全按存档"探索物资"难度档**（丰富 1.3/标准 1.0/稀少 0.75/极少 0.5），mod 不做任何叠加——原 `RollExploreLootCopies` postfix 与 `RichnessStep` 配置已删除，官方函数零接触。
+- 拾遗卡只保留**品质层**效果：解锁池中被封印物品（篮子+降档，§2.5.3）。
+- **历史否决项**（设计过程否决，勿复活）：私有"锚点+2/级、每点抽取+1/2级、刷新周期 5→2 天、每柜 LootRandomCount 加成"曲线；以及 v5 的"档位值+0.3×卡数"叠加公式（2026-10-25 一并撤除）。
 
 #### 2.5.5 注入与生效实现
 
@@ -150,7 +140,6 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 | `FallBlocker.cs`（暂名） | 功能 1：FallMapPoint prefix + 拦截计数自证 |
 | `FallRestorer.cs`（暂名） | 功能 2+3：读档后四步清账 + tag 剥除 + trace |
 | `ScavengePlans.cs`（暂名） | 功能 4：数值总表/篮子/降档**代码单源**；Talent+ConditionSet 表注入；洞察注册表追加；GameSetting 写入与重载兜底 |
-| `LootRichnessPatch.cs`（暂名） | 功能 4 数量层：`RollExploreLootCopies` postfix（难度档位值 + RichnessStep×已购卡数） |
 | `ModShared\WelcomeTip.cs` | 共享源码（csproj 链入，套件统一防盗署名） |
 
 ## 4. 配置项（com.local.survivallog.endlessguard.cfg）
@@ -158,10 +147,10 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 | 键 | 默认 | 说明 |
 |---|---|---|
 | `PreventNewFalls` | true | 拦截全部新沦陷（三模式通吃） |
-| `RestoreFallenPoints` | true | 读档后恢复已沦陷交易点/探险图（营地除外） |
-| `StripPendingFallTags` | true | 剥沦陷倒计时 tag（前缀运行时读，读不到降级） |
+| `RestoreFallenPoints` | true | 读档后恢复已沦陷交易点/探险图（营地按剧情链状态区分） |
 | `ExtendScavengePlans` | true | 注入 11 条拾遗扩展条目（含注册表追加+内容层落表） |
-| `RichnessStep` | 0.3 | 数量层每张卡的期望份数加成步长（0=纯官方难度） |
+
+配置只剩三键（2026-10-25 作者定案：StripPendingFallTags/RichnessStep 撤除——剥倒计时 tag 无条件执行、物资份数完全按官方"探索物资"难度档，零接触官方函数）；旧 cfg 文件里的孤儿键 BepInEx 自动忽略，无需手清。
 
 注意 cfg 首跑固化坑（CabinetEverywhere 教训）：新键上线时旧 cfg 缺键给默认值并日志提示一次。
 
@@ -181,7 +170,7 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 - **营地按剧情链状态区分**：campState=Evacuated(5)/Lost(6) 不恢复（撤离剧情链一致性）；campState=None 的日程沦陷营地照常恢复（2026-10-25 诊断定案，§2.6）；
 - **不回滚已触发的一次性事件**（沦陷广播/遗产事件是历史新闻）；
 - **不进官方随机池**（本地化键缺失 + 池污染，§2.5.5）；
-- **数量层不得另造私有刷新曲线**（v5 定稿：一律走官方 RollExploreLootCopies 通道，作者明令）；
+- **不设数量层**（2026-10-25 撤除：物资份数完全按官方探索物资难度，零接触官方函数）；
 - **孤儿 ID 风险**：买了新条目后卸载本 mod，SaveCache 留下无表行 ID——官方 `OnInitBuffs` 对缺行容错**必须装机验证**（实测前不得发布）；
 - B 方案（运行时清 Config_EndlessTier 三张点名表）v1 不做，实测碍眼再议；
 - 版本号作者定；本 mod 不进 publish.ps1 白名单直至作者发话。
@@ -194,7 +183,6 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 4. PlanPick 自选页：11 张新卡可见、D100 前锁"生存至第100天"、前置链与二级归组正确、购买走官方链扣点成功；
 5. **注册表生效**：买 1 张新卡 → 探针读 `GetDiscoveryLv(图)` 返回值 +1；
 6. **追加波**：买卡 → 进图 → 全图柜子出现该级新解锁物品（篮子/压轴货可见）；
-7. **数量层**：标准档存档，同图同轮对比买卡前后每轮总件数（期望 ×2.5 满档）；
 8. 篮子物品与现有池程序化去重校验（零重复进池）；
 9. 卸载测试：删 DLL 重进 → 旧档无异常（孤儿 ID 容错验证）。
 
@@ -205,7 +193,7 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 - **挂钩点**（实现时同步 `tools/gamekb/moddeps.json`，硬规则 11）：
   - Harmony prefix：`EndlessManager::FallMapPoint`（私有，0x264CD90）
   - Harmony postfix：`EndlessManager::Initialize(GameSaveData, GameMode)`（0x2653EE0）
-  - Harmony postfix：`DifficultyTools::RollExploreLootCopies`（0x31BC080，静态）
+  - （已撤）`DifficultyTools::RollExploreLootCopies` postfix——2026-10-25 数量层移除，官方函数零接触
   - 兜底（如需）：`ExploreDiscoveryTools::GetDiscoveryLv`（0x2825E80）/ `_registryLoaded` 静态字段重载
 - **沦陷链地址**：ApplyFallenMapPoints 0x2649140 / RecomputeTier 0x265BB80 / OnDayChanged 0x26586F0 / OnCasualDayChanged 0x26578C0 / TrySealTradeAccess 0x2665FC0 / IsCampFallen 0x2654390
 - **洞察/刷货链地址**：ExploreDiscoveryTools.GetDiscoveryLv 0x2825E80 / EnsureRegistry 0x2825710 / GetInsightMapForCard 0x2826440；FurnitureLootManager.RefreshForCurrentMap 0x26D2DC0 / AppendDiscoveryWave 0x26D1BB0；GroundLootManager.RollAndSpawn 0x26E9D20 / SpawnForCurrentMap 0x26E9F50 / SpawnOneAnchor 0x26EA440；FurnitureLootTools.FillRandomLoot 0x283D600；DifficultyTools.RollExploreLootCopies 0x31BC080
@@ -218,7 +206,6 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 
 - 沦陷/洞察机制相关改动 → §2 必须附实证依据（反汇编/探针），不许凭猜测改；
 - 数值调整 → §2.5.2/2.5.3 总表是**代码单源**，三处同步：本文档、ScavengePlans.cs 常量、（如发版）CHANGELOG；
-- 数量层只动 RichnessStep 或公式常数，**不得新增私有刷新曲线**（§6 红线）；
 - PlanPick 兼容四要素任一断（目录时机/ShowUnpooled 语义变更）→ 重新源码级确认；
 - 每次发版在根 CHANGELOG.md 补一节；改挂钩点必须同步 `tools/gamekb/moddeps.json`。
 - 2026-10-24 实现落地：四功能块按本设计实施，装机验证清单见 plans/2026-10-24-endless-guard.md Task 8；moddeps 已同步。

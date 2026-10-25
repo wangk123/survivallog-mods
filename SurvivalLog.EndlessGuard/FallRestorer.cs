@@ -9,8 +9,8 @@ namespace SurvivalLog.EndlessGuard;
 /// 旧档恢复+剥倒计时tag：postfix 挂 EndlessManager.Initialize（读档补账 ApplyFallenMapPoints 之后跑，
 /// DESIGN §2.3）。四步全走原版 API（存档格式层零风险论证见 DESIGN §2.6）：
 /// ①FallenMapPointIds 名单剔除非营地 ②fall_tier counter 清零 ③剥全局交易封印tag ④剥缓刑tag。
-/// ③④不受名单为空早退（"无沦陷点但挂缓刑tag"正是剥tag首要场景）；④另只受 StripPendingFallTags 独立门控
-///（不受 RestoreFallenPoints 早退，2026-10-24 终审建议修1）。全程 try/catch + trace，幂等（半途异常下次读档跑齐）。
+/// ③④不受名单为空早退（"无沦陷点但挂缓刑tag"正是剥tag首要场景）；④无条件执行
+///（2026-10-25 作者定案：mod 在即永不沦陷，倒计时无显示意义，开关撤除）。全程 try/catch + trace，幂等（半途异常下次读档跑齐）。
 /// </summary>
 [HarmonyPatch]
 internal static class FallRestorer
@@ -33,10 +33,9 @@ internal static class FallRestorer
             var tm = GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.IsInstanceCreated
                 ? GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.Instance?._TagManager : null;
 
-            // ④剥缓刑tag：独立门控（只受 StripPendingFallTags 管，不受 Restore 早退——终审建议修1；
-            // "Restore=false 但要剥倒计时"的非默认配置从此生效）
+            // ④剥缓刑tag：无条件（2026-10-25 作者定案：mod 在即永不沦陷，倒计时无意义，开关撤除）
             int stripped = 0;
-            if (EndlessGuardPlugin.StripPendingFallTags.Value && tm != null)
+            if (tm != null)
             {
                 var prefix = ReadDeferredFallPrefix();
                 if (prefix != null)

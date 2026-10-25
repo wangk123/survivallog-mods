@@ -242,26 +242,6 @@ internal static class ScavengePlans
         catch (Exception e) { EndlessGuardPlugin.Trace("registry: " + e.Message); }
     }
 
-    /// <summary>该图已购新卡数（数量层 Task 7 消费）。Redux 已购名单 PlanPick 同款读取；读不到返回 0（fail-safe 无加成）。</summary>
-    internal static int OwnedNewCount(int mapId)
-    {
-        try
-        {
-            var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
-            var dataTree = rus?.reduxStoreLayer?.dataTree;
-            if (dataTree == null) return 0;
-            dataTree.TryGetValue(Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out var raw);
-            var st = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Data_Talent>();
-            var ids = st?.SurvivalPlanningIds;
-            if (ids == null) return 0;
-            var set = new HashSet<int>();
-            for (int i = 0; i < ids.Count; i++) set.Add(ids[i]);
-            var n = 0; foreach (var p in Plans) if (p.MapId == mapId && set.Contains(p.TalentId)) n++;
-            return n;
-        }
-        catch { return 0; }
-    }
-
     // ---- 功能4b 内容层落表（DESIGN §2.5.3）：篮子扩池 + 官方封印货降档。只改进程内存表，零存档写入 ----
     // 幂等三重防护（2026-10-25 闩锁改复查后全为可重入设计）：IndexOf 池内去重 / OrigGates 降档记首读原值按原值推导 /
     // 门槛已是目标值则跳写。表被游戏重建冲掉时 Tick 复查哨兵项自动重放（见 Tick 注释）。
