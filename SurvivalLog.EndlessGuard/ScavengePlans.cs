@@ -52,10 +52,14 @@ internal static class ScavengePlans
 
     internal static void Tick()
     {
-        if (!EndlessGuardPlugin.ExtendScavengePlans.Value) return;
-        if (!_loaded) { LoadJson(); if (!_loaded) return; }
         var cm = BagTable.Cm();
         if (cm == null) return;                 // 表未就绪，下轮再试
+        // 方案B（2026-10-25 作者验收第二轮定案）：UI 沦陷显示的第三份账=Config_EndlessTier 三张点名表
+        //（当前阶段≥点名排定阶段即显示"已沦陷"，与 FallMapPoint 是否真执行无关——FallBlocker 拦了执行
+        // 但显示层照读日程）。清空三张表=日程源头消失（倒计时/已沦陷显示/调度三合一），挂 PreventNewFalls 门。
+        if (EndlessGuardPlugin.PreventNewFalls.Value) ClearTierFallLists(cm);
+        if (!EndlessGuardPlugin.ExtendScavengePlans.Value) return;
+        if (!_loaded) { LoadJson(); if (!_loaded) return; }
         // 复查代替闩锁（2026-10-25 作者实测定案）：配置表加载完成会重建 _Config_*_Dict，启动早期的
         // 注入/落表会被整体冲掉（实测：注入 11/11 打在加载完成前，PlanPick 目录只有原版 465 项）。
         // 每轮校验首行/首篮是否还在，被冲掉即重放；Inject/ApplyContent 内部逐行 ContainsKey/IndexOf 幂等。
@@ -66,6 +70,31 @@ internal static class ScavengePlans
             && sentinelPool != null && IndexOf(sentinelPool.IdList, Baskets[0].Items[0].ItemId) < 0)
             ApplyContent();
         AppendRegistry();                       // 注册表可能被 EnsureRegistry 重载覆盖：每轮补（Contains 幂等，开销可忽略）
+    }
+
+    /// <summary>清空 Config_EndlessTier 的 FallMapPoints/StoryFallMapPoints/DroneFallMapPoints（每轮复查，
+    /// 表重建后自动重清；稳态静默）。这三张表是沦陷调度+UI"已沦陷/倒计时"显示的日程源头（DESIGN §2.1）。</summary>
+    private static void ClearTierFallLists(GameCore.HotUpdate.ConfigManager cm)
+    {
+        try
+        {
+            var dict = cm._Config_EndlessTier_Dict;
+            if (dict == null) return;
+            int tiers = 0, entries = 0;
+            foreach (var kv in dict)
+            {
+                var row = kv.Value;
+                if (row == null) continue;
+                var changed = false;
+                var a = row.FallMapPoints; if (a != null && a.Count > 0) { entries += a.Count; a.Clear(); changed = true; }
+                var b = row.StoryFallMapPoints; if (b != null && b.Count > 0) { entries += b.Count; b.Clear(); changed = true; }
+                var c = row.DroneFallMapPoints; if (c != null && c.Count > 0) { entries += c.Count; c.Clear(); changed = true; }
+                if (changed) tiers++;
+            }
+            if (tiers > 0)
+                EndlessGuardPlugin.Trace("tier清空：" + tiers + " 个阶段的点名表共 " + entries + " 条沦陷排期已抹除");
+        }
+        catch (Exception e) { EndlessGuardPlugin.Trace("tier清空: " + e.Message); }
     }
 
     private static void LoadJson()
