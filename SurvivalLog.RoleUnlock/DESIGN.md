@@ -93,16 +93,14 @@
 
 ## 4. 配置
 
-| 项 | 默认 | 说明 |
+| 项 | 默认 | 说明（人话版，与插件 cfg 描述一致） |
 |---|---|---|
-| General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=全功能目标态切"还原官方"（复用各 Apply 现役还原路径：Params3 回原白名单/DefenseLv 回分列/Talent 回白名单/花瓶回官方等级）；下次启动不加载（不创建 Ticker，零日志零改写） |
-| UnlockVine | true | 清空藤蔓角色白名单（藤蔓种子发现的防御等级门槛保留官方值，不提供改动） |
-| UnlockFlowerSeeds | true | 观赏花种子全角色（清 Plant_FlowerSeedDiscover 白名单）；false=还原官方 |
-| ShareDefenseRecipes | true | DefenseLv P1~P4 并集互通 |
-| Plan.ClearPool | true | 解锁角色专属生存规划（46 项功能类，清 PlayerSelectId）；false=还原官方白名单（家具位黑名单始终不动；已购不清退） |
-| Plan.VaseRecipe | true | 解锁花瓶配方（325 craft/show→1/1）；false=还原官方等级（仅大学生剧情事件发放） |
-| ListOnReady | true | 首轮列原始白名单与各行并集 |
-| Verbose | false | 每轮明细 |
+| General.Enabled | true | 总开关：false=全部改回游戏原样；下次启动不加载 |
+| UnlockVine | true | 藤蔓全角色：任何角色收庄稼可能捡到爬山虎种子、能种藤蔓（原生仅大学生）；防御门槛保留官方 |
+| UnlockFlowerSeeds | true | 花种子全角色：任何角色收庄稼可能捡到花朵种子（原生仅大学生）；2026-10-24 默认改 true |
+| ShareDefenseRecipes | true | 防御配方互通（本版官方已统一，空转留作保险） |
+| Plan.ClearPool | true | 生存规划全角色：46 项功能类专属规划谁都能刷能买（已购不退；房屋扩建类不通融）；false=还原 |
+| Plan.VaseRecipe | true | 花瓶全角色：制作等级 1 谁都能学做花瓶（原生仅大学生剧情送）；false=还原 |
 
 注：SkipDefenseGate（清零藤蔓种子防御门槛）已于 2026-10-24 按作者决定移除——门槛保留官方规则；
 UnlockFlowerSeeds 默认值同日改 true（作者定案：其他角色默认可发现花朵种子）。
@@ -166,3 +164,4 @@ cfg 文件名 `com.local.survivallog.roleunlock.cfg`（Guid `com.local.survivall
   - **Plan.VaseRecipe=false 还原语义**：ApplyVaseRecipe 目标态切回 `_origVaseCraft/_origVaseShow`
     首读快照（本版 0/0：craft_level=0 纯 P2 剧情发放）。
   - 两开关默认 true（升级用户行为不变）；cfg 键首跑自动生成，SettingChanged 触发 Rerun 热重写。
+- **2026-10-24（作者定案）：cfg 说明改人话版；删 Debug.ListOnReady/Verbose 两调试开关**（首轮核对清单改为固定输出，46/77 基线自检不丢）；UnlockFlowerSeeds 默认 true；SkipDefenseGate 移除（藤蔓种子防御门槛永远保留官方规则）。

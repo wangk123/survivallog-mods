@@ -54,28 +54,23 @@ public sealed class RoleUnlockPlugin : BasePlugin
     internal static ConfigEntry<bool> ShareDefenseRecipes;
     internal static ConfigEntry<bool> ClearPool;
     internal static ConfigEntry<bool> VaseRecipe;
-    internal static ConfigEntry<bool> ListOnReady;
-    internal static ConfigEntry<bool> Verbose;
     internal static volatile bool Rerun = true;
 
     public override void Load()
     {
         Log = base.Log;
         // General.Enabled 放最前 Bind（保证 cfg 键已生成后才可能早退）
-        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方表值并停写；下次启动不加载。");
+        Enabled = Config.Bind("General", "Enabled", true, "总开关：false=全部改回游戏原样；下次启动完全不加载本插件。");
         UnlockVine = Config.Bind("Vine", "UnlockVine", true,
-            "藤蔓全角色解锁：清空 Plant_RareSeedDiscover 的角色白名单。所有角色收获作物都可能发现藤蔓种子，并可种植/安装藤蔓。");
+            "藤蔓全角色：任何角色收庄稼时都可能捡到爬山虎种子、能种藤蔓挡尸潮（原本只有大学生会）。false=改回游戏原样。");
         UnlockFlowerSeeds = Config.Bind("Vine", "UnlockFlowerSeeds", true,
-            "观赏花种子全角色解锁（清空 Plant_FlowerSeedDiscover 白名单）：任何角色收获作物都可能发现花朵种子（原生=大学生专属）。false=还原官方白名单。");
+            "花种子全角色：任何角色收庄稼时都可能捡到花朵种子、能种花插瓶（原本只有大学生会）。false=改回游戏原样。");
         ShareDefenseRecipes = Config.Bind("Defense", "ShareDefenseRecipes", true,
-            "防御配方全角色互通：Config_DefenseLv 的 unlock_recipes_P1~P4 四列合并成并集。燃烧瓶等角色专属配方对所有角色变为可解锁（等级门槛照旧）。");
+            "防御配方互通：让所有角色都能做燃烧瓶、电网这类防线道具（当前游戏版本已自带此效果，此项留作保险，不用管）。false=改回游戏原样。");
         ClearPool = Config.Bind("Plan", "ClearPool", true,
-            "解锁角色专属生存规划（46 项功能类）：清空 Talent 表功能类专属规划的角色白名单，任何角色可选（已购规划不清退）。false=还原官方白名单（家具位扩建类始终不动）。");
+            "生存规划全角色：每日规划商店里，别的角色的专属规划（种花、做菜、存粮、搬东西这些共 46 项）也会刷出来，谁都能买（已买的不退）。注意：各角色的房屋扩建类规划不会互通。false=改回游戏原样（只能刷到自己的）。");
         VaseRecipe = Config.Bind("Plan", "VaseRecipe", true,
-            "解锁花瓶配方：花瓶包裹 325 的制作/显示等级改为 1（全角色制作等级 1 可学）。false=还原官方等级（原生仅大学生剧情事件发放）。");
-        ListOnReady = Config.Bind("Debug", "ListOnReady", true,
-            "首次生效时在日志列出原始白名单与各防御等级配方并集（核对数据用）。");
-        Verbose = Config.Bind("Debug", "Verbose", false, "每轮输出明细。");
+            "花瓶全角色：制作等级到 1 级，谁都能在工作台学会做花瓶（原本只有大学生的剧情会送）。false=改回游戏原样。");
 
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         Enabled.SettingChanged += reload;
@@ -384,14 +379,15 @@ internal sealed class RoleTicker : MonoBehaviour
         var cm = BagTable.Cm();
         if (cm == null) { RoleUnlockPlugin.Rerun = true; return; }
 
-        var listAll = RoleUnlockPlugin.ListOnReady.Value && !_announced;
+        // 首轮固定输出核对清单（46/77 基线自检），无开关
+        var listAll = !_announced;
         var lines = RoleTable.Apply(cm,
             on && RoleUnlockPlugin.UnlockVine.Value,
             on && RoleUnlockPlugin.UnlockFlowerSeeds.Value,
             on && RoleUnlockPlugin.ShareDefenseRecipes.Value,
             on && RoleUnlockPlugin.ClearPool.Value,
             on && RoleUnlockPlugin.VaseRecipe.Value,
-            RoleUnlockPlugin.Verbose.Value, listAll);
+            false, listAll);
         if (lines == null) { RoleUnlockPlugin.Rerun = true; return; } // 配置表未就绪
         RoleUnlockPlugin.Rerun = false;
 
