@@ -220,14 +220,14 @@ internal static class GrantPatch
             for (int i = 0; i < cache.Count; i++) if (cache[i] == grant) { owned = true; break; }
             if (owned)
             {
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有");
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有（确认持久化成功）");
+                EndlessGuardPlugin.GrantPlanId.Value = 0;   // 只在确认已持有时清零：防"写完即清但存档未落盘"丢补授
             }
             else
             {
                 cache.Add(grant);
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入持有名单（OnInitBuffs prefix，本次加载即激活，不扣点）");
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入持有名单（OnInitBuffs prefix，本次加载即激活；cfg保留至下轮确认）");
             }
-            EndlessGuardPlugin.GrantPlanId.Value = 0;   // 补完即清，防重复
         }
         catch (System.Exception e) { EndlessGuardPlugin.Trace("补授异常: " + e.Message); }
     }
