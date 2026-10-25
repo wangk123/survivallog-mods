@@ -116,11 +116,60 @@ internal static class FallRestorer
             }
 
             EndlessGuardPlugin.Trace($"restore：恢复 {restored.Count} 点 [{string.Join(",", restored)}]，剥封印tag {sealStripped}，剥缓刑tag {stripped} 条");
+            DumpDiag(__instance, save, tm);
         }
         catch (System.Exception e)
         {
             EndlessGuardPlugin.Trace("restore 异常（下次读档重试）: " + e.Message);
         }
+    }
+
+    /// <summary>全量诊断（2026-10-25 作者令"一次排查完"）：把沦陷显示可能读的每一份状态全部倒进
+    /// BepInEx/EndlessGuard_diag.txt——名单/每点计数器/营地状态/日程档位/显示天数/全量 tag 清单。
+    /// 定位"三份账清干净仍显示已沦陷"的真源头后即可撤除。</summary>
+    private static void DumpDiag(EndlessManager em, GameCore.HotUpdate.GameSaveData save, TagManager tm)
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("=== EndlessGuard 全量诊断 ").Append(System.DateTime.Now.ToString("HH:mm:ss")).Append(" tier=").Append(em.CurrentTier).AppendLine(" ===");
+            var list = save.FallenMapPointIds;
+            sb.Append("[ FallenMapPointIds 名单 ] count=").Append(list == null ? -1 : list.Count).Append(" : ");
+            if (list != null) for (int i = 0; i < list.Count; i++) sb.Append(list[i]).Append(i == list.Count - 1 ? "" : ",");
+            sb.AppendLine();
+            if (tm != null)
+            {
+                var keys = tm.GetTagKeys();
+                sb.Append("[ TagManager 全量 tag ] count=").Append(keys == null ? -1 : keys.Count).AppendLine();
+                if (keys != null) for (int i = 0; i < keys.Count; i++) sb.Append("  ").AppendLine(keys[i]);
+            }
+            sb.AppendLine("[ 每图状态 ] id|name|cat|camp|inList|fallCtr|campState|baseTier|schedTier|dispDay");
+            var cm = SurvivalLog.ModShared.BagTable.Cm();
+            var dict = cm?._Config_MapPoint_Dict;
+            if (dict != null)
+            {
+                var rows = new System.Collections.Generic.SortedList<int, GameCore.HotUpdate.Config_MapPoint>();
+                foreach (var kv in dict) if (kv.Value != null) rows[kv.Key] = kv.Value;
+                foreach (var row in rows.Values)
+                {
+                    var id = row.ID;
+                    bool camp; try { camp = EndlessManager.IsCampMapPoint(id); } catch { camp = true; }
+                    bool inL = false; if (list != null) for (int j = 0; j < list.Count; j++) if (list[j] == id) { inL = true; break; }
+                    int ctr = 0; try { ctr = GameCounter.GetCounter("endless.fall_tier_" + id); } catch { }
+                    int cs = -1; try { cs = em.GetCampState(id); } catch { }
+                    int bt = -1; try { bt = em.GetBaseFallTier(id); } catch { }
+                    int st = -1; try { st = em.GetScheduledFallTier(id); } catch { }
+                    int dd = -1; try { dd = em.GetFallDisplayDay(id); } catch { }
+                    sb.Append("  ").Append(id).Append('|').Append(row.Name_Local).Append('|').Append(row.PointCategory)
+                      .Append('|').Append(camp ? 1 : 0).Append('|').Append(inL ? 1 : 0).Append('|').Append(ctr)
+                      .Append('|').Append(cs).Append('|').Append(bt).Append('|').Append(st).Append('|').Append(dd).AppendLine();
+                }
+            }
+            System.IO.File.AppendAllText(System.IO.Path.Combine(
+                BepInEx.Paths.BepInExRootPath, "EndlessGuard_diag.txt"), sb.ToString());
+            EndlessGuardPlugin.Trace("diag：全量诊断已写入 EndlessGuard_diag.txt");
+        }
+        catch (System.Exception e) { EndlessGuardPlugin.Trace("diag: " + e.Message); }
     }
 
     /// <summary>TAG_DEFERRED_FALL_PREFIX 私有静态字段运行时读（不硬编码，抗表更新；读失败返回 null 降级）。</summary>
