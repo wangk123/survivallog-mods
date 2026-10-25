@@ -28,15 +28,18 @@ public sealed class PreDisasterSpeedPlugin : BasePlugin
     {
         Log = base.Log;
         Enabled = Config.Bind("General", "Enabled", true, "灾前加速条总开关（关闭=不注入不挂钩；对已在档对局下次启动生效）。");
-        TrueThreeX = Config.Bind("General", "TrueThreeX", true,
-            "手动三键在灾前按真实×3生效（临时换档校正；睡眠跳夜保持官方×32 不变）。false=官方表值×32（三键≈快进档）。");
+        TrueThreeX = Config.Bind("General", "TrueThreeX", false,
+            "手动三键在灾前按真实×3生效（临时换档校正；睡眠跳夜不受影响）。默认 false=官方表值×32（作者定案 2026-10-25：按官方的来）；改 true 重启生效。");
         Hotkeys = Config.Bind("Hotkeys", "Enabled", true,
             "快捷键（仅灾前 HUD 显示期间生效，键位与官方一致）：~=慢速 1=原速 2=二倍 3=三倍 4=暂停。注意：网页输入框聚焦时按键仍会触发。");
         Verbose = Config.Bind("Debug", "Verbose", false, "注入/payload 明细日志。");
 
         var harmony = new HarmonyLib.Harmony(Guid);
         harmony.PatchAll();
-        TryPatchTrueThree(harmony);
+        // 真三倍按 cfg 门挂载（默认 false=官方 ×32，作者定案 2026-10-25"按官方的来"：
+        // 关时不尝试挂载，启动日志不再出现补丁告警；改 true 重启后生效）
+        if (TrueThreeX.Value) TryPatchTrueThree(harmony);
+        else Log.LogInfo("[PdsSpeed] 三倍档=官方×32（TrueThreeX=false，不挂校正补丁）");
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<PdsTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<PdsTicker>();

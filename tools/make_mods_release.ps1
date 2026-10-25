@@ -88,11 +88,12 @@ foreach ($m in $mods) {
         $txt = $txt -replace '(?m)^(FridgeHeightMult\s*=\s).*$', '${1}1.5'
         $txt = $txt -replace '(?m)^(VehicleWidthMult\s*=\s).*$',  '${1}1.5'
         $txt = $txt -replace '(?m)^(VehicleHeightMult\s*=\s).*$', '${1}1.5'
-        # BurdenMult 同名不同义：背包已退役该键（2026-10-25 数值化，见下分支），柜子负重=1000
+        # CabinetBurden（v1.7.0 语义=清零无限制，已无 BurdenMult 键）：IncludeBagIds 归一为空
         if ($m.Name -eq 'CabinetBurden') {
-            $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$',   '${1}1000'
+            $txt = $txt -replace '(?m)^(Enabled\s*=\s).*$',       '${1}true'
             $txt = $txt -replace '(?m)^(IncludeBagIds\s*=\s).*$', '${1}'
-            # ExcludeBagIds 本身就是发布默认值（3,4），保留
+            $txt = $txt -replace '(?m)^(ExcludeBagIds\s*=\s).*$', '${1}3,4'
+            # ExcludeBagIds 本身就是发布默认值（3,4），归一双保险防本机实验值
         }
         # RoleUnlock：全部布尔键归一为发布默认 true（终版六键，aedc790 定稿：SkipDefenseGate 已删、花种 Def=true）
         if ($m.Name -eq 'RoleUnlock') {

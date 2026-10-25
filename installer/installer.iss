@@ -53,7 +53,7 @@ Name: "mod_backpack"; Description: "背包扩容：格子宽高各×1.5（约2.2
 Name: "mod_cabinet"; Description: "柜子容量：家里全部柜子按 小/中/大/特大 四档统一调到固定宽×高（默认14x10~20x16，逐档可改），13 个常用包独立微调、任意柜可个性化定值，改值热生效（原「柜子扩容」百分比版已废弃，由本组件取代）"; Types: recommended full custom
 Name: "mod_chill"; Description: "冰箱保鲜：保鲜5倍→10倍"; Types: recommended full custom
 Name: "mod_cabaccess"; Description: "储藏柜直达（直达+智能视图+筛选）：储物柜/橱柜/金属柜进工作台/无人机交易/烹饪等界面，制作自动取料；按界面场景视图（食物/材料）自动收窄页签，或下拉按标签筛选柜子页签（原「柜子标签筛选」mod 已并入本组件）"; Types: recommended full custom
-Name: "mod_cabburden"; Description: "柜子负重解放：橱柜/床头柜/储物柜等全部储物家具负重×1000，格子没满就能继续放"; Types: recommended full custom
+Name: "mod_cabburden"; Description: "柜子负重解放：全部储物家具（柜子/篮子/储物柜/货车厢/无人机舱等10种）负重无限制，格子没满就能继续放；默认不碰购物车/轿车（可调）"; Types: recommended full custom
 Name: "mod_roleunlock"; Description: "角色专属解锁：藤蔓种子全角色可发现（含种植/护盾），燃烧瓶等防御配方四角色互通（各自防御等级门槛照旧）"; Types: recommended full custom
 Name: "mod_robotspeed"; Description: "机器人提速：修理/整理/种植机器人不再比手动慢（动作对齐手速+移速/充电/续航翻倍+三台货舱扩容；不含插槽与模块）"; Types: recommended full custom
 Name: "mod_quick"; Description: "动作提速：按游戏官方分类统一提速，周期结算收益的动作自动保护"; Types: recommended full custom
