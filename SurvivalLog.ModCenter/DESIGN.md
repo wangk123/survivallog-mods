@@ -31,7 +31,7 @@
 | 层 | 代码 | 职责 |
 |---|---|---|
 | C# 宿主层 | `ModCenterPlugin` / `ModCenterTicker` / `ConfigBridge` / `Meta` / `Payload`（任务 6）/ `FocusTick`（任务 8）/ `DllDisabler`（任务 16） | BepInEx 插件宿主。Ticker 每帧跑 `ConfigBridge.Pump`（outbox 消息分发 + Save 防抖计时，主线程），每 0.3s（unscaled，暂停照走）跑 `FocusTick.Tick`（键盘门沿交接，§6.6），每 2s（unscaled）跑注入巡检；`ConfigBridge`：快照 `BuildSnapshot()` / 写 `TrySet`（联动 writeKeys 等值）/ `SetModEnabled`（任务 13 直写各 mod `General.Enabled`；任务 16 第三方分流——Tier 2 软停回调优先，§6.10）/ `MC_EVIDENCE` 验证辅助；`DllDisabler`：第三方重启级 dll 禁用（[DisabledTp] marker + 退出分离进程改名 + 残留自愈，§6.10）；`Meta` 九表 + `Payload` DTO/手写 JSON。统一经 `ModCenterPlugin.Log(msg)` 静态门输出 |
-| 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s：panel.js 幂等安装（Root 上下文）→ 双锚点入口注入（每轮无条件重跑自愈，脚本幂等：`__mc_entry` 已在目标 DOM 则跳过）→ outbox 轮询（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
+| 注入层 | `WebBridge` / `MenuEntryInjector`（任务 5；实机 UI 三修改事件驱动） | `WebBridge.GetWebView()`（TagFilter.cs:64-77 原样）+ `Exec`（注入与 C#→JS 推送共用主通道，Root 上下文）/ `Eval`（JS→C# 消息回读，任务 6 起承载 outbox drain；回调 DelegateSupport 包装，异常只 Warn 不中断轮询）。`MenuEntryInjector.Tick` 每 2s **自愈守卫拍**（不再每拍全量重发）：极小表达式校验 `__mcObserver`（Root 侧常驻 MutationObserver）+ `__McInstalled`（面板）+ `__mcSelfCheck()`（双锚点入口未被抹除），任一失守才重发完整引导（幂等）；入口即时性由 Root 侧 Observer（body 子树，iframe 插入当场）+ 目标页 iframe load 钩（页面加载完成当场 install）承担；outbox 轮询节奏不变（回读 JSON 入队 `ConfigBridge`，分发在其主线程 Pump 执行） |
 | 前端面板层 | `panel.js`（EmbeddedResource，`SurvivalLog.ModCenter.panel.js`；任务 7 已长成完整面板） | 面板 UI 与交互（原型 v4 移植，机制与实测见 §6.5）。全局名 `__mcOutbox` / `__mcDrain` / `__McInstalled` / `__mcOpen(hostDoc)` / `__mcClose` / `__mcEsc` / `__mcRender(snapshot)` / `__mcEvent(event)`（调试镜像 `__mcLastSnapshot` / `__mcLastEvent` / 推送序号 `__mcSnapSeq`）为既定契约，全程一致；任务 8 起 `MC_OPEN`/`MC_CLOSE` 兼作键盘门信号 + Root 侧孤儿看门狗（§6.6） |
 
 panel.js 作为内嵌资源随 dll 分发，不落盘、不改游戏资源文件（同 CabinetEverywhere
@@ -143,10 +143,19 @@ entry.Value = 3f;
 
 ### 5.1 通道与落点
 
-- C# 侧每 2s（Ticker，unscaled）：`GetWebView()` 为 null（主菜单前/重建中）静默跳过本轮；
-  就绪则 `Exec(panel.js)`（Root 上下文，`__McInstalled` 守卫幂等）→ `Exec(EntryJs)`（每轮
-  **无条件重跑**的免维护自愈，TagFilter.cs:46-50 模式；脚本内部幂等）→ `Eval(drain)` 回读
-  面板 outbox。
+- C# 侧每 2s（Ticker，unscaled，实机 UI 三修后为**自愈守卫拍**）：`GetWebView()` 为 null
+  （主菜单前/重建中）静默跳过本轮；就绪则只 `Exec` 一个极小守卫表达式
+  （`__mcObserver && __McInstalled && (!__mcSelfCheck || __mcSelfCheck())`）——失守
+  （WebView/Root 重建、或运行中入口被页面异常抹除）才重发完整引导（panel.js + EntryJs，
+  双守卫幂等）→ `Eval(drain)` 回读面板 outbox（节奏不变，非入口延迟来源）。
+- 入口即时性（问题1 修复）由 Root 侧常驻设施承担（EntryJs 一次性安装，`__mcObserver`
+  防重装）：① MutationObserver 观察 **document.body 子树**（childList+subtree，含
+  `#iframe-container` 增删；观察 body 而非容器节点——Root.html 的 Vue mount 会克隆替换
+  #app 内容、容器节点身份会换，tagfilter.page.js:899 同款）→ 回调当场跑幂等 install；
+  ② 目标页 iframe（id MainUI/OutSetting）**load 事件钩**（元素属性防重挂）——Observer
+  回调时 contentDocument 常还是 about:blank（锚点未在），真正就位时机 = load（页面脚本
+  已跑、Vue 已 mount）→ 当场 install；③ `__mcSelfCheck` 供守卫拍判定"锚点已在而入口
+  被抹"的自愈重装（保留旧免维护语义，TagFilter.cs:46-50）。
 - EntryJs 在 Root 扫 `#iframe-container iframe`（pathname 优先 / id 兜底，ANCHORS.md §三），
   命中 MainUI / OutSetting 后进目标 `contentDocument` 插入口按钮；点击闭包在 **Root realm**
   执行（`window.__mcOpen` 即 Root 契约函数），按钮元素归属 iframe 文档。
@@ -571,6 +580,17 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
 
 ## 7. 迭代维护清单
 
+- 2026-10-24 实机 UI 三修（bugfix round 2，作者试用三问题）：①ESC 入口出现慢（≤2s 轮询
+  等待）→ `MenuEntryInjector.cs` 改事件驱动常驻：EntryJs 一次性安装 MutationObserver
+  （body 子树）+ 目标 iframe load 钩，回调当场跑幂等 install（锚点逻辑照旧，ANCHORS.md
+  单源不变）；C# 2s 慢拍降级为守卫自愈（`__mcObserver`/`__McInstalled`/`__mcSelfCheck`
+  三分量极小表达式，失守才重发完整引导）；DrainOutbox 节奏不动。②滑条轨道不可见（游戏
+  WebView 不画 accent-color 原生默认轨道）→ panel.js 显式 `-webkit-appearance:none` +
+  自绘 runnable-track（4px #2a2f3d）/ slider-thumb（13px 圆 #e8a33d，margin-top -4.5px
+  居中）+ -moz 双保险。③动作加速"新增覆盖"ID 栏 number 框原生加减钮 → 改
+  `type=text` + `inputmode=numeric`（去 min；parseInt 校验与防重复逻辑不变；补
+  `.__mc-ovr-add input` flex 覆盖防通用 text 规则拉伸）。锚点/挂钩点零变更（moddeps.json
+  不动）。实测见 `.superpowers/sdd/2026-10-24-modcenter/bugfix-round2-report.md`。
 - 2026-10-25 任务 18（文档终版 + 发版接线，零代码改动）：状态头改"全 18 任务实机定稿"口径
   （三档接入/启停两层/双列表入口/键盘门/六模式夹具 + task-17-report §5 验收清单衔接）；§3 补
   `mc_fixture.js` 六模式条目；§6.5.1 补 B3；§6.6.1 看门狗判据文案对齐 T17 修复；§7 T17 条目补

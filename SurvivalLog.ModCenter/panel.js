@@ -114,9 +114,20 @@
     + '#__mc_overlay .__mc-del:hover{border-color:#f87171;color:#f87171;}'
     + '#__mc_overlay .__mc-ovr-empty{padding:12px 4px;font-size:12.5px;color:#6b7180;}'
     /* 控件 */
-    + '#__mc_overlay input[type=range]{flex:1;accent-color:#e8a33d;height:4px;}'
+    /* 实机 UI 三修·问题2：滑条显式轨道/滑钮。游戏 WebView（CEF）不画 accent-color 依赖的
+     * 原生默认轨道（只见圆钮，拖动才显示）——appearance 归零 + 自绘 4px 轨道（#2a2f3d）
+     * 与 13px 圆钮（accent #e8a33d，margin-top:-4.5px 在 4px 轨道上垂直居中）；
+     * -moz 系双保险。容器高度 16px 保点击热区。 */
+    + '#__mc_overlay input[type=range]{-webkit-appearance:none;appearance:none;flex:1;accent-color:#e8a33d;background:transparent;height:16px;}'
+    + '#__mc_overlay input[type=range]::-webkit-slider-runnable-track{height:4px;background:#2a2f3d;border-radius:2px;}'
+    + '#__mc_overlay input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#e8a33d;margin-top:-4.5px;border:0;}'
+    + '#__mc_overlay input[type=range]::-moz-range-track{height:4px;background:#2a2f3d;border-radius:2px;}'
+    + '#__mc_overlay input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#e8a33d;border:0;}'
     + '#__mc_overlay input[type=number]{width:62px;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 6px;font-size:13px;text-align:center;font-family:inherit;}'
     + '#__mc_overlay input[type=text]{flex:1;min-width:0;background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:4px 9px;font-size:13px;text-align:left;font-family:inherit;}'
+    /* 问题3 后续：ovr 新增框改 type=text 后会被上面通用 text 规则 flex:1 拉伸——
+     * 等特异性后位覆盖回紧凑定宽（120px 来自 .__mc-ovr-add input 规则）。 */
+    + '#__mc_overlay .__mc-ovr-add input{flex:0 0 auto;}'
     + '#__mc_overlay input:focus,#__mc_overlay select:focus{outline:1px solid #e8a33d;}'
     + '#__mc_overlay select{background:#0f1219;border:1px solid #2a2f3d;color:#e8e6e0;border-radius:6px;padding:5px 8px;font-size:12.5px;font-family:inherit;max-width:170px;}'
     /* 底部图例 */
@@ -317,7 +328,10 @@
   function ovrHtml(m) {
     var h = '<div class="__mc-grp"><h3>\u52a8\u4f5c\u8986\u76d6\uff08\u5355\u4e2a\u52a8\u4f5c\u5355\u72ec\u8c03\uff09</h3>'
       + '<div class="__mc-ovr-add">'
-      + '<input type="number" id="__mc_ovr_new" placeholder="\u52a8\u4f5c ID" min="1">'
+      /* 实机 UI 三修·问题3：number 框在游戏 WebView 带原生加减钮（遮挡/误触）——改纯文本框
+       * + inputmode=numeric（软键盘数字提示）；min 属性去除。parseInt 校验与防重复逻辑
+       * 不变（wireCfg ovr-add 分支：!isNaN(id) && id>0 && !m.ovr.some(...)）。 */
+      + '<input type="text" id="__mc_ovr_new" placeholder="\u52a8\u4f5c ID" inputmode="numeric">'
       + '<button type="button" data-act="ovr-add">\uff0b \u65b0\u589e\u8986\u76d6</button>'
       + '</div>';
     var ovr = m.ovr || [];
