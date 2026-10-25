@@ -405,11 +405,6 @@
         "type": "GameCore.HotUpdate.Battle.Logic.EndlessManager",
         "method": "Initialize",
         "params": 2
-      },
-      {
-        "type": "GameCore.HotUpdate.Battle.Logic.DifficultyTools",
-        "method": "RollExploreLootCopies",
-        "params": 1
       }
     ],
     "configFields": [
