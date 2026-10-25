@@ -79,8 +79,7 @@ foreach ($m in $mods) {
         $txt = $txt -replace '(?m)^(FridgeHeightMult\s*=\s).*$', '${1}1.5'
         $txt = $txt -replace '(?m)^(VehicleWidthMult\s*=\s).*$',  '${1}1.5'
         $txt = $txt -replace '(?m)^(VehicleHeightMult\s*=\s).*$', '${1}1.5'
-        # BurdenMult 同名不同义：背包=2（倍增玩家背包），柜子负重=1000（解除家具限制）——按 mod 区分
-        if ($m.Name -eq 'BackpackExpand') { $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$', '${1}2' }
+        # BurdenMult 同名不同义：背包已退役该键（2026-10-25 数值化，见下分支），柜子负重=1000
         if ($m.Name -eq 'CabinetBurden') {
             $txt = $txt -replace '(?m)^(BurdenMult\s*=\s).*$',   '${1}1000'
             $txt = $txt -replace '(?m)^(IncludeBagIds\s*=\s).*$', '${1}'
@@ -127,6 +126,17 @@ foreach ($m in $mods) {
         # CabinetEverywhere：IncludeFurnitureIds 归一为空；ExcludeBagIds/ExcludeFurnitureIds
         # 本身就是发布默认值（v1.2 起名单默认非空），保留不清空
         $txt = $txt -replace '(?m)^(IncludeFurnitureIds\s*=\s).*$', '${1}'
+        # BackpackExpand（2026-10-25 数值化，作者定稿极简三键）：归一 = Expand.Width/Height/Burden
+        # 与 Global.MaxWidth/MaxHeight 五键归回发布默认（11/10/48000/16/18），防本机实验值进发布包
+        #（v1.3.6 FridgeWidthMult 漏网同款坑的对策）。旧倍率键（WidthMult/HeightMult/BurdenMult）
+        # 玩家侧由 mod 首跑迁移删除；上方裸 WidthMult/HeightMult 归一对此文件 no-op，留给 CabinetExpand。
+        if ($m.Name -eq 'BackpackExpand') {
+            $txt = $txt -replace '(?m)^(Width\s*=\s).*$',  '${1}11'
+            $txt = $txt -replace '(?m)^(Height\s*=\s).*$', '${1}10'
+            $txt = $txt -replace '(?m)^(Burden\s*=\s).*$', '${1}48000'
+            $txt = $txt -replace '(?m)^(MaxWidth\s*=\s).*$',  '${1}16'
+            $txt = $txt -replace '(?m)^(MaxHeight\s*=\s).*$', '${1}18'
+        }
         $txt = $txt -replace '(?m)^(ListOnReady\s*=\s).*$', '${1}true'
         [System.IO.File]::WriteAllText($dstCfg, $txt, (New-Object System.Text.UTF8Encoding($false)))
     }

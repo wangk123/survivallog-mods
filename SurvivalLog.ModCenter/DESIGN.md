@@ -591,6 +591,15 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   `type=text` + `inputmode=numeric`（去 min；parseInt 校验与防重复逻辑不变；补
   `.__mc-ovr-add input` flex 覆盖防通用 text 规则拉伸）。锚点/挂钩点零变更（moddeps.json
   不动）。实测见 `.superpowers/sdd/2026-10-24-modcenter/bugfix-round2-report.md`。
+- 2026-10-25 背包数值化对账（作者定稿极简三键版）：BackpackExpand 倍率制改数值制，Bind 面 =
+  `General.Enabled + Expand.Width/Height/Burden + Global.MaxWidth/MaxHeight` 共 6 键；Meta 背包位换
+  两组 5 键（扩容数值 3：Width/Height Badge now、Burden Badge reload；防呆上限 2）。Height 语义=
+  基础高度，天赋加行三连（31931-31933）每级 +1 由 mod 按链级数表计算（天赋照常生效）。旧倍率条目
+  （`Expand.WidthMult/HeightMult` 联动 + `Expand.BurdenMult`）与试点期的 `[Bag.*]` 逐包节、
+  Preset/ExtraIds/ExcludeIds/Debug.* 键全部退役（玩家 cfg 由 mod 首跑迁移删除）。**全面板自此无
+  live 联动项**：联动渲染仍由合成快照覆盖、TrySet 联动写机器保留但无条目命中；夹具 `LINKED`
+  数组清空（空真）、`backpackDynNote` 断言改 `backpackZeroNote`（首条 note 含"0=恢复官方原值"）、
+  默认页断言改两组 3+2 / 5 滑条 5 徽标。
 - 2026-10-25 任务 18（文档终版 + 发版接线，零代码改动）：状态头改"全 18 任务实机定稿"口径
   （三档接入/启停两层/双列表入口/键盘门/六模式夹具 + task-17-report §5 验收清单衔接）；§3 补
   `mc_fixture.js` 六模式条目；§6.5.1 补 B3；§6.6.1 看门狗判据文案对齐 T17 修复；§7 T17 条目补

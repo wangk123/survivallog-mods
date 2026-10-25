@@ -71,32 +71,57 @@ internal static class Meta
         {
             Guid = "com.local.survivallog.backpackexpand",
             Name = "背包扩容", En = "BackpackExpand",
-            Desc = "一个倍率搞定：自动计算背包宽度与高度（超游戏上限自动封顶）；负重单独调。",
+            Desc = "宽度/基础高度/负重三个明确数值统一应用全部背包（0=恢复官方原值）；天赋『背包加一行』照常每级+1；热改即时生效。",
             Groups =
             {
                 new MetaGroup
                 {
-                    Title = "扩容",
+                    Title = "扩容数值（0=恢复官方原值）",
                     Items =
                     {
                         new MetaItem
                         {
-                            Section = "Expand", Key = "WidthMult",
-                            WriteKeys = new[] { "WidthMult", "HeightMult" },
-                            Label = "背包倍率", Badge = "now", Type = "float",
-                            Def = 1.5, Min = 1, Max = 3, St = 0.1,
-                            LinkedSuffix = " · 拖动后宽高同步为新倍率，超上限自动封顶"
+                            Section = "Expand", Key = "Width", Label = "背包宽度",
+                            Badge = "now", Type = "int", Def = 11, Min = 0, Max = 30, St = 1,
+                            Note = "全部背包统一列数（原生最大 10）"
                         },
                         new MetaItem
                         {
-                            Section = "Expand", Key = "BurdenMult",
-                            Label = "负重倍率", Badge = "reload", Type = "int",
-                            Def = 2, Min = 1, Max = 10, St = 1,
-                            Note = "表值即时改，既有背包读档后体现"
+                            Section = "Expand", Key = "Height", Label = "基础高度",
+                            Badge = "now", Type = "int", Def = 10, Min = 0, Max = 30, St = 1,
+                            Note = "初始背包与登山包行数；天赋『背包加一行』每级自动 +1，照常生效"
+                        },
+                        new MetaItem
+                        {
+                            Section = "Expand", Key = "Burden", Label = "负重上限",
+                            Badge = "reload", Type = "int", Def = 48000, Min = 0, Max = 150000, St = 1000,
+                            Note = "全部背包统一基础值，天赋加成照常叠加；读档后体现"
+                        }
+                    }
+                },
+                new MetaGroup
+                {
+                    Title = "防呆上限（0=不封顶）",
+                    Items =
+                    {
+                        new MetaItem
+                        {
+                            Section = "Global", Key = "MaxWidth", Label = "宽度上限",
+                            Badge = "now", Type = "int", Def = 16, Min = 0, Max = 30, St = 1,
+                            Note = "Width 超出即夹到此值；过宽挤压背包页右侧栏"
+                        },
+                        new MetaItem
+                        {
+                            Section = "Global", Key = "MaxHeight", Label = "高度上限",
+                            Badge = "now", Type = "int", Def = 18, Min = 0, Max = 30, St = 1
                         }
                     }
                 }
             }
+            // 2026-10-25 数值化对账（作者定稿极简版）：Bind 面 = General.Enabled + Expand.Width/
+            // Height/Burden + Global.MaxWidth/MaxHeight，共 6 键；面板暴露 5 键（Enabled 走侧栏启停位）。
+            // Height 语义=基础高度，天赋加行三连（31931-31933）每级 +1 由 mod 按链级数表计算。
+            // 旧倍率键（Expand.*Mult）与 ExtraIds/ExcludeIds/Debug.* 已全部退役（首跑迁移后删除）。
         },
         new MetaMod
         {

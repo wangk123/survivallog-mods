@@ -17,7 +17,7 @@
 //        without throwaway targets), tp group (SKIP on machines without
 //        third-party plugins -- T14 net-machine semantics), real-DOM interactions:
 //        slider + throttle burst, bool, side toggle (PDS), cabinetsize
-//        no-gate toggle semantics (rejected + self-heal), linked pair (backpack),
+//        no-gate toggle semantics (rejected + self-heal), backpack cap-note + (formerly linked pair, now none),
 //        cabinet tier write round-trip, ovr round-trip, close via X.
 //   node tools/mc_fixture.js toggle     T13 hot-restore suite (MC_EVIDENCE
 //        multi-table snapshots; needs all suite cfgs Enabled=true; restores them).
@@ -75,16 +75,16 @@ const Z = {
   bp: '\u80cc\u5305\u6269\u5bb9', cb: '\u67dc\u5b50\u5bb9\u91cf', fc: '\u4fdd\u9c9c\u589e\u5f3a',
   qa: '\u52a8\u4f5c\u52a0\u901f', ce: '\u66f4\u597d\u7684\u50a8\u7269\u67dc', ru: '\u89d2\u8272\u89e3\u9501',
   rs: '\u673a\u5668\u4eba\u63d0\u901f', pp: '\u81ea\u9009\u751f\u5b58\u89c4\u5212', pd: '\u707e\u524d\u52a0\u901f',
-  gExpand: '\u6269\u5bb9', gUiFit: '\u89c6\u53e3\u81ea\u9002\u5e94', gChill: '\u4fdd\u9c9c',
+  gBpExp: '\u6269\u5bb9\u6570\u503c\uff080=\u6062\u590d\u5b98\u65b9\u539f\u503c\uff09', gBpCap: '\u9632\u5446\u4e0a\u9650\uff080=\u4e0d\u5c01\u9876\uff09', gUiFit: '\u89c6\u53e3\u81ea\u9002\u5e94', gChill: '\u4fdd\u9c9c',
   gMs: '\u5206\u7c7b\u8017\u65f6\uff08\u6beb\u79d2\uff0c0=\u5b98\u65b9\u539f\u503c\uff09',
   gVine: '\u85e4\u8513\u89d2\u8272', gPlan: '\u914d\u65b9\u4e0e\u89c4\u5212',
   gCost: '\u82b1\u8d39', gList: '\u5217\u8868', gRs: '\u673a\u5668\u4eba\u63d0\u901f',
   gCabV3: '\u6863\u4f4d\u4e0e\u4e0a\u9650\uff08\u70ed\u6539\u5373\u65f6\u751f\u6548\uff09', // cabinet v3 group title
-  noCap: '0=\u4e0d\u5c01\u9876', // 0=uncapped (cap-item note fragment)
+  noCap: '0=\u4e0d\u5c01\u9876', zero: '0=\u6062\u590d\u5b98\u65b9\u539f\u503c', // 0=uncapped (cap-item note fragment)
   moveKey: '\u79fb\u901f\u500d\u7387', secRs: '\u673a\u5668\u4eba\u63d0\u901f',
   flower: '\u89e3\u9501\u85e4\u8513\u4e13\u5c5e\u82b1\u79cd\u5b50',
   burden: '\u8d1f\u91cd\u500d\u7387',
-  curW: '\u5f53\u524d \u5bbd', w15h20: '\u5bbd1.5\u00d7\u9ad82.0',
+  w15h20: '\u5bbd1.5\u00d7\u9ad82.0',
   afterLoad: '\u8bfb\u6863\u540e', toggleOnly: '\u4ec5\u652f\u6301\u542f\u7528',
   fool: '\u9632\u5446', ovrNew: '\u65b0\u589e\u8986\u76d6',
   cont: '\u7ee7\u7eed\u6e38\u620f', newg: '\u65b0\u6e38\u620f',
@@ -310,13 +310,12 @@ async function menuMode() {
             badgeCount: q('#__mc_cfg .__mc-badge').length,
             ver: window.__mcLastSnapshot && window.__mcLastSnapshot.self ? window.__mcLastSnapshot.self.ver : null,
             tpCount: window.__mcLastSnapshot && window.__mcLastSnapshot.tp ? window.__mcLastSnapshot.tp.length : 0,
-            curW: curW,
           };
         }
       } catch (e) {}
     }
     return null;
-  }, { tail: MAIN_HTML, curW: Z.curW });
+  }, { tail: MAIN_HTML });
   F.layout = layout;
   if (layout) {
     V.styleInstalled = layout.style;
@@ -331,19 +330,20 @@ async function menuMode() {
     V.threeCats = layout.cats.length === 3
       && layout.cats[0].indexOf('\u5957\u4ef6 MOD') === 0 && layout.cats[1].indexOf('\u9762\u677f\u81ea\u8eab') === 0
       && layout.cats[2].indexOf('\u7b2c\u4e09\u65b9 MOD') === 0;
-    V.defaultPageBackpack = layout.cfgTitle === Z.bp && layout.cfgGrps.length === 1
-      && layout.cfgGrps[0].t === Z.gExpand && layout.cfgGrps[0].items === 2
-      && layout.rangeCount === 2 && layout.badgeCount === 2;
-    V.backpackDynNote = !!layout.curItemNote && layout.curItemNote.indexOf(Z.curW) === 0;
+    V.defaultPageBackpack = layout.cfgTitle === Z.bp && layout.cfgGrps.length === 2
+      && layout.cfgGrps[0].t === Z.gBpExp && layout.cfgGrps[0].items === 3
+      && layout.cfgGrps[1].t === Z.gBpCap && layout.cfgGrps[1].items === 2
+      && layout.rangeCount === 5 && layout.badgeCount === 5;
+    V.backpackZeroNote = !!layout.curItemNote && layout.curItemNote.indexOf(Z.zero) !== -1;
   } else {
     ['styleInstalled', 'headTitle', 'headSubVer', 'closeBtn', 'footFourBadges', 'toastEl', 'sideTenRows',
-      'selfLock', 'tpEmptyHint', 'threeCats', 'defaultPageBackpack', 'backpackDynNote'].forEach((k) => { V[k] = false; });
+      'selfLock', 'tpEmptyHint', 'threeCats', 'defaultPageBackpack', 'backpackZeroNote'].forEach((k) => { V[k] = false; });
   }
 
   // ---- page-by-page: click each suite row, assert groups/items/controls ----
   // expectations mirror Meta.cs (single source: SurvivalLog.ModCenter/Meta.cs)
   const EXPECT = [
-    { name: Z.bp, groups: [{ t: Z.gExpand, items: 2 }] },
+    { name: Z.bp, groups: [{ t: Z.gBpExp, items: 3 }, { t: Z.gBpCap, items: 2 }] },
     { name: Z.cb, groups: [{ t: Z.gCabV3, items: 10 }], special: 'cabinetv3' },
     { name: Z.fc, groups: [{ t: Z.gChill, items: 2 }], special: 'fridge' },
     { name: Z.qa, groups: [{ t: Z.gMs, items: 5 }], special: 'ovr' },
@@ -1103,13 +1103,11 @@ async function menuMode() {
   // key must be the FULL display string ("Expand.WidthMult + HeightMult") so the C#
   // Match hits its it.K branch; then TrySet writes BOTH writeKeys equal. Assert:
   // message shape -> MC_SET_OK -> both keys equal new value on disk -> restore.
-  const LINKED = [
-    // T17: cabinetsize pairs removed (CabinetSize v3 has no linked mult keys);
-    // backpack remains the live linked pair. The linked RENDER/write machinery is
-    // additionally exercised panel-side by the synthetic snapshots above.
-    { name: Z.bp, file: GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg',
-      k: 'Expand.WidthMult + HeightMult', g: 0, i: 0, keys: ['WidthMult', 'HeightMult'] },
-  ];
+  // 2026-10-25: backpack numeric migration removed the last live linked pair
+  // (CabinetSize v3 already had none) -- LINKED is now empty and the loop below is
+  // a no-op kept for the day a linked item returns; linked RENDER/write machinery
+  // stays exercised panel-side by the synthetic snapshots above.
+  const LINKED = [];
   const readPair = (file, keys) => keys.map((k) => stripNonCodeLines(readCfgSection(file, 'Expand', k)));
   F.linked = [];
   for (const L of LINKED) {
@@ -2072,7 +2070,7 @@ async function menuMode() {
     ['0  side: tp empty hint consistent with tp count', V.tpEmptyHint],
     ['0  side: 3 category headers', V.threeCats],
     ['0  default page = backpack 2 items 2 ranges', V.defaultPageBackpack],
-    ['0  backpack linked dynamic note (当前 宽..)', V.backpackDynNote],
+    ['0  backpack zero-note (0=恢复官方原值..)', V.backpackZeroNote],
     ['14 tp present (>=1 third-party plugin)', V.tpPresent],
     ['14 tp exempt: no first-party guid / probe name in tp', V.tpExempt],
     ['14 tp snapshot vs own cfg on disk (sections/items/values)', V.tpSnapshotVsDisk],
