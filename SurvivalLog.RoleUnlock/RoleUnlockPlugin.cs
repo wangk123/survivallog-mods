@@ -50,7 +50,6 @@ public sealed class RoleUnlockPlugin : BasePlugin
     // 下次启动不加载（不创建 Ticker，零日志零改写）。
     internal static ConfigEntry<bool> Enabled;
     internal static ConfigEntry<bool> UnlockVine;
-    internal static ConfigEntry<bool> VineSkipDefenseGate;
     internal static ConfigEntry<bool> UnlockFlowerSeeds;
     internal static ConfigEntry<bool> ShareDefenseRecipes;
     internal static ConfigEntry<bool> ClearPool;
@@ -66,10 +65,8 @@ public sealed class RoleUnlockPlugin : BasePlugin
         Enabled = Config.Bind("General", "Enabled", true, "总开关：false=还原官方表值并停写；下次启动不加载。");
         UnlockVine = Config.Bind("Vine", "UnlockVine", true,
             "藤蔓全角色解锁：清空 Plant_RareSeedDiscover 的角色白名单。所有角色收获作物都可能发现藤蔓种子，并可种植/安装藤蔓。");
-        VineSkipDefenseGate = Config.Bind("Vine", "SkipDefenseGate", false,
-            "同时清零藤蔓种子的防御等级门槛（Plant_RareSeedDiscover_DefenseLv）。默认 false=保留门槛（发现种子需防御达标，与女大学生原生规则一致）。");
-        UnlockFlowerSeeds = Config.Bind("Vine", "UnlockFlowerSeeds", false,
-            "观赏花种子同样全角色解锁（清空 Plant_FlowerSeedDiscover 白名单）。默认 false=不动。");
+        UnlockFlowerSeeds = Config.Bind("Vine", "UnlockFlowerSeeds", true,
+            "观赏花种子全角色解锁（清空 Plant_FlowerSeedDiscover 白名单）：任何角色收获作物都可能发现花朵种子（原生=大学生专属）。false=还原官方白名单。");
         ShareDefenseRecipes = Config.Bind("Defense", "ShareDefenseRecipes", true,
             "防御配方全角色互通：Config_DefenseLv 的 unlock_recipes_P1~P4 四列合并成并集。燃烧瓶等角色专属配方对所有角色变为可解锁（等级门槛照旧）。");
         ClearPool = Config.Bind("Plan", "ClearPool", true,
@@ -83,7 +80,6 @@ public sealed class RoleUnlockPlugin : BasePlugin
         System.EventHandler reload = (object s, System.EventArgs e) => { Rerun = true; };
         Enabled.SettingChanged += reload;
         UnlockVine.SettingChanged += reload;
-        VineSkipDefenseGate.SettingChanged += reload;
         UnlockFlowerSeeds.SettingChanged += reload;
         ShareDefenseRecipes.SettingChanged += reload;
         ClearPool.SettingChanged += reload;
@@ -110,46 +106,25 @@ public sealed class RoleUnlockPlugin : BasePlugin
 internal static class RoleTable
 {
     private const string KeyRareSeed = "Plant_RareSeedDiscover";
-    private const string KeyRareSeedGate = "Plant_RareSeedDiscover_DefenseLv";
     private const string KeyFlowerSeed = "Plant_FlowerSeedDiscover";
 
     // GlobalSetting 原值（null=尚未见过该条目）
     private static string _origRareAllow, _origFlowerAllow;
-    private static int _origGate = int.MinValue;
 
     // DefenseLv 每行四列原值：rowKey(Lv) -> [P1,P2,P3,P4]
     private static readonly Dictionary<int, List<int>[]> OrigCols = new();
 
     /// <summary>一轮同步。返回 null=表未就绪；否则 (日志行列表)。</summary>
     internal static List<string> Apply(GameCore.HotUpdate.ConfigManager cm, bool unlockVine,
-        bool skipGate, bool unlockFlower, bool shareRecipes, bool clearPool, bool vaseRecipe,
+        bool unlockFlower, bool shareRecipes, bool clearPool, bool vaseRecipe,
         bool verbose, bool listAll)
     {
         var lines = new List<string>();
 
-        // ---- 1) GlobalSetting：藤蔓 / 花种白名单 + 防御门槛 ----
+        // ---- 1) GlobalSetting：藤蔓 / 花种白名单（防御门槛保留官方值，不改动）----
         if (!ApplyAllowList(cm, KeyRareSeed, unlockVine, ref _origRareAllow, "藤蔓", verbose, lines) ||
             !ApplyAllowList(cm, KeyFlowerSeed, unlockFlower, ref _origFlowerAllow, "花种", verbose, lines))
             return null;
-
-        var gate = cm.TryGet_Config_GlobalSetting(KeyRareSeedGate);
-        if (gate != null)
-        {
-            int cur;
-            try { cur = gate.Params1; } catch { cur = int.MinValue; }
-            if (cur != int.MinValue)
-            {
-                if (_origGate == int.MinValue) _origGate = cur;
-                int want = skipGate ? 0 : _origGate;
-                if (cur != want)
-                {
-                    gate.Params1 = want;
-                    lines.Add($"GS {KeyRareSeedGate}.Params1 防御门槛 {cur} -> {want}");
-                }
-                else if (verbose || listAll)
-                    lines.Add($"GS {KeyRareSeedGate}.Params1 防御门槛 = {cur}（原 {_origGate}）");
-            }
-        }
 
         // ---- 2) DefenseLv：P1~P4 列并集 ----
         Il2CppSystem.Collections.Generic.Dictionary<int, GameCore.HotUpdate.Config_DefenseLv> dict;
@@ -412,7 +387,6 @@ internal sealed class RoleTicker : MonoBehaviour
         var listAll = RoleUnlockPlugin.ListOnReady.Value && !_announced;
         var lines = RoleTable.Apply(cm,
             on && RoleUnlockPlugin.UnlockVine.Value,
-            on && RoleUnlockPlugin.VineSkipDefenseGate.Value,
             on && RoleUnlockPlugin.UnlockFlowerSeeds.Value,
             on && RoleUnlockPlugin.ShareDefenseRecipes.Value,
             on && RoleUnlockPlugin.ClearPool.Value,
@@ -447,7 +421,7 @@ internal sealed class RoleTicker : MonoBehaviour
             var pool = on && RoleUnlockPlugin.ClearPool.Value ? "开" : "关";
             var vase = on && RoleUnlockPlugin.VaseRecipe.Value ? "开" : "关";
             RoleUnlockPlugin.Log.LogInfo(
-                $"[RoleUnlock] 生效：藤蔓全角色解锁={vine}（防御门槛{(on && RoleUnlockPlugin.VineSkipDefenseGate.Value ? "已清零" : "保留")}），" +
+                $"[RoleUnlock] 生效：藤蔓全角色解锁={vine}（防御门槛按官方规则保留），" +
                 $"防御配方互通={def}，生存规划互通={pool}，花瓶配方={vase}。配置改动后自动重写/还原。");
         }
     }

@@ -96,15 +96,16 @@
 | 项 | 默认 | 说明 |
 |---|---|---|
 | General.Enabled | true | 总开关（ModCenter 启停位，2026-10-24）：false=全功能目标态切"还原官方"（复用各 Apply 现役还原路径：Params3 回原白名单/DefenseLv 回分列/Talent 回白名单/花瓶回官方等级）；下次启动不加载（不创建 Ticker，零日志零改写） |
-| UnlockVine | true | 清空藤蔓角色白名单 |
-| SkipDefenseGate | false | 清零藤蔓种子防御等级门槛 |
-| UnlockFlowerSeeds | false | 观赏花种子同样全角色 |
+| UnlockVine | true | 清空藤蔓角色白名单（藤蔓种子发现的防御等级门槛保留官方值，不提供改动） |
+| UnlockFlowerSeeds | true | 观赏花种子全角色（清 Plant_FlowerSeedDiscover 白名单）；false=还原官方 |
 | ShareDefenseRecipes | true | DefenseLv P1~P4 并集互通 |
 | Plan.ClearPool | true | 解锁角色专属生存规划（46 项功能类，清 PlayerSelectId）；false=还原官方白名单（家具位黑名单始终不动；已购不清退） |
 | Plan.VaseRecipe | true | 解锁花瓶配方（325 craft/show→1/1）；false=还原官方等级（仅大学生剧情事件发放） |
 | ListOnReady | true | 首轮列原始白名单与各行并集 |
 | Verbose | false | 每轮明细 |
 
+注：SkipDefenseGate（清零藤蔓种子防御门槛）已于 2026-10-24 按作者决定移除——门槛保留官方规则；
+UnlockFlowerSeeds 默认值同日改 true（作者定案：其他角色默认可发现花朵种子）。
 注：生存规划互通 / 花瓶配方互通原为无开关设计，2026-10-24（ModCenter T11）起各有独立开关
 （Plan.ClearPool / Plan.VaseRecipe，默认 true=行为不变）；总停用走 General.Enabled。
 
