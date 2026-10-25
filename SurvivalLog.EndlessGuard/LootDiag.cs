@@ -66,9 +66,9 @@ internal static class LootDiag
     {
         private static MethodBase TargetMethod() =>
             AccessTools.Method(typeof(FurnitureLootManager), "AppendDiscoveryWave");
-        private static void Postfix(Il2CppSystem.Collections.Generic.List<Furniture> __0, int __2)
+        private static void Postfix(Il2CppSystem.Collections.Generic.List<Furniture> __0, int __1)
         {
-            try { W("AppendDiscoveryWave 容器数=" + (__0 == null ? -1 : __0.Count) + " 等级=" + __2); }
+            try { W("AppendDiscoveryWave 容器数=" + (__0 == null ? -1 : __0.Count) + " 等级=" + __1); }
             catch (System.Exception e) { W("WaveDiag: " + e.Message); }
         }
     }

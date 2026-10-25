@@ -20,22 +20,24 @@ public sealed class EndlessGuardPlugin : BasePlugin
     internal static ManualLogSource Log;
     internal static ConfigEntry<bool> PreventNewFalls;
     internal static ConfigEntry<bool> RestoreFallenPoints;
-    internal static ConfigEntry<bool> StripPendingFallTags;
     internal static ConfigEntry<bool> ExtendScavengePlans;
-    internal static ConfigEntry<float> RichnessStep;
 
     public override void Load()
     {
         Log = base.Log;
         PreventNewFalls = Config.Bind("Fall", "PreventNewFalls", true, "拦截全部新沦陷（三模式通吃）。");
-        RestoreFallenPoints = Config.Bind("Fall", "RestoreFallenPoints", true, "读档后恢复已沦陷的交易点/探险图（营地除外，恢复例程幂等）。");
-        StripPendingFallTags = Config.Bind("Fall", "StripPendingFallTags", true, "剥掉沦陷倒计时 tag（前缀运行时读，读不到自动降级跳过）。");
+        RestoreFallenPoints = Config.Bind("Fall", "RestoreFallenPoints", true, "读档后恢复已沦陷的交易点/探险图（营地按剧情链状态区分；恢复例程幂等）。");
         ExtendScavengePlans = Config.Bind("Plans", "ExtendScavengePlans", true, "注入 11 条拾遗扩展规划（超市·六~十/医院·三~五/学校·三~五，D100-D300）+ 洞察注册表 + 篮子/降档。");
-        RichnessStep = Config.Bind("Plans", "RichnessStep", 0.3f, "数量层每张已购新卡的期望份数加成（官方探索物资难度值之上叠加；0=纯官方难度）。");
 
+        // 逐类挂载+异常隔离（2026-10-25 事故教训：PatchAll 整包挂载时单个补丁 IL 编译错会炸掉整个
+        // Load()——Ticker/loaded 行全没执行，"补丁在跑轮询全无"的残废态。逐类隔离后坏一个不连坐）。
         var harmony = new HarmonyLib.Harmony(Guid);
-        // 各补丁类由后续功能块自带 [HarmonyPatch]，统一在此 PatchAll
-        harmony.PatchAll(typeof(EndlessGuardPlugin).Assembly);
+        foreach (var t in typeof(EndlessGuardPlugin).Assembly.GetTypes())
+        {
+            if (!t.IsClass || !t.IsDefined(typeof(HarmonyLib.HarmonyPatch), false)) continue;
+            try { harmony.CreateClassProcessor(t).Patch(); }
+            catch (Exception e) { Trace("patch 挂载失败 " + t.Name + ": " + e.Message); }
+        }
 
         if (!ClassInjector.IsTypeRegisteredInIl2Cpp<GuardTicker>())
             ClassInjector.RegisterTypeInIl2Cpp<GuardTicker>();
@@ -43,7 +45,7 @@ public sealed class EndlessGuardPlugin : BasePlugin
         Object.DontDestroyOnLoad(go);
         go.AddComponent<GuardTicker>();
 
-        Trace("loaded：cfg=" + PreventNewFalls.Value + "," + RestoreFallenPoints.Value + "," + StripPendingFallTags.Value + "," + ExtendScavengePlans.Value + ",step=" + RichnessStep.Value);
+        Trace("loaded：cfg=" + PreventNewFalls.Value + "," + RestoreFallenPoints.Value + "," + ExtendScavengePlans.Value);
         Log.LogInfo("[EndlessGuard] loaded（拦沦陷/恢复/剥tag/规划扩展）");
         SurvivalLog.ModShared.WelcomeTip.Install(Log);
     }
