@@ -112,12 +112,50 @@ internal static class FallRestorer
             }
 
             EndlessGuardPlugin.Trace($"restore：恢复 {restored.Count} 点 [{string.Join(",", restored)}]，剥封印tag {sealStripped}，剥缓刑tag {stripped} 条");
+            GrantLostPlan();
             DumpDiag(__instance, save, tm);
         }
         catch (System.Exception e)
         {
             EndlessGuardPlugin.Trace("restore 异常（下次读档重试）: " + e.Message);
         }
+    }
+
+    /// <summary>补授（2026-10-25 作者验收实锤"点数已扣但 T 键列表无此规划"——买卡撞上注入被表重建
+    /// 冲掉的窗口，官方链激活写入失败即孤儿 ID 事故的正向面）。cfg GrantPlanId 指定一张新卡 id，
+    /// 读档时若持有名单缺它则直接写入 SurvivalPlanningComponent.SaveCache（官方持久化名单，
+    /// 官方 OnInitBuffs 下次加载照单激活），不重复扣点；补完自动清零 cfg 值防重复。</summary>
+    private static void GrantLostPlan()
+    {
+        try
+        {
+            int grant = EndlessGuardPlugin.GrantPlanId == null ? 0 : EndlessGuardPlugin.GrantPlanId.Value;
+            if (grant == 0) return;
+            var am = GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.IsInstanceCreated
+                ? GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.Instance?._AgentManager : null;
+            var role = am?.GetLeadingRole();
+            var spc = role == null ? null
+                : AgentTools.GetAgentComponent<GameCore.HotUpdate.Battle.Logic.BaseComponent>(role)?.TryCast<SurvivalPlanningComponent>();
+            var cache = spc?.SaveCache;
+            if (cache == null)
+            {
+                EndlessGuardPlugin.Trace("补授：" + grant + " 组件/持有名单不可达，本次未补（cfg 保留）");
+                return;
+            }
+            bool owned = false;
+            for (int i = 0; i < cache.Count; i++) if (cache[i] == grant) { owned = true; break; }
+            if (owned)
+            {
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有，无需补");
+            }
+            else
+            {
+                cache.Add(grant);
+                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入持有名单（官方存档流持久化；下次加载激活）");
+            }
+            EndlessGuardPlugin.GrantPlanId.Value = 0;   // 补完即清（写回 cfg 文件）
+        }
+        catch (System.Exception e) { EndlessGuardPlugin.Trace("补授异常: " + e.Message); }
     }
 
     /// <summary>全量诊断（2026-10-25 作者令"一次排查完"）：把沦陷显示可能读的每一份状态全部倒进

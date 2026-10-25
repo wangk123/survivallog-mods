@@ -47,14 +47,43 @@ internal static class LootDiag
                 try { sb.Append(" 发现等级=").Append(ExploreDiscoveryTools.GetDiscoveryLv(map)); } catch (System.Exception e) { sb.Append(" 发现等级=ERR:").Append(e.Message); }
                 try { sb.Append(" 快照=").Append(GameCounter.GetCounter("furnitureloot.discoverlv." + map)); } catch { }
                 try { sb.Append(" 基础回填=").Append(GameCounter.GetCounter("furnitureloot.basefill." + map)); } catch { }
+                Il2CppSystem.Collections.Generic.List<int> cards = null;
                 try
                 {
-                    var cards = ExploreDiscoveryTools.GetInsightCards(map);
+                    cards = ExploreDiscoveryTools.GetInsightCards(map);
                     sb.Append(" 卡表=[");
                     if (cards != null) for (int i = 0; i < cards.Count; i++) sb.Append(cards[i]).Append(i == cards.Count - 1 ? "" : ",");
                     sb.Append(']');
                 }
                 catch (System.Exception e) { sb.Append(" 卡表=ERR:").Append(e.Message); }
+                // 持有态终审（2026-10-25）：GetDiscoveryLv 数等级用的就是 HasActivated——
+                // 直接 dump 每张卡的 HasActivated 结果 + Redux 已购名单，一次定案"买了但没持有"在哪层
+                try
+                {
+                    var role = (GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.IsInstanceCreated ? GameCore.HotUpdate.BaseSingleton<BattleLogicWorld>.Instance?._AgentManager : null)?.GetLeadingRole();
+                    // interop 泛型限制（记忆实证）：GetAgentComponent<T> 仅 <object> 预编译实例可用，TryCast 落型
+                    var compObj = role == null ? null : GameCore.HotUpdate.Battle.Logic.AgentTools.GetAgentComponent<GameCore.HotUpdate.Battle.Logic.BaseComponent>(role);
+                    var spc = compObj?.TryCast<SurvivalPlanningComponent>();
+                    sb.Append(" HasActivated=[");
+                    if (spc != null && cards != null)
+                        for (int i = 0; i < cards.Count; i++) sb.Append(cards[i]).Append(':').Append(spc.HasActivated(cards[i]) ? 1 : 0).Append(i == cards.Count - 1 ? "" : " ");
+                    sb.Append(']');
+                }
+                catch (System.Exception e) { sb.Append(" HasActivated=ERR:").Append(e.Message); }
+                try
+                {
+                    var rus = GameCore.HotUpdate.BaseSingleton<GameCore.HotUpdate.ReduxUI.ReduxUISystem>.Instance;
+                    var dataTree = rus?.reduxStoreLayer?.dataTree;
+                    if (dataTree != null && dataTree.TryGetValue(Il2CppInterop.Runtime.Il2CppType.From(typeof(GameCore.HotUpdate.ReduxUI.State_Data_Talent)), out var raw))
+                    {
+                        var st = raw?.TryCast<GameCore.HotUpdate.ReduxUI.State_Data_Talent>();
+                        var ids = st?.SurvivalPlanningIds;
+                        sb.Append(" Redux已购=[");
+                        if (ids != null) for (int i = 0; i < ids.Count; i++) sb.Append(ids[i]).Append(i == ids.Count - 1 ? "" : ",");
+                        sb.Append(']');
+                    }
+                }
+                catch (System.Exception e) { sb.Append(" Redux=ERR:").Append(e.Message); }
                 W(sb.ToString());
             }
             catch (System.Exception e) { W("RefreshDiag: " + e.Message); }
