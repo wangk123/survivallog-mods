@@ -60,9 +60,7 @@ internal static class FallRestorer
                     for (int i = list.Count - 1; i >= 0; i--)   // 倒序 Remove 安全
                     {
                         var id = list[i];
-                        bool isCamp = true;    // fail-closed：查询异常按营地处理=留沦陷（终审建议修2，§6 红线保守方向）
-                        try { isCamp = EndlessManager.IsCampMapPoint(id); } catch { }
-                        if (isCamp) continue;                    // 营地永不恢复（DESIGN §6 红线）
+                        if (IsStoryLockedCamp(__instance, id)) continue;   // 营地红线细化（2026-10-25 诊断定案）：仅撤离剧情链营地不恢复
                         list.RemoveAt(i);
                         GameCounter.SetCounter("endless.fall_tier_" + id, 0);
                         restored.Add(id);
@@ -86,9 +84,7 @@ internal static class FallRestorer
                             if (mp == null) continue;
                             var id = mp.ID;
                             if (restored.Contains(id)) continue;
-                            bool camp = true;   // fail-closed 同上
-                            try { camp = EndlessManager.IsCampMapPoint(id); } catch { }
-                            if (camp) continue;
+                            if (IsStoryLockedCamp(__instance, id)) continue;
                             int tier = 0;
                             try { tier = GameCounter.GetCounter("endless.fall_tier_" + id); } catch { }
                             bool inList = false;
@@ -170,6 +166,20 @@ internal static class FallRestorer
             EndlessGuardPlugin.Trace("diag：全量诊断已写入 EndlessGuard_diag.txt");
         }
         catch (System.Exception e) { EndlessGuardPlugin.Trace("diag: " + e.Message); }
+    }
+
+    /// <summary>营地红线细化（2026-10-25 作者验收第三轮+全量诊断定案）：仅已进入撤离剧情链的营地
+    /// （campState=Evacuated5/Lost6）不恢复；普通日程沦陷的营地照常恢复。原一刀切"营地永不恢复"
+    /// 误伤了 1100 城东幸存者营地/1101 废墟回收站——诊断实锤其 campState=0（撤离链根本没跑过，
+    /// 无剧情状态可冲突，与 CampStateEvacuated/Lost 的告别事件链不是一回事）。</summary>
+    private static bool IsStoryLockedCamp(EndlessManager em, int id)
+    {
+        bool camp;
+        try { camp = EndlessManager.IsCampMapPoint(id); } catch { return true; }   // fail-closed：查询异常按锁定
+        if (!camp) return false;
+        int st;
+        try { st = em.GetCampState(id); } catch { return true; }                   // 同上
+        return st == 5 || st == 6;
     }
 
     /// <summary>TAG_DEFERRED_FALL_PREFIX 私有静态字段运行时读（不硬编码，抗表更新；读失败返回 null 降级）。</summary>
