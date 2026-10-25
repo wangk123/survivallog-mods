@@ -162,21 +162,27 @@ internal static class ScavengePlans
             var icon = tDict.TryGetValue(31601, out var proto) ? (proto.Icon, proto.WebIcon) : ("", "");
             foreach (var p in Plans)
             {
-                if (!tDict.ContainsKey(p.TalentId))
+                // upsert：行不存在则建；显示字段无条件拍平（2026-10-25 作者实机截图实锤：官方 T 列表把 Name/Dec
+                // 当本地化键走 GetLocalText→GetLocalTxt，键 miss 时 mov rax,rbx 原样透传输入串。写键名则显示键名，
+                // 直接写字面中文则透传显示中文，无需注入本地化表）
+                GameCore.HotUpdate.Config_Talent t;
+                if (!tDict.TryGetValue(p.TalentId, out t))
                 {
-                    var t = new GameCore.HotUpdate.Config_Talent();
+                    t = new GameCore.HotUpdate.Config_Talent();
                     t.ID = p.TalentId; t.TalentID = p.TalentId; t.Lv = 1; t.Available = 1;
                     t.DemoTwoMode = 0; t.EndlessMode = 0; t.IsReget = false;
-                    t.Name = "Talent_Name_" + p.TalentId; t.Name_Local = p.Name;
-                    t.Dec = "Talent_Dec_" + p.TalentId; t.Dec_Local = "搜索能力增强，可以发现更多被忽略的物资（发现等级+" + p.Level + "档）";
-                    t.Type = 2; t.ShowType = 2; t.Icon = icon.Item1; t.WebIcon = icon.Item2;
+                    t.Type = 2; t.ShowType = 2;
                     t.LvParaShow = ""; t.LvParaShow_Local = "";
-                    t.LvUpCost = p.Cost; t.BuffID = 0; t.BuffRefresh = 0;
+                    t.BuffID = 0; t.BuffRefresh = 0;
                     t.ConditionSetId = p.CondId;
                     t.PlayerSelectId = new Il2CppSystem.Collections.Generic.List<int>();   // 官方行原值=[]=不限角色
                     tDict[p.TalentId] = t;
                     InjectedCount++;
                 }
+                t.Name = p.Name; t.Name_Local = p.Name;
+                t.Dec = t.Dec_Local = "搜索能力增强，可以发现更多被忽略的物资（发现等级+" + p.Level + "档）";
+                t.Icon = icon.Item1; t.WebIcon = icon.Item2;
+                t.LvUpCost = p.Cost;
 
                 if (cDict.ContainsKey(p.CondId)) continue;
                 var c = NewCondSet(p.CondId);
@@ -226,7 +232,10 @@ internal static class ScavengePlans
     }
 
     /// <summary>注册表活引用追加：GetInsightCards 返回字典内的 List（0x2826350 实证非副本），Add 即生效。
-    /// 追加后 GetDiscoveryLv 自动数到新卡（HasActivated 循环），官方追加波（AppendDiscoveryWave）下轮进图自动上货。</summary>
+    /// 追加后 GetDiscoveryLv 自动数到新卡（HasActivated 循环），官方追加波（AppendDiscoveryWave）下轮进图自动上货。
+    /// 2026-10-25 二连丢卡（·七/学校·三）反汇编定案追加反向表：AddBuff 主门（0x3018A75 gate）=
+    /// BuffID&gt;0 ∨ id==32111 ∨ GetInsightMapForCard&gt;0 ∨ 在静态数组；GetInsightMapForCard(0x2826440)
+    /// 只查 _mapByCard 反向表——缺反向项→官方购买链扣点后【静默不加卡】。反向表同款每轮补（幂等）。</summary>
     private static void AppendRegistry()
     {
         try
@@ -238,8 +247,38 @@ internal static class ScavengePlans
                 foreach (var p in g)
                     if (!cards.Contains(p.TalentId)) { cards.Add(p.TalentId); EndlessGuardPlugin.Trace("registry：图" + g.Key + " +卡 " + p.TalentId); }
             }
+            AppendReverseMap();
         }
         catch (Exception e) { EndlessGuardPlugin.Trace("registry: " + e.Message); }
+    }
+
+    /// <summary>_mapByCard（卡→图，静态偏移 0x18）反射追加。interop 静态引用字段以属性或字段形态暴露，两种都试。
+    /// 每轮重取实例（防 EnsureRegistry 重建换对象后写进陈旧字典），句柄缓存。</summary>
+    private static System.Reflection.PropertyInfo _revMapPi;
+    private static System.Reflection.FieldInfo _revMapFi;
+    private static bool _revMapTried;
+    private static void AppendReverseMap()
+    {
+        try
+        {
+            if (!_revMapTried)
+            {
+                _revMapTried = true;
+                var t = typeof(GameCore.HotUpdate.Battle.Logic.ExploreDiscoveryTools);
+                const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+                _revMapPi = t.GetProperty("_mapByCard", F);
+                if (_revMapPi == null) _revMapFi = t.GetField("_mapByCard", F);
+                if (_revMapPi == null && _revMapFi == null) { EndlessGuardPlugin.Trace("registry：_mapByCard 反射不可达（GetProperty/GetField 双失败）"); }
+            }
+            var d = (_revMapPi != null ? _revMapPi.GetValue(null) : _revMapFi?.GetValue(null))
+                as Il2CppSystem.Collections.Generic.Dictionary<int, int>;
+            if (d == null) return;
+            int added = 0;
+            foreach (var p in Plans)
+                if (!d.ContainsKey(p.TalentId)) { d[p.TalentId] = p.MapId; added++; }
+            if (added > 0) EndlessGuardPlugin.Trace("registry：反向表(卡→图) +" + added + " 项——AddBuff 购买门已通");
+        }
+        catch (Exception e) { EndlessGuardPlugin.Trace("registry 反向表: " + e.Message); }
     }
 
     // ---- 功能4b 内容层落表（DESIGN §2.5.3）：篮子扩池 + 官方封印货降档。只改进程内存表，零存档写入 ----

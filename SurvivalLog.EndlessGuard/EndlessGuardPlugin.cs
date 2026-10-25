@@ -23,6 +23,7 @@ public sealed class EndlessGuardPlugin : BasePlugin
     internal static ConfigEntry<bool> RestoreFallenPoints;
     internal static ConfigEntry<bool> ExtendScavengePlans;
     internal static ConfigEntry<int> GrantPlanId;
+    internal static ConfigEntry<string> GrantPlanIds;
 
     public override void Load()
     {
@@ -32,6 +33,7 @@ public sealed class EndlessGuardPlugin : BasePlugin
         RestoreFallenPoints = Config.Bind("Fall", "RestoreFallenPoints", true, "读档后恢复已沦陷的交易点/探险图（营地按剧情链状态区分；恢复例程幂等）。");
         ExtendScavengePlans = Config.Bind("Plans", "ExtendScavengePlans", true, "注入 11 条拾遗扩展规划（超市·六~十/医院·三~五/学校·三~五，D100-D300）+ 洞察注册表 + 篮子/降档。");
         GrantPlanId = Config.Bind("Plans", "GrantPlanId", 0, "补授：因注入窗口事故丢失持有的新规划卡 id（如 31606=超市拾遗·六）。设值后进档一次即写入持有名单（不扣点），补完自动清零。0=关闭。");
+        GrantPlanIds = Config.Bind("Plans", "GrantPlanIds", "", "补授（多卡版）：逗号分隔的新规划卡 id 列表（如 31607,31633）。进档一次逐卡补入持有名单（不扣点），全部确认后自动清空。");
 
         // 逐类挂载+异常隔离（2026-10-25 事故教训：PatchAll 整包挂载时单个补丁 IL 编译错会炸掉整个
         // Load()——Ticker/loaded 行全没执行，"补丁在跑轮询全无"的残废态。逐类隔离后坏一个不连坐）。

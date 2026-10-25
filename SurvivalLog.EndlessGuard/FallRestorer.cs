@@ -215,25 +215,47 @@ internal static class GrantPatch
     {
         try
         {
-            int grant = EndlessGuardPlugin.GrantPlanId == null ? 0 : EndlessGuardPlugin.GrantPlanId.Value;
-            if (grant == 0) return;
             var ids = __0?.SurvivalPlanningActiveIds;
             if (ids == null) return;
-            bool owned = false;
-            for (int i = 0; i < ids.Count; i++) if (ids[i] == grant) { owned = true; break; }
-            if (owned)
+            // 单卡版（保留兼容）
+            int grant = EndlessGuardPlugin.GrantPlanId == null ? 0 : EndlessGuardPlugin.GrantPlanId.Value;
+            if (grant != 0)
             {
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已持有（存档确认）");
-                EndlessGuardPlugin.GrantPlanId.Value = 0;   // 只在确认已持有时清零
+                if (Contains(ids, grant))
+                {
+                    EndlessGuardPlugin.Trace("补授：" + grant + " 已持有（存档确认）");
+                    EndlessGuardPlugin.GrantPlanId.Value = 0;   // 只在确认已持有时清零
+                }
+                else
+                {
+                    ids.Add(grant);
+                    EndlessGuardPlugin.Trace("补授：" + grant + " 已写入 AgentSave.SurvivalPlanningActiveIds（官方激活源，本次加载即激活+随存档落盘）");
+                }
             }
-            else
+            // 多卡版（2026-10-25 二连丢卡·七/学校·三追加）
+            var raw = EndlessGuardPlugin.GrantPlanIds == null ? "" : (EndlessGuardPlugin.GrantPlanIds.Value ?? "");
+            if (raw.Trim().Length > 0)
             {
-                ids.Add(grant);
-                EndlessGuardPlugin.Trace("补授：" + grant + " 已写入 AgentSave.SurvivalPlanningActiveIds（官方激活源，本次加载即激活+随存档落盘）");
+                var todo = new System.Collections.Generic.List<int>();
+                foreach (var seg in raw.Split(','))
+                {
+                    if (!int.TryParse(seg.Trim(), out var id) || id == 0) continue;
+                    if (Contains(ids, id)) EndlessGuardPlugin.Trace("补授：" + id + " 已持有（存档确认）");
+                    else todo.Add(id);
+                }
+                foreach (var id in todo)
+                {
+                    ids.Add(id);
+                    EndlessGuardPlugin.Trace("补授：" + id + " 已写入 AgentSave.SurvivalPlanningActiveIds（官方激活源，本次加载即激活+随存档落盘）");
+                }
+                EndlessGuardPlugin.GrantPlanIds.Value = "";   // 逐卡处置完毕（新写入或已持有）即清空
             }
         }
         catch (System.Exception e) { EndlessGuardPlugin.Trace("补授异常: " + e.Message); }
     }
+
+    private static bool Contains(Il2CppSystem.Collections.Generic.List<int> ids, int v)
+    { for (int i = 0; i < ids.Count; i++) if (ids[i] == v) return true; return false; }
 
     /// <summary>终审 dump（读档即触发，零门票）：官方处理完后逐卡 HasActivated + 三图发现等级。</summary>
     private static void Postfix(SurvivalPlanningComponent __instance)

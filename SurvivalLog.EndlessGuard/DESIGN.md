@@ -210,6 +210,8 @@ Harmony postfix 挂 `EndlessManager.Initialize(saveData, gameMode)`（读档补�
 - 每次发版在根 CHANGELOG.md 补一节；改挂钩点必须同步 `tools/gamekb/moddeps.json`。
 - 2026-10-24 实现落地：四功能块按本设计实施，装机验证清单见 plans/2026-10-24-endless-guard.md Task 8；moddeps 已同步。
 - 2026-10-24 终审建议修4条（final-review ②）：④剥缓刑tag 移出 RestoreFallenPoints 门控（StripPendingFallTags 独立管，③剥封印留 Restore 门内=沦陷语义不变）；IsCampMapPoint 异常 fail-closed 改按营地留沦陷；ApplyContent 降档汇总 trace 改实写计数（demoted）；删 GuardTicker.PlansInjected 死符号。挂钩点未动（moddeps 无需更新）。
+- 2026-10-25 T列表显示修复：作者截图实锤官方"已激活生存规划"列表把 Talent 行 `Name`/`Dec` 字段当本地化键走 `GetLocalText→GetLocalTxt`（0x2F67320），字典 miss 分支 `mov rax,rbx` **原样透传输入串**（对照 `ToConstantTextOrExposeKey` 0x2971BF0 miss 返 `string.Empty`，T列表非此路）。修法=Inject 改 upsert，`Name=p.Name`、`Dec=Dec_Local 同文案` 直接写字面中文，透传即正确显示，无需注入本地化表；PlanPick 读 `Name_Local` 不受影响。
+- 2026-10-25 购买丢卡真根因（·六/·七/学校·三 三连定案，推翻此前"撞表重建窗口"归因）：官方购买链 `OnBuySurvivalPlan`(0x2833A30) 先扣点(0x2833BA6)后唯一落档点=`SurvivalPlanningComponent.AddBuff`(0x30187A0)；AddBuff 主门(0x3018A75 gate)=`BuffID>0 ∨ id==32111 ∨ GetInsightMapForCard>0 ∨ 在组件静态数组`，门不过**静默 return（点已扣卡不加零报错）**。`GetInsightMapForCard`(0x2826440) 只查 `_mapByCard` 反向表（静态偏移 0x18）——本 mod 此前只补 `_cardsByMap` 正向表，反向缺项→三次丢卡。修法=AppendRegistry 每轮同步反射补 `_mapByCard[卡]=图`（幂等，防 EnsureRegistry 重建换对象每轮重取实例）；两张已扣点卡经 `GrantPlanIds`（多卡补授 cfg，逗号分隔）免费补回。过门后官方链自动走全：+0x40 激活表 Add→RecordInsightBuy(0x2826A90)→NotifySurvivalPlanningUpdate(0x301D510, T列表即时刷新)；静态数组(bpl=1)尾段仅多背包扩格 ApplyBagGridExpansion，洞察卡无需。
 
 ## 10. 防盗署名气泡（套件统一）
 
