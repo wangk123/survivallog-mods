@@ -4,10 +4,10 @@
 > （文档维护规则见 `docs\00-目录说明.md`）。
 > 版本：跟随套件 version.json（作者定号，硬规则 1）。
 > 菜单锚点单源：本目录 `ANCHORS.md`（任务 1 离线定位结论；改挂钩点必须同步该文件与
-> `tools/gamekb/moddeps.json`）。当前状态：**全 18 任务实机定稿（2026-10-25）**——三档第三方
+> `tools/gamekb/moddeps.json`）。当前状态：**全 18 任务实机定稿（2026-10-25）+ T19 柜子页三组重构**——三档第三方
 > 接入（Tier 0 通用页 §6.8 / Tier 1 声明式清单 §6.9 / Tier 2 深度对接 + 重启级 dll 禁用 §6.10）；
-> 启停两层（套件 mod 直写 `General.Enabled` 热还原 §6.3/§6.7——PDS 重启级例外与 CabinetSize
-> 未接 gate 现状见 §6.3；第三方三层分流 §6.10）；主菜单
+> 启停两层（套件 mod 直写 `General.Enabled` 热还原 §6.3/§6.7——PDS 重启级例外见 §6.3，
+> CabinetSize 已随对方 v4 补 Bind 走全语义，见 §7 T19）；主菜单
 > 与游戏内 ESC 菜单各一个**列表入口**（§1/§5/§6.5.3）；键盘门（§6.6）；回归夹具六模式
 > `tools/mc_fixture.js`（§3）。发版接线：publish.ps1 `$suiteMods` + installer.iss 组件表已改稿
 > **留作者工作树核入**（作者脏文件不代提交，清单见任务 18 报告）。作者人工验收清单（6 项体感）
@@ -246,7 +246,8 @@ entry.Value = 3f;
   全套件无键名差异，字段留作个别 mod 例外位）。写入经 §4.1 同款事件链触发该 mod 现役
   `SettingChanged→Rerun`：热关闭=其 Ticker 首行 gate 按原值缓存还原并停写（≤其轮询周期），
   重开=重新落笔（例外：PDS 无 Rerun 订阅——`General.Enabled` 系既有键复用，重启级语义
-  =Injector 停注入，见其 DESIGN；Meta 该页为仅启停形态。CabinetSize 未 Bind 该键，见 §7 T17）。
+  =Injector 停注入，见其 DESIGN；Meta 该页为仅启停形态。CabinetSize 已随其 v4 补 Bind 该键
+  （2026-10-25，T19），热启停全语义可用——T17 时代"toggle 拒绝 + 快照回推自愈"缺口闭合）。
   Save 走统一防抖（MarkDirty 该 mod cfg）。**旧的本插件 cfg `[Disabled]`
   名单机制已移除**（避免双轨；快照真值源=各 mod entry 本身，旧 cfg 里残留的 `[Disabled]` 节
   无人再读，行为惰性）。dll 不在链上 / entry 不存在（旧版 dll）→ 拒写并 Log。
@@ -600,6 +601,18 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   live 联动项**：联动渲染仍由合成快照覆盖、TrySet 联动写机器保留但无条目命中；夹具 `LINKED`
   数组清空（空真）、`backpackDynNote` 断言改 `backpackZeroNote`（首条 note 含"0=恢复官方原值"）、
   默认页断言改两组 3+2 / 5 滑条 5 徽标。
+- 2026-10-25 任务 19（作者令：柜子容量页三组重构——12 包+工具柜入面板、工具柜单独一块、
+  档位归通用组；**ConfigBridge 零代码改动**）：Meta 柜子页由单组 10 键扩为三组——
+  「通用：档位与上限」（原 10 键原样）+「专属修改：常用 12 包」（24 键，`BagW/BagH`
+  工厂）+「专属修改：工具柜」（10007 两键，独立块不随小档）。前置实证（决定架构）：
+  部署版 BepInEx（6.0.0-dev.2025.12.31 = 上游 577eba4）`ConfigFile.Save()` **不重读磁盘**，
+  orphan（未绑定）节按**加载时**内存快照回写——若走"[Bag.*] 文件直写"方案，面板写的值会被
+  下一次 cfg 落盘打回，且 T17 陈旧文件闸会被文件 mtime 刷新绕过。故由对方 mod v4 把 13 包
+  `[Bag.<id>]` 升级为 **BepInEx 绑定键**（BagBindings），本表 `Section="Bag.<id>"` 直达既有
+  反射桥（快照反射/TrySet/防抖/T17 闸全复用，B3 点分节名路由 T17 已前置放行）。注意：
+  10007=包名"工具柜"（家具 406）；游戏内另一"工具柜"家具 70006 走 110001（与中型置物架
+  共包，面板 110001 项 note 已注明）。夹具 `cabinetsize no-gate toggle` 断言随之改语义
+  （toggle 由"拒绝自愈"改为"接受+热还原"）。
 - 2026-10-25 任务 18（文档终版 + 发版接线，零代码改动）：状态头改"全 18 任务实机定稿"口径
   （三档接入/启停两层/双列表入口/键盘门/六模式夹具 + task-17-report §5 验收清单衔接）；§3 补
   `mc_fixture.js` 六模式条目；§6.5.1 补 B3；§6.6.1 看门狗判据文案对齐 T17 修复；§7 T17 条目补

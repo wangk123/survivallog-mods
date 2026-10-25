@@ -82,7 +82,7 @@ internal static class SizeEngine
         return "?";
     }
 
-    // ── 值解析：cfg 显式 ＞ 原生格数档位 ＞ 不缩水守卫 ＞ 全局夹顶 ──
+    // ── 值解析：13 包绑定键 ＞ 玩家自加节 ＞ 原生格数档位 ＞ 不缩水守卫 ＞ 全局夹顶 ──
 
     internal static string TierOf(int area) =>
         area <= 60 ? "小" : area <= 99 ? "中" : area <= 149 ? "大" : "特大";
@@ -90,7 +90,8 @@ internal static class SizeEngine
     internal static (int w, int h, string src) Resolve(int id, int nativeW, int nativeH)
     {
         int w, h; string src;
-        if (BagSections.Entries.TryGetValue(id, out var e)) { w = e.w; h = e.h; src = "cfg显式"; }
+        if (CabinetSizePlugin.BagBindings.TryGetValue(id, out var bb)) { w = bb.W.Value; h = bb.H.Value; src = "cfg显式"; }
+        else if (BagSections.Entries.TryGetValue(id, out var e)) { w = e.w; h = e.h; src = "cfg自加"; }
         else
         {
             var tier = TierOf(nativeW * nativeH);
@@ -103,7 +104,7 @@ internal static class SizeEngine
                 _ => (CabinetSizePlugin.XLargeW.Value, CabinetSizePlugin.XLargeH.Value),
             };
         }
-        w = Math.Max(w, nativeW); h = Math.Max(h, nativeH); // 不缩水：未来新包原生超档位时保护
+        w = Math.Max(w, nativeW); h = Math.Max(h, nativeH); // 不缩水：显式 0 经此变原生（0=恢复原生的实现点）；未来新包原生超档位时保护
         if (CabinetSizePlugin.MaxWidth.Value > 0) w = Math.Min(w, CabinetSizePlugin.MaxWidth.Value);
         if (CabinetSizePlugin.MaxHeight.Value > 0) h = Math.Min(h, CabinetSizePlugin.MaxHeight.Value);
         return (w, h, src);
@@ -160,6 +161,44 @@ internal static class SizeEngine
                 new UTF8Encoding(false));
         }
         catch { }
+    }
+
+    /// <summary>
+    /// General.Enabled=false 热关还原（2026-10-25，T10 模式）：重新发现受管集，全部回写原生值
+    /// （NativeW/NativeH 会话缓存——首见即原生，本 mod 是唯一写者）。表未就绪返回 false（调用方
+    /// 下一帧重试）；名单按当前 cfg 重算（先 ExcludeIds 再热关的包不在还原面，与套件同边界）。
+    /// </summary>
+    internal static bool RestoreAll(List<string> lines, out int changedOut)
+    {
+        changedOut = 0;
+        var ids = DiscoverManaged(null, out _);
+        if (ids == null) return false;
+        var cm = BagTable.Cm();
+        var dict = cm == null ? null : BagTable.BagDict(cm);
+        if (dict == null) return false;
+        int changed = 0;
+        foreach (var pair in dict)
+        {
+            if (!ids.Contains(pair.Key)) continue;
+            var bag = pair.Value;
+            if (bag == null) continue;
+            Il2CppSystem.Collections.Generic.List<int> size = null;
+            try { size = bag.Size; } catch { }
+            if (size == null || size.Count < 2) continue;
+            int w0 = size[0], h0 = size[1];
+            if (!NativeW.TryGetValue(pair.Key, out var nw)) { nw = w0; NativeW[pair.Key] = w0; }
+            if (!NativeH.TryGetValue(pair.Key, out var nh)) { nh = h0; NativeH[pair.Key] = h0; }
+            if (w0 != nw || h0 != nh)
+            {
+                size[0] = nw;
+                size[1] = nh;
+                changed++;
+                lines.Add($"BAG {pair.Key}({BagTable.Name(bag)}) {w0}x{h0} -> {nw}x{nh}（还原原生）");
+            }
+        }
+        if (changed > 0) BagTable.InvalidateBagSizeIndex(cm, lines);
+        changedOut = changed;
+        return true;
     }
 }
 

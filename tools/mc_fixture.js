@@ -10,15 +10,18 @@
 //
 // Modes (LIVE game via steam://, CDP 9222 up):
 //   node tools/mc_fixture.js menu       (default) Main-menu phase:
-//        layout + 9-page reconciliation (cabinet page = CabinetSize v3 tiers since
-//        T17), snapshot-vs-disk cfg consistency for all 9 suite mods, PlanPick
+//        layout + 9-page reconciliation (cabinet page = CabinetSize v4 three
+//        groups since T19: general tiers / 12-bag explicit / tool cabinet),
+//        snapshot-vs-disk cfg consistency for all 9 suite mods, PlanPick
 //        Cost reflection range, select-shape via synthetic snapshot (UiFit gone in
 //        v3), no-range numeric number-box-only (Fix R1), t15/t16 slices (SKIP
 //        without throwaway targets), tp group (SKIP on machines without
 //        third-party plugins -- T14 net-machine semantics), real-DOM interactions:
 //        slider + throttle burst, bool, side toggle (PDS), cabinetsize
-//        no-gate toggle semantics (rejected + self-heal), backpack cap-note + (formerly linked pair, now none),
-//        cabinet tier write round-trip, ovr round-trip, close via X.
+//        toggle (v4 binds General.Enabled: accepted + hot-off restore, T19),
+//        backpack cap-note + (formerly linked pair, now none),
+//        cabinet tier write round-trip + bag-explicit write round-trip (T19),
+//        ovr round-trip, close via X.
 //   node tools/mc_fixture.js toggle     T13 hot-restore suite (MC_EVIDENCE
 //        multi-table snapshots; needs all suite cfgs Enabled=true; restores them).
 //   node tools/mc_fixture.js loadgame   click "continue" (or "new game") and wait
@@ -77,9 +80,11 @@ const Z = {
   rs: '\u673a\u5668\u4eba\u63d0\u901f', pp: '\u81ea\u9009\u751f\u5b58\u89c4\u5212', pd: '\u707e\u524d\u52a0\u901f',
   gBpExp: '\u6269\u5bb9\u6570\u503c\uff080=\u6062\u590d\u5b98\u65b9\u539f\u503c\uff09', gBpCap: '\u9632\u5446\u4e0a\u9650\uff080=\u4e0d\u5c01\u9876\uff09', gUiFit: '\u89c6\u53e3\u81ea\u9002\u5e94', gChill: '\u4fdd\u9c9c',
   gMs: '\u5206\u7c7b\u8017\u65f6\uff08\u6beb\u79d2\uff0c0=\u5b98\u65b9\u539f\u503c\uff09',
-  gVine: '\u85e4\u8513\u89d2\u8272', gPlan: '\u914d\u65b9\u4e0e\u89c4\u5212',
+  gVine: '\u85e4\u8513\u4e0e\u82b1\u79cd\u5b50', gPlan: '\u914d\u65b9\u4e0e\u89c4\u5212', // aedc790: 藤蔓角色 -> 藤蔓与花种子
   gCost: '\u82b1\u8d39', gList: '\u5217\u8868', gRs: '\u673a\u5668\u4eba\u63d0\u901f',
-  gCabV3: '\u6863\u4f4d\u4e0e\u4e0a\u9650\uff08\u70ed\u6539\u5373\u65f6\u751f\u6548\uff09', // cabinet v3 group title
+  gCabGen: '\u901a\u7528\uff1a\u6863\u4f4d\u4e0e\u4e0a\u9650\uff08\u672a\u5355\u72ec\u5217\u51fa\u7684\u67dc\u5b50\u81ea\u52a8\u843d\u6863\uff09', // T19 general group (tiers+caps, ex-T17 single group)
+  gCab12: '\u4e13\u5c5e\u4fee\u6539\uff1a\u5e38\u7528 12 \u5305\uff080=\u6062\u590d\u8be5\u67dc\u539f\u751f\uff09', // T19 12-bag explicit block
+  gCabTool: '\u4e13\u5c5e\u4fee\u6539\uff1a\u5de5\u5177\u67dc\uff08\u72ec\u7acb\u8c03\u6574\uff0c\u4e0d\u968f\u5c0f\u6863\uff1b0=\u6062\u590d\u539f\u751f\uff09', // T19 tool-cabinet dedicated block
   noCap: '0=\u4e0d\u5c01\u9876', zero: '0=\u6062\u590d\u5b98\u65b9\u539f\u503c', // 0=uncapped (cap-item note fragment)
   moveKey: '\u79fb\u901f\u500d\u7387', secRs: '\u673a\u5668\u4eba\u63d0\u901f',
   flower: '\u89e3\u9501\u85e4\u8513\u4e13\u5c5e\u82b1\u79cd\u5b50',
@@ -334,7 +339,10 @@ async function menuMode() {
       && layout.cfgGrps[0].t === Z.gBpExp && layout.cfgGrps[0].items === 3
       && layout.cfgGrps[1].t === Z.gBpCap && layout.cfgGrps[1].items === 2
       && layout.rangeCount === 5 && layout.badgeCount === 5;
-    V.backpackZeroNote = !!layout.curItemNote && layout.curItemNote.indexOf(Z.zero) !== -1;
+    // f7a76a7 numeric era: the 0=restore hint moved from item notes into the group
+    // title ("扩容数值（0=恢复官方原值）") -- accept either location.
+    V.backpackZeroNote = !!layout.curItemNote && layout.curItemNote.indexOf(Z.zero) !== -1
+      || !!(layout.cfgGrps && layout.cfgGrps[0] && layout.cfgGrps[0].t.indexOf(Z.zero) !== -1);
   } else {
     ['styleInstalled', 'headTitle', 'headSubVer', 'closeBtn', 'footFourBadges', 'toastEl', 'sideTenRows',
       'selfLock', 'tpEmptyHint', 'threeCats', 'defaultPageBackpack', 'backpackZeroNote'].forEach((k) => { V[k] = false; });
@@ -344,11 +352,11 @@ async function menuMode() {
   // expectations mirror Meta.cs (single source: SurvivalLog.ModCenter/Meta.cs)
   const EXPECT = [
     { name: Z.bp, groups: [{ t: Z.gBpExp, items: 3 }, { t: Z.gBpCap, items: 2 }] },
-    { name: Z.cb, groups: [{ t: Z.gCabV3, items: 10 }], special: 'cabinetv3' },
+    { name: Z.cb, groups: [{ t: Z.gCabGen, items: 10 }, { t: Z.gCab12, items: 24 }, { t: Z.gCabTool, items: 2 }], special: 'cabinetv4' },
     { name: Z.fc, groups: [{ t: Z.gChill, items: 2 }], special: 'fridge' },
     { name: Z.qa, groups: [{ t: Z.gMs, items: 5 }], special: 'ovr' },
     { name: Z.ce, groups: [], special: 'toggleOnly' },
-    { name: Z.ru, groups: [{ t: Z.gVine, items: 3 }, { t: Z.gPlan, items: 3 }], special: 'role' },
+    { name: Z.ru, groups: [{ t: Z.gVine, items: 2 }, { t: Z.gPlan, items: 3 }], special: 'role' },
     { name: Z.rs, groups: [{ t: Z.gRs, items: 7 }], special: 'robot' },
     { name: Z.pp, groups: [{ t: Z.gCost, items: 1 }, { t: Z.gList, items: 2 }], special: 'planpick' },
     { name: Z.pd, groups: [], special: 'toggleOnly' },
@@ -428,18 +436,21 @@ async function menuMode() {
       for (let i = 0; i < exp.groups.length && i < r.grps.length; i++)
         pass = pass && r.grps[i].t === exp.groups[i].t && r.grps[i].items === exp.groups[i].items;
     }
-    if (pass && exp.special === 'cabinetv3') {
-      // CabinetSize v3 tier table (T17 Meta fix): 10 int sliders (2 caps + 4 tiers
-      // x W/H), zero bool/select (UiFit group retired -- official viewport fit);
-      // cap items carry the 0=uncapped note; range attrs from Meta fallback
-      // (plugin Binds carry no AcceptableValueRange).
+    if (pass && exp.special === 'cabinetv4') {
+      // CabinetSize v4 three-group page (T19): group0 = 10 tier/cap sliders (unchanged
+      // ex-T17 shape), group1 = 24 bag-explicit sliders (12 packs x W/H, Bind keys
+      // Bag.<id>), group2 = 2 tool-cabinet sliders (10007). All int sliders with
+      // Meta-fallback ranges (cap 0..40 width); zero bool/select.
       pass = r.grps[0].ranges === 10 && r.grps[0].bools === 0 && r.grps[0].selects === 0
+        && r.grps[1].ranges === 24 && r.grps[1].bools === 0
+        && r.grps[2].ranges === 2 && r.grps[2].bools === 0
+        && r.totalItems === 36
         && !!r.firstRange && r.firstRange.min === '0' && r.firstRange.max === '40' && r.firstRange.step === '1'
         && r.notes.some((n) => n.indexOf(Z.noCap) !== -1);
     }
     if (pass && exp.special === 'fridge') pass = r.grps[0].ranges === 2;
     if (pass && exp.special === 'ovr') pass = r.grps.length === 2 && r.ovrNew && r.ovrAddBtn && r.ovrRows === 0;
-    if (pass && exp.special === 'role') pass = r.totalItems === 6 && r.grps[0].bools === 3 && r.grps[1].bools === 3;
+    if (pass && exp.special === 'role') pass = r.totalItems === 5 && r.grps[0].bools === 2 && r.grps[1].bools === 3; // aedc790 removed SkipDefenseGate (T19 fixture sync)
     if (pass && exp.special === 'robot') pass = r.grps[0].bools === 1 && r.grps[0].ranges === 6 && r.totalItems === 7;
     if (pass && exp.special === 'planpick')
       pass = r.grps[0].ranges === 1 && r.grps[0].items === 1 && r.firstRange
@@ -1165,13 +1176,13 @@ async function menuMode() {
     return false;
   }, { tail: MAIN_HTML, g, i });
   F.ruBefore = stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.roleunlock.cfg', 'Vine', 'UnlockFlowerSeeds'));
-  const flowerSnap = await readSnapItem(Z.ru, 0, 2);
+  const flowerSnap = await readSnapItem(Z.ru, 0, 1); // UnlockFlowerSeeds = Vine[1] since aedc790
   const flower0 = !!(flowerSnap && flowerSnap.v === true); // current value before click
   const m3 = await sentMark();
-  const b1 = await clickBool(0, 2); // Vine.UnlockFlowerSeeds -> toggles to !flower0
+  const b1 = await clickBool(0, 1); // Vine.UnlockFlowerSeeds -> toggles to !flower0
   const ev3 = await waitEvent('MC_SET_OK');
   const sent3 = await sentSince(m3);
-  const b2 = await clickBool(0, 2); // restore
+  const b2 = await clickBool(0, 1); // restore
   await waitEvent('MC_SET_OK');
   const sent3set = firstOf(sent3, 'MC_SET');
   F.boolSet = { flower0, b1, ev3, sent3: sent3set, b2 };
@@ -1268,8 +1279,8 @@ async function menuMode() {
   // ---- interaction 5: reload-badge toast (backpack burden; restore to AUTHOR baseline) ----
   await clickRow(guidOf[Z.bp]);
   await sleep(60);
-  F.burdenBefore = parseInt(stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'BurdenMult')) || '2', 10);
-  await setRange(0, 1, Math.min(10, F.burdenBefore + 1)); // Expand.BurdenMult (badge reload)
+  F.burdenBefore = parseInt(stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'Burden')) || '48000', 10); // f7a76a7 numeric key (was BurdenMult)
+  await setRange(0, 2, Math.min(150000, F.burdenBefore + 1000)); // Expand.Burden (badge reload; numeric era)
   const toast5 = await page.evaluate((tail) => {
     const fs = document.querySelectorAll('#iframe-container iframe');
     for (let i = 0; i < fs.length; i++) {
@@ -1285,7 +1296,7 @@ async function menuMode() {
   }, MAIN_HTML);
   F.toast5 = toast5;
   V.reloadBadgeToast = !!(toast5 && toast5.shown && toast5.text.indexOf(Z.afterLoad) !== -1);
-  await setRange(0, 1, F.burdenBefore); // restore burden to author baseline
+  await setRange(0, 2, F.burdenBefore); // restore burden to author baseline
   await waitEvent('MC_SET_OK');
 
   // ---- interaction 6: side toggle (PreDisasterSpeed off -> banner -> cfg -> on) ----
@@ -1358,13 +1369,12 @@ async function menuMode() {
   await clickToggle(PD_GUID); // restore on
   await sleep(2500);
 
-  // ---- interaction 6b: cabinetsize toggle semantics (T17 documented state) ----
-  // CabinetSize (author parallel task, v3) does NOT Bind General.Enabled yet, so
-  // the panel toggle takes the designed reject path: MC_TOGGLE_MOD sent, C#
-  // refuses to write (no bool entry), HandleToggle still pushes a fresh snapshot
-  // -> the optimistic row flip self-heals back to ON, cfg gains no [General]
-  // section. Records the integration gap until the author wires the gate
-  // (T9-T12 template) -- see task-17-report deferred-items table.
+  // ---- interaction 6b: cabinetsize toggle semantics (T19: v4 binds General.Enabled) ----
+  // CabinetSize v4 (2026-10-25) Binds General.Enabled like the T9-T12 suite template,
+  // so the panel toggle now takes the ACCEPTED path: MC_TOGGLE_MOD -> C# writes the
+  // bool entry -> fresh snapshot carries enabled=false, row goes OFF, cfg gains
+  // [General] Enabled=false (hot-off restore is the mod's own RestoreAll, asserted
+  // by its trace rather than here). Toggle back ON and assert cfg flips true.
   {
     const m6b = await sentMark();
     const seq6b = await page.evaluate(() => window.__mcSnapSeq || 0);
@@ -1378,31 +1388,41 @@ async function menuMode() {
         const m = s && s.mods && s.mods.find((x) => x.guid === guid);
         return { enabled: m ? m.enabled : undefined, seq: window.__mcSnapSeq || 0 };
       }, CB_GUID);
-      if (tog6b.enabled === true && tog6b.seq > seq6b) break; // push-back self-heal
+      if (tog6b.enabled === false && tog6b.seq > seq6b) break; // accepted: pushed snapshot keeps OFF
       if (Date.now() > dl6b) break;
       await sleep(400);
     }
-    const rowOn = await page.evaluate(({ tail, guid }) => {
+    const rowOff = await page.evaluate(({ tail, guid }) => {
       const fs = document.querySelectorAll('#iframe-container iframe');
       for (let i = 0; i < fs.length; i++) {
         try {
           const d = fs[i].contentDocument;
           if (d && d.location.pathname.indexOf(tail) !== -1) {
             const r = d.querySelector('#__mc_side .__mc-mod-row[data-guid="' + guid + '"]');
-            return r ? !r.classList.contains('__mc-off') : null;
+            return r ? r.classList.contains('__mc-off') : null;
           }
         } catch (e) {}
       }
       return null;
     }, { tail: MAIN_HTML, guid: CB_GUID });
     await sleep(4000); // debounce+drain settle before reading the disk cfg
-    const genAfter = readCfgSection(CB_CFG, 'General', 'Enabled');
+    const genOff = stripNonCodeLines(readCfgSection(CB_CFG, 'General', 'Enabled'));
     const sent6b = firstOf(await sentSince(m6b), 'MC_TOGGLE_MOD');
-    F.cbToggle = { sent: sent6b, pushBack: tog6b, rowOn, genBefore, genAfter };
-    V.cbToggleRejectedSelfHeal = !!(sent6b && sent6b.guid === CB_GUID && sent6b.enabled === false)
-      && !!(tog6b && tog6b.enabled === true && tog6b.seq > seq6b) // push-back carries enabled=true
-      && rowOn === true
-      && genAfter == null && genBefore == null; // no General.Enabled ever written
+    // restore ON
+    await clickToggle(CB_GUID);
+    let genOn = null;
+    const dl6e = Date.now() + 15000;
+    for (;;) {
+      genOn = stripNonCodeLines(readCfgSection(CB_CFG, 'General', 'Enabled'));
+      if (genOn === 'true') break;
+      if (Date.now() > dl6e) break;
+      await sleep(600);
+    }
+    F.cbToggle = { sent: sent6b, pushed: tog6b, rowOff, genBefore, genOff, genOn };
+    V.cbToggleAcceptedHotGate = !!(sent6b && sent6b.guid === CB_GUID && sent6b.enabled === false)
+      && !!(tog6b && tog6b.enabled === false && tog6b.seq > seq6b) // pushed snapshot keeps OFF
+      && rowOff === true
+      && genOff === 'false' && genOn === 'true'; // entry written both ways (T19 gate)
   }
 
   // ---- interaction 6c: CabinetSize v3 tier write round-trip (hot-apply write face) ----
@@ -1458,6 +1478,59 @@ async function menuMode() {
     F.cabTierWrite.back = back;
     V.cabTierWriteOk = V.cabTierWriteOk && back === before;
     F.cabTierBaseline = before;
+  }
+
+  // ---- interaction 6c2: bag-explicit write round-trip (T19 binding path) ----
+  // Group1 item2 = Bag.110001 Width (medium shelf W). Proves the 13-pack [Bag.<id>]
+  // BOUND-key path end-to-end: MC_SET full display key "Bag.110001.Width" (dotted
+  // section, B3 pre-pass match) -> MC_SET_OK badge now -> value persists in cfg
+  // [Bag.110001] -> restore. Same bridge contract as 6c, different key family.
+  {
+    const bagSec = 'Bag.110001'; const bagKey = 'Width';
+    const before = stripNonCodeLines(readCfgSection(CB_CFG, bagSec, bagKey));
+    const base = parseInt(before || '16', 10) || 16;
+    const want = String(Math.min(40, Math.max(0, base + 2)));
+    await clickRow(CB_GUID);
+    await sleep(60);
+    const mk = await sentMark();
+    const evPre = await page.evaluate(() => JSON.stringify(window.__mcLastEvent || null));
+    await setRange(1, 2, parseInt(want, 10)); // group 1 item 2 = Bag.110001.Width
+    let ev = null;
+    const dlE = Date.now() + 12000;
+    for (;;) {
+      ev = await page.evaluate(() => window.__mcLastEvent || null);
+      if (ev && JSON.stringify(ev) !== evPre && (ev.type === 'MC_SET_OK' || ev.type === 'MC_SET_FAIL')) break;
+      if (Date.now() > dlE) break;
+      await sleep(300);
+    }
+    const sent = firstOf(await sentSince(mk), 'MC_SET');
+    let after = null;
+    const dl = Date.now() + 12000;
+    for (;;) {
+      after = stripNonCodeLines(readCfgSection(CB_CFG, bagSec, bagKey));
+      if (after === want) break;
+      if (Date.now() > dl) break;
+      await sleep(600);
+    }
+    F.cabBagWrite = { before, want, sent, ev, after };
+    V.cabBagWriteOk = !!(sent && sent.guid === CB_GUID
+      && sent.key === bagSec + '.' + bagKey && sent.value === parseInt(want, 10)
+      && ev && ev.type === 'MC_SET_OK' && ev.k === bagSec + '.' + bagKey && ev.badge === 'now'
+      && after === want);
+    // restore author baseline
+    await setRange(1, 2, base);
+    await waitEvent('MC_SET_OK', 12000);
+    let back = null;
+    const dl2 = Date.now() + 12000;
+    for (;;) {
+      back = stripNonCodeLines(readCfgSection(CB_CFG, bagSec, bagKey));
+      if (back === before) break;
+      if (Date.now() > dl2) break;
+      await sleep(600);
+    }
+    F.cabBagWrite.back = back;
+    V.cabBagWriteOk = V.cabBagWriteOk && back === before;
+    F.cabBagBaseline = before;
   }
 
   // ---- interaction 7: ovr round-trip ----
@@ -2015,9 +2088,9 @@ async function menuMode() {
   F.final = {
     rs: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.robotspeed.cfg', Z.secRs, Z.moveKey)),
     cabTier: stripNonCodeLines(readCfgSection(CB_CFG, 'Tier.Small', 'Width')),
-    cabGen: readCfgSection(CB_CFG, 'General', 'Enabled'),
+    cabGen: stripNonCodeLines(readCfgSection(CB_CFG, 'General', 'Enabled')),
     flower: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.roleunlock.cfg', 'Vine', 'UnlockFlowerSeeds')),
-    burden: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'BurdenMult')),
+    burden: stripNonCodeLines(readCfgSection(GAME_ROOT + '/BepInEx/config/com.local.survivallog.backpackexpand.cfg', 'Expand', 'Burden')),
     ovr: stripNonCodeLines(readCfgSection(QA_CFG, '\u5176\u4ed6', 'Overrides')),
     pdEnabled: stripNonCodeLines(readCfgSection(PD_CFG, 'General', 'Enabled')),
     linkedPairs: linkedFinalPairs,
@@ -2027,7 +2100,7 @@ async function menuMode() {
       && linkedFinalPairs[i].pair[1] === e.orig[1]));
   V.restoredStates = (F.final.rs === (F.rsBefore || '2'))
     && F.final.cabTier === (F.cabTierBaseline || F.final.cabTier)
-    && F.final.cabGen == null // cabinetsize never gains General.Enabled this run
+    && F.final.cabGen === 'true' // T19: v4 binds General.Enabled; toggle test leaves it ON
     && F.final.flower === (F.ruBefore || 'false')
     && F.final.burden === String(F.burdenBefore)
     && F.final.pdEnabled === 'true'
@@ -2128,8 +2201,9 @@ async function menuMode() {
     // T17: snapshot-vs-disk cfg consistency (spec sec.10, all 9 suite mods)
     ['17 suite snapshot v == cfg Bind on disk (9 mods, all items)', V.suiteSnapshotVsDisk],
     ['17 suite Meta items all resolve on disk (Bind face complete)', V.suiteDiskCoverage],
-    ['17 cabinetsize toggle: rejected + push-back self-heal + cfg untouched', V.cbToggleRejectedSelfHeal],
-    ['17 cabinet v3 tier write: shape + now receipt + disk + restore', V.cabTierWriteOk],
+    ['19 cabinetsize toggle: accepted + cfg General.Enabled written both ways', V.cbToggleAcceptedHotGate],
+    ['17 cabinet tier write: shape + now receipt + disk + restore', V.cabTierWriteOk],
+    ['19 cabinet bag write: Bag.110001.Width full-key receipt + disk + restore', V.cabBagWriteOk],
     ['2  slider MC_SET message shape', V.sliderMsgShape],
     ['2  slider MC_SET_OK receipt', V.sliderOkReceipt],
     ['2  slider sibling number sync', V.sliderSiblingSync],

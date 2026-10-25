@@ -127,12 +127,12 @@ internal static class Meta
         {
             Guid = "com.local.survivallog.cabinetsize",
             Name = "柜子容量", En = "CabinetSize",
-            Desc = "普通柜/冰箱/载具按原生格数分四档定宽高（小/中/大/特大），全局上限兜底；热改即时生效。",
+            Desc = "常用 12 包（置物架/冰箱/载具）与工具柜单独定宽高（0=恢复该柜原生）；其余柜子按 小/中/大/特大 档位自动调整；全局上限兜底；热改即时生效。",
             Groups =
             {
                 new MetaGroup
                 {
-                    Title = "档位与上限（热改即时生效）",
+                    Title = "通用：档位与上限（未单独列出的柜子自动落档）",
                     Items =
                     {
                         new MetaItem
@@ -156,12 +156,54 @@ internal static class Meta
                         new MetaItem { Section = "Tier.XLarge", Key = "Width", Label = "特大档宽度", Badge = "now", Type = "int", Def = 20, Min = 4, Max = 40, St = 1, Note = "原生格数 ≥150" },
                         new MetaItem { Section = "Tier.XLarge", Key = "Height", Label = "特大档高度", Badge = "now", Type = "int", Def = 16, Min = 4, Max = 30, St = 1 }
                     }
+                },
+                new MetaGroup
+                {
+                    Title = "专属修改：常用 12 包（0=恢复该柜原生）",
+                    Items =
+                    {
+                        BagW(110002, "小型置物架", 14, 10, "原生 6x8｜小档"),
+                        BagH(110002, "小型置物架", 10, "原生 6x8｜小档"),
+                        BagW(110001, "中型置物架", 16, 12, "原生 8x10｜中档；游戏内'工具柜'家具(70006)共用此包"),
+                        BagH(110001, "中型置物架", 12, "原生 8x10｜中档"),
+                        BagW(110000, "大型置物架", 18, 14, "原生 12x10｜大档"),
+                        BagH(110000, "大型置物架", 14, "原生 12x10｜大档"),
+                        BagW(110008, "超大型置物架", 20, 16, "原生 15x12｜特大档"),
+                        BagH(110008, "超大型置物架", 16, "原生 15x12｜特大档"),
+                        BagW(110009, "材料架", 20, 16, "原生 20x12｜特大档"),
+                        BagH(110009, "材料架", 16, "原生 20x12｜特大档"),
+                        BagW(1004, "双门冰箱", 16, 12, "原生 8x7｜中档"),
+                        BagH(1004, "双门冰箱", 12, "原生 8x7｜中档"),
+                        BagW(115000, "双开门冰箱", 16, 12, "原生 8x7｜中档"),
+                        BagH(115000, "双开门冰箱", 12, "原生 8x7｜中档"),
+                        BagW(115001, "冰柜", 18, 14, "原生 8x10｜大档"),
+                        BagH(115001, "冰柜", 14, "原生 8x10｜大档"),
+                        BagW(115005, "大容量冰柜", 20, 16, "原生 12x10｜特大档"),
+                        BagH(115005, "大容量冰柜", 16, "原生 12x10｜特大档"),
+                        BagW(1021, "自行车车筐", 12, 6, "原生 5x4｜独立定值 12x6"),
+                        BagH(1021, "自行车车筐", 6, "原生 5x4｜独立定值"),
+                        BagW(1022, "小汽车后备箱", 16, 8, "原生 10x8｜独立定值 16x8"),
+                        BagH(1022, "小汽车后备箱", 8, "原生 10x8｜独立定值"),
+                        BagW(1023, "SUV后备箱+门口塑料袋", 18, 10, "原生 12x10｜独立定值 18x10"),
+                        BagH(1023, "SUV后备箱+门口塑料袋", 10, "原生 12x10｜独立定值")
+                    }
+                },
+                new MetaGroup
+                {
+                    Title = "专属修改：工具柜（独立调整，不随小档；0=恢复原生）",
+                    Items =
+                    {
+                        BagW(10007, "工具柜", 14, 10, "原生 6x7｜包 10007（家具 406）；游戏内另一'工具柜'家具(70006)走中型置物架包 110001"),
+                        BagH(10007, "工具柜", 10, "原生 6x7｜独立调整，不随小档")
+                    }
                 }
             }
-            // T17 对账注记：作者 CabinetSize v3 终表（d02e985）Bind 面 = Global.MaxWidth/MaxHeight/Preset/
-            // ExcludeIds + Tier.Small..XLarge.Width/Height + Debug.*。此处只暴露档位与上限 10 键；
-            // Preset（勿手改）/ExcludeIds（同 BP ExcludeIds 口径不暴露）/Debug.* 不进面板。
-            // 旧倍率模型条目（Expand.*Mult + UiFit.*）已随 v3 档位模型退役——UiFit 系官方自适应接管。
+            // T19 对账注记（2026-10-25 作者令）：12 包 + 工具柜 10007 加入面板为"专属修改"两组，
+            // 档位/上限归"通用"组。CabinetSize v4 起 13 包 [Bag.<id>] 节升级为 BepInEx 绑定键
+            // （BagBindings），本表 Section="Bag.<id>" 直达既有反射桥（读写/防抖/T17 闸全复用，
+            // ConfigBridge 零改动）；此前 [Bag.*] 是孤儿节（Save 按加载时快照回写，外部写会被打回，
+            // BepInEx 577eba4 源码实证），绑定制一并根除。General.Enabled 已由 v4 补 Bind（原 T17 时代
+            // 启停被拒的缺口闭合）。Preset（勿手改）/ExcludeIds/Debug.* 不进面板。
         },
         new MetaMod
         {
@@ -328,6 +370,20 @@ internal static class Meta
     {
         Section = "分类修改", Key = key, Label = label,
         Badge = "now", Type = "int", Def = 500, Min = 0, Max = 5000, St = 50
+    };
+
+    // 柜子容量 13 包显式条目（T19）：Section="Bag.<id>" 是 CabinetSize v4 绑定键——
+    // 反射桥按 entry 读写（V/Min/Max 快照反射+Meta 兜底，写走 TrySet 常规路径）
+    private static MetaItem BagW(int id, string name, int defW, int defH, string note) => new()
+    {
+        Section = "Bag." + id, Key = "Width", Label = name + " 宽度",
+        Badge = "now", Type = "int", Def = defW, Min = 0, Max = 40, St = 1, Note = note
+    };
+
+    private static MetaItem BagH(int id, string name, int defH, string note) => new()
+    {
+        Section = "Bag." + id, Key = "Height", Label = name + " 高度",
+        Badge = "now", Type = "int", Def = defH, Min = 0, Max = 30, St = 1, Note = note
     };
 
     private static MetaItem MultItem(string key) => new()

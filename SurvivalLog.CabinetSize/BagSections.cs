@@ -1,20 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Logging;
 
 namespace SurvivalLog.CabinetSize;
 
 /// <summary>
-/// [Bag.&lt;id&gt;] 节自解析：12 常用包默认条目首跑写入 + 玩家自加节即时识别（mtime 监听，每轮 Ticker Poll）。
-/// 键名用 ASCII（Bag.110001）——与 BepInEx 绑定键（Global/Tier/Debug）分治：本类只认自己的节；
-/// BepInEx 保存 cfg 时对未知节按 orphan 原样回写，但会把节间 ;; 注释挤离节头（孤儿行实锤）——MaintainBagComments 自动补回。
-/// 同一监听周期还热改绑定键：[Global] MaxWidth/MaxHeight 与 [Tier.*] Width/Height 记事本改动即时生效（ApplyHotKeys）。
+/// [Bag.&lt;id&gt;] 节双轨（2026-10-25 v4 起）：
+/// ① 13 常用包（12 + 工具柜 10007）升级为 **BepInEx 正式绑定键**（插件 Bind，见 CabinetSizePlugin.BindConfig）——
+/// BepInEx 原生读写/落盘，ModCenter 反射桥零改造直达；孤儿陈旧问题（见下）对这 13 包根除。
+/// ② 玩家自加 [Bag.&lt;其他id&gt;] 节仍走本类文件自解析（mtime 监听，每轮 Ticker Poll）。
+/// BepInEx cfg 机制实证（部署版 6.0.0-dev.2025.12.31 反查上游 commit 577eba4 源码）：
+/// Save() **不重读磁盘**，未绑定节按 orphan 字典（**加载时**快照）回写——外部改文件后一旦有绑定键
+/// 落盘，orphan 节值会被打回加载时值（这就是旧"注释被挤掉"的根因，旧版靠 MaintainBagComments
+/// 补注释自愈、该机制已随 v4 绑定制退役删除；玩家自加节的"记事本改+面板改绑定键"组合同理存在
+/// 打回风险，属已知限制见 DESIGN §9）。绑定节无此问题（Save 永远写内存现值）。
+/// 同一监听周期还热改绑定键：[Global]/[Tier.*] 与 13 包 [Bag.*] 记事本改动即时生效（ApplyHotKeys）。
 /// </summary>
 internal static class BagSections
 {
+    /// <summary>玩家自加节解析结果（v4 起 13 常用包为绑定键不依赖此表；本表仍会收录它们，仅作兜底展示，解析权威=BagBindings）。</summary>
     internal static readonly Dictionary<int, (int w, int h)> Entries = new();
 
     /// <summary>预设 v1 的 12 包默认值（DESIGN §5.1 阶梯口径 A）。第 4 元=节头注释文案（作者口径照抄；
@@ -69,15 +75,37 @@ internal static class BagSections
         (1023,   18, 10, ";; SUV后备箱+门口塑料袋（原生 12x10｜默认 18x10）"),
     };
 
-    /// <summary>当前预设版本。调默认值时 bump 并在 PresetHistory 追加新版本行。</summary>
-    internal const int CurrentPreset = 3;
+    /// <summary>预设 v4（2026-10-25 作者令：工具柜 10007 加入显式清单为独立专属块；12 包值沿 v3 不变。
+    /// v4 起 13 包升级为 BepInEx 绑定键：节头 ;; 注释退役（说明文案进 Bind 描述=## 注释，BepInEx 原生维护），
+    /// 此处 note 仅作绑定描述源（TrimStart ';;'）与历史留档。</summary>
+    internal static readonly (int id, int w, int h, string note)[] PresetV4 =
+    {
+        (110002, 14, 10, ";; 小型置物架（原生 6x8｜小档）"),
+        (110001, 16, 12, ";; 中型置物架（原生 8x10｜中档，游戏内'工具柜'家具70006共用此包）"),
+        (110000, 18, 14, ";; 大型置物架（原生 12x10｜大档）"),
+        (110008, 20, 16, ";; 超大型置物架（原生 15x12｜特大档）"),
+        (110009, 20, 16, ";; 材料架（原生 20x12｜特大档）"),
+        (1004,   16, 12, ";; 双门冰箱（原生 8x7｜中档）"),
+        (115000, 16, 12, ";; 双开门冰箱（原生 8x7｜中档）"),
+        (115001, 18, 14, ";; 冰柜（原生 8x10｜大档）"),
+        (115005, 20, 16, ";; 大容量冰柜（原生 12x10｜特大档）"),
+        (1021,   12, 6,  ";; 自行车车筐（原生 5x4｜默认 12x6）"),
+        (1022,   16, 8,  ";; 小汽车后备箱（原生 10x8｜默认 16x8）"),
+        (1023,   18, 10, ";; SUV后备箱+门口塑料袋（原生 12x10｜默认 18x10）"),
+        (10007,  14, 10, ";; 工具柜（原生 6x7｜小档，独立专属块）"),
+    };
 
-    /// <summary>预设史（版本→12 包默认值）。迁移语义：文件条目等于旧版本默认 → 自动改写为新版本默认；玩家改过的（不等于任何旧默认）原样保留。</summary>
+    /// <summary>当前预设版本。调默认值时 bump 并在 PresetHistory 追加新版本行。</summary>
+    internal const int CurrentPreset = 4;
+
+    /// <summary>预设史（版本→13 包默认值）。迁移语义（v4 起条目制）：绑定 entry 值等于上一版默认 → 改写为新版默认；
+    /// 玩家改过的（不等于任何旧默认）原样保留。v3 及以前为孤儿节文本制时代（迁移逻辑同语义，见 MigratePreset 注释）。</summary>
     internal static readonly Dictionary<int, (int id, int w, int h, string note)[]> PresetHistory = new()
     {
         { 1, PresetV1 },
         { 2, PresetV2 },
         { 3, PresetV3 },
+        { 4, PresetV4 },
     };
 
     private static string _path;
@@ -102,64 +130,65 @@ internal static class BagSections
     internal static void Init(string cfgPath)
     {
         _path = cfgPath;
-        EnsureDefaultSections();
         MigratePreset();
+        EnsureDefaultSections();
         Reload();
-        MaintainBagComments(); // 跨重启自愈：上次运行 BepInEx 重写挤掉的节注释，本次启动即补回（已在=不写）
     }
 
-    /// <summary>首跑写入：文件不存在或没有任何 [Bag. 节时，追加 12 包默认节（一次性，含节头 ;; 注释；
-    /// 之后 BepInEx 重写文件也会按 orphan 保留这些节，注释若被挤掉由 MaintainBagComments 补回）。</summary>
+    /// <summary>缺节兜底落盘：文件缺任何一个当前预设 13 包的 [Bag.*] 节 → Config.Save() 一次
+    /// （BepInEx 会把全部绑定节（含 ## 描述注释）规范写出；MigratePreset 改 Preset 键本身就会触发
+    /// SaveOnConfigSet 自动落盘，本方法兜"版本已最新但节缺失"（如玩家手删）与首跑两种情况）。
+    /// v3 及以前为手写追加 12 节（EnsureDefaultSections 文本版），v4 绑定制后退役。</summary>
     private static void EnsureDefaultSections()
     {
         try
         {
             var text = File.Exists(_path) ? File.ReadAllText(_path) : "";
-            if (text.Contains("[Bag.")) return;
-            var sb = new StringBuilder();
-            sb.AppendLine();
-            sb.AppendLine(";; ===== 柜子容量：常用 12 包显式宽高（Width/Height 任一改 0 = 该包恢复官方原值；给其他柜子加条目见 README）=====");
-            foreach (var (id, w, h, note) in PresetHistory.TryGetValue(CurrentPreset, out var cur) ? cur : PresetV1)
-                sb.AppendLine().AppendLine(note).AppendLine("[Bag." + id + "]").AppendLine("Width = " + w).AppendLine("Height = " + h);
-            File.AppendAllText(_path, sb.ToString(), new UTF8Encoding(true));
+            foreach (var (id, _, _, _) in PresetV4)
+                if (!text.Contains("[Bag." + id + "]"))
+                {
+                    CabinetSizePlugin.Cfg.Save();
+                    CabinetSizePlugin.Log.LogInfo($"[CabinetSize] cfg 缺 [Bag.{id}] 节，已按绑定键默认值补写落盘");
+                    return;
+                }
         }
-        catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 默认节写入失败（不影响其余功能）: " + e.Message); }
+        catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 缺节兜底落盘失败（不影响其余功能）: " + e.Message); }
     }
 
-    /// <summary>预设迁移：Preset 键 &lt; 当前版本时，把等于旧默认的文件条目改写为新默认（cfg 首跑固化坑的对策）。v2=2026-10-25 作者实测定稿（小14x10/中16x12/大18x14/特大20x16）；v3=同日二次定档（冰箱族整体上移一档，档位值沿用 v2）。</summary>
+    /// <summary>预设迁移（v4 起条目制）：Preset 键 &lt; 当前版本时，把**绑定 entry 值等于上一版默认**的条目改写为新版默认
+    /// （cfg 首跑固化坑的对策）。绑定键在 Bind 阶段已从文件载入现值，此处直接比内存值——旧版文本制时代的
+    /// "孤儿节文本替换"不再需要（v1/v2/v3 老文件同样先被 Bind 读成 entry 再比较，语义等价且对 BepInEx 重写免疫）。
+    /// 新版新增包（上一版表无对应行，如 v4 的 10007）无旧默认可比 → 保持 Bind 默认不动。
+    /// 迁移后写 Preset=CurrentPreset → SettingChanged → SaveOnConfigSet 自动落盘（顺带把新节写全）。</summary>
     private static void MigratePreset()
     {
         try
         {
             int from = CabinetSizePlugin.Preset.Value;
-            if (from >= CurrentPreset || !File.Exists(_path)) return;
-            var text = File.ReadAllText(_path);
+            if (from >= CurrentPreset) return;
+            var applied = new List<string>();
             for (int ver = from + 1; ver <= CurrentPreset; ver++)
             {
                 if (!PresetHistory.TryGetValue(ver, out var table) || !PresetHistory.TryGetValue(ver - 1, out var prev)) continue;
                 foreach (var (id, nw, nh, _) in table)
                 {
+                    if (!CabinetSizePlugin.BagBindings.TryGetValue(id, out var be)) continue;
                     var (pw, ph, _, _) = Array.Find(prev, t => t.id == id);
-                    foreach (var nl in new[] { "\r\n", "\n" }) // 容忍 BepInEx 重写时可能的换行风格差异
+                    if (pw <= 0) continue; // 上一版无此包（新增）：Bind 默认即终值
+                    if (be.W.Value == pw && be.H.Value == ph && (be.W.Value != nw || be.H.Value != nh))
                     {
-                        var oldBlock = SectionText(id, pw, ph, nl);
-                        if (text.Contains(oldBlock))
-                        {
-                            text = text.Replace(oldBlock, SectionText(id, nw, nh, nl));
-                            break;
-                        }
+                        be.W.Value = nw;
+                        be.H.Value = nh;
+                        applied.Add($"{id} {pw}x{ph}->{nw}x{nh}");
                     }
                 }
             }
-            File.WriteAllText(_path, text, new UTF8Encoding(true));
             CabinetSizePlugin.Preset.Value = CurrentPreset;
-            CabinetSizePlugin.Log.LogInfo($"[CabinetSize] 预设已迁移到 v{CurrentPreset}（未手动改过的条目已跟新默认）");
+            CabinetSizePlugin.Log.LogInfo($"[CabinetSize] 预设已迁移到 v{CurrentPreset}"
+                + (applied.Count > 0 ? "（未手动改过的条目已跟新默认：" + string.Join("、", applied) + "）" : "（13 包显式清单就位，工具柜 10007 已加入）"));
         }
         catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 预设迁移失败（可手动改 cfg）: " + e.Message); }
     }
-
-    private static string SectionText(int id, int w, int h, string nl) =>
-        "[Bag." + id + "]" + nl + "Width = " + w + nl + "Height = " + h;
 
     private static void Reload()
     {
@@ -195,10 +224,11 @@ internal static class BagSections
         return hash;
     }
 
-    /// <summary>绑定键热改：[Global] MaxWidth/MaxHeight 与 [Tier.Small|Medium|Large|XLarge] Width/Height 记事本改动即时生效。
+    /// <summary>绑定键热改：[Global] MaxWidth/MaxHeight、[Tier.*] Width/Height 与 13 包 [Bag.*] Width/Height 记事本改动即时生效。
     /// 解析值与绑定 entry 不等才赋值（entry.Value 赋值 → SettingChanged → 既有 reload 处理器置 Rerun=true，下轮 Ticker 落地）；
     /// 相等不动——BepInEx 被触发的计划性存档会重写文件（mtime 变→再解析→值相等），自然收敛，无每轮重复赋值。
-    /// 不解析/不回写 Preset（迁移走 MigratePreset 专用路径）、ExcludeIds、Debug 键。</summary>
+    /// 不解析/不回写 Preset（迁移走 MigratePreset 专用路径）、ExcludeIds、Debug 键。
+    /// v4 注：13 包节已是绑定键，BepInEx 自身不改文件值（orphan 打回只影响未绑定节），玩家记事本改值由本表拾取。</summary>
     private static void ApplyHotKeys()
     {
         try
@@ -208,7 +238,7 @@ internal static class BagSections
             // 防抖落盘的间隙），跳过——否则旧盘值会覆盖尚未落盘的新值（第二次调整静默丢失实锤）。
             // 正常玩家记事本热改：mtime 晚于任何内存赋值，不受影响。
             if (File.GetLastWriteTimeUtc(_path) < _lastBindChangeUtc) return;
-            var map = new (string key, BepInEx.Configuration.ConfigEntry<int> entry)[]
+            var map = new List<(string key, BepInEx.Configuration.ConfigEntry<int> entry)>
             {
                 ("global|maxwidth", CabinetSizePlugin.MaxWidth),
                 ("global|maxheight", CabinetSizePlugin.MaxHeight),
@@ -221,6 +251,11 @@ internal static class BagSections
                 ("tier.xlarge|width", CabinetSizePlugin.XLargeW),
                 ("tier.xlarge|height", CabinetSizePlugin.XLargeH),
             };
+            foreach (var kv in CabinetSizePlugin.BagBindings)
+            {
+                map.Add(("bag." + kv.Key + "|width", kv.Value.W));
+                map.Add(("bag." + kv.Key + "|height", kv.Value.H));
+            }
             string section = "", sectionKey = "";
             var applied = new List<string>();
             foreach (var raw in File.ReadAllLines(_path))
@@ -232,8 +267,8 @@ internal static class BagSections
                 if (t.Length == 0 || t[0] == '#' || t[0] == ';') continue; // ##/;;/# 注释行不解析
                 var km = IntKeyValRe.Match(line);
                 if (!km.Success) continue;
-                int hit = Array.FindIndex(map, p => p.key == sectionKey + "|" + km.Groups[1].Value.ToLowerInvariant());
-                if (hit < 0) continue; // 节+键不在热改表（含 [Bag.*] 内的 Width/Height）→ 不动
+                int hit = map.FindIndex(p => p.key == sectionKey + "|" + km.Groups[1].Value.ToLowerInvariant());
+                if (hit < 0) continue; // 节+键不在热改表（玩家自加 [Bag.*] 节走 Entries 解析）→ 不动
                 var entry = map[hit].entry;
                 int parsed = int.Parse(km.Groups[2].Value);
                 if (entry == null || parsed == entry.Value) continue; // 相等不动（防循环的关键闸）
@@ -247,55 +282,10 @@ internal static class BagSections
         catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 绑定键热改解析失败: " + e.Message); }
     }
 
-    /// <summary>[Bag.*] 节头 ;; 注释自动补回：BepInEx 重写 cfg 会把节间注释挤离节头（孤儿行实锤）。
-    /// 每次重解析后检查 12 已知包：注释未紧邻节头则重写文件补回。只增删已知文案的注释行（游离孤儿/重复行一并清掉），
-    /// 其余行（含 BepInEx 托管的 ##/# 说明与键值行、玩家自加节内容）逐字保留；玩家自加节无文案可写，不处理。</summary>
-    private static void MaintainBagComments()
-    {
-        try
-        {
-            if (!File.Exists(_path)) return;
-            var text = File.ReadAllText(_path);
-            string nl = text.Contains("\r\n") ? "\r\n" : "\n"; // 保持原换行风格
-            var lines = new List<string>(text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None));
-            var noteOf = new Dictionary<int, string>();
-            var idOf = new Dictionary<string, int>();
-            foreach (var (id, _, _, note) in PresetHistory.TryGetValue(CurrentPreset, out var cur2) ? cur2 : PresetV1)
-            { noteOf[id] = note; idOf[note] = id; } // 补回/比对用当前版本文案
-            foreach (var kv in PresetHistory) // 历史版本文案也登记：换版后旧文案的游离行可在后续周期被清理
-                foreach (var (id2, _, _, note2) in kv.Value)
-                    if (!idOf.ContainsKey(note2)) idOf[note2] = id2;
-            bool dirty = false;
-            // 1) 清游离行：已知文案但下一行不是其对应 [Bag.<id>] 节头（被挤进邻近节的孤儿/重复行）
-            for (int j = lines.Count - 1; j >= 0; j--)
-            {
-                if (!idOf.TryGetValue(lines[j].Trim(), out int id)) continue;
-                if (j + 1 >= lines.Count || !IsBagHeader(lines[j + 1], id)) { lines.RemoveAt(j); dirty = true; }
-            }
-            // 2) 补缺失：节头上无紧邻注释则插入（倒序扫描，Insert 不影响待处理的更小下标）
-            for (int i = lines.Count - 1; i >= 0; i--)
-            {
-                var m = SectionRe.Match(lines[i]);
-                if (!m.Success || !noteOf.TryGetValue(int.Parse(m.Groups[1].Value), out var note)) continue;
-                if (i > 0 && lines[i - 1].Trim() == note) continue; // 已紧邻：不重写（作者手工维护的注释走此路径）
-                lines.Insert(i, note);
-                dirty = true;
-            }
-            if (!dirty) return;
-            File.WriteAllText(_path, string.Join(nl, lines), new UTF8Encoding(true));
-            _lastMtime = File.GetLastWriteTime(_path); // 自身写入不触发多余重解析（注释行不进 Entries，_lastHash 不变）
-        }
-        catch (Exception e) { CabinetSizePlugin.Log.LogWarning("[CabinetSize] 节注释补回失败（不影响功能）: " + e.Message); }
-    }
-
-    private static bool IsBagHeader(string line, int id)
-    {
-        var m = SectionRe.Match(line);
-        return m.Success && int.Parse(m.Groups[1].Value) == id;
-    }
-
     /// <summary>每轮 Ticker 调用：文件 mtime 变化则重解析；条目集变化返回 true（触发立即改写）。
-    /// 重解析后顺带绑定键热改（ApplyHotKeys）与 [Bag.*] 节注释补回（MaintainBagComments）。</summary>
+    /// 重解析后顺带绑定键热改（ApplyHotKeys——含 13 包 [Bag.*] 绑定键的记事本改动）。
+    /// v4 删 MaintainBagComments：13 包节已是绑定键（## 描述注释由 BepInEx 原生维护，不再被挤掉），
+    /// 玩家自加节无已知文案可维护——注释自愈机制整体退役。</summary>
     internal static bool Poll()
     {
         try
@@ -304,7 +294,6 @@ internal static class BagSections
             int prev = _lastHash;
             Reload();
             ApplyHotKeys();
-            MaintainBagComments();
             return _lastHash != prev;
         }
         catch { return false; }
