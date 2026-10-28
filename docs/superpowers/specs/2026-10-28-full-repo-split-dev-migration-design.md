@@ -7,7 +7,7 @@
 | 层 | 内容 |
 |---|---|
 | GitHub 组织 `survivallog-mods` | 12 个 mod 仓 = **各自开发主场**（公开，源码+ModShared 副本+CHANGELOG+README+LICENSE+仓内 release.ps1）；`survivallog-mods/survivallog-mods` = **套件中枢仓**（公开：落地页 README 为门面 + 安装器/publish 工具链/文档/物料/取证脚本/探针与存档 mod——与旧个人仓同暴露面） |
-| 本地磁盘 `E:\Game\Mod\` | 平铺：`survivallog-mods\`（中枢 clone）、12 个 `<Mod>\`（各 mod clone，夹名=仓名）、`gamekb\`（**只留本地**，1.2GB，从 mod_stack 迁出）、`sdk\`（便携 SDK 迁出）、`thirdparty\`/`发版物料\`（本地或入中枢，见 §5） |
+| 本地磁盘 | **一个父项目夹 `E:\Game\Mod\survivallog-mods\`**（父夹本身**不是 git 仓**），内装多个子项目：`suite\`（中枢仓 clone，套件基础设施子项目）、12 个 `<Mod>\`（各 mod 仓 clone，夹名=仓名）、`gamekb\`（**只留本地**，1.2GB，从 mod_stack 迁入）、`sdk\`（便携 SDK）、`thirdparty\`、`发版物料\`（本地） |
 | 退役 | `E:\Game\Mod\mod_stack\`：迁移+对账完成、作者确认后**整仓删除**；旧个人仓 `wangk123/survivallog-mods` 同步执行弃用（横幅+archive） |
 
 不变的红线：gamekb 与 `tools\secrets\` 永不入库（gitignore 随迁）；探针三件/StackLimit999/CabinetExpand **不建独立仓**（随中枢存档，绝不发 Release）；N网确认门；版本号只由作者改（各仓 csproj）。
@@ -55,9 +55,19 @@ BackpackExpand/                 ← 仓库根 = 开发主场
 - 新增：`push_modshared.ps1`（改 ModShared 后一键提交推送 12 仓，附每仓比对报告）；`publish.ps1` 重写为多仓编排：pull 12 仓 → 逐仓 `release.ps1 -PackageOnly`（只打包不发版）→ Base 打包 → 安装器编译 → 回归 → 网盘组装 → 中枢仓 tag `suite-v<套件号>` + Release（仅说明，安装包仍只走网盘——v1 政策不变）。
 - 原 `sync_repos.ps1` / `release_mod.ps1` / `manifest.json`（mod 部分）**退役删除**。
 
-## 5. 本地磁盘迁移
+## 5. 本地磁盘迁移（父项目 + 子项目）
 
-`E:\Game\Mod\` 最终平铺：`survivallog-mods\`、12×`<Mod>\`、`gamekb\`、`sdk\`、`thirdparty\`（本地存档，gitignore 性质）、`发版物料\`（本地；N网封面等素材源文件不入中枢——产物图可留在 assets\）。
+```
+E:\Game\Mod\survivallog-mods\        ← 父项目夹（非 git 仓，纯容器）
+├─ suite\                            ← 中枢仓 clone（survivallog-mods/survivallog-mods；工具链/安装器/文档/物料/存档）
+├─ BackpackExpand\ … PreDisasterSpeed\   ← 12 个 mod 子项目（各自 git 仓 clone，开发主场）
+├─ gamekb\                           ← 游戏资料集（只留本地，不入任何仓）
+├─ sdk\                              ← 便携 .NET SDK（本地）
+├─ thirdparty\                       ← 本地存档（不入库）
+└─ 发版物料\                          ← 发布素材工作区（本地；产物图随 suite\assets 入中枢）
+```
+
+子项目各自负责自己的内容（各自 git 仓、各自发版流水线）；父夹只提供统一根路径，脚本一律以 `E:\Game\Mod\survivallog-mods\` 为根寻址兄弟子项目。`mod_stack\` 对账删除后 `E:\Game\Mod\` 下只剩这一个父夹。
 
 ## 6. 对账与删除（"没有遗漏就删"）
 
