@@ -1,4 +1,18 @@
 ﻿{
   "suite": "1.7.0",
-  "_note": "Suite-wide version shared by all packages and the installer. Defined ONLY by the repo owner; all scripts read from here and never invent a version."
+  "mods": {
+    "BackpackExpand": "1.7.0",
+    "CabinetSize": "1.7.0",
+    "FridgeChill": "1.7.0",
+    "QuickAction": "1.7.0",
+    "CabinetEverywhere": "1.7.0",
+    "CabinetBurden": "1.7.0",
+    "RoleUnlock": "1.7.0",
+    "RobotSpeed": "1.7.0",
+    "ModCenter": "1.7.0",
+    "EndlessGuard": "1.7.0",
+    "PlanPick": "1.7.0",
+    "PreDisasterSpeed": "1.7.0"
+  },
+  "_note": "Suite = installer/总仓 tag 线；mods = 单 mod 发版线（GitHub 组织通道）。两者都只由仓库作者定义，脚本只读。"
 }

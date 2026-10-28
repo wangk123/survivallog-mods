@@ -46,7 +46,7 @@ public sealed class QuickActionPlugin : BasePlugin
 {
     public const string Guid = "com.local.survivallog.quickaction";
     public const string Name = "QuickAction";
-    public const string Version = "2.1.2";
+    public const string Version = "1.7.0";
 
     /// <summary>探索时钟倍速（Config_Chapter 实测 120；游戏更新后体感异常再改此处重编译）。</summary>
     internal const int Scale = 120;
