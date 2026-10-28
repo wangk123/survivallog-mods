@@ -38,22 +38,23 @@ if (-not $Yes) {
     if ($a -notmatch '^[Yy]') { throw '已取消' }
 }
 
-# ---------- 2. 插件版本常量同步（仅套件 4 个扩容 MOD；StackLimit999/ActionProbe 不动）----------
-# 例外：QuickAction 插件版本独立于套件版本（作者口径 2026-10-07：插件自身大版本如 v2.0.0，
-# 不跟随套件 release 版本），其 csproj/Plugin.cs 版本手动维护。
-foreach ($m in $suiteMods | Where-Object { $_ -ne 'QuickAction' }) {
+# ---------- 2. 版本一致性校验（双轨：csproj/Plugin.cs 必须与 version.json.mods 一致；单 mod 发版由 release_mod.ps1 维护版本戳） ----------
+$vj = Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom-Json
+foreach ($m in $suiteMods) {
+    $mver = $vj.mods.$m
+    if (-not $mver) { throw ('version.json mods 缺少字段: ' + $m) }
     $dir = Join-Path $projRoot ('SurvivalLog.' + $m)
     $csproj = Join-Path $dir ('SurvivalLog.' + $m + '.csproj')
     $t = [System.IO.File]::ReadAllText($csproj)
-    $t2 = [regex]::Replace($t, '(<Version>)[\d.]+(</Version>)', ('${1}' + $ver + '${2}'))
-    if ($t2 -ne $t) { Set-SrcText $csproj $t2; Write-Host ('同步 ' + $m + '.csproj 版本 → ' + $ver) }
+    if ($t -notmatch ('<Version>' + [regex]::Escape($mver) + '</Version>')) {
+        throw ($m + '.csproj Version 与 version.json mods(' + $mver + ') 不一致——单 mod 发版走 tools\release_mod.ps1，或手动对齐后重试。')
+    }
     $plug = Get-ChildItem $dir -Filter '*Plugin.cs' | Select-Object -First 1
-    if ($plug) {
-        $c = [System.IO.File]::ReadAllText($plug.FullName)
-        $c2 = [regex]::Replace($c, '(public const string Version\s*=\s*")[\d.]+(")', ('${1}' + $ver + '${2}'))
-        if ($c2 -ne $c) { Set-SrcText $plug.FullName $c2; Write-Host ('同步 ' + $plug.Name + ' → ' + $ver) }
+    if ($plug -and (([System.IO.File]::ReadAllText($plug.FullName)) -notmatch ('public const string Version\s*=\s*"' + [regex]::Escape($mver) + '"'))) {
+        throw ($plug.Name + ' Version 常量与 version.json mods(' + $mver + ') 不一致。')
     }
 }
+Write-Host '双轨版本一致性校验通过（12 mod csproj/Plugin.cs == version.json.mods）'
 
 # ---------- 2.5 防盗署名气泡接线校验（套件规范：新 mod 必须接入 WelcomeTip，见 docs\00）----------
 foreach ($m in $suiteMods) {
@@ -120,7 +121,9 @@ $artifacts = @(
     (Join-Path $relRoot '【必读】安装说明.txt')
 )
 foreach ($m in @('Base') + $suiteMods) {
-    $artifacts += (Join-Path $relRoot ('SurvivalLog.' + $m + '_v' + $ver + '.zip'))
+    $mv = if ($m -eq 'Base') { $ver } else { $vj.mods.$m }
+    if (-not $mv) { throw ('version.json mods 缺少字段: ' + $m) }
+    $artifacts += (Join-Path $relRoot ('SurvivalLog.' + $m + '_v' + $mv + '.zip'))
 }
 foreach ($f in $artifacts) {
     if (-not (Test-Path $f)) { throw ('产物缺失: ' + $f) }

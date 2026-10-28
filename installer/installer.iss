@@ -12,6 +12,43 @@
 #ifndef RelRoot
 #define RelRoot "..\release"
 #endif
+; per-mod 版本（双轨：mod 包目录名 = mod 自身版本；由 tools\build_installer.ps1 注入 /DVer<Mod>=x.y.z）
+#ifndef VerBackpackExpand
+#define VerBackpackExpand "1.7.0"
+#endif
+#ifndef VerCabinetSize
+#define VerCabinetSize "1.7.0"
+#endif
+#ifndef VerFridgeChill
+#define VerFridgeChill "1.7.0"
+#endif
+#ifndef VerQuickAction
+#define VerQuickAction "1.7.0"
+#endif
+#ifndef VerCabinetEverywhere
+#define VerCabinetEverywhere "1.7.0"
+#endif
+#ifndef VerCabinetBurden
+#define VerCabinetBurden "1.7.0"
+#endif
+#ifndef VerRoleUnlock
+#define VerRoleUnlock "1.7.0"
+#endif
+#ifndef VerRobotSpeed
+#define VerRobotSpeed "1.7.0"
+#endif
+#ifndef VerModCenter
+#define VerModCenter "1.7.0"
+#endif
+#ifndef VerEndlessGuard
+#define VerEndlessGuard "1.7.0"
+#endif
+#ifndef VerPlanPick
+#define VerPlanPick "1.7.0"
+#endif
+#ifndef VerPreDisasterSpeed
+#define VerPreDisasterSpeed "1.7.0"
+#endif
 ; 作者署名/防盗引流（2026-10-14）：每页底部署名条（TNewStaticText）+ 欢迎页二维码名片，均点击直达作者抖音主页
 #define DouyinUrl "https://v.douyin.com/z99n5ZQfkyw/"
 
@@ -123,49 +160,49 @@ Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\unit
 ; cfg 不覆盖玩家已有配置（重装/换组件时保留调好的数值）
 Components: base; Source: "{#RelRoot}\SurvivalLog.Base_v{#SuiteVer}\BepInEx\config\BepInEx.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
 ; ---- 背包扩容 ----
-Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\BepInEx\config\com.local.survivallog.backpackexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "背包扩容.md"; Flags: ignoreversion
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#VerBackpackExpand}\BepInEx\plugins\SurvivalLog.BackpackExpand.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#VerBackpackExpand}\BepInEx\config\com.local.survivallog.backpackexpand.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_backpack; Source: "{#RelRoot}\SurvivalLog.BackpackExpand_v{#VerBackpackExpand}\README.md"; DestDir: "{app}\MOD说明"; DestName: "背包扩容.md"; Flags: ignoreversion
 ; ---- 柜子扩容 ----
 ; ---- 柜子容量（v1.7.0 起取代柜子扩容；cfg 不预置：首跑按代码默认生成） ----
-Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetSize.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子容量.md"; Flags: ignoreversion
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#VerCabinetSize}\BepInEx\plugins\SurvivalLog.CabinetSize.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabinet; Source: "{#RelRoot}\SurvivalLog.CabinetSize_v{#VerCabinetSize}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子容量.md"; Flags: ignoreversion
 ; ---- 冰箱扩容已并入柜子扩容（2026-10-13）：此处只保留升级清理（InstallDelete 区的旧 dll/说明文件） ----
 ; ---- 冰箱保鲜 ----
-Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\BepInEx\config\com.local.survivallog.fridgechill.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "冰箱保鲜.md"; Flags: ignoreversion
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#VerFridgeChill}\BepInEx\plugins\SurvivalLog.FridgeChill.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#VerFridgeChill}\BepInEx\config\com.local.survivallog.fridgechill.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_chill; Source: "{#RelRoot}\SurvivalLog.FridgeChill_v{#VerFridgeChill}\README.md"; DestDir: "{app}\MOD说明"; DestName: "冰箱保鲜.md"; Flags: ignoreversion
 ; ---- 储藏柜直达 ----
-Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabineteverywhere.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "储藏柜直达.md"; Flags: ignoreversion
+Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#VerCabinetEverywhere}\BepInEx\plugins\SurvivalLog.CabinetEverywhere.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#VerCabinetEverywhere}\BepInEx\config\com.local.survivallog.cabineteverywhere.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_cabaccess; Source: "{#RelRoot}\SurvivalLog.CabinetEverywhere_v{#VerCabinetEverywhere}\README.md"; DestDir: "{app}\MOD说明"; DestName: "储藏柜直达.md"; Flags: ignoreversion
 ; ---- 柜子负重解放 ----
-Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#VerCabinetBurden}\BepInEx\plugins\SurvivalLog.CabinetBurden.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#VerCabinetBurden}\BepInEx\config\com.local.survivallog.cabinetburden.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_cabburden; Source: "{#RelRoot}\SurvivalLog.CabinetBurden_v{#VerCabinetBurden}\README.md"; DestDir: "{app}\MOD说明"; DestName: "柜子负重解放.md"; Flags: ignoreversion
 ; ---- 角色专属解锁 ----
-Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RoleUnlock.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\BepInEx\config\com.local.survivallog.roleunlock.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "角色专属解锁.md"; Flags: ignoreversion
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#VerRoleUnlock}\BepInEx\plugins\SurvivalLog.RoleUnlock.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#VerRoleUnlock}\BepInEx\config\com.local.survivallog.roleunlock.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_roleunlock; Source: "{#RelRoot}\SurvivalLog.RoleUnlock_v{#VerRoleUnlock}\README.md"; DestDir: "{app}\MOD说明"; DestName: "角色专属解锁.md"; Flags: ignoreversion
 ; ---- 机器人提速（cfg 不预置：首跑按代码默认生成完整中文注释配置） ----
-Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "机器人提速.md"; Flags: ignoreversion
+Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#VerRobotSpeed}\BepInEx\plugins\SurvivalLog.RobotSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_robotspeed; Source: "{#RelRoot}\SurvivalLog.RobotSpeed_v{#VerRobotSpeed}\README.md"; DestDir: "{app}\MOD说明"; DestName: "机器人提速.md"; Flags: ignoreversion
 ; ---- 动作提速 ----
-Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.QuickAction.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
-Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "动作提速.md"; Flags: ignoreversion
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#VerQuickAction}\BepInEx\plugins\SurvivalLog.QuickAction.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#VerQuickAction}\BepInEx\config\com.local.survivallog.quickaction.cfg"; DestDir: "{app}\BepInEx\config"; Flags: onlyifdoesntexist
+Components: mod_quick; Source: "{#RelRoot}\SurvivalLog.QuickAction_v{#VerQuickAction}\README.md"; DestDir: "{app}\MOD说明"; DestName: "动作提速.md"; Flags: ignoreversion
 ; ---- MOD 管理中心（cfg 不预置：首跑按代码默认生成） ----
-Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.ModCenter.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "MOD管理中心.md"; Flags: ignoreversion
+Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#VerModCenter}\BepInEx\plugins\SurvivalLog.ModCenter.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_center; Source: "{#RelRoot}\SurvivalLog.ModCenter_v{#VerModCenter}\README.md"; DestDir: "{app}\MOD说明"; DestName: "MOD管理中心.md"; Flags: ignoreversion
 ; ---- 无尽守卫（cfg 不预置：首跑按代码默认生成） ----
-Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.EndlessGuard.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "无尽守卫.md"; Flags: ignoreversion
+Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#VerEndlessGuard}\BepInEx\plugins\SurvivalLog.EndlessGuard.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_endless; Source: "{#RelRoot}\SurvivalLog.EndlessGuard_v{#VerEndlessGuard}\README.md"; DestDir: "{app}\MOD说明"; DestName: "无尽守卫.md"; Flags: ignoreversion
 ; ---- 自选规划（cfg 不预置：首跑按代码默认生成） ----
-Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.PlanPick.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "自选规划.md"; Flags: ignoreversion
+Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#VerPlanPick}\BepInEx\plugins\SurvivalLog.PlanPick.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_planpick; Source: "{#RelRoot}\SurvivalLog.PlanPick_v{#VerPlanPick}\README.md"; DestDir: "{app}\MOD说明"; DestName: "自选规划.md"; Flags: ignoreversion
 ; ---- 灾前加速（cfg 不预置：首跑按代码默认生成） ----
-Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#SuiteVer}\BepInEx\plugins\SurvivalLog.PreDisasterSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
-Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#SuiteVer}\README.md"; DestDir: "{app}\MOD说明"; DestName: "灾前加速.md"; Flags: ignoreversion
+Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#VerPreDisasterSpeed}\BepInEx\plugins\SurvivalLog.PreDisasterSpeed.dll"; DestDir: "{app}\BepInEx\plugins"; Flags: ignoreversion
+Components: mod_predisaster; Source: "{#RelRoot}\SurvivalLog.PreDisasterSpeed_v{#VerPreDisasterSpeed}\README.md"; DestDir: "{app}\MOD说明"; DestName: "灾前加速.md"; Flags: ignoreversion
 
 ; 抖音名片（仅向导期署名展示用，dontcopy 不落地安装目录）
 Source: "assets\douyin_night_card.bmp"; DestDir: "{tmp}"; Flags: dontcopy
