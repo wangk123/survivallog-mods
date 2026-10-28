@@ -1,3 +1,6 @@
+﻿> ⚠️ **本仓库已迁移**：全套件已拆分至 GitHub 组织 [survivallog-mods](https://github.com/survivallog-mods)——12 个 mod 各自独立仓库（各自发版）+ [suite 中枢仓](https://github.com/survivallog-mods/survivallog-mods)（安装器/工具链/文档）。
+> 本仓库自 2026-10-28 起冻结为历史存档（保留拆分前的完整提交历史），不再更新；新版本与问题反馈请移步组织对应仓库。
+
 # 生存日志 MOD 套件（SurvivalLog Mods）
 
 《生存日志》(Survival Log, Steam AppID 4164790) 的 BepInEx 6 (IL2CPP) 插件套件。
