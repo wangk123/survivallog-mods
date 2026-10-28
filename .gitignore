@@ -38,3 +38,4 @@ tools/webui_src/
 
 # mdump 工具的元数据 dump 产物（6.6MB 级文本，本地留用不入库；工具源码本身入库）
 tools/mdump/*.txt
+/发版物料/
