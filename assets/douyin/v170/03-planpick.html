@@ -1,0 +1,85 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>抖音图文 03 自选规划 1080x1440</title><style>
+  
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; font-family:"Microsoft YaHei","SimHei",sans-serif; }
+  .board { position:relative; overflow:hidden; width:1080px; height:1440px; background:#08080b; }
+  .bg { position:absolute; inset:0; }
+  .grain { position:absolute; inset:0; opacity:.05; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>"); background-size:180px; }
+  .stamp { position:absolute; transform:rotate(-7deg); z-index:30;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.7)) drop-shadow(0 0 12px rgba(255,193,7,.3)); }
+  .gold-t { background:linear-gradient(180deg,#fdf6e3 8%,#f2ddb0 55%,#dcc084 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .bg { background:linear-gradient(178deg,#171b20 0%,#0e1013 46%,#100c07 54%,#1a1309 100%); }
+  header { position:absolute; top:44px; left:48px; right:48px; }
+  .hrow { display:flex; justify-content:space-between; align-items:center; }
+  .tag { font-size:22px; font-weight:800; letter-spacing:3px; padding:9px 20px; border-radius:999px;
+    border:1px solid; background:rgba(12,10,7,.6); color:#FFD75E;border-color:rgba(255,193,7,.5); }
+  .pageno { color:#6d757f; font-size:20px; letter-spacing:4px; font-family:Georgia,serif; }
+  .name { margin-top:20px; font-size:64px; font-weight:900; letter-spacing:7px; line-height:1.1; }
+  .en { margin-top:12px; font-family:Georgia,serif; font-size:20px; color:#c9a754; letter-spacing:4px; }
+  .card { position:absolute; left:48px; right:48px; height:480px; border-radius:22px;
+    display:flex; align-items:center; gap:18px; padding:20px; }
+  .before { top:228px; background:linear-gradient(135deg,rgba(30,35,42,.95),rgba(20,23,28,.95));
+    border:1px solid rgba(255,255,255,.10); box-shadow:0 24px 60px rgba(0,0,0,.55); }
+  .after { top:788px; background:linear-gradient(135deg,rgba(41,30,15,.96),rgba(26,19,10,.96));
+    border:1px solid rgba(255,193,7,.45); box-shadow:0 26px 66px rgba(0,0,0,.6), 0 0 46px rgba(255,193,7,.09); }
+  .txt { width:288px; flex:none; }
+  .pill { display:inline-block; font-size:19px; font-weight:800; letter-spacing:3px; padding:8px 17px;
+    border-radius:999px; }
+  .pill.g { color:#8f99a4; border:1px solid rgba(143,153,164,.45); background:rgba(255,255,255,.04); }
+  .pill.y { color:#FFD75E; border:1px solid rgba(255,193,7,.55); background:rgba(255,193,7,.07); }
+  .bt { margin-top:18px; color:#d5dde4; font-size:31px; font-weight:900; line-height:1.42; letter-spacing:1px; }
+  .st { margin-top:18px; font-size:31px; font-weight:900; line-height:1.42; letter-spacing:1px;
+    color:#FFD75E; text-shadow:0 2px 14px rgba(255,193,7,.22); }
+  .bd { margin-top:15px; color:#939ea9; font-size:20px; line-height:1.68; }
+  .sd { margin-top:15px; color:#c8b68e; font-size:20px; line-height:1.68; }
+  .win { width:640px; flex:none; border-radius:13px; overflow:hidden; background:#101013;
+    border:1px solid rgba(255,255,255,.14); box-shadow:0 24px 56px rgba(0,0,0,.6); }
+  .win.gold { border:1.5px solid rgba(255,193,7,.75); box-shadow:0 24px 60px rgba(0,0,0,.65), 0 0 36px rgba(255,193,7,.16); }
+  .win .bar { height:28px; background:rgba(22,22,26,.96); display:flex; align-items:center; gap:7px; padding:0 12px;
+    border-bottom:1px solid rgba(255,255,255,.07); }
+  .win .bar i { width:7px; height:7px; border-radius:50%; background:#41414a; }
+  .win.gold .bar i:first-child { background:rgba(255,193,7,.85); }
+  .win img { display:block; width:100%; }
+  .win img.van { filter:grayscale(.82) brightness(.78); }
+  .divider { position:absolute; top:712px; left:0; width:100%; text-align:center; }
+  .divider span { display:inline-block; color:#FFC107; font-size:22px; font-weight:800; letter-spacing:7px;
+    padding:11px 30px; border-radius:999px; border:1px solid rgba(255,193,7,.4);
+    background:rgba(10,8,5,.72); box-shadow:0 10px 26px rgba(0,0,0,.5); }
+  .cfgline { position:absolute; bottom:64px; left:48px; right:48px; text-align:center;
+    color:#cdb87e; font-size:20px; letter-spacing:2px; }
+  .brand { position:absolute; bottom:30px; width:100%; text-align:center; color:#6d757f;
+    font-size:17px; letter-spacing:3px; }
+  </style></head><body><div class="board">
+  <div class="bg"></div><div class="grain"></div>
+  <header>
+    <div class="hrow"><span class="tag">🆕 新 MOD</span><span class="pageno">03 / 010</span></div>
+    <div class="name gold-t">自选规划</div>
+    <div class="en">PLAN PICK · 随机三选 → 全目录自选</div>
+  </header>
+  <section class="card before">
+    <div class="txt"><div class="pill g">装前 · 痛点</div><div class="bt">每日规划三选一<br>想要啥全看脸</div><div class="bd">惦记的规划老不出现在候选里，错过一次又等一年</div></div>
+    <div class="win" style="transform:rotate(-0.9deg)">
+    <div class="bar"><i></i><i></i><i></i></div>
+    <img class="van" src="../../../gamekb/webui_shots/rogue_vanilla_cards.png"></div>
+  </section>
+  <div class="divider"><span>▼ 装上 MOD</span></div>
+  <section class="card after">
+    <div class="win gold" style="transform:rotate(0.9deg)">
+    <div class="bar"><i></i><i></i><i></i></div>
+    <img class="" src="../../../gamekb/webui_shots/pp_real_panel.png"></div>
+    <div class="txt"><div class="pill y">装上后 · 解决</div><div class="st">465+ 项<br>全目录自选购买</div><div class="sd">含从不进抽取池的隐藏项；分类/搜索/排序，买完立即生效</div></div>
+  </section>
+  <div class="cfgline">⚙ 非今日加价 100%~300% 可调</div>
+  <div class="brand">生存日志 MOD 合集 v1.7.0 · by Night</div>
+  <div class="stamp" style="right:26px;bottom:22px;width:58px;height:58px" style="width:58px;height:58px">
+    <svg width="58" height="58" viewBox="0 0 264 264">
+      <rect x="8" y="8" width="248" height="248" rx="30" fill="#1b1610"/>
+      <rect x="24" y="24" width="216" height="216" rx="20" fill="none" stroke="#FFC107" stroke-width="5"/>
+      <text x="132" y="176" text-anchor="middle" font-family="KaiTi,STKaiti,serif" font-weight="900"
+            font-size="150" fill="#FFC107">夜</text>
+      <text x="132" y="222" text-anchor="middle" font-family="Georgia,serif" font-size="21"
+            letter-spacing="6" fill="#FFC107" opacity=".85">NIGHT</text>
+    </svg></div>
+  </div></body></html>

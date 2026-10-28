@@ -18,14 +18,25 @@ internal static class PlanCatalog
 {
     internal static List<PlanEntry> Plans;          // 表就绪后构建一次
     internal static readonly List<string> BuildLog = new();
+    private static int _builtTalentCount = -1;      // 构建时的 Talent 表行数；行数变=表被重建或他 mod 注入 → 目录重建
 
     internal static bool Build(GameCore.HotUpdate.ConfigManager cm)
     {
-        if (Plans != null) return true;
         var talentDict = cm._Config_Talent_Dict; var groupDict = cm._Config_RandomGroup_Dict;
         var dailyDict = cm._Config_DailyRandom_Dict; var condDict = cm._Config_ConditionSet_Dict;
         if (talentDict == null || groupDict == null || dailyDict == null || condDict == null) return false;
-        try { BuildCore(talentDict, groupDict, dailyDict, condDict); return true; }
+        if (Plans != null)
+        {
+            // 失效复核（2026-10-25 465 项事故）：目录曾"构建即终身缓存"，注入晚到/表重建都追不进——
+            // 自选规划整局缺 11 条注入卡。改按行数复核：EndlessGuard 挂官方装表管道随行注入后行数
+            // 在装表步进内就位（本复核是二道防线），官方重跑 Initialize 重建表也能捕捉。
+            // 行数不变视为内容未变跳过（每轮一次 Count 原生调用，开销可忽略；interop 包装实例
+            // 每次访问可能新造，ReferenceEquals 不可靠，故用行数不用引用比对）。
+            if (talentDict.Count == _builtTalentCount) return true;
+            BuildLog.Add("Talent 表行数 " + _builtTalentCount + "→" + talentDict.Count + "，目录重建");
+            Plans = null;
+        }
+        try { BuildCore(talentDict, groupDict, dailyDict, condDict); _builtTalentCount = talentDict.Count; return true; }
         // 每 2s 重试下 BuildLog 只保留首条异常（与上一条相同则不重复添加，防无限增长）
         catch (Exception e)
         {

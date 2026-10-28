@@ -452,7 +452,8 @@
       "GameCounter.SetCounter",
       "TagManager.GetTagKeys/RemoveTags/HasTag",
       "ReduxUI.State_Data_Talent.SurvivalPlanningIds",
-      "BattleLogicWorld._ExploreManager.MapConfigId"
+      "BattleLogicWorld._ExploreManager.MapConfigId",
+      "GameEntrance.<EnterMain>d__0.MoveNext(0x2954C90)与ConfigManager.<Initialize>d__256.MoveNext(0x30A4E70) 均为禁挂锚点(2026-10-25/26两连实弹事故): HarmonyX detour挂async状态机MoveNext不可靠——d__256=装表中注入10Hz重试循环,d__0=启动序列卡死黑屏(进程/webview活,窗口黑,内存1.09GB卡死); 此类方法XMM非易失寄存器+栈保活状态机数据,蹦床不完整保存即静默损坏; 免巡检迁移动候补=装表后续体常规方法(GameSaveManager.Initialize类),须离线论证全调用方+作者批后才上机"
     ]
   }
 }

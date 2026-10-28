@@ -1,0 +1,76 @@
+﻿
+##### refs in BepInEx.Unity.IL2CPP.dll
+  BepInEx.Unity.IL2CPP.Preloader :: Run  ->  IL_0206: newobj System.Void BepInEx.Preloader.Core.Patching.AssemblyPatcher::.ctor(System.Func`3<System.Byte[],System.String,System.Reflection.Assembly>)
+  BepInEx.Unity.IL2CPP.UnityPreloaderRunner :: LocalResolve  ->  System.String BepInEx.Paths::get_PatcherPluginPath()
+
+##### refs in BepInEx.Preloader.Core.dll
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: .ctor  ->  BepInEx.Preloader.Core.Patching.PatcherContext BepInEx.Preloader.Core.Patching.AssemblyPatcher::<PatcherContext>k__BackingField
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: get_PatcherContext  ->  BepInEx.Preloader.Core.Patching.PatcherContext BepInEx.Preloader.Core.Patching.AssemblyPatcher::<PatcherContext>k__BackingField
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: get_PatcherPluginsSafe  ->  BepInEx.Preloader.Core.Patching.PatcherContext BepInEx.Preloader.Core.Patching.AssemblyPatcher::get_PatcherContext()
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: get_Logger  ->  BepInEx.Logging.ManualLogSource BepInEx.Preloader.Core.Patching.AssemblyPatcher::<Logger>k__BackingField
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: get_allowedGuidRegex  ->  System.Text.RegularExpressions.Regex BepInEx.Preloader.Core.Patching.AssemblyPatcher::<allowedGuidRegex>k__BackingField
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: Dispose  ->  BepInEx.Preloader.Core.Patching.PatcherContext BepInEx.Preloader.Core.Patching.AssemblyPatcher::get_PatcherContext()
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: ToPatcherPlugin  ->  BepInEx.Logging.ManualLogSource BepInEx.Preloader.Core.Patching.AssemblyPatcher::get_Logger()
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: HasPatcherPlugins  ->  System.Func`2<Mono.Cecil.AssemblyNameReference,System.Boolean> BepInEx.Preloader.Core.Patching.AssemblyPatcher/<>c::<>9__16_0
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: AddPatchersFromDirectory  ->  BepInEx.Preloader.Core.Patching.AssemblyPatcher BepInEx.Preloader.Core.Patching.AssemblyPatcher/<>c__DisplayClass17_0::<>4__this
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: LoadAssemblyDirectories  ->  System.Void BepInEx.Preloader.Core.Patching.AssemblyPatcher::LoadAssemblyDirectories(System.Collections.Generic.IEnumerable`1<System.String>,System.Collections.Generic.IEnumerable`1<System.String>)
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: LoadAssemblyDirectories  ->  System.Void BepInEx.Preloader.Core.Patching.AssemblyPatcher/<>c__DisplayClass19_0::.ctor()
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: PatchAndLoad  ->  System.Void BepInEx.Preloader.Core.Patching.AssemblyPatcher/<>c__DisplayClass21_0::.ctor()
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: .cctor  ->  System.String BepInEx.Preloader.Core.Patching.AssemblyPatcher::CurrentAssemblyName
+  BepInEx.Preloader.Core.Patching.AssemblyPatcher :: <AddPatchersFromDirectory>g__AddDefinition|17_0  ->  BepInEx.Logging.ManualLogSource BepInEx.Preloader.Core.Patching.AssemblyPatcher::get_Logger()
+
+##### all top-level types in BepInEx.Unity.IL2CPP.dll
+  <Module>
+  <>z__ReadOnlyArray`1
+  Microsoft.CodeAnalysis.EmbeddedAttribute
+  System.Runtime.CompilerServices.NullableAttribute
+  System.Runtime.CompilerServices.NullableContextAttribute
+  System.Runtime.CompilerServices.NativeIntegerAttribute
+  System.Runtime.CompilerServices.RefSafetyRulesAttribute
+  Doorstop.Entrypoint
+  BepInEx.UnityInput
+  BepInEx.IInputSystem
+  BepInEx.NullInputSystem
+  BepInEx.NewInputSystem
+  BepInEx.LegacyInputSystem
+  BepInEx.IL2CPP.RuntimeFixes.RedirectStdErrFix
+  BepInEx.Unity.IL2CPP.BasePlugin
+  BepInEx.Unity.IL2CPP.IL2CPPChainloader
+  BepInEx.Unity.IL2CPP.Il2CppInteropManager
+  BepInEx.Unity.IL2CPP.Preloader
+  BepInEx.Unity.IL2CPP.UnityPreloaderRunner
+  BepInEx.Unity.IL2CPP.Utils.Il2CppUtils
+  BepInEx.Unity.IL2CPP.Utils.MessageBox
+  BepInEx.Unity.IL2CPP.Utils.MonoBehaviourExtensions
+  BepInEx.Unity.IL2CPP.Utils.NotifySend
+  BepInEx.Unity.IL2CPP.Utils.Collections.CollectionExtensions
+  BepInEx.Unity.IL2CPP.Utils.Collections.Il2CppManagedEnumerable
+  BepInEx.Unity.IL2CPP.Utils.Collections.Il2CppManagedEnumerator
+  BepInEx.Unity.IL2CPP.Utils.Collections.ManagedIl2CppEnumerable
+  BepInEx.Unity.IL2CPP.Utils.Collections.ManagedIl2CppEnumerator
+  BepInEx.Unity.IL2CPP.UnityEngine.KeyCode
+  BepInEx.Unity.IL2CPP.UnityEngine.Input
+  BepInEx.Unity.IL2CPP.Logging.BepInExLoggerProvider
+  BepInEx.Unity.IL2CPP.Logging.IL2CPPLogSource
+  BepInEx.Unity.IL2CPP.Logging.IL2CPPUnityLogSource
+  BepInEx.Unity.IL2CPP.Hook.BaseNativeDetour`1
+  BepInEx.Unity.IL2CPP.Hook.Il2CppInteropDetourProvider
+  BepInEx.Unity.IL2CPP.Hook.Il2CppInteropDetour
+  BepInEx.Unity.IL2CPP.Hook.INativeDetour
+  BepInEx.Unity.IL2CPP.Hook.Funchook.FunchookDetour
+  BepInEx.Unity.IL2CPP.Hook.Funchook.FunchookResult
+  BepInEx.Unity.IL2CPP.Hook.Funchook.FunchookLib
+  BepInEx.Unity.IL2CPP.Hook.Dobby.DobbyDetour
+  BepInEx.Unity.IL2CPP.Hook.Dobby.DobbyLib
+  BepInEx.Unity.IL2CPP.Configuration.KeyboardShortcut
+  <PrivateImplementationDetails>
+
+##### BasePatcher ALL members
+  METHOD: False Void .ctor()
+  METHOD: False ManualLogSource get_Log()
+  METHOD: False ConfigFile get_Config()
+  METHOD: False PatcherPluginInfoAttribute get_Info()
+  METHOD: False PatcherContext get_Context()
+  METHOD: False Void set_Context(BepInEx.Preloader.Core.Patching.PatcherContext value)
+  METHOD: True Void Initialize()
+  METHOD: True Void Finalizer()

@@ -64,23 +64,26 @@ public sealed class EndlessGuardPlugin : BasePlugin
     }
 }
 
-/// <summary>2s 轮询：表注入与注册表追加在 Cm() 就绪后执行（早于 PlanPick 目录构建=首次开规划页）。
+/// <summary>2s 轮询：表注入与注册表追加在 Cm() 就绪且装表完成后执行（静默失败期天然避开装表窗口）。
 /// Update 必须 public + 双构造器（RoleUnlock RoleTicker 实证模式：interop 注入类的引擎回调
-/// 只桥接 public 生命周期方法——2026-10-25 探针实锤 private 版在场景切换后停止回调，
-/// "每2s复查"全链哑火即买卡后追加波不生效的根因）。心跳行进 trace 供存活自证。</summary>
+/// 只桥接 public 生命周期方法——2026-10-25 探针实锤 private 版在场景切换后停止回调）。
+/// 2026-10-26 兓律（两连实弹事故定案）：**禁用 HarmonyX detour 挂编译器生成的 async 状态机
+/// MoveNext**——d__256 锚点=Initialize ~10Hz 重试循环（2026-10-25 晚），d__0/EnterMain 锚点=
+/// 装表后启动序列卡死黑屏（2026-10-26 凌晨，进程活/webview 活/窗口黑、内存 1.09GB 卡死）。
+/// 两次均在"锚点选对"的前提下翻车：此类方法靠 XMM 非易失寄存器+栈保活状态机数据，蹦床不完整
+/// 保存即静默损坏。免巡检若再迁：候补锚点=装表后续体里的**常规方法**（如 GameSaveManager.Initialize，
+/// 与套件在役补丁同类），必须先离线论证其调用时机与全部调用方，论证材料呈作者批后才上机。</summary>
 internal sealed class GuardTicker : MonoBehaviour
 {
     private float _acc;
-    private int _beats;
     public GuardTicker(IntPtr p) : base(p) { }
     public GuardTicker() { }
     public void Update()
     {
         _acc += UnityEngine.Time.unscaledDeltaTime;
         if (_acc < 2f) return;
-        _acc = 0f;
-        _beats++;
+        _acc = 0;
         if (EndlessGuardPlugin.Enabled != null && !EndlessGuardPlugin.Enabled.Value) return;   // 总开关关=轮询停（已生效改动保留，重启干净）
-        try { ScavengePlans.Tick(); } catch (Exception e) { EndlessGuardPlugin.Trace("ticker ScavengePlans: " + e.Message); }
+        try { ScavengePlans.OnConfigStep(); } catch (Exception e) { EndlessGuardPlugin.Trace("ticker ScavengePlans: " + e.Message); }
     }
 }

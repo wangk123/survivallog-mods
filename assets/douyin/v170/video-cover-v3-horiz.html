@@ -1,0 +1,80 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>抖音视频封面 v3 横版 1920x1080（中央3:4安全区）</title><style>
+  
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; font-family:"Microsoft YaHei","SimHei",sans-serif; }
+  .board { position:relative; overflow:hidden; width:1080px; height:1440px; background:#08080b; }
+  .bg { position:absolute; inset:0; }
+  .grain { position:absolute; inset:0; opacity:.05; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>"); background-size:180px; }
+  .stamp { position:absolute; transform:rotate(-7deg); z-index:30;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,.7)) drop-shadow(0 0 12px rgba(255,193,7,.3)); }
+  .gold-t { background:linear-gradient(180deg,#fdf6e3 8%,#f2ddb0 55%,#dcc084 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .board { width:1920px; height:1080px; }
+  .bg { background:radial-gradient(1300px 900px at 50% 44%, #2e2313 0%, #19130b 55%, #0a0a0d 100%); }
+  .bg::after { content:''; position:absolute; inset:0; opacity:.32;
+    background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:64px 64px; }
+  .side { position:absolute; top:50%; transform:translateY(-50%); opacity:.09; z-index:1;
+    writing-mode:vertical-rl; font-size:128px; font-weight:900; letter-spacing:26px;
+    color:#FFC107; white-space:nowrap; }
+  .side.l { left:66px; } .side.r { right:66px; }
+  .glow { position:absolute; left:50%; top:470px; transform:translate(-50%,-50%); width:860px; height:860px;
+    border-radius:50%; z-index:0;
+    background:radial-gradient(circle, rgba(255,193,7,.12) 0%, transparent 62%); }
+  .safe { position:absolute; left:555px; top:0; width:810px; height:1080px; z-index:2; }
+  .kick { position:absolute; top:74px; width:100%; text-align:center; color:#b0a078;
+    font-size:25px; letter-spacing:12px; font-weight:700; }
+  .q { position:absolute; top:140px; width:100%; text-align:center; color:#e8e4da;
+    font-size:50px; font-weight:900; letter-spacing:3px; }
+  .a { position:absolute; top:224px; width:100%; text-align:center; font-size:128px;
+    font-weight:900; letter-spacing:6px; line-height:1.05;
+    text-shadow:0 8px 40px rgba(0,0,0,.55); }
+  .pills { position:absolute; top:412px; width:100%; display:flex; justify-content:center; gap:15px; }
+  .pl { color:#FFD75E; font-size:25px; font-weight:900; letter-spacing:4px; padding:13px 25px;
+    border-radius:999px; border:2px solid rgba(255,193,7,.55); background:rgba(12,10,7,.72);
+    box-shadow:0 12px 32px rgba(0,0,0,.55); }
+  .ver { position:absolute; top:540px; width:100%; text-align:center; }
+  .ver span { display:inline-block; font-family:Impact,"Arial Black",sans-serif; font-size:40px;
+    color:#0a0a0d; letter-spacing:3px; padding:9px 25px; border-radius:12px;
+    background:linear-gradient(180deg,#f2ddb0,#dcc084); box-shadow:0 12px 30px rgba(0,0,0,.5); }
+  .hair { position:absolute; top:668px; left:110px; right:110px; height:1px;
+    background:linear-gradient(90deg,transparent,#8f7c4e,transparent); }
+  .chips { position:absolute; top:706px; width:100%; display:flex; justify-content:center; gap:13px; }
+  .pc { color:#8f99a4; font-size:21px; letter-spacing:2px; padding:10px 20px; border-radius:999px;
+    border:1px solid rgba(143,153,164,.38); background:rgba(255,255,255,.03);
+    text-decoration:line-through; text-decoration-color:rgba(179,52,42,.85); text-decoration-thickness:2.5px; }
+  .sub { position:absolute; top:806px; width:100%; text-align:center; color:#fdf6e3;
+    font-size:27px; font-weight:900; letter-spacing:4px; }
+  .sub b { color:#FFD75E; font-size:29px; }
+  .foot { position:absolute; top:906px; width:100%; text-align:center; color:#cdb87e;
+    font-size:24px; letter-spacing:6px; }
+  .foot2 { position:absolute; top:956px; width:100%; text-align:center; color:#6d757f;
+    font-size:18px; letter-spacing:3px; }
+  </style></head><body><div class="board">
+  <div class="bg"></div><div class="grain"></div>
+  <div class="glow"></div>
+  <div class="side l">生存日志</div><div class="side r">MOD 合集</div>
+  <div class="safe">
+    <div class="kick">生存日志 · MOD 合集</div>
+    <div class="q">还在找生存日志mod？</div>
+    <div class="a gold-t">这边全都有</div>
+    <div class="pills"><span class="pl">免冲突</span><span class="pl">全中文</span><span class="pl">一键装齐</span></div>
+    <div class="ver"><span>v1.7.0 大版本</span></div>
+    <div class="hair"></div>
+    <div class="chips"><span class="pc">满世界找</span><span class="pc">装一堆冲突</span><span class="pc">全英文配置</span></div>
+    <div class="sub">一个安装器 · <b>装齐整个合集</b></div>
+    <div class="foot">粉丝群置顶免费取</div>
+    <div class="foot2">生存日志 MOD 合集 v1.7.0 · by Night</div>
+  </div>
+  <div class="stamp" style="right:600px;bottom:56px;width:76px;height:76px" style="width:76px;height:76px">
+    <svg width="76" height="76" viewBox="0 0 264 264">
+      <rect x="8" y="8" width="248" height="248" rx="30" fill="#1b1610"/>
+      <rect x="24" y="24" width="216" height="216" rx="20" fill="none" stroke="#FFC107" stroke-width="5"/>
+      <text x="132" y="176" text-anchor="middle" font-family="KaiTi,STKaiti,serif" font-weight="900"
+            font-size="150" fill="#FFC107">夜</text>
+      <text x="132" y="222" text-anchor="middle" font-family="Georgia,serif" font-size="21"
+            letter-spacing="6" fill="#FFC107" opacity=".85">NIGHT</text>
+    </svg></div>
+  </div></body></html>

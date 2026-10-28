@@ -1,5 +1,5 @@
 // 柜子扩容 CabinetExpand 封面素材：ToolTable 工作台页，官方 cabinet-tab 页签 + 官方格子背包 API
-// vanilla：超大型置物架 15x12；mod：23x18（宽高 x1.5，bag 110008 实证 15x12 -> 23x18）；格子填真实材料约一半
+// vanilla：超大型置物架 15x12；mod：特大档 20x16（CabinetSize PresetV2 数值制）；格子填真实材料约一半
 // 柜子页签官方语义：applyLeftGrid 对 isCabinet 隐藏负重行（照抄官方行为）
 const mod = window.__COV_VARIANT === 'mod';
 const R = '/Res/';
@@ -36,7 +36,7 @@ const wsec = document.querySelector('.weight-section');
 if (wsec) wsec.style.visibility = 'hidden';
 
 // 3) 官方格子背包 API：backpack.resize 画格子、backpack.refresh 走 mapItem 官方渲染链
-const cols = mod ? 23 : 15, rows = mod ? 18 : 12;
+const cols = mod ? 20 : 15, rows = mod ? 16 : 12;
 const items = [];
 let id = 5000;
 for (let y = 0; y < rows; y++) {
@@ -110,7 +110,7 @@ if (list) {
   });
 }
 
-// 5) 官方视口适配：body zoom 让 23x18 也整页入镜
+// 5) 官方视口适配：body zoom 让 20x16 也整页入镜
 if (typeof applyViewportFit === 'function') applyViewportFit();
 await new Promise(r => setTimeout(r, 500));
 if (typeof applyViewportFit === 'function') applyViewportFit();

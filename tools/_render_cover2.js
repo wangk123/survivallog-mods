@@ -31,7 +31,7 @@ const server = http.createServer((req, res) => {
   const port = server.address().port;
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
-  await page.goto('http://127.0.0.1:' + port + '/' + pagePath, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto('http://127.0.0.1:' + port + '/' + encodeURI(pagePath), { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForTimeout(700);
   await page.screenshot({ path: out, clip: { x: 0, y: 0, width: W, height: H } });
   await browser.close(); server.close();

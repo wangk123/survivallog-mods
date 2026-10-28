@@ -1,7 +1,7 @@
 // N网详情页文案生成器：各 mod README.md（发布口径单源）→ 双语 BBCode
 // 用法：node tools/nexus_page_text.js          （全部 mod）
 //       node tools/nexus_page_text.js PlanPick （单个 mod）
-// 输出：assets/nexus/pages/<File>.bbcode.txt + _index.md（发版物料索引）
+// 输出：发版物料/N网/页面文案/<中文名>-页面文案.txt + 发版物料/N网/物料索引.md
 // 依据 docs/08 §5.2：中文在前完整五节 + [hr] 英文完整对照；安全标签集
 // center/size/b/color/url/img/list/spoiler/hr（无 table/code，配置表转 list）。
 // 注：docs/08 原计划 nexus_page_text.ps1；PS5.1 有 ASCII 坑（硬规则 7），改 node 实现，语义不变。
@@ -9,13 +9,12 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const OUTDIR = path.join(ROOT, 'assets', 'nexus', 'pages');
 
 // mod 清单（发版白名单口径：套件 9 + PlanPick/PreDisasterSpeed/EndlessGuard；
 // StackLimit999 禁发（硬规则 6），探针禁发（硬规则 5），CabinetSize WIP 未列）
 const MODS = [
   { dir: 'SurvivalLog.BackpackExpand',   cn: '背包扩容',     en: 'Backpack Expand',        file: 'BackpackExpand', cover: 'bp-cover.jpg' },
-  { dir: 'SurvivalLog.CabinetExpand',    cn: '柜子扩容',     en: 'Cabinet Expand',         file: 'CabinetExpand', cover: 'cx-cover.jpg' },
+  { dir: 'SurvivalLog.CabinetSize',     cn: '柜子容量',     en: 'Cabinet Size',           file: 'CabinetSize', cover: 'cs-cover.jpg' },
   { dir: 'SurvivalLog.FridgeChill',      cn: '冰箱保鲜',     en: 'Fridge Chill',           file: 'FridgeChill', cover: 'fc-cover.jpg' },
   { dir: 'SurvivalLog.QuickAction',      cn: '动作提速',     en: 'Quick Action',           file: 'QuickAction', cover: 'qa-cover.jpg' },
   { dir: 'SurvivalLog.CabinetEverywhere',cn: '储藏柜直达',   en: 'Cabinet Everywhere',     file: 'CabinetEverywhere', cover: 'ce-cover.jpg' },
@@ -138,7 +137,7 @@ function buildPage(mod, ver) {
   cfgItems.forEach(c => L.push(c));
   L.push('[/list]');
   L.push('[size=4][b]❓ 常见问题 FAQ[/b][/size]');
-  L.push('[list][*]装了没反应？检查游戏根目录三件套：winhttp.dll + doorstop_config.ini、dotnet\\ 目录、BepInEx\\core 有 dll；缺了请重跑套件安装器。');
+  L.push('[list][*]装了没反应？检查游戏根目录三件套：winhttp.dll + doorstop_config.ini、dotnet\\ 目录、BepInEx\\core 有 dll；缺了请用本页 Full 包往游戏根目录覆盖解压一次。');
   L.push('[*]游戏更新后失效？等套件适配新版即可，本 mod 不改任何游戏文件。[/list]');
   L.push('[size=4][b]✍️ 署名 Credits[/b][/size]');
   L.push('作者 Night（抖音 166660371）。免费分享，仅供学习交流；游戏本体请支持正版。');
@@ -153,24 +152,30 @@ function buildPage(mod, ver) {
 
 const only = process.argv[2];
 const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8').replace(/^\uFEFF/, '')).suite;
+const DL = path.join(ROOT, '发版物料', 'N网');
+const OUTDIR = path.join(DL, '页面文案');
 fs.mkdirSync(OUTDIR, { recursive: true });
+const cname = m => m.cn.replace(/\s+/g, '');
 
-const index = ['# N网发版物料索引（生成物，勿手改；单源=各 mod README.md）',
+const index = ['# N网物料索引（生成物，勿手改；单源=各 mod README.md）',
   '',
   `套件版本：v${version}（version.json 单源）。生成命令：\`node tools/nexus_page_text.js\``,
   '',
-  '| mod | 封面 JPG | BBCode | 主文件名（Full） | 纯插件包名（PluginOnly） |',
-  '|---|---|---|---|---|'];
+  '**上传口径**：N网按【单个 mod】建页上传，双轨包 = Full（自带 BepInEx 基座，解压即用）+ PluginOnly（纯 dll）。套件一键安装器不上 N网（百度云渠道专属）；页面安装说明即单 mod 双轨口径。',
+  '',
+  '| mod | 封面（封面\\） | 横幅（横幅\\） | 页面文案（页面文案\\） | 上传包名 Full | 上传包名 PluginOnly |',
+  '|---|---|---|---|---|---|'];
 
 let fail = 0;
 for (const m of MODS) {
   if (only && !m.dir.includes(only)) continue;
   const r = buildPage(m, version);
   if (r.error) { console.log('SKIP ' + m.dir + ': ' + r.error); fail++; continue; }
-  const out = path.join(OUTDIR, m.file + '.bbcode.txt');
+  const n = cname(m);
+  const out = path.join(OUTDIR, n + '-页面文案.txt');
   fs.writeFileSync(out, r.body.replace(/\n{3,}/g, '\n\n'), 'utf8');
-  index.push(`| ${m.cn} ${m.en} | assets/banners/nexus-ce/v2/${m.cover} | assets/nexus/pages/${m.file}.bbcode.txt | SurvivalLog-${m.file}-v${version}-Full.zip | SurvivalLog-${m.file}-v${version}-PluginOnly.zip |`);
-  console.log('OK ' + m.file + '.bbcode.txt  (' + r.body.length + ' chars)');
+  index.push(`| ${m.cn} ${m.en} | ${n}-封面.jpg | ${n}-横幅.jpg | ${n}-页面文案.txt | SurvivalLog-${m.file}-v${version}-Full.zip | SurvivalLog-${m.file}-v${version}-PluginOnly.zip |`);
+  console.log('OK ' + n + '-页面文案.txt  (' + r.body.length + ' chars)');
 }
-if (!only) fs.writeFileSync(path.join(OUTDIR, '_index.md'), index.join('\n'), 'utf8');
+if (!only) fs.writeFileSync(path.join(DL, '物料索引.md'), index.join('\n'), 'utf8');
 process.exit(fail && !only ? 1 : 0);

@@ -342,3 +342,13 @@
   热禁用期间 CostPatch 已挂但不触发（其 prefix 只对"非今日候选"购买干预，入口隐藏后无该路径——
   官方链只能买候选内原价）。重启级实测两轮：false=零 `[PlanPick]` 日志（仅 BepInEx Loading 行）；
   true=loaded 正常+作者自定义 CostMultiplierPercent=150 无损。UI 级（入口出现/消失）留 T17 存档轮。
+- 2026-10-25 晚 目录失效复核（465 项事故二道防线）：PlanCatalog 曾"构建即终身缓存"（`Plans != null
+  return true`）——启动帧隙里目录可能抢在 EndlessGuard 注入前构建，冻结在官方 465 项（自选规划整局
+  缺 11 条注入卡，LogOutput 实锤"规划 465/465 项、不入池 11 项"而非 476/22）。根治尝试见 EndlessGuard
+  DESIGN §9（改挂官方装表管道实弹翻车已回滚，注入仍是 2s 巡检后置落表）；本 mod
+  配套加行数复核：Build 记住构建时 `_Config_Talent_Dict.Count`，每轮不等即整目录重建（EndlessGuard
+  注入 +11、官方重跑 Initialize 重建表均可捕捉；行数不变视为内容未变跳过，每轮一次 Count 开销可忽略；
+  interop 包装实例每次访问可能新造，ReferenceEquals 不可靠故用行数不用引用比对）。目录类信号走
+  BuildLog（重建时补"Talent 表行数 a→b，目录重建"行）。PlanTicker 巡检保留但仅余 UI 管道职责
+  （page.js 安装/payload 推送/键盘桥/启停门），不再承担"等表"数据职责。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.PlanPick` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod PlanPick`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。

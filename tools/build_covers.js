@@ -1,6 +1,7 @@
 // N网封面统一构建器（v2 版式 · 2026-10-25 作者定调：去署名行 + 加可配置信息行 + 质感精修）
 // 用法：node tools/build_covers.js [前缀...]   不带参数=全部 12 张
 // 产物：assets/banners/nexus-ce/v2/<xx>-cover.html + .jpg（1920x1080，<400KB 校验）
+//       assets/nexus/banners/<xx>-banner.html + .jpg（1300x372 描述页头横幅，docs/08 §5.2 规格）
 // 版式依据 docs/08 §5.1 R4 定稿；v2 变更（作者 2026-10-25）：
 //   删 by 署名行（FREE·Night·抖音）→ 换「⚙ 可配置」信息行；标题金白渐变；标签胶囊化+毛玻璃；
 //   窗框细化；暗角+细噪点；夜字印 B-2 保留（如需移除改 KEEP_STAMP=false）。
@@ -9,19 +10,21 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const V2 = path.join(ROOT, 'assets', 'banners', 'nexus-ce', 'v2');
-const SHOTS = '../../../../gamekb/webui_shots/';
+// 交付目录（中文命名，作者 2026-10-25 定）：封面/横幅/页面文案集中一处
+const SHOTS = '../../../gamekb/webui_shots/';
+const BAN_SHOTS = '../../../gamekb/webui_shots/';
 const KEEP_STAMP = true;
 
 const MODS = [
   { p: 'bp', cn: '背包扩容',     cnpx: 92, en: 'BACKPACK EXPAND · 8×7 → 11×10 · 负重五倍',  gray: '8×7 · 负重紧巴巴',    gold: '11×10 · 负重五倍',   cfg: '宽 · 高 · 负重 三键任意调' },
-  { p: 'cx', cn: '柜子扩容',     cnpx: 92, en: 'CABINET EXPAND · 置物架 15×12 → 23×18',    gray: '超大置物架 15×12',    gold: '23×18 · 全家×1.5',   cfg: '柜子 / 冰箱 / 载具 倍数独立调' },
+  { p: 'cs', cn: '柜子容量',     cnpx: 92, en: 'CABINET SIZE · 四档容量 数值直调',          gray: '超大置物架 15×12',    gold: '特大档 20×16 · 四档可调', cfg: '小 / 中 / 大 / 特大 数值直调 · 任意柜单独改',
+    imgs: ['cx_vanilla_full.png', 'cs_mod_full.png', 'cs_mod_zoom.png'] },
   { p: 'cb', cn: '柜子负重解放', cnpx: 88, en: 'CABINET BURDEN UNBOUND · 负重上限 → 无限制', gray: '格子没满 · 放不下',  gold: '负重清零 · 格满为限', cfg: '开关一键还原 · 名单可增删' },
   { p: 'fc', cn: '冰箱保鲜',     cnpx: 92, en: 'FRIDGE CHILL · 保鲜 ×5 → ×10 天赋解封',    gray: '保鲜×5 · 食物快坏',    gold: '保鲜×10 · 封顶百倍',  cfg: '保鲜倍数 · 总封顶 可调' },
   { p: 'ce', cn: '储藏柜直达',   cnpx: 92, en: 'CABINET EVERYWHERE · 工作台直连家里的柜子', gray: '材料压背包 · 来回倒', gold: '柜子直达 · 自动取料', cfg: '十界面视图 逐个配置' },
   { p: 'ru', cn: '角色专属解锁', cnpx: 88, en: 'ROLE UNLOCK · 角色专属 → 全角色互通',      gray: '专属内容 · 锁角色',    gold: '专卡全角色 · 想买就买', cfg: '藤蔓 / 规划 / 花瓶 独立开关' },
   { p: 'mc', cn: 'MOD 管理中心', cnpx: 80, en: 'MOD CENTER · 逐个手改 cfg → 面板一键管理',  gray: '手改 cfg · 太硬核',   gold: '全套件 · 面板直管',  cfg: '面板滑条直改 · 即时生效' },
-  { p: 'pds', cn: '灾前加速',    cnpx: 92, en: 'PRE-DISASTER SPEED · 灾前干等 → 五键变速 真×3', gray: '灾前 1 倍 · 干等', gold: '五键变速 · 真×3',    cfg: '真三倍 · 快捷键 可开关' },
+  { p: 'pds', cn: '灾前加速',    cnpx: 92, en: 'PRE-DISASTER SPEED · 灾前干等 → 五键倍速',  gray: '灾前 1 倍 · 干等', gold: '灾前也有 · 五键倍速', cfg: '倍速档位 · 快捷键 可开关' },
   { p: 'qa', cn: '动作提速',     cnpx: 92, en: 'QUICK ACTION · 吃饭15秒 → 全动作0.5秒',    gray: '搜个柜 15 秒',        gold: '全动作 0.5 秒',      cfg: '五分类毫秒 逐类可调' },
   { p: 'rs', cn: '机器人提速',   cnpx: 92, en: 'ROBOT SPEED · 慢半拍机器人 → 全面×2',      gray: '机器人 · 慢半拍',      gold: '全属性×2 · 对齐手速', cfg: '七项倍率 独立可调' },
   { p: 'pp', cn: '自选规划',     cnpx: 92, en: 'PLAN PICK · 随机三选 → 全目录自选',        gray: '随机派 3 张 · 看运气', gold: '465 项全目录 · 搜索自选', cfg: '自选加价 100%~300% 可调',
@@ -163,19 +166,101 @@ ${stamp}
 `;
 }
 
+// —— 1300×372 描述页头横幅（docs/08 §5.2 规格）——
+function tplBanner(m) {
+  const im = (m.imgs && m.imgs[1]) || m.p + '_mod_full.png';
+  const px = Math.round(m.cnpx * 0.6);
+  const pos = m.banPos || '62% 45%';
+  const stamp = KEEP_STAMP ? `
+  <div class="stamp">
+    <svg width="76" height="76" viewBox="0 0 264 264">
+      <rect x="8" y="8" width="248" height="248" rx="30" fill="#1b1610"/>
+      <rect x="24" y="24" width="216" height="216" rx="20" fill="none" stroke="#FFC107" stroke-width="5"/>
+      <text x="132" y="176" text-anchor="middle" font-family="KaiTi,STKaiti,serif" font-weight="900"
+            font-size="150" fill="#FFC107">夜</text>
+      <text x="132" y="222" text-anchor="middle" font-family="Georgia,serif" font-size="21"
+            letter-spacing="6" fill="#FFC107" opacity=".85">NIGHT</text>
+    </svg>
+  </div>` : '';
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>${m.cn} · 横幅 1300x372</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; font-family:"Microsoft YaHei","SimHei",sans-serif; }
+  .board { position:relative; overflow:hidden; width:1300px; height:372px; background:#0c0a08; }
+  .bg { position:absolute; inset:0; }
+  .bg img { width:100%; height:100%; object-fit:cover; object-position:${pos};
+    filter:brightness(.92) saturate(1.05); }
+  .scrim { position:absolute; inset:0;
+    background: linear-gradient(90deg, rgba(7,6,4,.96) 0%, rgba(7,6,4,.88) 34%, rgba(7,6,4,.42) 66%, rgba(7,6,4,.1) 100%); }
+  .scrim2 { position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,.18) 0%, transparent 26%, transparent 70%, rgba(0,0,0,.32) 100%); }
+  .title { position:absolute; left:58px; top:0; bottom:0; width:640px; display:flex;
+    flex-direction:column; justify-content:center; z-index:5; }
+  .kicker { color:#b0a078; font-size:14px; letter-spacing:9px; font-weight:600; }
+  .cn { margin-top:9px; font-size:${px}px; font-weight:900; letter-spacing:6px; line-height:1.05;
+    background:linear-gradient(180deg,#fdf6e3 10%,#f2ddb0 55%,#dcc084 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 2px 12px rgba(0,0,0,.5); }
+  .en { margin-top:8px; font-family:Georgia,serif; font-size:16px; color:#e8c766; letter-spacing:3px; }
+  .cfg { margin-top:9px; display:flex; align-items:center; gap:7px; color:#d6c188; font-size:15px; font-weight:600; letter-spacing:1.5px; }
+  .cfg .sep { width:20px; height:1px; background:linear-gradient(90deg,transparent,#8f7c4e); }
+  .rule { position:absolute; left:58px; right:170px; bottom:16px; height:2px; z-index:6;
+    background:linear-gradient(90deg, rgba(255,193,7,.75), rgba(255,193,7,.25) 55%, transparent); }
+  .stamp { position:absolute; right:22px; bottom:18px; z-index:7; transform:rotate(-7deg);
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,.7)) drop-shadow(0 0 10px rgba(255,193,7,.3)); }
+  .vig { position:absolute; inset:0; z-index:8; pointer-events:none;
+    background: radial-gradient(130% 120% at 40% 45%, transparent 62%, rgba(0,0,0,.34) 100%); }
+  .grain { position:absolute; inset:0; z-index:9; pointer-events:none; opacity:.05;
+    background-image:url("${GRAIN}"); background-size:180px 180px; }
+</style>
+</head>
+<body>
+<section class="board">
+  <div class="bg"><img src="${BAN_SHOTS}${im}" alt=""></div>
+  <div class="scrim"></div><div class="scrim2"></div>
+  <div class="title">
+    <div class="kicker">SURVIVAL LOG · MOD</div>
+    <div class="cn">${m.cn}</div>
+    <div class="en">${m.en}</div>
+    <div class="cfg"><span>⚙</span>${m.cfg}<span class="sep"></span>cfg 即改即生效</div>
+  </div>
+  <div class="rule"></div>
+${stamp}
+  <div class="vig"></div><div class="grain"></div>
+</section>
+</body>
+</html>
+`;
+}
+
 const only = process.argv.slice(2);
+const DL = path.join(ROOT, '发版物料', 'N网');            // 交付根：发版物料/N网
+const D_COV = path.join(DL, '封面'), D_BAN = path.join(DL, '横幅'), D_SRC = path.join(DL, '源文件');
+[D_COV, D_BAN, D_SRC].forEach(d => fs.mkdirSync(d, { recursive: true }));
+const cname = m => m.cn.replace(/\s+/g, '');             // 中文文件名（去空格）
+const rel = p => path.relative(ROOT, p).replace(/\\/g, '/');
 let built = 0, failed = 0;
 for (const m of MODS) {
   if (only.length && !only.includes(m.p)) continue;
-  const html = path.join(V2, m.p + '-cover.html');
-  const jpg = path.join(V2, m.p + '-cover.jpg');
+  const n = cname(m);
+  const html = path.join(D_SRC, n + '-封面.html');
+  const jpg = path.join(D_COV, n + '-封面.jpg');
   fs.writeFileSync(html, tpl(m), 'utf8');
-  const relHtml = path.relative(ROOT, html).replace(/\\/g, '/');
-  const relJpg = path.relative(ROOT, jpg).replace(/\\/g, '/');
-  execSync(`node "${path.join(__dirname, '_render_cover2.js')}" "${relHtml}" "${relJpg}" 1920 1080`, { stdio: 'pipe' });
+  execSync(`node "${path.join(__dirname, '_render_cover2.js')}" "${rel(html)}" "${rel(jpg)}" 1920 1080`, { stdio: 'pipe' });
   const kb = fs.statSync(jpg).size / 1024;
-  const pass = kb < 400;
-  console.log((pass ? 'PASS' : 'FAIL') + ' ' + m.p + '-cover.jpg ' + kb.toFixed(0) + 'KB');
+
+  const bhtml = path.join(D_SRC, n + '-横幅.html');
+  const bjpg = path.join(D_BAN, n + '-横幅.jpg');
+  fs.writeFileSync(bhtml, tplBanner(m), 'utf8');
+  execSync(`node "${path.join(__dirname, '_render_cover2.js')}" "${rel(bhtml)}" "${rel(bjpg)}" 1300 372`, { stdio: 'pipe' });
+  const bkb = fs.statSync(bjpg).size / 1024;
+
+  const pass = kb < 400 && bkb < 400;
+  console.log((pass ? 'PASS' : 'FAIL') + ' ' + n + ' 封面 ' + kb.toFixed(0) + 'KB  横幅 ' + bkb.toFixed(0) + 'KB');
   pass ? built++ : failed++;
 }
 console.log(`done: ${built} built, ${failed} failed`);

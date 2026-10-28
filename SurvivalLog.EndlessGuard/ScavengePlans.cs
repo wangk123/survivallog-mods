@@ -31,9 +31,12 @@ internal sealed class DemoteRow
 }
 
 /// <summary>
-/// 生存规划扩展：读档期把 11 条 Talent/ConditionSet 行注进内存表 + 新卡 ID 追加进洞察注册表活引用
+/// 生存规划扩展：把 11 条 Talent/ConditionSet 行注进内存表 + 新卡 ID 追加进洞察注册表活引用
 /// + 功能4b 内容层（ApplyContent：篮子物品按 itemId 扩池挂门槛 / 官方封印货原值校验后降档，见文末）。
-/// 时机：Ticker 每 2s 检查 Cm() 就绪即注（远早于 PlanPick 目录构建=首次开规划页，DESIGN §5）。
+/// 时机：GuardTicker 每 2s 检查 Cm() 就绪且装表完成后注入（2026-10-26 两连事故定案：async 状态机
+/// MoveNext 一律禁挂——d__256 步进注入=装表破坏重试循环、d__0/EnterMain 续体注入=启动序列卡死黑屏，
+/// 见 EndlessGuardPlugin GuardTicker 头注；巡检的静默失败期天然避开装表窗口=其稳定性来源）。
+/// PlanPick 侧目录已加行数失效复核，注入晚到亦可自愈。
 /// 幂等：dict.ContainsKey 防重注；注册表 Contains 防重加。表是进程内存态，不写任何存档（DESIGN §2.6）。
 /// interop 绑定按 mdump 实测修正（2026-10-24，tools/_t5tal.txt / _t5cond.txt）：
 /// - ConditionSet 的 EventTag/EventNoTag/BuffTag/EventTagOr/SymbolNeed/SymbolNoNeed 是 List&lt;string&gt;（非 List&lt;int&gt;）；
@@ -50,26 +53,32 @@ internal static class ScavengePlans
     private static readonly Dictionary<long, int> OrigGates = new();   // poolId*100000+itemId -> 首读原门槛（幂等防护之二）
     internal static int InjectedCount;   // 自证
 
-    internal static void Tick()
+    /// <summary>GuardTicker 2s 巡检入口（2026-10-26 两连事故后回归并定案：async 状态机 MoveNext
+    /// 禁挂——装表中注入=Initialize 重试循环；装表后续体注入=启动卡死黑屏，见 EndlessGuardPlugin
+    /// GuardTicker 头注）。全部幂等（哨兵判重）。
+    /// 巡检时代的事故（2026-10-25 晚）：注入完成于 22:26:31，而 PlanPick 目录构建（构建后永不重建）
+    /// 抢先落在 :29~:31 的帧隙窗口 → 冻结在官方 465 项，自选规划整局看不到 11 条注入卡——
+    /// 已由 PlanPick 侧目录行数失效复核根治（注入晚到/表重建，目录自动重建收敛）。</summary>
+    internal static void OnConfigStep()
     {
+        if (EndlessGuardPlugin.Enabled != null && !EndlessGuardPlugin.Enabled.Value) return;   // 总开关关=不注入（已生效改动保留，重启干净）
         var cm = BagTable.Cm();
-        if (cm == null) return;                 // 表未就绪，下轮再试
+        if (cm == null) return;                 // 单例未建，下步步进再试
         // 方案B（2026-10-25 作者验收第二轮定案）：UI 沦陷显示的第三份账=Config_EndlessTier 三张点名表
         //（当前阶段≥点名排定阶段即显示"已沦陷"，与 FallMapPoint 是否真执行无关——FallBlocker 拦了执行
         // 但显示层照读日程）。清空三张表=日程源头消失（倒计时/已沦陷显示/调度三合一），挂 PreventNewFalls 门。
         if (EndlessGuardPlugin.PreventNewFalls.Value) ClearTierFallLists(cm);
         if (!EndlessGuardPlugin.ExtendScavengePlans.Value) return;
         if (!_loaded) { LoadJson(); if (!_loaded) return; }
-        // 复查代替闩锁（2026-10-25 作者实测定案）：配置表加载完成会重建 _Config_*_Dict，启动早期的
-        // 注入/落表会被整体冲掉（实测：注入 11/11 打在加载完成前，PlanPick 目录只有原版 465 项）。
-        // 每轮校验首行/首篮是否还在，被冲掉即重放；Inject/ApplyContent 内部逐行 ContainsKey/IndexOf 幂等。
+        // 哨兵复查（保留巡检时代的结论，官方重试/换语言会重跑 Initialize 整体重建 _Config_*_Dict）：
+        // 每步校验首行/首篮是否还在，被冲掉即重放；Inject/ApplyContent 内部逐行 ContainsKey/IndexOf 幂等。
         var tDict = cm._Config_Talent_Dict;
         if (tDict == null || !tDict.ContainsKey(Plans[0].TalentId)) Inject(cm);
         var rgDict = cm._Config_RandomGroup_Dict;
         if (rgDict != null && rgDict.TryGetValue(Baskets[0].PoolId, out var sentinelPool)
             && sentinelPool != null && IndexOf(sentinelPool.IdList, Baskets[0].Items[0].ItemId) < 0)
             ApplyContent();
-        AppendRegistry();                       // 注册表可能被 EnsureRegistry 重载覆盖：每轮补（Contains 幂等，开销可忽略）
+        AppendRegistry();                       // 注册表可能被 EnsureRegistry 重载覆盖：随步进补（Contains 幂等，开销可忽略）
     }
 
     /// <summary>清空 Config_EndlessTier 的 FallMapPoints/StoryFallMapPoints/DroneFallMapPoints（每轮复查，
@@ -236,6 +245,7 @@ internal static class ScavengePlans
     /// 2026-10-25 二连丢卡（·七/学校·三）反汇编定案追加反向表：AddBuff 主门（0x3018A75 gate）=
     /// BuffID&gt;0 ∨ id==32111 ∨ GetInsightMapForCard&gt;0 ∨ 在静态数组；GetInsightMapForCard(0x2826440)
     /// 只查 _mapByCard 反向表——缺反向项→官方购买链扣点后【静默不加卡】。反向表同款每轮补（幂等）。</summary>
+    private static string _lastRegErr;   // 步进频率下表未齐的 NRE 每步必发：同文只打一次防刷屏（表齐后自然停）
     private static void AppendRegistry()
     {
         try
@@ -249,7 +259,7 @@ internal static class ScavengePlans
             }
             AppendReverseMap();
         }
-        catch (Exception e) { EndlessGuardPlugin.Trace("registry: " + e.Message); }
+        catch (Exception e) { var m = "registry: " + e.Message; if (m != _lastRegErr) { _lastRegErr = m; EndlessGuardPlugin.Trace(m); } }
     }
 
     /// <summary>_mapByCard（卡→图，静态偏移 0x18）反射追加。interop 静态引用字段以属性或字段形态暴露，两种都试。

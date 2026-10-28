@@ -27,10 +27,10 @@
 ## 四、安装与卸载
 
 **前置**：Steam 正版《生存日志》（AppID 4164790）+ BepInEx 6（IL2CPP）注入链。
-- **一键安装器（推荐）**：勾选本 mod，自动探测游戏目录，自带卸载器；
-- **手动**：把 `SurvivalLog.CabinetBurden.dll` 放进 `<游戏目录>\BepInEx\plugins\`（需已装 BepInEx 基座）。
+- **Full 完整包（推荐新玩家）**：解压到游戏根目录（Steam 库 `steamapps\common\Survival Log`），自带 BepInEx 6（IL2CPP）基座，装完即用；
+- **PluginOnly 纯插件包**：已装 BepInEx 6 的玩家，把 `SurvivalLog.CabinetBurden.dll` 放进 `<游戏目录>\BepInEx\plugins\`。
 
-**卸载** = 删掉该 dll（或用安装器卸载）：容器负重上限需重读一次存档才回到原版数值（新制作/新放置的家具立即回原值）。游戏更新后失效属正常，等套件适配新版即可；本 mod 不改任何游戏文件。
+**卸载** = 删掉该 dll（Full 包玩家要彻底清基座：再删 `BepInEx\` 目录、`winhttp.dll`、`dotnet\` 目录；存档不受影响）：容器负重上限需重读一次存档才回到原版数值（新制作/新放置的家具立即回原值）。游戏更新后失效属正常，等套件适配新版即可；本 mod 不改任何游戏文件。
 
 ## 五、配置说明
 
@@ -59,7 +59,7 @@
 - Only touches weight limits, never grid sizes or items — fully compatible with grid-expansion mods; the player's own overweight debuff is unaffected
 
 **Requirements / Install / Uninstall**
-Survival Log (Steam AppID 4164790) + BepInEx 6 IL2CPP. Install via the one-click installer (pick this mod) or drop the DLL into BepInEx\plugins\. Uninstall = delete the DLL; the game returns to vanilla after one save reload (newly crafted/placed furniture reverts immediately).
+Survival Log (Steam AppID 4164790) + BepInEx 6 IL2CPP. Install the Full package (bundled BepInEx 6 base — extract into the game root, `steamapps\common\Survival Log`) or the PluginOnly package (drop `SurvivalLog.CabinetBurden.dll` into `BepInEx\plugins\` if BepInEx 6 is already installed). Uninstall = delete the DLL; the game returns to vanilla after one save reload (newly crafted/placed furniture reverts immediately).
 
 **Configuration**
 Config file: `BepInEx\config\com.local.survivallog.cabinetburden.cfg`. Burden.Enabled toggles the unlimited mode (false = restore vanilla; reload the save to apply to existing containers), IncludeBagIds/ExcludeBagIds fine-tune the bag list, and two debug switches control logging. The obsolete BurdenMult key from the old version is ignored and can be deleted.

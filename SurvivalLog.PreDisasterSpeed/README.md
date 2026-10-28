@@ -26,10 +26,10 @@
 ## 四、安装与卸载
 
 **前置**：Steam 正版《生存日志》（AppID 4164790）+ BepInEx 6（IL2CPP）注入链。
-- **一键安装器（推荐）**：勾选本 mod，自动探测游戏目录，自带卸载器；
-- **手动**：把 `SurvivalLog.PreDisasterSpeed.dll` 放进 `<游戏目录>\BepInEx\plugins\`（需已装 BepInEx 基座）。
+- **Full 完整包（推荐新玩家）**：解压到游戏根目录（Steam 库 `steamapps\common\Survival Log`），自带 BepInEx 6（IL2CPP）基座，装完即用；
+- **PluginOnly 纯插件包**：已装 BepInEx 6 的玩家，把 `SurvivalLog.PreDisasterSpeed.dll` 放进 `<游戏目录>\BepInEx\plugins\`。
 
-**卸载** = 删掉该 dll（或用安装器卸载），游戏回到原版（无灾前倍速条），下次启动游戏后完全还原。游戏更新后失效属正常，等套件适配新版即可；本 mod 不改任何游戏文件。
+**卸载** = 删掉该 dll（Full 包玩家要彻底清基座：再删 `BepInEx\` 目录、`winhttp.dll`、`dotnet\` 目录；存档不受影响），游戏回到原版（无灾前倍速条），下次启动游戏后完全还原。游戏更新后失效属正常，等套件适配新版即可；本 mod 不改任何游戏文件。
 
 ## 五、配置说明
 
@@ -38,7 +38,7 @@
 | 节.键 | 默认 | 说明（人话） |
 |---|---|---|
 | General.Enabled | true | 灾前加速条总开关（关闭=不注入不挂钩；对已在档对局下次启动生效）。 |
-| General.TrueThreeX | true | 手动三键在灾前按真实×3 生效（临时换档校正；睡眠跳夜保持官方×32 不变）。false=官方表值×32（三键≈快进档）。 |
+| General.TrueThreeX | false | 默认=false：三倍档与官方一致（×32 快进档）。true=手动三键按真实×3 生效（临时换档校正；睡眠跳夜保持官方×32 不变）。重启生效。 |
 | Hotkeys.Enabled | true | 快捷键（仅灾前 HUD 显示期间生效，键位与官方一致）：~=慢速 1=原速 2=二倍 3=三倍 4=暂停。注意：网页输入框聚焦时按键仍会触发。 |
 | Debug.Verbose | false | 注入/payload 明细日志（排查问题用，平时保持关闭）。 |
 
@@ -49,13 +49,13 @@
 **Features**
 - The official speed bar appears in the pre-disaster HUD (bottom-left), pause and slow-speed gears included
 - Hotkeys match the official ones: ~ slow, 1 normal, 2 double, 3 triple, 4 pause (active only while the pre-disaster HUD is shown)
-- True ×3 correction (default on): the official "triple" button is actually a ×32 fast-forward tier pre-disaster; this makes the manual triple button a real ×3
+- Optional true ×3 correction (default OFF): the official "triple" button is a ×32 fast-forward tier pre-disaster; enable TrueThreeX to make the manual triple button a real ×3
 - Sleep time-skip is untouched and keeps the official ×32
 - The pre-disaster countdown speeds up together with the clock (native game behavior); clicks go through the game's own speed-change channel
 - Speed automatically resets to 1x at the disaster transition, so the multiplier never carries into the post-disaster phase
 
 **Requirements / Install / Uninstall**
-Survival Log (Steam AppID 4164790) + BepInEx 6 IL2CPP. Install via the one-click installer (pick this mod) or drop the DLL into BepInEx\plugins\. Uninstall = delete the DLL; the game returns to vanilla (no pre-disaster speed bar). Restoration is restart-level — fully effective on the next game launch.
+Survival Log (Steam AppID 4164790) + BepInEx 6 IL2CPP. Install the Full package (bundled BepInEx 6 base — extract into the game root, `steamapps\common\Survival Log`) or the PluginOnly package (drop `SurvivalLog.PreDisasterSpeed.dll` into `BepInEx\plugins\` if BepInEx 6 is already installed). Uninstall = delete the DLL; the game returns to vanilla (no pre-disaster speed bar). Restoration is restart-level — fully effective on the next game launch.
 
 **Configuration**
 Config file: `BepInEx\config\com.local.survivallog.predisasterspeed.cfg`. Master switch (takes effect on next launch), true-×3 correction and hotkey toggle (both instant).
