@@ -74,6 +74,11 @@ function Sync-Repo($entry) {
         git clone ('https://github.com/' + $org + '/' + $repoName + '.git') $clone
         if ($LASTEXITCODE -ne 0) { throw ('git clone failed: ' + $repoName) }
         git -C $clone config core.autocrlf false
+        # identity: propagate from monorepo local config (machine may have no global identity)
+        foreach ($k in @('user.name', 'user.email')) {
+            $v = (git -C $projRoot config --get $k) | Select-Object -First 1
+            if ("$v") { git -C $clone config $k $v }
+        }
         $br = (git -C $clone symbolic-ref --short HEAD) | Select-Object -First 1
         if ("$br" -ne 'main') {
             git -C $clone branch -m main
