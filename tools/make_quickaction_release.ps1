@@ -1,8 +1,10 @@
 ﻿$ErrorActionPreference = 'Stop'
 $game     = 'E:\SteamLibrary\steamapps\common\Survival Log'
 $projRoot = 'E:\Game\Mod\mod_stack'
-# 版本号唯一来源：根目录 version.json（仅作者定义，脚本只读）
-$ver      = (Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom-Json).suite
+# 版本号唯一来源：根目录 version.json 的 mods.QuickAction（仅作者定义，脚本只读）
+$vj  = Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom-Json
+$ver = $vj.mods.QuickAction
+if (-not $ver) { throw 'version.json mods.QuickAction missing' }
 $relRoot  = Join-Path $projRoot 'release'
 $dll      = Join-Path $projRoot 'SurvivalLog.QuickAction\bin\Release\SurvivalLog.QuickAction.dll'
 if (-not (Test-Path $dll)) { throw ('build missing: ' + $dll) }

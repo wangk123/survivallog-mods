@@ -1,10 +1,17 @@
-﻿$ErrorActionPreference = 'Stop'
+﻿param([string]$Mod = '')
+$ErrorActionPreference = 'Stop'
 $game     = 'E:\SteamLibrary\steamapps\common\Survival Log'
 $projRoot = 'E:\Game\Mod\mod_stack'
 $relRoot  = Join-Path $projRoot 'release'
 # 版本号唯一来源：根目录 version.json（仅作者定义，脚本只读）
-$ver      = (Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom-Json).suite
+# $ver = suite（Base 包/安装器线）；$mver = mods（单 mod 线，mod zip 命名用）
+$vj  = Get-Content (Join-Path $projRoot 'version.json') -Raw | ConvertFrom-Json
+$ver = $vj.suite
+$mver = @{}
+$vj.mods.PSObject.Properties | ForEach-Object { $mver[$_.Name] = $_.Value }
 
+# 单发模式（-Mod <Name>，Task 6 release_mod.ps1 调用）：跳过 Base 段，只打该 mod 的 zip
+if (-not $Mod) {
 # ---------- BASE package ----------
 $base = Join-Path $relRoot ('SurvivalLog.Base_v' + $ver)
 
@@ -36,6 +43,7 @@ Copy-Item (Join-Path $projRoot 'tools\readme_base.md') (Join-Path $base 'README.
 $baseZip = Join-Path $relRoot ('SurvivalLog.Base_v' + $ver + '.zip')
 if (Test-Path $baseZip) { Remove-Item $baseZip -Force }
 Compress-Archive -Path (Join-Path $base '*') -DestinationPath $baseZip -CompressionLevel Optimal
+} # end if (-not $Mod) —— Base 段
 
 # ---------- One package per mod ----------
 $mods = @(
@@ -55,6 +63,9 @@ $mods = @(
 # 全中文注释配置；也避免本机实验值（如 EndlessGuard 补授名单/CabinetSize 个性化清单）混进发布包
 $noCfgMods = @('ModCenter','EndlessGuard','PlanPick','PreDisasterSpeed','CabinetSize')
 foreach ($m in $mods) {
+    if ($Mod -and $m.Name -ne $Mod) { continue }
+    $mv = $mver[$m.Name]
+    if (-not $mv) { throw ('version.json mods missing entry: ' + $m.Name) }
     $dll = Join-Path $projRoot ('SurvivalLog.' + $m.Name + '\bin\Release\SurvivalLog.' + $m.Name + '.dll')
     if (-not (Test-Path $dll)) { throw ('build missing: ' + $dll) }
     # 新鲜度守卫（2026-10-17 事故）：本脚本不编译，只收 bin\Release 现货——若 dll 比源码旧，
@@ -66,7 +77,7 @@ foreach ($m in $mods) {
         throw ('stale build: ' + $dll + ' 比源码旧（最新源文件 ' + $newestSrc.Name + ' ' + $newestSrc.LastWriteTime.ToString('yyyy-MM-dd HH:mm') + '）。请先: sdk\dotnet\dotnet.exe build ' + $srcDir + ' -c Release')
     }
 
-    $pkg = Join-Path $relRoot ('SurvivalLog.' + $m.Name + '_v' + $ver)
+    $pkg = Join-Path $relRoot ('SurvivalLog.' + $m.Name + '_v' + $mv)
 
     New-Item (Join-Path $pkg 'BepInEx\plugins') -ItemType Directory -Force | Out-Null
     New-Item (Join-Path $pkg 'BepInEx\config') -ItemType Directory -Force | Out-Null
@@ -162,7 +173,7 @@ foreach ($m in $mods) {
 
     Copy-Item (Join-Path $projRoot ('tools\' + $m.Readme)) (Join-Path $pkg 'README.md') -Force
 
-    $zip = Join-Path $relRoot ('SurvivalLog.' + $m.Name + '_v' + $ver + '.zip')
+    $zip = Join-Path $relRoot ('SurvivalLog.' + $m.Name + '_v' + $mv + '.zip')
     if (Test-Path $zip) { Remove-Item $zip -Force }
     Compress-Archive -Path (Join-Path $pkg '*') -DestinationPath $zip -CompressionLevel Optimal
 }
