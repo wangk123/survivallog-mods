@@ -1,0 +1,18 @@
+{
+  "org": "survivallog-mods",
+  "mods": [
+    { "mod": "BackpackExpand",    "repo": "BackpackExpand",    "description": "《生存日志》背包扩容：宽/高/负载数值可调（默认 11/10/48000），天赋加成照常叠加" },
+    { "mod": "CabinetSize",       "repo": "CabinetSize",       "description": "《生存日志》柜子容量：全部柜子四档统一固定宽×高，13 常用包微调 + 任意柜个性化定值" },
+    { "mod": "FridgeChill",       "repo": "FridgeChill",       "description": "《生存日志》冰箱保鲜：保鲜 5 倍 → 10 倍，天赋加成上限可调" },
+    { "mod": "QuickAction",       "repo": "QuickAction",       "description": "《生存日志》动作提速：77 项动作逐项可调，默认 0.5 秒" },
+    { "mod": "CabinetEverywhere", "repo": "CabinetEverywhere", "description": "《生存日志》储藏柜直达：储物柜进工作台/无人机交易/烹饪等界面容器页签" },
+    { "mod": "CabinetBurden",     "repo": "CabinetBurden",     "description": "《生存日志》柜子负重解放：全部带负重上限的储物家具负重无限制" },
+    { "mod": "RoleUnlock",        "repo": "RoleUnlock",        "description": "《生存日志》角色专属解锁：藤蔓种子全角色可发现，防御配方四角色互通" },
+    { "mod": "RobotSpeed",        "repo": "RobotSpeed",        "description": "《生存日志》机器人提速：动作对齐手速，移速/充电/续航倍率可调" },
+    { "mod": "ModCenter",         "repo": "ModCenter",         "description": "《生存日志》MOD 管理中心：游戏内面板集中开关/调参全套件 mod" },
+    { "mod": "EndlessGuard",      "repo": "EndlessGuard",      "description": "《生存日志》无尽守卫（囤鼠桃园）：无尽模式永不沦陷 + 11 条后期拾遗规划" },
+    { "mod": "PlanPick",          "repo": "PlanPick",          "description": "《生存日志》自选规划：全部 465+ 项规划可搜可买，非今日候选两倍价" },
+    { "mod": "PreDisasterSpeed",  "repo": "PreDisasterSpeed",  "description": "《生存日志》灾前加速：官方五键倍速条搬到灾前，按钮+快捷键变速" }
+  ],
+  "profile": { "repo": "survivallog-mods", "description": "《生存日志》(Survival Log) MOD 套件——12 个 BepInEx IL2CPP 插件的合集主页与在线更新通道" }
+}
