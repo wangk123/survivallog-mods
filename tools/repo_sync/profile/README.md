@@ -6,18 +6,18 @@
 
 | MOD | 功能 | 仓库 |
 |---|---|---|
-| 背包扩容 BackpackExpand | 背包格子宽、高各 ×1.5（约 2.2 倍面积），负重 ×2 | [BackpackExpand](BackpackExpand) |
-| 柜子容量 CabinetSize | 柜子按四档统一固定宽×高，可个性化定值 | [CabinetSize](CabinetSize) |
-| 冰箱保鲜 FridgeChill | 保鲜 5 倍 → 10 倍 | [FridgeChill](FridgeChill) |
-| 动作提速 QuickAction | 77 项动作逐项可调，默认 0.5 秒 | [QuickAction](QuickAction) |
-| 储藏柜直达 CabinetEverywhere | 储物柜进工作台/交易/烹饪等界面页签 | [CabinetEverywhere](CabinetEverywhere) |
-| 柜子负重解放 CabinetBurden | 储物家具负重无限制 | [CabinetBurden](CabinetBurden) |
-| 角色专属解锁 RoleUnlock | 藤蔓种子/防御配方全角色互通 | [RoleUnlock](RoleUnlock) |
-| 机器人提速 RobotSpeed | 动作对齐手速，移速/充电/续航翻倍 | [RobotSpeed](RobotSpeed) |
-| MOD 管理中心 ModCenter | 游戏内面板集中开关/调参全套件 mod | [ModCenter](ModCenter) |
-| 无尽守卫 EndlessGuard（囤鼠桃园） | 无尽模式永不沦陷 + 11 条后期拾遗规划 | [EndlessGuard](EndlessGuard) |
-| 自选规划 PlanPick | 全部 465+ 项规划可搜可买 | [PlanPick](PlanPick) |
-| 灾前加速 PreDisasterSpeed | 官方五键倍速条搬到灾前 | [PreDisasterSpeed](PreDisasterSpeed) |
+| 背包扩容 BackpackExpand | 背包格子宽、高各 ×1.5（约 2.2 倍面积），负重 ×2 | [BackpackExpand](https://github.com/survivallog-mods/BackpackExpand) |
+| 柜子容量 CabinetSize | 柜子按四档统一固定宽×高，可个性化定值 | [CabinetSize](https://github.com/survivallog-mods/CabinetSize) |
+| 冰箱保鲜 FridgeChill | 保鲜 5 倍 → 10 倍 | [FridgeChill](https://github.com/survivallog-mods/FridgeChill) |
+| 动作提速 QuickAction | 77 项动作逐项可调，默认 0.5 秒 | [QuickAction](https://github.com/survivallog-mods/QuickAction) |
+| 储藏柜直达 CabinetEverywhere | 储物柜进工作台/交易/烹饪等界面页签 | [CabinetEverywhere](https://github.com/survivallog-mods/CabinetEverywhere) |
+| 柜子负重解放 CabinetBurden | 储物家具负重无限制 | [CabinetBurden](https://github.com/survivallog-mods/CabinetBurden) |
+| 角色专属解锁 RoleUnlock | 藤蔓种子/防御配方全角色互通 | [RoleUnlock](https://github.com/survivallog-mods/RoleUnlock) |
+| 机器人提速 RobotSpeed | 动作对齐手速，移速/充电/续航翻倍 | [RobotSpeed](https://github.com/survivallog-mods/RobotSpeed) |
+| MOD 管理中心 ModCenter | 游戏内面板集中开关/调参全套件 mod | [ModCenter](https://github.com/survivallog-mods/ModCenter) |
+| 无尽守卫 EndlessGuard（囤鼠桃园） | 无尽模式永不沦陷 + 11 条后期拾遗规划 | [EndlessGuard](https://github.com/survivallog-mods/EndlessGuard) |
+| 自选规划 PlanPick | 全部 465+ 项规划可搜可买 | [PlanPick](https://github.com/survivallog-mods/PlanPick) |
+| 灾前加速 PreDisasterSpeed | 官方五键倍速条搬到灾前 | [PreDisasterSpeed](https://github.com/survivallog-mods/PreDisasterSpeed) |
 
 每个仓库的 Release 页提供该 mod 最新版安装包（`SurvivalLog.<Mod>_v<版本>.zip`），并附带 `update.json` 版本契约（游戏内「MOD 管理中心」后续支持一键在线更新）。
 

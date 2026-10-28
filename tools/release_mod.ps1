@@ -81,7 +81,7 @@ if ($UseExistingZip) {
     if ($relFiles.Count -gt 0) {
         git -C $projRoot add -- $relFiles
         if ($LASTEXITCODE -ne 0) { throw 'git add release files failed' }
-        git -C $projRoot commit -m ('release(' + $Mod + '): v' + $ver)
+        git -C $projRoot commit -m ('release(' + $Mod + '): v' + $ver) -- $relFiles
         if ($LASTEXITCODE -ne 0) { throw 'git commit release failed' }
         Write-Host ('release commit: ' + ($relFiles -join ', '))
     }

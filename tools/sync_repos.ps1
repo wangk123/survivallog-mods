@@ -3,12 +3,14 @@
 #   -Mod      sync one mod repo only (org profile repo not touched)
 #   -Create   create missing repos first (one-time; requires gh login with repo scope)
 #   -ListOnly show what would change; commit/push nothing
+#   -Exclude  skip the named mod(s) (e.g. -Exclude CabinetSize)
 # Snapshot source = git HEAD of this monorepo (NEVER the working tree: author WIP stays out).
 # Mirror repo layout: README.md, LICENSE, .gitignore, SurvivalLog.<Mod>\, ModShared\
 # (csproj keeps its ..\ModShared\ relative links - both trees build identically).
 # Design: docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md
 param(
     [string]$Mod = '',
+    [string[]]$Exclude = @(),
     [switch]$Create,
     [switch]$ListOnly
 )
@@ -109,7 +111,7 @@ New-Item $workRoot -ItemType Directory -Force | Out-Null
 if ($Mod) {
     Sync-Repo ($man.mods | Where-Object { $_.mod -eq $Mod })
 } else {
-    foreach ($e in $man.mods) { Sync-Repo $e }
+    foreach ($e in $man.mods) { if ($Exclude -notcontains $e.mod) { Sync-Repo $e } }
     Sync-Repo $man.profile
 }
 Write-Host 'done.'
