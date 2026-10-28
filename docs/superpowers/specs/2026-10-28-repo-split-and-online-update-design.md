@@ -18,6 +18,7 @@
 | 仓库名 | 短名（= mod 文件夹后缀），组织内天然带命名空间 |
 | Release 资产范围 | **仅 12 个 mod 的 zip**；Base 包与安装器 exe 不上 GitHub，仍走网盘 |
 | 版本模型 | **双轨制**：mod 独立版本线 + 安装器继续套件号 |
+| 首轮基线 | 12 mod 首轮统一 **v1.7.0**（含 QuickAction，自 2.1.2 归位），此后各 mod 分开发布、独立演进 |
 | 下载通道 | 直连优先 + 镜像回退链（镜像列表进 cfg，可配置） |
 | 同步机制 | **快照同步**（脚本组装内容→比对远端→有差异才提交推送） |
 | 契约资产 | 每 Release 附 `update.json`（版本/资产名/md5/验证依据） |
@@ -70,7 +71,7 @@ BackpackExpand/                  ← 仓库根
   "suite": "1.7.0",
   "mods": {
     "BackpackExpand": "1.7.0", "CabinetSize": "1.7.0", "CabinetEverywhere": "1.7.0",
-    "CabinetBurden": "1.7.0", "FridgeChill": "1.7.0", "QuickAction": "2.1.2",
+    "CabinetBurden": "1.7.0", "FridgeChill": "1.7.0", "QuickAction": "1.7.0",
     "RoleUnlock": "1.7.0", "RobotSpeed": "1.7.0", "ModCenter": "1.7.0",
     "EndlessGuard": "1.7.0", "PlanPick": "1.7.0", "PreDisasterSpeed": "1.7.0"
   }
@@ -79,7 +80,7 @@ BackpackExpand/                  ← 仓库根
 
 - **mod 线**：改哪个 mod 升哪个（如 1.7.0 → 1.7.1），走 `release_mod.ps1` 单发。
 - **套件线**（`suite`）：只管安装器与总仓 tag；安装器捆绑 `release\` 下各 mod 当期最新 zip。
-- 初始值 = 各 mod 当前实况（11 个 1.7.0，QuickAction **2.1.2**——以 Plugin.cs `Version` 常量为准；其 csproj 现为陈旧的 2.0.0，publish.ps1 从不同步它，实施第 2 步对齐时统一改齐）。
+- 初始值 = 统一基线 **1.7.0**（作者口径 2026-10-28：首轮全按 1.7.0，之后各 mod 分开发布版本）。QuickAction 自 2.1.2 归位：Plugin.cs `Version` 常量与 csproj（现为陈旧 2.0.0）同步改 1.7.0 后重建。注意：cfg 持久键 `[迁移].DefaultsV21` 是已落盘的配置键，与版本号无关，**不得**因版本归位改名。
 
 ### CHANGELOG 拆分
 
@@ -102,7 +103,7 @@ BackpackExpand/                  ← 仓库根
 
 **试点**：QuickAction（本就是独立版本，天然示范仓）。
 
-**首轮回填**：12 仓各以当前版本发首个 Release（11× v1.7.0 + 1× v2.1.2），保证 ModCenter 上线时映射表完整。前 11 个 zip 直接用现有产物；**QuickAction 需重打**——现产物 `SurvivalLog.QuickAction_v1.7.0.zip` 是套件号命名（make_quickaction_release.ps1 读 suite 字段命名），内装 dll 实为 2.1.2，新通道按 mod 自身版本命名，须以 v2.1.2 重新打包。
+**首轮回填**：12 仓统一以 **v1.7.0** 发首个 Release（首轮基线，见 §1），保证 ModCenter 上线时映射表完整。前 11 个 zip 直接用现有产物；**QuickAction 需重打**——dll 版本常量归位 1.7.0 后重建打包（现产物 `SurvivalLog.QuickAction_v1.7.0.zip` 虽为 1.7.0 命名，但内装 dll 上报 2.1.2，须以归位后的新构建替换）。
 
 ## 6. Release 资产与 update.json 契约
 
@@ -171,11 +172,12 @@ ModCenter 更新功能是独立项目（另行 spec + 计划），其冻结输�
 - **md5 只防传输损坏不防篡改**：接受（玩家群体与威胁模型不需要签名）。
 - **Base/安装器不上 GitHub**：游戏内全新安装与基座修复仍依赖网盘（作者已定的边界）。
 - **镜像仓历史 = 同步快照**：无逐提交历史，考古回总仓。
+- **QuickAction 版本归位的存量影响**：存量玩家 dll 上报 2.1.2，数值上"高于"后续 1.7.x，版本比较会压住它的更新提示，直到该 mod 版本再次超过 2.1.2（届时可直接跳 2.2.0）或 ModCenter 比较策略改为展示远端版本线而非静默跳过（ModCenter 立项时定）。
 
 ## 12. 实施顺序（供 writing-plans 展开）
 
 1. LICENSE 文本定稿（作者过目）
-2. version.json 扩 `mods` 字段 + 各 mod csproj/Plugin.cs 版本对齐校验
+2. version.json 扩 `mods` 字段（首轮全部 1.7.0）+ 各 mod csproj/Plugin.cs 版本对齐校验（QuickAction 归位重戳 1.7.0 + 重建）
 3. 每 mod `CHANGELOG.md` 拆分（含 v1.7.0 小节条目提取）
 4. `tools\sync_repos.ps1`（快照同步，幂等）
 5. 组织主页仓（落地页 README）
