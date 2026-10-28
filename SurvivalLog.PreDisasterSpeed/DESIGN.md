@@ -70,6 +70,7 @@
 - 改 page.js 行为 → 先改 tests 夹具断言再改实现（红灯→绿灯）。
 - 游戏更新后：node tools/gamekb/modcompat_check.js gamekb/<版本> 看本 mod 红灯项。
 - 发版：作者定号后在 publish.ps1 $suiteMods 登记（本 mod 未发版前不动发版脚本）。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.PreDisasterSpeed` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod PreDisasterSpeed`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
 
 ## 7. 迭代记录
 

@@ -97,6 +97,7 @@
 - 发现新的原生交互/限制 → 补 §6 §7；
 - 挂钩点（Config_Bag.Size/Burden 改写）不变时 moddeps.json 无需动；
 - 每次发版在根 CHANGELOG.md 补一节（publish.ps1 强制校验）。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.BackpackExpand` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod BackpackExpand`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
 
 ## 10. 防盗署名气泡（2026-10-14，套件统一）
 

@@ -338,6 +338,10 @@ cfg 文件（置物架排除/炉具排除/电器排除三次演进都靠手工�
 
 ---
 
+## 8. 迭代维护清单（2026-10-28 新增）
+
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.CabinetEverywhere` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod CabinetEverywhere`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
+
 ## 附录 A：白盒穷举表（2026-10-17，T10；十七+轮教训的对照基线）
 
 **方法**：直读游戏目录 `WebUI\UI\*\*.html`（`E:\SteamLibrary\...\StreamingAssets\WebUI\`），

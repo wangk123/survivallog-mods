@@ -165,3 +165,4 @@ cfg 文件名 `com.local.survivallog.roleunlock.cfg`（Guid `com.local.survivall
     首读快照（本版 0/0：craft_level=0 纯 P2 剧情发放）。
   - 两开关默认 true（升级用户行为不变）；cfg 键首跑自动生成，SettingChanged 触发 Rerun 热重写。
 - **2026-10-24（作者定案）：cfg 说明改人话版；删 Debug.ListOnReady/Verbose 两调试开关**（首轮核对清单改为固定输出，46/77 基线自检不丢）；UnlockFlowerSeeds 默认 true；SkipDefenseGate 移除（藤蔓种子防御门槛永远保留官方规则）。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.RoleUnlock` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod RoleUnlock`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。

@@ -23,11 +23,14 @@
 
 数值都可以在 `BepInEx\config\` 下的配置文件里调整。
 
+> 各 mod 独立仓库与更新包：**https://github.com/survivallog-mods**（组织主页有全部链接）。
+
 > `SurvivalLog.StackLimit999`（堆叠 999）为历史项目，**有未修复缺陷，不参与任何发布**，源码仅存档。
 
 ## 安装（玩家）
 
-安装包只在**百度网盘**分享（链接由作者在分享渠道发布），本仓库不提供安装包下载。
+- **完整安装**（新玩家推荐，含 BepInEx 基座）：安装包只在**百度网盘**分享（链接由作者在分享渠道发布）。
+- **单 mod 更新**：12 个 mod 在 GitHub 组织 [survivallog-mods](https://github.com/survivallog-mods) 各有独立仓库，Release 页提供最新版单 mod 安装包（`SurvivalLog.<Mod>_v<版本>.zip`，附 `update.json` 版本契约）；游戏内「MOD 管理中心」后续支持一键在线更新。
 推荐使用一键安装器 `生存日志MOD安装器_v<版本>.exe`：自动探测 Steam 游戏目录、
 自选 MOD 组件、玩家已有配置不覆盖、自带卸载器；也可以下载各 MOD 的独立 zip 手动安装。
 详见发布包内《【必读】安装说明.txt》。

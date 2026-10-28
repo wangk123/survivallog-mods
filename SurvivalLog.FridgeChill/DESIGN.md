@@ -112,6 +112,7 @@
 - 保鲜机制相关改动 → §2 必须附实证依据，**任何写 Data_Item 的提议都违反红线，直接否决**；
 - 名单/配置调整 → §4 §5；
 - 每次发版在根 CHANGELOG.md 补一节。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.FridgeChill` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod FridgeChill`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
 
 ## 10. 防盗署名气泡（2026-10-14，套件统一）
 

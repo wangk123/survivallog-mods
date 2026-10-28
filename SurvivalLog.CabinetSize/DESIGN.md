@@ -157,3 +157,4 @@ ModCenter 面板（T20 起）：「专属修改：常用 13 包」26 键 →「�
 - cfg 增删 → §4；
 - 挂钩点变更（Config_Bag/Config_Furniture/Config_Vehicle/OnInit）→ `tools/gamekb/moddeps.json`；
 - 每次发版在根 CHANGELOG.md 补一节。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.CabinetSize` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod CabinetSize`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。

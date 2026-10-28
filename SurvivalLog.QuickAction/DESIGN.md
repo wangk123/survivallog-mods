@@ -199,6 +199,7 @@ v2.0.0 实测（全开）：物品×2746 家具×733 维护×69 杂项×67 娱�
 - 换算/天赋结论变化 → §2；
 - 配置形态变化 → §3 + tools\make_quickaction_release.ps1（预置 cfg 直接生成）+ installer.iss 勾选；
 - 每次发版在根 CHANGELOG.md 补一节。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.QuickAction` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod QuickAction`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
 
 ## 10. 防盗署名气泡（2026-10-14，套件统一）
 

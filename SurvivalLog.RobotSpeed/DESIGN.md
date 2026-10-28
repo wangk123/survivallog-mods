@@ -162,3 +162,7 @@ mod 在 BepInEx 启动后注入 Ticker 轮询（5 秒），`ConfigManager` 就�
 - 行为：进档后主角头顶显示欢迎文字（约 3 秒）——主通道走游戏官方说话队列 `CharacterTalkManager.EnqueueTalk`（与原生气泡消息排队轮流显示、互不顶替；进档瞬间有原生推送也不会被覆盖）；管理器不可用时退 `AgentModel.Unit_ShowHeadTalk(text, 3)` 直显。实测主角头顶条为官方无框文字样式（silentHeadTalk 默认 false，各通道均无框，非缺陷）；During≈真实秒（传 360 会远超 3 秒）。每次进档一次，回主菜单再进再弹。
 - 7 个套件 mod 全部调用，靠 `GameObject.Find("SurvivalLog.WelcomeTip")` 去重：先到者创建 DontDestroyOnLoad ticker，其余跳过——装多个只弹一条。无 cfg 开关（防盗署名为内置行为，防剥离）。
 - 文案单源 `WelcomeTip.Text`（作者 Night · 抖音号 166660371）；改文案后 7 个 mod 需全部重编。
+
+## 8. 迭代维护清单（2026-10-28 新增）
+
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.RobotSpeed` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod RobotSpeed`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。

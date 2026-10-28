@@ -51,3 +51,7 @@ Config_Bag / Config_Furniture **内存表直写工具**：表访问、进程内�
 - 任何新增写操作先过红线检查：**不写 Data_Item / 不写存档，零例外**（曾有的唯一例外
   RepairV11TimeScale 已于 2026-10-18 连同其调用点彻底移除——其判定区间误伤合法天赋档位；
   WelcomeTip 只读状态不写任何数据）。
+
+## 在镜像仓中的角色
+
+GitHub 组织 `survivallog-mods` 的 12 个 mod 仓各携带一份 ModShared 快照（`tools\sync_repos.ps1` 从总仓 HEAD 同步）。本目录是唯一改动源；镜像仓内的副本是生成物，勿手改。

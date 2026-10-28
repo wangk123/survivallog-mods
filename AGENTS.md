@@ -5,7 +5,7 @@
 
 ## 一、硬规则（违反即事故，先读这里）
 
-1. **版本号只由作者本人定义**。助手不得自定/自增版本号，一切以 `version.json` 的 `suite` 字段为单源；CHANGELOG 可代写。
+1. **版本号只由作者本人定义**。助手不得自定/自增版本号，一切以 `version.json` 为单源——`suite` 字段=安装器/套件线，`mods` 字段=单 mod 发版线（GitHub 组织通道）；CHANGELOG 可代写。
 2. **工作树常带作者未提交改动**。提交必须外科手术式：`git add <明确文件清单>`，**禁止 `git add -A` / `git add .`**；对作者已脏（有未提交改动）的文件只能改内容、不得擅自 stage 整文件。
 3. **游戏单实例红线**：作者正在玩（SurvivalLog.exe 在跑且内存活跃）时，**绝不等待、绝不杀进程**，任务整体中止择时重试。杀游戏后必须回读 tasklist 确认死透再操作文件（`sleep 3`）。注意 `tasklist | grep` 在 GBK 中文控制台输出不可靠，判断进程看原始输出。
 4. **游戏启动方式**：`powershell Start-Process 'steam://rungameid/4164790'`（直接 start exe 会被 Steamworks 转拉导致插件哑火）；表就绪约在主菜单后 15-25 秒。
@@ -19,6 +19,7 @@
 12. **实证优先**：不猜先查（反汇编/读源码/运行时探针），方案确认后再动手，最小侵入。
 13. **外部工具装卸可能拆注入链**（2026-10-24 xmod 卸载实锤拆了 winhttp/dotnet/BepInEx core，见 docs/03 环境事故节）：任何 xmod/修改器/loader 安装或卸载后、以及"mod 全部失效"时，先验三件套——根目录 `winhttp.dll`+`doorstop_config.ini`、`dotnet\` 有货、`BepInEx\core` 有 dll；被拆即重跑套件安装器（勿 /SILENT）。
 14. **N网通道确认门**：向 Nexus Mods 推送发版前必须经作者显式触发/确认（publish.ps1 出完 GitHub Release 后不得自动推 N网）；API key 本地单源 `tools/secrets/`（gitignore 已锚定）绝不入库。详见 `docs/08`。
+15. **组织镜像仓红线**：GitHub 组织 `survivallog-mods` 下的 12 个 mod 仓是 `tools\sync_repos.ps1` 从 git HEAD 打的**发布镜像**（开发只在单仓，镜像仓永不手改）；快照源是 HEAD 而非工作树，作者 WIP 绝不入镜像。探针三件（ActionProbe/ConfigDumpProbe/ViewportProbe）、StackLimit999、CabinetExpand **绝不建仓**。单 mod 发版走 `tools\release_mod.ps1 -Mod <名>`（发版源码必须已提交，脚本有干净树闸门）；N网推送永远另走确认门（规则 14）。
 
 ## 二、环境与路径（本机开发环境）
 
@@ -53,6 +54,12 @@ node tools/gamekb/sigscan.js "E:/SteamLibrary/steamapps/common/Survival Log/Game
 
 # 发版（作者定号后）
 powershell -File tools/publish.ps1
+
+# 单 mod 发版（GitHub 组织通道；版本号=version.json 的 mods 字段，作者定义）
+powershell -File tools/release_mod.ps1 -Mod QuickAction
+
+# 组织镜像仓快照同步（幂等；-Create 仅首次建仓用）
+powershell -File tools/sync_repos.ps1 [-Mod <名>] [-Create]
 ```
 
 ## 四、两条核心工作流

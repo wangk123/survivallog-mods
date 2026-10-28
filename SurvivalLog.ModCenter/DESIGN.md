@@ -743,3 +743,4 @@ mcSpec 99 双清单 → Tier 0 兜底（tier 省略/Secret 照常显示/反射�
   探针代码常驻为诊断功能（默认关）。
 
 - **2026-10-24（同步 RoleUnlock 配置变更）**：Meta.cs 注册表删 Vine.SkipDefenseGate 项（插件侧已移除该开关）、UnlockFlowerSeeds Def 改 true、组名"藤蔓角色"→"藤蔓与花种子"、标签"解锁藤蔓角色"→"解锁藤蔓（爬山虎）"、"解锁藤蔓专属花种子"→"解锁花种子"（花种子是大学生专属非藤蔓专属，原标签有误）。
+- 版本与发版（2026-10-28 起）：版本号单源 = 根 `version.json` 的 `mods.ModCenter` 字段（作者定义）；单 mod 发版走 `tools\release_mod.ps1 -Mod ModCenter`；本 mod 的 GitHub 镜像仓由 `tools\sync_repos.ps1` 从 HEAD 快照同步（详见 docs\superpowers\specs\2026-10-28-repo-split-and-online-update-design.md）。
