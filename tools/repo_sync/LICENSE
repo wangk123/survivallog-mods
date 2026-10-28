@@ -1,0 +1,26 @@
+生存日志 MOD 套件 · 源码使用许可（自定义条款）
+版权所有 © 2026 Night（抖音 166660371）
+
+本仓库为《生存日志》(Survival Log, Steam AppID 4164790) 的 BepInEx 6 (IL2CPP) 插件源码。
+
+一、你可以（无需询问）
+1. 下载、编译本源码，并将构建产物用于自己的游戏；
+2. 阅读与学习本源码的实现；
+3. 在本机修改自用（不分发）。
+
+二、你不可以
+1. 以任何形式二次分发本仓库内容或其构建产物（包括但不限于转载、打包再发、网盘/镜像站分发、视频教程附带分发）；
+2. 去除、修改署名或防盗提示后分发；
+3. 基于本源码制作衍生 mod 并分发（含改名再发、换皮再发）；
+4. 将本源码或其衍生版本用于任何商业用途。
+
+三、正确分享方式
+想推荐本 mod，请直接分享本仓库地址或作者的官方发布渠道（百度网盘安装包 / Nexus Mods 页面），而不是文件本身。
+
+四、反馈
+建议与 bug 欢迎在本仓库 Issues 留言，或通过抖音联系作者。
+
+五、免责
+本源码按"现状"提供，不附带任何明示或默示的担保；使用本源码产生的任何后果由使用者自行承担。本 mod 不改存档、不改游戏本体文件，但请自行做好存档备份。
+
+English summary: Source is public for personal use and study only. Redistribution, re-upload, derivative distribution, and commercial use are prohibited. Share by linking to this repository or the author's official channels instead of redistributing files.
